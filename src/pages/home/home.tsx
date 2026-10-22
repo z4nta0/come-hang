@@ -62,7 +62,7 @@ function HomPagCom () : React.JSX.Element {
 		<section className={ cssModObj.homPagSec }>{ /* What: Home Page Section Element. Why: The placeholder should sit in the middle of the screen. How: This fills the app's main element and centers its heading and note both ways. */ }
 
 
-			<h1 className={ cssModObj.homTitHea }>Group Planner</h1>{ /* What: Home Title Heading Element. Why: Every page needs one heading naming it. How: This names the app, a working name until the real one is chosen. */ }
+			<h1 className={ cssModObj.homTitHea }>Come Hang</h1>{ /* What: Home Title Heading Element. Why: Every page needs one heading naming it. How: This names the app. */ }
 
 			<p className={ cssModObj.homNotPar }>Plan get-togethers with your group. The app is still being built, so there's nothing to do here yet.</p>{ /* What: Home Note Paragraph Element. Why: A visitor should know the empty page is expected. How: This says what the app is for and that it isn't ready. */ }
 

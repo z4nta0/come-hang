@@ -66,7 +66,7 @@ function NotFouCom () : React.JSX.Element {
 		<>{ /* What: Not Found Fragment. Why: The page's head tags and its content render side by side. How: This groups them without adding an element. */ }
 
 
-			<title>Page Not Found | Group Planner</title>{ /* What: Page Title Element. Why: A visitor's tab and history should say the address they tried doesn't exist. How: React 19 moves this title into the document head while the page is shown. */ }
+			<title>Page Not Found | Come Hang</title>{ /* What: Page Title Element. Why: A visitor's tab and history should say the address they tried doesn't exist. How: React 19 moves this title into the document head while the page is shown. */ }
 
 			<meta
 				name='robots'

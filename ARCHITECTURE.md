@@ -1,4 +1,4 @@
-# Group Planner — Architecture Decisions
+# Come Hang: Architecture Decisions
 
 Living document. Updated as design decisions are made during planning
 conversations, before implementation starts. Sections marked **Open** are

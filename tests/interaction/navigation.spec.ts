@@ -50,7 +50,7 @@ test( 'an unknown address shows the 404 page, marked noindex', async ( { page : 
 
 
 	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Page Not Found' );     // What: Heading Assertion. Why: The page should say what happened. How: This reads its one h1.
-	await expect( curPagObj ).toHaveTitle( 'Page Not Found | Group Planner' );                          // What: Title Assertion. Why: The tab should name the 404 page. How: This reads the document's title.
+	await expect( curPagObj ).toHaveTitle( 'Page Not Found | Come Hang' );                              // What: Title Assertion. Why: The tab should name the 404 page. How: This reads the document's title.
 	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveAttribute( 'content', 'noindex' ); // What: Robots Assertion. Why: The host answers unknown paths with a 200, so search engines must be told to skip the page. How: This reads the robots tag's content.
 
 
@@ -68,10 +68,10 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: This is the navigation being checked. How: Playwright scrolls the link into view, scrolling the page down, then clicks it.
 
 
-	await expect( curPagObj ).toHaveURL( '/' );                                                    // What: Address Assertion. Why: The link leads to the home page. How: This reads the address.
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Group Planner' ); // What: Home Heading Assertion. Why: The home page should be what's showing. How: This reads its one h1.
-	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveCount( 0 );                   // What: Robots Removed Assertion. Why: The home page must not keep the 404 page's noindex. How: This checks the tag left with the page.
-	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );               // What: Top Assertion. Why: A new page should open at its top. How: This polls the scroll position until it reads zero.
+	await expect( curPagObj ).toHaveURL( '/' );                                                // What: Address Assertion. Why: The link leads to the home page. How: This reads the address.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Home Heading Assertion. Why: The home page should be what's showing. How: This reads its one h1.
+	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveCount( 0 );               // What: Robots Removed Assertion. Why: The home page must not keep the 404 page's noindex. How: This checks the tag left with the page.
+	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );           // What: Top Assertion. Why: A new page should open at its top. How: This polls the scroll position until it reads zero.
 
 
 } );

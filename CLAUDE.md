@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Project guidance for group-planner. The user-level CLAUDE.md (pointing to
+Project guidance for Come Hang (`come-hang`). The user-level CLAUDE.md (pointing to
 `~/projects/claude-rules/CLAUDE.md`) holds every coding, formatting,
 naming, comment, copy, testing, and commit rule; this file only adds what's
 specific to this project.
@@ -24,9 +24,9 @@ global stylesheet, and the accessibility and interaction suites. No
 Firebase code yet. Next steps are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
-font in `src/styles/styles.css` (neutral stand-ins, marked as such), the
-working name "Group Planner", and the text width tokens, which need
-re-measuring once the main font is chosen.
+font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
+text width tokens, which need re-measuring once the main font is
+chosen.
 
 ## Commands
 
@@ -47,7 +47,9 @@ The suites start their own dev server on port 5198 (sibling projects use
 
 - **Kind of site** (per the SEO rules): a web app. Public pages (landing,
   help, legal) are indexed; every screen behind identity or holding
-  personal data carries `noindex`. Live URL: not yet chosen.
+  personal data carries `noindex`. Live URL: https://comehang.app (domain
+  registered 2026-10-22, not yet deployed).
+- **Support email**: support@comehang.app.
 - **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
   first file), `vite-plugin-pwa`.
 - **Backend**: Firebase on the Blaze plan (Auth, Firestore, Realtime
