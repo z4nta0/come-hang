@@ -1,0 +1,48 @@
+# CLAUDE.md
+
+Project guidance for group-planner. The user-level CLAUDE.md (pointing to
+`~/projects/claude-rules/CLAUDE.md`) holds every coding, formatting,
+naming, comment, copy, testing, and commit rule; this file only adds what's
+specific to this project.
+
+## What this is
+
+A progressive web app for planning a group get-together: group chat, an
+event scheduler, notes on who's bringing what, and opt-in location
+sharing on the day of an event. People can belong to more than one group.
+
+**Read [ARCHITECTURE.md](ARCHITECTURE.md) before designing or building
+anything.** It's the decision record from the planning conversations: the
+Firebase setup, the data model, encryption, retention, invites, join
+approval, billing, and every open question. When a decision changes or a
+new one is made, update it there in the same change.
+
+## Status
+
+Pre-implementation. The architecture is decided; the app hasn't been
+scaffolded yet. Next steps are in ARCHITECTURE.md's Section 14.
+
+## Project facts
+
+- **Kind of site** (per the SEO rules): a web app. Public pages (landing,
+  help, legal) are indexed; every screen behind identity or holding
+  personal data carries `noindex`. Live URL: not yet chosen.
+- **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
+  first file), `vite-plugin-pwa`.
+- **Backend**: Firebase on the Blaze plan (Auth, Firestore, Realtime
+  Database, Cloud Messaging, Storage, Cloud Functions, App Check). No
+  other server.
+- **Hosting**: Netlify.
+- **Environments**: the Firebase Emulator Suite for development and
+  automated tests, plus two real Firebase projects, live and staging
+  (staging backs Netlify deploy previews).
+- **Client storage**: raw IndexedDB, no wrapper library.
+- **UI**: built in-house, no component library.
+- **Horizontal sizing system**: not yet chosen (per the global CSS rules,
+  discuss with the user before converting any widths).
+
+## Don't forget
+
+- Firebase/Google Analytics stays **off** in every Firebase project.
+- Budget alerts and the automatic billing cutoff are set up the same day
+  Blaze is enabled (ARCHITECTURE.md Section 15).
