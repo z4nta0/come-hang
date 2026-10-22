@@ -7,11 +7,12 @@
  * @summary
  * The app's global stylesheet, holding only what can't belong to one
  * component: the design tokens every module reads (the plastic-ratio core
- * design numbers, the color and font roles, and the scales for type, spacing,
- * rhythm, borders, radii, durations, easing, and text widths), and the base
- * element styles (the 11px root, the box reset, the page's font and colors,
- * tight headings, plain links and buttons, and the focus ring every link and
- * button grows on keyboard focus). The colors and the main font are
+ * design numbers, the color and font roles, the scales for type, spacing,
+ * rhythm, borders, radii, durations, easing, and text widths, and the spacing
+ * tiers every gap, margin, and padding between parts of a page reads), and
+ * the base element styles (the 11px root, the box reset, the page's font and
+ * colors, tight headings, plain links and buttons, and the focus ring every
+ * link and button grows on keyboard focus). The colors and the main font are
  * placeholders until the visual design is chosen, and roles nothing uses yet
  * stay empty. Every component's own styles live in its CSS module.
  *
@@ -311,6 +312,25 @@
 	--tex-wid-bas : calc( var( --cdn-pow-012 ) * 1em ); /* What: Text Width Base ~= 29.207em. Why: Paragraphs read best near 66 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 66 in the sibling sites' fonts, to re-measure once it is; nothing uses it yet. */
 
 	/* #endregion Text Width Tokens */
+
+
+
+	/* #region Tier Tokens */
+
+	--tie-hor-001 : var( --spa-hor-p04 ); /* What: Tier Horizontal 1 ~= 44.876px. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads the p04 horizontal spacing step, the top tier, chosen first. */
+	--tie-hor-002 : var( --spa-hor-p02 ); /* What: Tier Horizontal 2 ~= 25.572px. Why: Sections of one screen sit apart. How: This reads the p02 horizontal spacing step, two rhythm steps below tier 1. */
+	--tie-hor-003 : var( --spa-hor-bas ); /* What: Tier Horizontal 3 ~= 14.572px. Why: Items in a list, and a heading and its content, sit apart. How: This reads the bas horizontal spacing step, two rhythm steps below tier 2. */
+	--tie-hor-004 : var( --spa-hor-m02 ); /* What: Tier Horizontal 4 ~= 8.304px. Why: The parts of one item, such as its title, details, and actions, sit apart. How: This reads the m02 horizontal spacing step, two rhythm steps below tier 3. */
+	--tie-hor-005 : var( --spa-hor-m04 ); /* What: Tier Horizontal 5 ~= 4.732px. Why: The pieces of one part, such as an icon and its label, sit closest. How: This reads the m04 horizontal spacing step, two rhythm steps below tier 4. */
+
+
+	--tie-ver-001 : var( --spa-ver-p04 ); /* What: Tier Vertical 1 ~= 44.876px. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads the p04 vertical spacing step, the top tier, chosen first. */
+	--tie-ver-002 : var( --spa-ver-p02 ); /* What: Tier Vertical 2 ~= 25.572px. Why: Sections of one screen sit apart. How: This reads the p02 vertical spacing step, two rhythm steps below tier 1. */
+	--tie-ver-003 : var( --spa-ver-bas ); /* What: Tier Vertical 3 ~= 14.572px. Why: Items in a list, and a heading and its content, sit apart. How: This reads the bas vertical spacing step, two rhythm steps below tier 2. */
+	--tie-ver-004 : var( --spa-ver-m02 ); /* What: Tier Vertical 4 ~= 8.304px. Why: The parts of one item, such as its title, details, and actions, sit apart. How: This reads the m02 vertical spacing step, two rhythm steps below tier 3. */
+	--tie-ver-005 : var( --spa-ver-m04 ); /* What: Tier Vertical 5 ~= 4.732px. Why: The pieces of one part, such as an icon and its label, sit closest. How: This reads the m04 vertical spacing step, two rhythm steps below tier 4. */
+
+	/* #endregion Tier Tokens */
 
 
 

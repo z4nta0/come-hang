@@ -61,6 +61,18 @@ The suites start their own dev server on port 5198 (sibling projects use
 - **UI**: built in-house, no component library.
 - **Horizontal sizing system**: not yet chosen (per the global CSS rules,
   discuss with the user before converting any widths).
+- **Layout and spacing** (per the global grid-first and spacing tier
+  rules): grid with areas named after each child's class, and five
+  spacing tiers, each two rhythm steps below the one above it, starting
+  from p04 (decided 2026-10-22):
+
+  | Tier | Tokens | Value | Separates |
+  |---|---|---|---|
+  | 1 | `--tie-ver-001` / `--tie-hor-001` | p04, ~44.9px | The page frame: the tab bar or header and a screen's content |
+  | 2 | `--tie-ver-002` / `--tie-hor-002` | p02, ~25.6px | Sections of one screen |
+  | 3 | `--tie-ver-003` / `--tie-hor-003` | bas, ~14.6px | Items in a list; a heading and its content |
+  | 4 | `--tie-ver-004` / `--tie-hor-004` | m02, ~8.3px | The parts of one item (title, details, actions) |
+  | 5 | `--tie-ver-005` / `--tie-hor-005` | m04, ~4.7px | The pieces of one part (an icon and its label, a label and its field) |
 
 ## Don't forget
 

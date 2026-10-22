@@ -5,11 +5,12 @@
  * not-found.module.css = Not Found Page Module
  *
  * @summary
- * Styles for NotFouCom: a section filling the app's main element with its
- * heading, note, and link centered both ways, the note in the muted text
- * color, and the link drawn as a pill button that shifts color and lifts on
- * hover, presses in, and grows its focus ring in. Its transitions are off
- * under reduced motion, while the lift and press still apply at once.
+ * Styles for NotFouCom: a grid section filling the app's main element, its
+ * heading, note, and link stacked in named areas and centered both ways, a
+ * tier 3 space apart, the note in the muted text color, and the link drawn
+ * as a pill button that shifts color and lifts on hover, presses in, and
+ * grows its focus ring in. Its transitions are off under reduced motion,
+ * while the lift and press still apply at once.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -19,48 +20,49 @@
 
 /* #region nofPagSec */
 
-.nofPagSec { /* What: Not-Found Page Section. Why: The page's message should sit in the middle of the screen. How: This grows to fill the app's main element and centers its contents both ways, with room on every side. */
+.nofPagSec { /* What: Not-Found Page Section. Why: The page's message should sit in the middle of the screen. How: This fills the app's main element as a one-column grid, stacks the heading, note, and link in named areas a tier 3 space apart, and centers them both ways, with the frame tier above and below and the gutter at the sides. */
 
 
-	align-items     : center;
-	display         : flex;
-	flex            : 1;
-	flex-direction  : column;
-	gap             : var( --spa-ver-bas );                      /* Spacing Vertical Base ~= 14.572px */
-	justify-content : center;
-	padding         : var( --spa-ver-p05 ) var( --gut-sid-pad ); /* Spacing Vertical Base Plus 5 ~= 59.447px, Gutter Side Padding ~= 19.304px */
-	text-align      : center;
+	align-content       : center;
+	display             : grid;
+	grid-template-areas : 'nofTitHea' 'nofNotPar' 'butBasAnc';
+	justify-items       : center;
+	padding             : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding ~= 19.304px */
+	row-gap             : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
+	text-align          : center;
 
 
 }
 
-.nofTitHea { /* What: Not-Found Title Heading. Why: The heading is the page's biggest text. How: This sets it at Base Plus 5. */
+.nofTitHea { /* What: Not-Found Title Heading. Why: The heading is the page's biggest text. How: This sets it at Base Plus 5, in its own area at the top. */
 
 
 	font-size : var( --fon-siz-p05 ); /* Font Size Base Plus 5 ~= 44.876px */
+	grid-area : nofTitHea;
 
 
 }
 
-.nofNotPar { /* What: Not-Found Note Paragraph. Why: The note is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width. */
+.nofNotPar { /* What: Not-Found Note Paragraph. Why: The note is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area below the heading. */
 
 
 	color     : var( --tex-mut-col ); /* Text Muted Color = #59636e */
+	grid-area : nofNotPar;
 	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
 
 
 }
 
-.butBasAnc { /* What: Button Base Anchor. Why: The way onward should read as the page's one clear action. How: This draws a pill in the main accent with bold text and room above, easing its color, lift, and focus ring. */
+.butBasAnc { /* What: Button Base Anchor. Why: The way onward should read as the page's one clear action. How: This draws a pill in the main accent with bold text, in its own area at the bottom, easing its color, lift, and focus ring. */
 
 
 	background-color : var( --acc-mai-col );                      /* Accent Main Color = #1f5bc4 */
 	border-radius    : 999px;
 	color            : var( --tex-acc-col );                      /* Text Accent Color = #ffffff */
-	display          : inline-flex;
+	display          : inline-grid;
 	font-weight      : 700;
-	margin-top       : var( --spa-ver-p02 );                      /* Spacing Vertical Base Plus 2 ~= 25.572px */
-	padding          : var( --spa-ver-bas ) var( --spa-hor-p03 ); /* Spacing Vertical Base ~= 14.572px, Spacing Horizontal Base Plus 3 ~= 33.876px */
+	grid-area        : butBasAnc;
+	padding          : var( --spa-ver-bas ) var( --spa-hor-p03 ); /* Spacing Vertical Base ~= 14.572px, Spacing Horizontal Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
 	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
 
 

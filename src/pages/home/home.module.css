@@ -5,9 +5,10 @@
  * home.module.css = Home Page Module
  *
  * @summary
- * Styles for HomPagCom's placeholder: a section filling the app's main
- * element with its heading and note centered both ways, the note in the
- * muted text color at a comfortable line length.
+ * Styles for HomPagCom's placeholder: a grid section filling the app's main
+ * element, its heading and note stacked in named areas and centered both
+ * ways, a tier 3 space apart, the note in the muted text color at a
+ * comfortable line length.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -17,33 +18,34 @@
 
 /* #region homPagSec */
 
-.homPagSec { /* What: Home Page Section. Why: The placeholder should sit in the middle of the screen. How: This grows to fill the app's main element and centers its contents both ways, with room on every side. */
+.homPagSec { /* What: Home Page Section. Why: The placeholder should sit in the middle of the screen. How: This fills the app's main element as a one-column grid, stacks the heading and note in named areas a tier 3 space apart, and centers them both ways, with the frame tier above and below and the gutter at the sides. */
 
 
-	align-items     : center;
-	display         : flex;
-	flex            : 1;
-	flex-direction  : column;
-	gap             : var( --spa-ver-bas );                      /* Spacing Vertical Base ~= 14.572px */
-	justify-content : center;
-	padding         : var( --spa-ver-p05 ) var( --gut-sid-pad ); /* Spacing Vertical Base Plus 5 ~= 59.447px, Gutter Side Padding ~= 19.304px */
-	text-align      : center;
+	align-content       : center;
+	display             : grid;
+	grid-template-areas : 'homTitHea' 'homNotPar';
+	justify-items       : center;
+	padding             : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding ~= 19.304px */
+	row-gap             : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
+	text-align          : center;
 
 
 }
 
-.homTitHea { /* What: Home Title Heading. Why: The app's name is the page's biggest text. How: This sets it at Base Plus 5. */
+.homTitHea { /* What: Home Title Heading. Why: The app's name is the page's biggest text. How: This sets it at Base Plus 5, in its own area at the top. */
 
 
 	font-size : var( --fon-siz-p05 ); /* Font Size Base Plus 5 ~= 44.876px */
+	grid-area : homTitHea;
 
 
 }
 
-.homNotPar { /* What: Home Note Paragraph. Why: The note is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width. */
+.homNotPar { /* What: Home Note Paragraph. Why: The note is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area below the heading. */
 
 
 	color     : var( --tex-mut-col ); /* Text Muted Color = #59636e */
+	grid-area : homNotPar;
 	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
 
 

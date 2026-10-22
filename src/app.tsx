@@ -18,8 +18,8 @@ import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scr
  *
  * @summary
  * The app's root component, mounted by main.tsx inside the router: the main
- * landmark holding whichever page the address matches, in a column at least
- * as tall as the screen. It also returns the window to the top after each
+ * landmark holding whichever page the address matches, in a one-cell grid at
+ * least as tall as the screen. It also returns the window to the top after each
  * link-driven navigation. A new page is added as another route here, above
  * the catch-all route that sends every unknown address to the 404 page. The
  * shared navigation joins once the app has pages to move between.
@@ -43,8 +43,9 @@ import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scr
  *
  * @summary
  * The top of the component tree: renders the page the address matches
- * inside the main landmark, which fills a column at least as tall as the
- * screen, so a short page such as the 404 page can center itself in it. It
+ * inside the main landmark, a one-cell grid at least as tall as the screen
+ * that stretches the page to fill it, so a short page such as the 404 page
+ * can center itself in it. It
  * calls useScrTopFun once, so every link-driven navigation opens the new page
  * at its top.
  *
@@ -73,11 +74,10 @@ function AppRooCom () : React.JSX.Element {
 
 		<main
 			style={{
-				display       : 'flex',
-				flexDirection : 'column',
-				minHeight     : '100vh'
+				display   : 'grid',
+				minHeight : '100vh'
 			}}
-		>{ /* What: App Main Element. Why: Each page's content is the main landmark, and it should fill the screen. How: This holds whichever page the address matches and stacks it as a flex column at least as tall as the screen, so a page can stretch to fill it. */ }
+		>{ /* What: App Main Element. Why: Each page's content is the main landmark, and it should fill the screen. How: This holds whichever page the address matches in a one-cell grid at least as tall as the screen, whose single row stretches the page to fill it, so the page needs no named area. */ }
 
 
 			<Routes>{ /* What: Page Routes. Why: Only one page should render for any path. How: This renders the first route below whose path matches. */ }
