@@ -1,0 +1,36 @@
+# What: Editor Files Block. Why: Editor and operating system settings belong to each machine, not the project. How: This ignores their folders and files, plus the Zone.Identifier markers Windows attaches to downloaded files.
+*.njsproj
+*.ntvs*
+*.sln
+*.suo
+*.sw?
+*:Zone.Identifier
+.DS_Store
+.idea
+.vscode/*
+
+
+
+# What: Log Files Block. Why: Logs are local run output, not source. How: This ignores every log file and folder the package managers write.
+*.log
+lerna-debug.log*
+logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+
+# What: Generated And Local Files Block. Why: Build output, dependencies, local secrets, and test reports are recreated or kept per machine. How: This ignores the build output, node_modules, local env files, and the test suites' reports and run output.
+*.env
+*.local
+dist
+dist-ssr
+node_modules
+tests/output
+
+
+
+# What: Re-Include Block. Why: A shared file inside an ignored folder still belongs in the project, and a re-include only works after the pattern it overrides. How: This re-includes .vscode/extensions.json, so the editor's extension recommendations stay shared.
+!.vscode/extensions.json

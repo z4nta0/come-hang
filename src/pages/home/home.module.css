@@ -1,0 +1,54 @@
+
+
+
+/**
+ * home.module.css = Home Page Module
+ *
+ * @summary
+ * Styles for HomPagCom's placeholder: a section filling the app's main
+ * element with its heading and note centered both ways, the note in the
+ * muted text color at a comfortable line length.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region homPagSec */
+
+.homPagSec { /* What: Home Page Section. Why: The placeholder should sit in the middle of the screen. How: This grows to fill the app's main element and centers its contents both ways, with room on every side. */
+
+
+	align-items     : center;
+	display         : flex;
+	flex            : 1;
+	flex-direction  : column;
+	gap             : var( --spa-ver-bas );                      /* Spacing Vertical Base ~= 14.572px */
+	justify-content : center;
+	padding         : var( --spa-ver-p05 ) var( --gut-sid-pad ); /* Spacing Vertical Base Plus 5 ~= 59.447px, Gutter Side Padding ~= 19.304px */
+	text-align      : center;
+
+
+}
+
+.homTitHea { /* What: Home Title Heading. Why: The app's name is the page's biggest text. How: This sets it at Base Plus 5. */
+
+
+	font-size : var( --fon-siz-p05 ); /* Font Size Base Plus 5 ~= 44.876px */
+
+
+}
+
+.homNotPar { /* What: Home Note Paragraph. Why: The note is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #59636e */
+	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+
+/* #endregion homPagSec */
+
+

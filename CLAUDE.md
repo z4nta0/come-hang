@@ -19,8 +19,29 @@ new one is made, update it there in the same change.
 
 ## Status
 
-Pre-implementation. The architecture is decided; the app hasn't been
-scaffolded yet. Next steps are in ARCHITECTURE.md's Section 14.
+Scaffolded: the app shell, a placeholder home page, the 404 page, the
+global stylesheet, and the accessibility and interaction suites. No
+Firebase code yet. Next steps are in ARCHITECTURE.md's Section 14.
+
+**Placeholders to replace in the design pass**: the colors and the main
+font in `src/styles/styles.css` (neutral stand-ins, marked as such), the
+working name "Group Planner", and the text width tokens, which need
+re-measuring once the main font is chosen.
+
+## Commands
+
+```
+npm run dev                  # Vite dev server
+npm run build                # type check, then production build to dist/
+npm run lint                 # ESLint across the repo
+npm run typecheck            # tsc -b
+npm test                     # every suite, in Chromium, Firefox, and WebKit
+npm run test:accessibility   # the pre-commit accessibility scan
+npm run test:interaction     # navigation and interaction feedback
+```
+
+The suites start their own dev server on port 5198 (sibling projects use
+5190 through 5197), so they never touch a dev server already running.
 
 ## Project facts
 
