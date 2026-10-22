@@ -660,6 +660,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 | `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.5. |
 | `wrappedGroupKey` | ciphertext | The group's AES-GCM key, wrapped for this member's public key via ECDH. Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. |
+| `lastActiveAt` | plaintext | Updated at most once a day on app open. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
 
 A subcollection, not a map field on the group doc, specifically so many
 members can update their own entry (or be added) without contending on
@@ -1302,7 +1303,7 @@ paywall is switched on before launch.
 | | Free | Paid |
 |---|---|---|
 | Groups you own | 1 | 10 |
-| Groups you belong to, owned or not | 20 | 20 |
+| Groups you belong to, owned or not | 10 | 20 |
 | Members in a group you own | 20 | 50 |
 
 - **The paywall counts groups you currently own, not groups you've
@@ -1312,6 +1313,11 @@ paywall is switched on before launch.
   is what a spammer or bot would abuse, while joining is already gated by
   approval (Section 17). It counts groups owned *now*, so deleting or
   transferring one frees its slot.
+- **Belonging to more than 10 groups is paid too** (decided 2026-10-22,
+  lowered from 20 for everyone), to give paid users more value. Ten is
+  still far more than most people need, so an invited friend almost never
+  meets the paywall just for being invited; one who does sees why when
+  the join is blocked.
 - **A group's member cap follows its owner's status**: 50 if the owner is
   paid, 20 otherwise. The chat recipient list and ack map (Section 11.7)
   grow with the group, and every joiner needs the key wrapped for them,
@@ -1355,14 +1361,17 @@ paywall is switched on before launch.
   for member counts (kept as a member count on the group doc, updated the
   same way), against the caps.
 
-**Open: an owner who disappears.** If the owner stops using the app
+**Decided (2026-10-22): an owner who disappears.** If the owner stops using the app
 without transferring (a lost phone with no linked sign-in, an
 uninstall), nobody can remove members, rotate the link, or change group
 settings again; chat, events, and approvals keep working, since any
-member can do those. Proposal: once the owner has been inactive for 60
-days, the longest-standing member can claim ownership, and the owner is
-notified if they ever return. That needs a last-active timestamp on each
-membership, a small amount of new plaintext metadata.
+member can do those. So once the owner has been inactive for **30
+days**, the longest-standing member can claim ownership, and the old owner
+is notified if they ever return. The same slot and member-cap rules as a
+transfer apply to the claimant. 30 days is a starting point: events are
+mostly near term, so it may come down later. This adds a plaintext
+`lastActiveAt` timestamp to each membership doc (Section 11.3), updated at
+most once a day when the member opens the app, to keep writes low.
 
 ---
 
