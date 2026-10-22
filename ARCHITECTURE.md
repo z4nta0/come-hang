@@ -491,6 +491,9 @@ in place of their name. The group can manually reassign it if needed.
   single-use.
 - The creator can revoke/regenerate the link at any time, independent of
   any removal action, for cases like the link being over-shared.
+- **Throughout this doc, "creator" means the group's current owner**
+  (`ownerUid`), which starts as the person who created it and can change
+  through an ownership transfer (Section 18).
 - **The creator can remove any individual member at any time**, gated by
   a security rule restricting this action to the group creator. Every
   member can always remove themselves (leave).
@@ -633,7 +636,8 @@ different names.
 
 | Field | Type | Notes |
 |---|---|---|
-| `creatorUid` | plaintext | Used by security rules for creator-only actions (remove member, revoke/rotate link). |
+| `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
+| `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept or the offer is withdrawn (Section 18). |
 | `name` | plaintext | The group's own name. Deliberately not encrypted, see below. |
 | `createdAt` | plaintext | Timestamp. |
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
@@ -753,7 +757,11 @@ plaintext copy of the group name, updated whenever the name changes, and
 |---|---|---|
 | `groupName` | plaintext | Denormalized copy of `/groups/{groupId}.name`, for the invite landing page. |
 
-### 11.7 RTDB: `/chats/{groupId}/messages/{messageId}`
+### 11.7 RTDB: `/chats/{conversationId}/messages/{messageId}`
+
+Keyed by conversation id rather than group id (decided 2026-10-22), so
+private messages (Section 19) can reuse this structure later. For now the
+only kind of conversation is a group's own chat.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -1282,56 +1290,95 @@ self-reported, so approval still rests on the approver's own judgment.
 
 ---
 
-## 18. Paid Multi-Group (Proposed)
+## 18. Paid Multi-Group & Group Ownership
 
-Decided 2026-10-22: belonging to more than one group is a paid feature, a
+Decided 2026-10-22: owning more than one group is a paid feature, a
 one-time $9.99 purchase, to discourage abuse and as a source of income.
 It's built from the start but stays unlocked for everyone until the
 paywall is switched on before launch.
 
-**Proposed, pending review**:
-- **What the paywall counts: groups you created, not groups you joined.**
-  Free users can create one group and join others' groups freely (up to
-  the overall cap below). Reasons: the organizer is the person getting
-  the value, so they're the natural buyer; an invited friend who already
-  uses the app for another group would otherwise hit a paywall just
-  because someone invited them, which hurts the inviting group too; and
-  creating groups is the action a spammer or bot would abuse, while
-  joining is already gated by approval (Section 17).
-- **Caps**: a paid user can create up to 10 groups, and everyone can
-  belong to at most 20 groups in total. A cap is easy to raise later (one
-  number in the rules and the app) but painful to lower once people are
-  over it, so it starts on the conservative side.
-- **A member cap per group** is worth setting too, since each chat
-  message carries a recipient list and an ack map that grow with the
-  group (Section 11.7), and every joiner needs the key wrapped for them.
-  A first guess is 50 members, to revisit.
-- **Buying requires linking Google sign-in** (Section 8). Paid status is
-  tied to the uid, and an anonymous uid can be lost with the device, so a
-  purchase without a recoverable sign-in would be a support problem.
-  ease-my-life reached the same conclusion for its paid accounts.
-- **Payment**: Polar, as in ease-my-life. Its webhook confirms the
-  purchase and writes a permanent paid flag the rules can read; the
-  webhook can be a Cloud Function here, since this project is on Blaze
-  anyway.
+**Limits (decided 2026-10-22)**:
+
+| | Free | Paid |
+|---|---|---|
+| Groups you own | 1 | 10 |
+| Groups you belong to, owned or not | 20 | 20 |
+| Members in a group you own | 20 | 50 |
+
+- **The paywall counts groups you currently own, not groups you've
+  joined.** The owner is the person getting the value, so they're the
+  natural buyer; an invited friend who already uses the app for another
+  group never hits a paywall just for being invited; and creating groups
+  is what a spammer or bot would abuse, while joining is already gated by
+  approval (Section 17). It counts groups owned *now*, so deleting or
+  transferring one frees its slot.
+- **A group's member cap follows its owner's status**: 50 if the owner is
+  paid, 20 otherwise. The chat recipient list and ack map (Section 11.7)
+  grow with the group, and every joiner needs the key wrapped for them,
+  so smaller groups are cheaper too.
+- **Caps start conservative** because raising one later is one number in
+  the rules and the app, while lowering one strands people already over
+  it.
+- **Over a limit never removes anything.** Whenever a group or a user
+  ends up over a cap (a transfer below, a refund), everything already
+  there stays; only adding more is blocked until it's back under.
+
+**Buying (decided 2026-10-22)**:
+- Requires linking Google sign-in (Section 8). Paid status is tied to the
+  uid, and an anonymous uid can be lost with the device, so a purchase
+  without a recoverable sign-in would be a support problem. ease-my-life
+  reached the same conclusion for its paid accounts.
+- Polar takes the payment, as in ease-my-life. Its webhook, a Cloud
+  Function here, writes a permanent paid flag the rules read. A refund
+  clears the flag, and the "over a limit" rule above applies.
+
+**Ownership transfer (decided 2026-10-22)**:
+- **Offer, then accept.** The owner offers ownership to a current member
+  (`pendingOwnerUid`), and it moves only when that member accepts, so
+  nobody is handed a group, and a slot of theirs, without agreeing.
+- **The new owner needs a free slot**: a free user who already owns a
+  group, or a paid user who owns 10, can't accept until they delete or
+  hand off one of their own (or, for a free user, buy). The app explains
+  this rather than just refusing.
+- **The member cap may drop**: transferring a 35-member group from a paid
+  owner to a free one is allowed, since blocking it could strand a group
+  whose owner needs to leave. All 35 stay; new approvals pause until the
+  group is under 20 or the new owner buys, and both people see that
+  before the transfer completes.
+- **An owner can't simply leave.** Leaving requires transferring
+  ownership first or deleting the group, so no group is ever left without
+  an owner by choice.
 - **Enforcement in the rules**: rules can't count documents, so each
-  user's own doc keeps a map of their memberships (and which they
-  created), updated in the same batch as every join, leave, create, and
-  removal. Rules check the batch's resulting map against the caps and the
-  paid flag.
+  user's own doc keeps a map of their memberships and which they own,
+  updated in the same batch as every join, leave, create, removal, and
+  transfer. The rules check the resulting map, plus the owner's paid flag
+  for member counts (kept as a member count on the group doc, updated the
+  same way), against the caps.
+
+**Open: an owner who disappears.** If the owner stops using the app
+without transferring (a lost phone with no linked sign-in, an
+uninstall), nobody can remove members, rotate the link, or change group
+settings again; chat, events, and approvals keep working, since any
+member can do those. Proposal: once the owner has been inactive for 60
+days, the longest-standing member can claim ownership, and the owner is
+notified if they ever return. That needs a last-active timestamp on each
+membership, a small amount of new plaintext metadata.
 
 ---
 
-## 19. Private Messages (Proposed, Post-Launch)
+## 19. Private Messages (Post-Launch)
 
-Proposed 2026-10-22: direct messages between two members of the same
-group. Not a big architectural change, since it reuses chat, and the
-recommendation is to ship it after launch while shaping chat now so it's
-cheap to add:
-- **Prepare now**: key chat by a conversation id rather than the group id
-  (`/chats/{conversationId}`), where a group's own chat is one kind of
+Decided 2026-10-22: direct messages between two members of the same group
+ship **after launch**, but chat is shaped now so adding them is cheap.
+Reasons for waiting: launch has plenty to prove without a second kind of
+conversation, and private messages need blocking and safety controls
+designed properly rather than rushed. It isn't a big architectural change,
+since it reuses chat:
+- **Built now**: chat is keyed by a conversation id rather than the group
+  id (`/chats/{conversationId}`), with a group's own chat as one kind of
   conversation. Everything in Section 11.7 (ack map, cleanup, TTL) then
-  works for a two-person conversation unchanged.
+  works for a two-person conversation unchanged, and adding private
+  messages later needs no change to how group chat is stored.
 - **Encryption needs no new exchange**: each user already publishes an
   ECDH public key (Section 11.1), so two members derive a shared private
   key directly from their own private key and the other's public key.
@@ -1339,8 +1386,8 @@ cheap to add:
 - **Scoped to a group**: a conversation belongs to the group both people
   share, and the rules require both to still be members. Leaving or
   being removed from the group ends it, like every other group access.
-- **Needs before shipping**: a way to block a person or turn off private
-  messages, since this opens a one-to-one channel inside groups that
-  approve members but can't vet every pairing; and a decision on history
-  recovery, since only the other person holds a copy (Section 11.9 would
-  become a request to that one person).
+- **Needed before it ships**: a way to block a person or turn off private
+  messages, since it opens a one-to-one channel that group approval
+  doesn't vet; and a decision on history recovery, since only the other
+  person holds a copy (Section 11.9 would become a request to that one
+  person).
