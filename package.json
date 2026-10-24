@@ -11,6 +11,7 @@
 		"test": "playwright test --config tests/playwright.config.ts",
 		"test:accessibility": "playwright test --config tests/playwright.config.ts --project \"accessibility-*\"",
 		"test:interaction": "playwright test --config tests/playwright.config.ts --project \"interaction-*\"",
+		"test:security": "playwright test --config tests/playwright.config.ts --project \"security-*\"",
 		"typecheck": "tsc -b"
 	},
 	"dependencies": {

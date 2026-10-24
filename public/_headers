@@ -1,0 +1,33 @@
+# _headers = Security Headers Policy
+#
+# @summary
+# Hardening headers applied to every response. For now the app loads nothing
+# but its own self-hosted files and talks to no other origin, so the
+# Content-Security-Policy can be strict rather than needing broad allowances.
+# The Firebase work opens connect-src and the sign-in pages' addresses, and
+# location sharing opens geolocation, each in the change that needs it.
+#
+# default-src 'self' is the fallback every unlisted fetch directive inherits,
+# such as the one for fonts, so those need no lines of their own. The
+# directives listed either need a different value than 'self', are never
+# covered by default-src at all, such as frame-ancestors, or just state the
+# default for clarity, such as script-src. style-src needs no 'unsafe-inline':
+# the build ships no inline styles, and React sets its few dynamic styles
+# through the DOM, which the policy doesn't restrict.
+#
+# Strict-Transport-Security keeps browsers on HTTPS for two years across every
+# subdomain, leaving out preload, which commits the domain to the browsers'
+# built-in HTTPS list and is slow to undo. Referrer-Policy sends a referrer
+# only to this same origin. Permissions-Policy turns off powerful browser
+# features the app doesn't use yet, such as the camera.
+#
+# @author z4nta0 <https://github.com/z4nta0>
+
+# What: Security Headers Rule. Why: Every response should refuse framing, sniffing, plain HTTP, referrer leaks to other sites, unused browser features, and anything loaded from another origin. How: This applies the Content-Security-Policy, the permissions and referrer policies, HSTS, a nosniff content type, and a deny on framing to every path.
+/*
+	Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; object-src 'none'; script-src 'self'; style-src 'self'
+	Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()
+	Referrer-Policy: same-origin
+	Strict-Transport-Security: max-age=63072000; includeSubDomains
+	X-Content-Type-Options: nosniff
+	X-Frame-Options: DENY

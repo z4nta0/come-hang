@@ -20,10 +20,12 @@ import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why
  * nothing about the others. Chromium runs as Chrome's full headless mode
  * rather than Playwright's headless shell. Each suite is a folder under
  * tests/, such as accessibility, which the pre-commit check runs. Playwright
- * starts the Vite dev server on port 5198 for the run and stops it
- * afterwards, so a dev server already running on the usual 5173, or a sibling
- * project's suites on 5190 through 5197, are never touched. Reports and
- * failure screenshots land in tests/output, which git ignores.
+ * starts the Vite dev server on port 5200 for every suite but security, and a
+ * production build served by vite preview on 5201 for the security suite,
+ * and stops both afterwards, so a dev server already running on the usual
+ * 5173, or a sibling project's suites on 5190 through 5199, are never
+ * touched. Reports and failure screenshots land in tests/output, which git
+ * ignores.
  *
  * Sections:
  *  - Constants
@@ -47,19 +49,21 @@ const ENG_NAM_ARR = [ // What: Engine Name Array. Why: Every suite runs in all t
 
 ] as const;
 
-const ROO_DIR_STR = fileURLToPath( new URL( '..', import.meta.url ) ); // What: Root Directory String. Why: The dev server must run from the repo root, where vite.config.ts lives. How: This resolves the folder above tests/.
-const SER_URL_STR = 'http://localhost:5198';                           // What: Server URL String. Why: Every suite opens the app from the same dev server. How: This is the address Playwright waits on and every page's baseURL.
+const PRE_URL_STR = 'http://localhost:5201';                           // What: Preview URL String. Why: The security suite loads the production build, since the dev server injects inline scripts the security policy would block. How: This is the address the preview server answers on and the security suite's baseURL.
+const ROO_DIR_STR = fileURLToPath( new URL( '..', import.meta.url ) ); // What: Root Directory String. Why: Both servers must run from the repo root, where vite.config.ts lives. How: This resolves the folder above tests/.
+const SER_URL_STR = 'http://localhost:5200';                           // What: Server URL String. Why: Every other suite opens the app from the same dev server. How: This is the address Playwright waits on and every other suite's baseURL.
 
 const SUI_NAM_ARR = [ // What: Suite Name Array. Why: Each suite lives in its own folder and runs as its own projects. How: Each entry names a folder under tests/, crossed with each engine into one project apiece.
 
 
 	'accessibility', // What: Accessibility Suite. Why: The pre-commit accessibility scan runs from here. How: This names tests/accessibility.
-	'interaction'    // What: Interaction Suite. Why: How moving between pages and using controls behaves is checked from here. How: This names tests/interaction.
+	'interaction',   // What: Interaction Suite. Why: How moving between pages and using controls behaves is checked from here. How: This names tests/interaction.
+	'security'       // What: Security Suite. Why: The app's security policy, its build, and its dependencies are checked from here. How: This names tests/security.
 
 
 ];
 
-const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playwright reads its whole setup from this file's default export. How: This holds the shared page settings, one project per suite and engine, the reporters, and the dev server.
+const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playwright reads its whole setup from this file's default export. How: This holds the shared page settings, one project per suite and engine, the reporters, and the two servers.
 
 
 	fullyParallel : false,            // What: Fully Parallel. Why: Each spec file walks its states in order. How: This keeps a file's tests running in sequence, while separate files may still run in parallel.
@@ -73,11 +77,12 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 		name      : `${ suiNamStr }-${ engNamStr }`, // What: Name. Why: A failure has to say which suite and engine it came from. How: This names the project after both.
 		testMatch : `${ suiNamStr }/**/*.spec.ts`,   // What: Test Match. Why: Each suite lives in its own folder. How: This runs every spec in the suite's folder under tests/.
 
-		use : { // What: Use. Why: The project has to launch its own engine. How: This sets the browser it runs in, and Chromium's channel.
+		use : { // What: Use. Why: The project has to launch its own engine, and the security suite its own server. How: This sets the browser it runs in, which build of it, and the server its pages open from.
 
 
-			browserName : engNamStr,                                        // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
-			channel     : engNamStr === 'chromium' ? 'chromium' : undefined // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
+			baseURL     : suiNamStr === 'security' ? PRE_URL_STR : SER_URL_STR, // What: Base URL. Why: The security suite checks the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
+			browserName : engNamStr,                                            // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
+			channel     : engNamStr === 'chromium' ? 'chromium' : undefined     // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
 
 
 		}
@@ -94,10 +99,9 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 
 	],
 
-	use : { // What: Use. Why: Every suite shares the same page setup. How: This sets the base URL, locale, and failure artifacts.
+	use : { // What: Use. Why: Every suite shares the same page setup. How: This sets the locale and failure artifacts, while each project sets its own base URL.
 
 
-		baseURL    : SER_URL_STR,        // What: Base URL. Why: Specs navigate with short paths. How: This points every page.goto at the dev server.
 		locale     : 'en-US',            // What: Locale. Why: The app is written in US English. How: This runs every page in it.
 		screenshot : 'only-on-failure',  // What: Screenshot. Why: A failing check is easier to diagnose from what was on screen. How: This saves a screenshot only when a test fails.
 		trace      : 'retain-on-failure' // What: Trace. Why: A failure can be stepped through afterwards. How: This keeps the Playwright trace only for failing tests.
@@ -105,17 +109,35 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 
 	},
 
-	webServer : { // What: Web Server. Why: The suites need the app running, without touching any dev server already open. How: This starts Vite on its own strict port from the repo root and stops it when the run ends.
+	webServer : [ // What: Web Server. Why: The suites need the app running, without touching any dev server already open. How: This starts the dev server and the production preview, each on its own strict port from the repo root, and stops both when the run ends.
 
 
-		command             : 'npx vite --port 5198 --strictPort', // What: Command. Why: A strict port fails loudly instead of drifting onto another server's port. How: This starts the Vite dev server on 5198.
-		cwd                 : ROO_DIR_STR,                         // What: Current Working Directory. Why: Vite reads its config from the repo root. How: This starts the command there.
-		reuseExistingServer : false,                               // What: Reuse Existing Server. Why: A leftover server could be running other code. How: This always starts a fresh one.
-		timeout             : 60000,                               // What: Timeout. Why: The first start can take a while on a cold cache. How: This waits up to a minute for the server to answer.
-		url                 : SER_URL_STR                          // What: URL. Why: Playwright starts the tests only once the app answers. How: This is the address it polls.
+		{ // What: Dev Server. Why: Every suite but the security suite checks the app as it's developed. How: This starts the Vite dev server on 5200.
 
 
-	}
+			command             : 'npx vite --port 5200 --strictPort', // What: Command. Why: A strict port fails loudly instead of drifting onto another server's port. How: This starts the Vite dev server on 5200.
+			cwd                 : ROO_DIR_STR,                         // What: Current Working Directory. Why: Vite reads its config from the repo root. How: This starts the command there.
+			reuseExistingServer : false,                               // What: Reuse Existing Server. Why: A leftover server could be running other code. How: This always starts a fresh one.
+			timeout             : 60000,                               // What: Timeout. Why: The first start can take a while on a cold cache. How: This waits up to a minute for the server to answer.
+			url                 : SER_URL_STR                          // What: URL. Why: Playwright starts the tests only once the app answers. How: This is the address it polls.
+
+
+		},
+
+		{ // What: Preview Server. Why: The security suite checks what ships, and the dev server's inline scripts would break a strict policy. How: This builds the app and serves the build on 5201.
+
+
+			command             : 'npm run build && npx vite preview --port 5201 --strictPort', // What: Command. Why: The preview serves only a fresh build, and a strict port fails loudly. How: This type checks and builds the app, then serves dist/ on 5201.
+			cwd                 : ROO_DIR_STR,                                                  // What: Current Working Directory. Why: The build and Vite read their config from the repo root. How: This starts the command there.
+			reuseExistingServer : false,                                                        // What: Reuse Existing Server. Why: A leftover server could be serving an older build. How: This always starts a fresh one.
+			timeout             : 120000,                                                       // What: Timeout. Why: The type check and build run before the server starts. How: This waits up to two minutes for it to answer.
+			url                 : PRE_URL_STR                                                   // What: URL. Why: Playwright starts the tests only once the build is served. How: This is the address it polls.
+
+
+		}
+
+
+	]
 
 
 });

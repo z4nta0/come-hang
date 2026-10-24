@@ -38,10 +38,12 @@ npm run typecheck            # tsc -b
 npm test                     # every suite, in Chromium, Firefox, and WebKit
 npm run test:accessibility   # the pre-commit accessibility scan
 npm run test:interaction     # navigation and interaction feedback
+npm run test:security        # headers policy, build secrets, npm audit
 ```
 
-The suites start their own dev server on port 5198 (sibling projects use
-5190 through 5197), so they never touch a dev server already running.
+The suites start their own dev server on port 5200, and the security suite
+a production build served by `vite preview` on 5201 (sibling projects use
+5190 through 5199), so they never touch a dev server already running.
 
 ## Project facts
 
@@ -61,6 +63,13 @@ The suites start their own dev server on port 5198 (sibling projects use
   automated tests, plus two real Firebase projects, live and staging
   (staging backs Netlify deploy previews).
 - **Client storage**: raw IndexedDB, no wrapper library.
+- **Security suite** (per the security testing rule): the baseline lives in
+  `tests/security/`, checking `public/_headers` and the production build. The
+  policy is strict while the app talks to no other origin: the Firebase work
+  adds its addresses to the Content-Security-Policy and turns the secret
+  search's Google key pattern into an allowance for the Firebase web config's
+  browser key (named here when it lands), and location sharing opens
+  `geolocation` in the Permissions-Policy, each in the change that needs it.
 - **UI**: built in-house, no component library.
 - **Horizontal sizing system**: not yet chosen (per the global CSS rules,
   discuss with the user before converting any widths).
