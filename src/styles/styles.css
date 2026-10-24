@@ -142,13 +142,13 @@
 
 	/* CTRL+ALT+C to toggle color swatches on and off *Requires Extension Toggle by Peng Lv */
 
-	--acc-mai-col : #1f5bc4;              /* What: Accent Main Color = #1f5bc4. Why: The main actions need one color that stands out; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button fills with it, and the focus ring reads it. */
+	--acc-mai-col : #1f5bc4;              /* What: Accent Main Color. Why: The main actions need one color that stands out; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button fills with it, and the focus ring reads it. */
 	--acc-sec-col : ;                     /* What: Accent Secondary Color. Why: The standard role set includes a second accent. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--acc-tin-col : ;                     /* What: Accent Tint Color. Why: The standard role set includes a pale tint of the main accent. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--att-rin-col : ;                     /* What: Attention Ring Color. Why: The standard role set includes an attention ring. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--bac-hov-col : ;                     /* What: Background Hover Color. Why: The standard role set includes a hover overlay. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--bac-inv-col : ;                     /* What: Background Inverse Color. Why: The standard role set includes a dark surface. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--bac-pag-col : #ffffff;              /* What: Background Page Color = #ffffff. Why: Every page needs one background; this is a neutral placeholder until the visual design is chosen. How: The body reads it. */
+	--bac-pag-col : #ffffff;              /* What: Background Page Color. Why: Every page needs one background; this is a neutral placeholder until the visual design is chosen. How: The body reads it. */
 	--bac-sur-col : ;                     /* What: Background Surface Color. Why: The standard role set includes a card and panel surface. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--bor-mai-col : ;                     /* What: Border Main Color. Why: The standard role set includes borders and dividers. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--err-dar-col : ;                     /* What: Error Dark Color. Why: The standard role set includes the error family. How: Nothing uses it yet, so it stays empty until the design pass. */
@@ -160,9 +160,9 @@
 	--suc-dar-col : ;                     /* What: Success Dark Color. Why: The standard role set includes the success family. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--suc-mai-col : ;                     /* What: Success Main Color. Why: The standard role set includes the success family. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--suc-tin-col : ;                     /* What: Success Tint Color. Why: The standard role set includes the success family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--tex-acc-col : #ffffff;              /* What: Text Accent Color = #ffffff. Why: Text on the main accent has to reach 4.5:1, which white does at about 6.3:1; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button text reads it. */
-	--tex-mai-col : #1f2328;              /* What: Text Main Color = #1f2328. Why: Body text needs strong contrast on the page; this is a neutral placeholder until the visual design is chosen. How: The body and headings read it. */
-	--tex-mut-col : #59636e;              /* What: Text Muted Color = #59636e. Why: Quieter text still has to reach 4.5:1 on the page, which this does at about 6.1:1; this is a neutral placeholder until the visual design is chosen. How: The home and 404 pages' notes read it. */
+	--tex-acc-col : #ffffff;              /* What: Text Accent Color. Why: Text on the main accent has to reach 4.5:1, which white does at about 6.3:1; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button text reads it. */
+	--tex-mai-col : #1f2328;              /* What: Text Main Color. Why: Body text needs strong contrast on the page; this is a neutral placeholder until the visual design is chosen. How: The body and headings read it. */
+	--tex-mut-col : #59636e;              /* What: Text Muted Color. Why: Quieter text still has to reach 4.5:1 on the page, which this does at about 6.1:1; this is a neutral placeholder until the visual design is chosen. How: The home and 404 pages' notes read it. */
 	--tex-sec-col : ;                     /* What: Text Secondary Color. Why: The standard role set includes secondary text. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--war-dar-col : ;                     /* What: Warning Dark Color. Why: The standard role set includes the warning family. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--war-mai-col : ;                     /* What: Warning Main Color. Why: The standard role set includes the warning family. How: Nothing uses it yet, so it stays empty until the design pass. */
@@ -213,7 +213,7 @@
 	--mot-bou-eas : cubic-bezier( .34, 1.56, .5, 1 ); /* What: Motion Bounce Easing. Why: A rare celebration can spring past its mark. How: Nothing uses it yet. */
 	--mot-dec-eas : cubic-bezier( .2, .7, .3, 1 );    /* What: Motion Decelerate Easing. Why: Things arriving should slow as they land. How: The focus ring growing in reads it. */
 	--mot-ove-eas : cubic-bezier( .34, 1.2, .5, 1 );  /* What: Motion Overshoot Easing. Why: A touch of flair can overshoot gently. How: Nothing uses it yet. */
-	--mot-sta-eas : ease;                             /* What: Motion Standard Easing = ease. Why: Most motion uses the browser's standard ease. How: The 404 page's button hover reads it. */
+	--mot-sta-eas : ease;                             /* What: Motion Standard Easing. Why: Most motion uses the browser's standard ease. How: The 404 page's button hover reads it. */
 
 	/* #endregion Easing Tokens */
 
