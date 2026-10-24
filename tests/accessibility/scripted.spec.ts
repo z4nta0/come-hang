@@ -20,15 +20,10 @@ import type { Page } from '@playwright/test'; // What: Page. Why: Every helper d
  *
  * @summary
  * The accessibility checks axe-core can't make, run on every page state in
- * whichever engine the project runs. Names: every link and button in the
- * accessibility tree has a name, and no name carries a decorative glyph such
- * as an arrow or an emoji. Keyboard: a Tab walk from the top of the page
- * reaches its end without getting trapped, never moves backwards through the
- * document, and lands only on stops that are on screen, not covered by
- * anything else, and visibly changed by focus. Reflow: at 320px wide, WCAG's
- * narrowest reflow width, nothing scrolls sideways. Motion: with reduced
- * motion requested, no animation or transition plays while the state opens.
- * Each failure lists every problem found, by element.
+ * whichever engine the project runs. They cover how controls are named, how a
+ * keyboard walks the page, whether it reflows at WCAG's narrowest width, and
+ * whether it stays still when reduced motion is requested. Each failure lists
+ * every problem found, by element.
  *
  * Sections:
  *  - Constants
@@ -43,7 +38,7 @@ import type { Page } from '@playwright/test'; // What: Page. Why: Every helper d
 
 // #region Constants
 
-const GLY_DEC_REG = /[←↑→↓·•]|\p{Extended_Pictographic}/u; // What: Glyph Decorative Regular Expression. Why: A decorative glyph inside a name is read aloud as noise, such as right arrow or paw prints. How: This matches the arrows and dots a decorative glyph would add to a name, plus any emoji or pictograph.
+const GLY_DEC_REG = /[←↑→↓·•]|\p{Extended_Pictographic}/u; // What: Glyph Decorative Regular Expression. Why: A decorative glyph inside a name is read aloud as noise, such as a right arrow. How: This matches the arrows and dots a decorative glyph would add to a name, plus any emoji or pictograph.
 const REF_WID_NUM = 320;                                   // What: Reflow Width Number. Why: WCAG's reflow criterion asks for no sideways scrolling at 320 CSS pixels, the width of 1,280px at 400% zoom. How: This is the viewport width the reflow check opens each state at.
 const TAB_MAX_NUM = 80;                                    // What: Tab Maximum Number. Why: A keyboard trap would otherwise keep the walk going forever. How: This caps the walk at far more Tab presses than the app has stops.
 
@@ -69,7 +64,7 @@ const TAB_MAX_NUM = 80;                                    // What: Tab Maximum 
  *
  * @param curPagObj - Current Page Object: The page to read.
  *
- * @returns Every naming problem found.
+ * @returns A promise that resolves with every naming problem found.
  * @see {@link proLisArr}
  *
  * @example
@@ -333,7 +328,7 @@ function stoInfFun () : StoInfTyp | null {
  * @param curPagObj - Current Page Object: The page to walk.
  * @param engNamStr - Engine Name String: The browser the project runs in.
  *
- * @returns Every keyboard problem found.
+ * @returns A promise that resolves with every keyboard problem found.
  * @see {@link proLisArr}
  *
  * @example
@@ -464,7 +459,7 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every ch
 
 		await curPagObj.emulateMedia( { reducedMotion : 'reduce' } ); // What: Reduced Motion Emulation. Why: The preference has to be set before the page loads. How: This makes the page match prefers-reduced-motion: reduce.
 
-		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: Entrance animations and the state's own action are the motion being checked. How: This loads the state and runs its action.
+		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: Entrance animations are the motion being checked. How: This loads the state and waits for it to settle.
 
 
 		expect( await curPagObj.evaluate( () => document.getAnimations().filter( ( aniCurObj ) => ( Number( aniCurObj.effect?.getTiming().duration ) || 0 ) > 1 ).map( ( aniCurObj ) => ( aniCurObj as CSSAnimation ).animationName || ( aniCurObj as CSSTransition ).transitionProperty || 'script animation' ) ) ).toEqual( [] ); // What: No Motion Assertion. Why: The state passes only when nothing animated as it opened. How: This lists every animation or transition the page still holds that lasts longer than 1ms, which should be none. // What: Type Assertion Note. Why: getAnimations returns plain Animation objects, which don't type their CSS names. How: Each one is read as a CSS animation, then a CSS transition, falling back to a generic label when neither name exists.

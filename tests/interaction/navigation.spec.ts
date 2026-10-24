@@ -16,12 +16,9 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
  * navigation.spec.ts = Navigation Spec
  *
  * @summary
- * Checks how the app behaves when someone moves through it, in whichever
- * engine the project runs. An unknown address lands on the 404 page, which
- * names itself in the tab and asks search engines not to index it; its link
- * returns to the home page, opening at the top, with the 404 page's robots
- * tag gone. The 404 page's button eases its hover, press, and focus looks,
- * and under reduced motion its hover lift still applies, only instantly.
+ * Checks how the app behaves when someone moves through it and uses its
+ * controls, in whichever engine the project runs, such as an unknown address
+ * landing on the 404 page and its link returning home.
  *
  * Sections:
  *  - Constants
