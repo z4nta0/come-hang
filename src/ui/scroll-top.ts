@@ -100,7 +100,7 @@ function useScrTopFun () : void {
 
 // #region Exports
 
-export { useScrTopFun }; // What: Named Exports. Why: app.tsx is the sole consumer, calling the hook once from the app root. How: This exports useScrTopFun.
+export { useScrTopFun }; // What: Named Export. Why: app.tsx is the sole consumer, calling the hook once from the app root. How: This exports useScrTopFun.
 
 // #endregion Exports
 
