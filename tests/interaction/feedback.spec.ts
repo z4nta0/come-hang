@@ -369,18 +369,19 @@ const valSigFun = ( snaRecArr : SnaRecTyp[] ) : string => JSON.stringify( snaRec
  *
  * @summary
  * Probes every reachable control and returns a problem for each one that gives
- * no feedback. Each control is scrolled into view, and one that still waits
- * above the screen until it's focused, such as the skip link, is focused so it
- * slides in, then blurred again once it's probed. Each is read at rest with
- * the pointer away, read again while hovered, and again while the mouse button
- * is held on it, every look read once its transition has settled. A control
- * that looks the same at rest and hovered, or hovered and pressed, is a
- * problem. Normally every property that changes on hover or press, on the
- * control or anything inside it, has to be eased by a transition ({@link
- * snaProFun}), and its transition list must include the focus ring's
- * outline-width, so the ring eases in; under reduced motion every one of its
- * transition durations must be zero instead. The caller blocks real clicks
- * first, so releasing the mouse does nothing.
+ * no feedback, or a single problem when it finds no control at all. Each
+ * control is scrolled into view, and one that still waits above the screen
+ * until it's focused, such as the skip link, is focused so it slides in, then
+ * blurred again once it's probed. Each is read at rest with the pointer away,
+ * read again while hovered, and again while the mouse button is held on it,
+ * every look read once its transition has settled. A control that looks the
+ * same at rest and hovered, or hovered and pressed, is a problem. Normally
+ * every property that changes on hover or press, on the control or anything
+ * inside it, has to be eased by a transition ({@link snaProFun}), and its
+ * transition list must include the focus ring's outline-width, so the ring
+ * eases in; under reduced motion every one of its transition durations must be
+ * zero instead. The caller blocks real clicks first, so releasing the mouse
+ * does nothing.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -406,8 +407,14 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 	const proLisArr : string[] = []; // What: Problem List Array. Why: Every problem should be reported, not just the first. How: This collects them.
 
+	const conHanArr = await conLisFun( curPagObj, conSelStr ); // What: Control Handle Array. Why: Every reachable control the selector matches is probed. How: This collects their handles.
 
-	for ( const conCurObj of await conLisFun( curPagObj, conSelStr ) ) { // What: Control Probe Loop. Why: Every reachable control has to respond. How: This reads each one the selector matches at rest, hovered, and pressed.
+
+	if ( !conHanArr.length ) proLisArr.push( 'no control to probe' ); // What: Empty Probe Check. Why: A probe that finds nothing would pass without checking anything, and every page has at least its skip link. How: This records a problem when no control is found.
+
+
+
+	for ( const conCurObj of conHanArr ) { // What: Control Probe Loop. Why: Every reachable control has to respond. How: This reads each one the selector matches at rest, hovered, and pressed.
 
 
 		const conDesStr = await conCurObj.evaluate( ( conCurEle ) => `${ conCurEle.tagName.toLowerCase() } "${ ( conCurEle.getAttribute( 'aria-label' ) || conCurEle.textContent || '' ).trim().slice( 0, 30 ) }"` ); // What: Control Description String. Why: A problem should name the control a person would recognize. How: This joins its tag with its label or text.

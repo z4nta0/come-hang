@@ -64,21 +64,24 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The reset only proves something if the page starts scrolled down. How: This jumps to the page's bottom, past any smooth scroll-behavior.
 
+	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
+
 	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without the reset. How: This checks the page sits below its top.
 
 	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: This is the navigation being checked. How: Playwright clicks the link, already in view at the page's bottom.
 
-	await expect( curPagObj ).toHaveURL( '/' );                                                // What: Address Assertion. Why: The link leads to the home page. How: This reads the address.
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Home Heading Assertion. Why: The home page should be what's showing. How: This reads its one h1.
-	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveCount( 0 );               // What: Robots Removed Assertion. Why: The home page must not keep the 404 page's noindex. How: This checks the tag left with the page.
-	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );                      // What: Top Assertion. Why: A new page should open at its top at once, not glide there under the stylesheet's smooth scroll-behavior. How: This reads the scroll position once, as soon as the home page shows, which a smooth scroll still under way would fail.
+	await expect( curPagObj ).toHaveURL( '/' );                                                                                  // What: Address Assertion. Why: The link leads to the home page. How: This reads the address.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' );                                   // What: Home Heading Assertion. Why: The home page should be what's showing. How: This reads its one h1.
+	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveCount( 0 );                                                 // What: Robots Removed Assertion. Why: The home page must not keep the 404 page's noindex. How: This checks the tag left with the page.
+	expect( await curPagObj.evaluate( () => document.documentElement.scrollHeight - window.innerHeight ) ).toBeGreaterThan( 0 ); // What: Scrollable Home Assertion. Why: A home page that couldn't scroll would clamp any leftover position to 0, letting the check pass without the reset. How: This checks the home page's scroll range is above zero.
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );                                                        // What: Top Assertion. Why: A new page should open at its top at once, not glide there under the stylesheet's smooth scroll-behavior. How: This reads the scroll position once, as soon as the home page shows, which a smooth scroll still under way would fail.
 
 
 } );
 
 
 
-test( 'back from the home page returns the 404 page to where it was left', async ( { page : curPagObj } ) => { // What: Back Position Test. Why: Back and forward are left to the browser, which should return the visitor to where they were. How: This scrolls the 404 page down, follows its link home, goes back, and checks the 404 page is scrolled down again.
+test( 'back from the home page returns the 404 page to where it was left', async ( { page : curPagObj } ) => { // What: Back Position Test. Why: Back and forward should return the visitor to where they were, which the scroll hook restores itself. How: This scrolls the 404 page down, follows its link home, checks the home page can't scroll that far, goes back, and checks the 404 page returns to the exact position.
 
 
 	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole 404 page.
@@ -97,10 +100,8 @@ test( 'back from the home page returns the 404 page to where it was left', async
 
 	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: The visitor leaves for the home page. How: This clicks the 404 page's link.
 
-	await expect( curPagObj ).toHaveURL( '/' ); // What: Home Address Assertion. Why: Back has to start from the home page. How: This waits for the address to change.
-
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Home Heading Assertion. Why: The address changes before the home page has rendered, so its height is read once it shows. How: This waits for the home page's heading.
-
+	await expect( curPagObj ).toHaveURL( '/' );                                                                                       // What: Home Address Assertion. Why: Back has to start from the home page. How: This waits for the address to change.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' );                                        // What: Home Heading Assertion. Why: The address changes before the home page has rendered, so its height is read once it shows. How: This waits for the home page's heading.
 	expect( await curPagObj.evaluate( () => document.documentElement.scrollHeight - window.innerHeight ) ).toBeLessThan( leaScrNum ); // What: Shorter Page Assertion. Why: Back only proves the hook's own restoring when the page in between can't scroll as far as the page being returned to, the case Firefox cut short. How: This checks the home page's scroll range falls short of the leaving position.
 
 	await curPagObj.goBack(); // What: Back Navigation Call. Why: This is the navigation being checked. How: This presses the browser's back.
@@ -139,7 +140,7 @@ test( 'a reload returns the 404 page to where it was left', async ( { page : cur
 
 
 
-test( 'a fresh load of an address opens at its top, not where an earlier visit left it', async ( { page : curPagObj } ) => { // What: Fresh Load Test. Why: A new visit in the same tab reuses the first entry's default key, and shouldn't open where the last visit was left. How: This scrolls the 404 page down, loads its address afresh, and checks it opens at the top.
+test( 'a fresh load of an address opens at its top, not where an earlier visit left it', async ( { page : curPagObj } ) => { // What: Fresh Load Test. Why: A new visit in the same tab reuses the first entry's default key, and shouldn't open where the last visit was left. How: This scrolls the 404 page down, loads its address afresh, and checks it opens at the top, then still does after a reload.
 
 
 	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a leftover position to mean anything. How: This makes the screen too short to show the whole 404 page.
@@ -155,8 +156,12 @@ test( 'a fresh load of an address opens at its top, not where an earlier visit l
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Fresh Load Call. Why: This is the navigation being checked. How: This loads the same address again as a new navigation, not a reload.
 
 	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Page Not Found' ); // What: Heading Assertion. Why: The position is read once the page has rendered and the hook has run. How: This waits for the 404 heading.
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );                           // What: Top Assertion. Why: A new visit should open at the top. How: This reads the scroll position once the page shows.
 
-	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 ); // What: Top Assertion. Why: A new visit should open at the top. How: This reads the scroll position once the page shows.
+	await curPagObj.reload(); // What: Page Reload Call. Why: The fresh load has to forget the old position in storage too, or a reload before any scroll would bring it back. How: This reloads the page without scrolling it.
+
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Page Not Found' ); // What: Reloaded Heading Assertion. Why: The position is read once the reloaded page has rendered. How: This waits for the 404 heading.
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );                           // What: Reloaded Top Assertion. Why: The reload should restore the fresh visit's top, not the earlier visit's position. How: This reads the scroll position once the page shows.
 
 
 } );
@@ -167,7 +172,6 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 
 
 	const errLisArr : string[] = []; // What: Error List Array. Why: An uncaught error in the page would mean the hook choked on the stored value. How: This collects every one the page raises.
-
 
 
 	curPagObj.on( 'pageerror', ( errCurObj ) => errLisArr.push( errCurObj.message ) ); // What: Page Error Listener. Why: Errors thrown in the page don't fail the test by themselves. How: This records each one's message.

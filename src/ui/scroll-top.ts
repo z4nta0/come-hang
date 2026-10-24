@@ -31,6 +31,7 @@ import { useNavigationType } from 'react-router'; // What: Use Navigation Type. 
  * Sections:
  *  - Constants
  *  - Module State
+ *  - Helpers
  *  - Hooks
  *  - Module Init
  *  - Exports
@@ -88,10 +89,49 @@ catch { scrPosMap.clear(); } // What: Unreadable Positions Fallback. Why: Storag
 
 const navEntObj = performance.getEntriesByType( 'navigation' )[ 0 ] as PerformanceNavigationTiming | undefined; // What: Navigation Entry Object. Why: A reload or a return through history should restore the first entry's position, but a fresh load of an address in the same tab starts a new visit under the same default key. How: This reads how the page was loaded. // What: Type Assertion Note. Why: getEntriesByType types its entries as the general PerformanceEntry. How: The navigation type only ever lists a PerformanceNavigationTiming, or nothing in an old engine.
 
-
-if ( navEntObj?.type === 'navigate' ) scrPosMap.delete( 'default' ); // What: Fresh Load Guard. Why: A new visit shouldn't open where an earlier one was left. How: This forgets the default key's position when the page was loaded fresh.
-
 // #endregion Module State
+
+
+
+// #region Helpers
+
+// #region savPosFun
+
+/**
+ * savPosFun = Save Positions Function
+ *
+ * @summary
+ * Writes the recorded positions to session storage as a JSON list of key and
+ * position pairs, oldest first, so a reload can read them back. A write that
+ * fails, because storage is full or blocked, is logged and otherwise
+ * ignored, since back and forward still restore from memory.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * savPosFun() // => void
+ * ```
+ *
+*/
+
+function savPosFun () : void {
+
+
+	try { sessionStorage.setItem( POS_STO_STR, JSON.stringify( [ ...scrPosMap ] ) ); } // What: Positions Write Attempt. Why: The positions only survive a reload in storage. How: This saves them as a JSON list of key and position pairs, oldest first.
+
+	catch ( errCatObj ) { console.warn( errCatObj ); } // What: Positions Write Failure. Why: Storage can be full or blocked, and the failure should stay visible to anyone debugging. How: This logs it, and back and forward still restore from memory.
+
+
+}
+
+// #endregion savPosFun
+
+// #endregion Helpers
 
 
 
@@ -110,11 +150,10 @@ if ( navEntObj?.type === 'navigate' ) scrPosMap.delete( 'default' ); // What: Fr
  * stylesheet's scroll-behavior. Back, forward, and a reload (a POP) return to
  * the position recorded for that history entry, after its page has rendered,
  * or are handled like any other navigation when none was recorded, such as on
- * a first visit. The jumps to
- * the top and to a recorded position are instant whatever the stylesheet's
- * scroll-behavior says, since a smooth scroll down a whole page reads as
- * motion rather than as arriving on a new page. Call it once, in a
- * component inside the router that stays mounted across routes.
+ * a first visit. The jumps to the top and to a recorded position are instant
+ * whatever the stylesheet's scroll-behavior says, since a smooth scroll down
+ * a whole page reads as motion rather than as arriving on a new page. Call it
+ * once, in a component inside the router that stays mounted across routes.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -183,6 +222,18 @@ function useScrTopFun () : void {
 
 // #region Module Init
 
+if ( navEntObj?.type === 'navigate' ) { // What: Fresh Load Guard. Why: A new visit shouldn't open where an earlier one was left, even after a reload before any scroll. How: When the page was loaded fresh, this forgets the default key's position in memory and in storage.
+
+
+	scrPosMap.delete( 'default' ); // What: Default Position Removal Call. Why: The fresh load reuses the default key. How: This drops its old position from the map.
+
+	savPosFun(); // What: Positions Save Call. Why: A reload before any scroll reads storage, which still holds the old position. How: This writes the record without it.
+
+
+}
+
+
+
 history.scrollRestoration = 'manual'; // What: Manual Scroll Restoration Assignment. Why: Firefox would otherwise restore a position while the page being left is still drawn, cutting it short, before the hook's own restore runs. How: This stops the browser restoring positions on its own.
 
 
@@ -198,9 +249,7 @@ window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Wh
 
 
 
-	try { sessionStorage.setItem( POS_STO_STR, JSON.stringify( [ ...scrPosMap ] ) ); } // What: Positions Write Attempt. Why: The positions only survive a reload in storage. How: This saves them as a JSON list of key and position pairs, oldest first.
-
-	catch ( errCatObj ) { console.warn( errCatObj ); } // What: Positions Write Failure. Why: Storage can be full or blocked, and the failure should stay visible to anyone debugging. How: This logs it, and back and forward still restore from memory.
+	savPosFun(); // What: Positions Save Call. Why: The positions only survive a reload in storage. How: This writes the whole record.
 
 
 } );
