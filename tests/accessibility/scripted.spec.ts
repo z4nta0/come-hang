@@ -47,6 +47,123 @@ const TAB_MAX_NUM = 80;                                    // What: Tab Maximum 
 
 // #region Helpers
 
+// #region motRecFun
+
+/**
+ * motRecFun = Motion Recorder Function
+ *
+ * @summary
+ * Runs inside the page from before it loads, as an init script, and records
+ * every animation or transition longer than 1ms that plays, so a motion that
+ * starts and finishes before the check reads the page still fails it. Each
+ * frame it sweeps document.getAnimations(), which holds whatever is playing at
+ * that moment. It also listens on the document for animationstart,
+ * transitionrun, and transitionstart, in the capture phase so nothing on the
+ * page can stop it hearing one, which catches a motion that starts and ends
+ * between two frames. An event carries no duration, so the listener reads the
+ * one the target's computed style gives that animation's name or that
+ * transition's property. Each motion is labelled by its animation name or
+ * transition property and the element it ran on, by its tag, its classes, and
+ * any pseudo-element, and kept once however often it's seen. The 1ms floor
+ * skips the .01ms reduced-motion exits the page waits on. The sweep is kept on
+ * the window as __motPolFun, which runs one last sweep and returns every
+ * label, so the check also catches anything still playing when it reads.
+ * Passed to Playwright's addInitScript, so it can't read anything from this
+ * file.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * page.addInitScript(motRecFun) // => void
+ * ```
+ *
+*/
+
+function motRecFun () : void {
+
+
+	const motLabSet = new Set< string >(); // What: Motion Label Set. Why: Each motion that plays has to be kept until the check reads it, once however many frames it spans. How: This collects one label per motion, dropping repeats.
+
+
+	const durMilFun = ( durCurStr : string ) : number => parseFloat( durCurStr ) * ( durCurStr.trim().endsWith( 'ms' ) ? 1 : 1000 ); // What: Duration Milliseconds Function. Why: Computed durations come in seconds or milliseconds. How: This converts one to milliseconds.
+	const eleDesFun = ( tarEleObj : Element | null, pseEleStr : string | null ) : string => `${ tarEleObj ? tarEleObj.tagName.toLowerCase() : 'no element' }${ Array.from( tarEleObj?.classList || [] ).map( ( claNamStr ) => `.${ claNamStr }` ).join( '' ) }${ pseEleStr || '' }`; // What: Element Description Function. Why: A failure should say what moved. How: This joins the element's tag, each of its classes, and the pseudo-element the motion ran on, if any.
+
+
+
+	const polAniFun = () : string[] => { // What: Poll Animation Function. Why: A motion that lasts across frames shows up in getAnimations while it plays. How: This labels every animation or transition the page holds that lasts longer than 1ms, and returns every label recorded so far.
+
+
+		for ( const aniCurObj of document.getAnimations() ) { // What: Animation Loop. Why: Each motion is judged on its own. How: This reads each one's effect, duration, and name.
+
+
+			const aniEffObj = aniCurObj.effect as KeyframeEffect | null; // What: Animation Effect Object. Why: The duration and the element moving live on the effect. How: This reads it. // What: Type Assertion Note. Why: effect types as AnimationEffect, which has no target. How: Every CSS animation and transition runs a keyframe effect.
+
+
+			if ( !aniEffObj || !( Number( aniEffObj.getTiming().duration ) > 1 ) ) continue; // What: Short Motion Guard. Why: Only motion longer than 1ms counts, which leaves out the .01ms reduced-motion exits. How: This skips an animation with no effect, or whose duration is 1ms or less, or auto.
+
+
+
+			motLabSet.add( `${ ( aniCurObj as CSSAnimation ).animationName || ( aniCurObj as CSSTransition ).transitionProperty || 'script animation' } on ${ eleDesFun( aniEffObj.target, aniEffObj.pseudoElement ) }` ); // What: Motion Label Add Call. Why: Each long motion should be named in the failure. How: This records its animation name or transition property and its element. // What: Type Assertion Note. Why: getAnimations returns plain Animation objects, which don't type their CSS names. How: Each one is read as a CSS animation, then a CSS transition, falling back to a generic label when neither name exists.
+
+
+		}
+
+
+
+		return Array.from( motLabSet ); // What: Motion Label Return. Why: The check reads every label from outside the page. How: This hands back the labels as an array.
+
+
+	};
+
+
+
+	const fraLooFun = () : void => { // What: Frame Loop Function. Why: getAnimations only shows what's playing at the moment it's read. How: This sweeps once per frame and schedules itself for the next.
+
+
+		polAniFun(); // What: Animation Poll Call. Why: Whatever plays this frame should be recorded. How: This sweeps the page's animations.
+
+		requestAnimationFrame( fraLooFun ); // What: Next Frame Call. Why: The sweep has to run on every frame until the check reads it. How: This schedules the loop again.
+
+
+	};
+
+
+	Reflect.set( window, '__motPolFun', polAniFun ); // What: Motion Poll Global Set. Why: The check runs a last sweep and reads the labels from outside the page. How: This puts the sweep on the window.
+
+	requestAnimationFrame( fraLooFun ); // What: Frame Loop Start Call. Why: The sweep has to start with the page's first frame. How: This schedules the loop's first pass.
+
+
+	for ( const eveTypStr of [ 'animationstart', 'transitionrun', 'transitionstart' ] ) document.addEventListener( eveTypStr, ( motEveObj ) => { // What: Motion Event Loop. Why: A motion that starts and ends between two frames never shows up in a sweep. How: This listens for each event an animation or transition fires as it begins, on the document in the capture phase, catching every element's events before they reach it.
+
+
+		const isaTraBoo = motEveObj.type !== 'animationstart';                                                                                          // What: Is-A Transition Boolean. Why: Animations and transitions keep their names and durations in different properties. How: This is true for the two transition events.
+		const tarEleObj = motEveObj.target as Element;                                                                                                  // What: Target Element Object. Why: The motion's duration is read from the element running it. How: This reads the event's target. // What: Type Assertion Note. Why: Event targets type as EventTarget. How: These events only fire on elements.
+		const pseEleStr = ( motEveObj as AnimationEvent ).pseudoElement || null;                                                                        // What: Pseudo Element String. Why: A motion can run on an element's pseudo-element, whose styles are its own. How: This reads the event's pseudo-element, or null for the element itself. // What: Type Assertion Note. Why: The listener types its event as a plain Event. How: Both animation and transition events carry pseudoElement, read here through the animation event's type.
+		const motNamStr = isaTraBoo ? ( motEveObj as TransitionEvent ).propertyName : ( motEveObj as AnimationEvent ).animationName;                    // What: Motion Name String. Why: The duration belongs to one animation name or one transition property. How: This reads the transition's property or the animation's name. // What: Type Assertion Note. Why: The listener types its event as a plain Event. How: isaTraBoo says which kind of event it is.
+		const motStyObj = getComputedStyle( tarEleObj, pseEleStr );                                                                                     // What: Motion Style Object. Why: The event doesn't carry the motion's duration. How: This reads the computed styles of the element, or of its pseudo-element.
+		const namLisArr = ( isaTraBoo ? motStyObj.transitionProperty : motStyObj.animationName ).split( ',' ).map( ( namCurStr ) => namCurStr.trim() ); // What: Name List Array. Why: An element can list several animations or transitioned properties. How: This splits the list that matches the event's kind.
+		const durLisArr = ( isaTraBoo ? motStyObj.transitionDuration : motStyObj.animationDuration ).split( ',' ).map( durMilFun );                     // What: Duration List Array. Why: Each name in the list has its own duration. How: This splits the matching duration list and converts each to milliseconds.
+		const namIndNum = namLisArr.includes( motNamStr ) ? namLisArr.lastIndexOf( motNamStr ) : namLisArr.lastIndexOf( 'all' );                        // What: Name Index Number. Why: The motion's duration sits at its name's place in the list, and a later entry wins over an earlier one. How: This finds the last entry naming the motion, or the last all entry for a transition, or -1.
+		const motDurNum = namIndNum < 0 ? Math.max( ...durLisArr ) : durLisArr[ namIndNum % durLisArr.length ];                                         // What: Motion Duration Number. Why: The check needs the motion's own duration. How: This reads the duration at its name's place, wrapping round a shorter duration list as CSS does, or the longest one listed when no entry names it.
+
+
+		if ( motDurNum > 1 ) motLabSet.add( `${ motNamStr } on ${ eleDesFun( tarEleObj, pseEleStr ) }` ); // What: Long Motion Add Call. Why: Each long motion should be named in the failure, with the same label a sweep gives it. How: This records its name and element when it lasts longer than 1ms.
+
+
+	}, true ); // What: Capture Phase Flag. Why: The recorder has to see each motion event before anything on the page can stop it. How: This registers the listener for the capture phase.
+
+
+}
+
+// #endregion motRecFun
+
+
+
 // #region namProFun
 
 /**
@@ -201,16 +318,18 @@ type StoInfTyp = { // What: Stop Information Type. Why: The keyboard walk judges
  * focus indicator is judged by blurring the stop for a moment and comparing
  * the styles a focus indicator usually changes (outline, shadow, border,
  * background, color, and underline), then focusing it again so the walk
- * continues from it. Coverage is judged by asking which element sits at the
- * stop's center: anything other than the stop or one of its own descendants
- * means the stop is hidden behind it. Passed to Playwright's evaluate, so it
- * can't read anything from this file.
+ * continues from it. A stop that slides into view on focus, such as a skip
+ * link, is measured once its slide finishes. Coverage is judged by asking
+ * which element sits at the stop's center: anything other than the stop or
+ * one of its own descendants means the stop is hidden behind it. Passed to
+ * Playwright's evaluate, so it can't read anything from this file.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param void - This function takes no parameters.
  *
- * @returns The stop's description, or null when the walk has ended.
+ * @returns A promise that resolves with the stop's description, or null when
+ *          the walk has ended.
  *
  * @example
  * ```ts
@@ -219,7 +338,7 @@ type StoInfTyp = { // What: Stop Information Type. Why: The keyboard walk judges
  *
 */
 
-function stoInfFun () : StoInfTyp | null {
+async function stoInfFun () : Promise< StoInfTyp | null > {
 
 
 	const actCurEle = document.activeElement as HTMLElement | null; // What: Active Current Element. Why: The stop is whatever holds focus after the press. How: This reads the focused element. // What: Type Assertion Note. Why: activeElement types as Element, which has no blur or focus. How: Every element that can hold focus in this app is an HTMLElement.
@@ -258,6 +377,12 @@ function stoInfFun () : StoInfTyp | null {
 
 
 	actCurEle.focus(); // What: Stop Refocus Call. Why: The walk continues from this stop. How: This puts focus back where the Tab press left it.
+
+
+	const sliTraArr = actCurEle.getAnimations().filter( ( aniCurObj ) => aniCurObj instanceof CSSTransition && aniCurObj.transitionProperty === 'transform' ); // What: Slide Transition Array. Why: A stop that slides into view on focus, such as a skip link, has to be judged where it lands. How: This keeps the stop's running transform transitions.
+
+
+	await Promise.allSettled( sliTraArr.map( ( sliCurObj ) => sliCurObj.finished ) ); // What: Slide Settled Wait. Why: Measuring mid-slide would find the stop partly off screen. How: This waits until each slide has finished, or been cancelled.
 
 
 	const recCurObj = actCurEle.getBoundingClientRect();                                                                       // What: Rect Current Object. Why: A focused stop has to be on screen and uncovered. How: This measures the stop.
@@ -450,14 +575,16 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every ch
 
 
 
-	test( `${ staRecObj.ideStr } plays no motion under reduced motion`, async ( { page : curPagObj } ) => { // What: Reduced Motion Test. Why: Visitors who ask for less motion shouldn't see the page animate. How: This requests reduced motion, opens the state, and checks that the page holds no animation or transition lasting longer than 1ms.
+	test( `${ staRecObj.ideStr } plays no motion under reduced motion`, async ( { page : curPagObj } ) => { // What: Reduced Motion Test. Why: Visitors who ask for less motion shouldn't see the page animate. How: This requests reduced motion, installs motRecFun before the page loads, opens the state, and checks the recorder found no animation or transition longer than 1ms from the first frame to a last sweep, ones that started and finished between frames included.
 
 
 		await curPagObj.emulateMedia( { reducedMotion : 'reduce' } ); // What: Reduced Motion Emulation. Why: The preference has to be set before the page loads. How: This makes the page match prefers-reduced-motion: reduce.
 
+		await curPagObj.addInitScript( motRecFun ); // What: Motion Recorder Install Call. Why: A motion that finishes before the page settles drops out of getAnimations, so reading it only at the end would miss it. How: This runs motRecFun in the page before it loads, recording every motion over 1ms from the start.
+
 		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: Entrance animations are the motion being checked. How: This loads the state and waits for it to settle.
 
-		expect( await curPagObj.evaluate( () => document.getAnimations().filter( ( aniCurObj ) => ( Number( aniCurObj.effect?.getTiming().duration ) || 0 ) > 1 ).map( ( aniCurObj ) => ( aniCurObj as CSSAnimation ).animationName || ( aniCurObj as CSSTransition ).transitionProperty || 'script animation' ) ) ).toEqual( [] ); // What: No Motion Assertion. Why: The state passes only when no animation or transition is left running or holding its result once the page has settled. How: This lists every animation or transition the page still holds that lasts longer than 1ms, which should be none. // What: Type Assertion Note. Why: getAnimations returns plain Animation objects, which don't type their CSS names. How: Each one is read as a CSS animation, then a CSS transition, falling back to a generic label when neither name exists.
+		expect( await curPagObj.evaluate( () => ( Reflect.get( window, '__motPolFun' ) as () => string[] )() ) ).toEqual( [] ); // What: No Motion Assertion. Why: The state passes only when nothing longer than 1ms played as it opened. How: This runs the recorder's last sweep, which also covers what the page still holds and so replaces a separate check of the settled page, and compares every label it recorded with an empty list, so a failure names each motion and its element. // What: Type Assertion Note. Why: Reflect.get types the global as unknown. How: motRecFun stores its sweep there, which returns a string array.
 
 
 	} );
