@@ -1,0 +1,2 @@
+# What: Single Page App Fallback Rule. Why: The site routes every page in the browser through React Router and has no server routes, so any path without a file of its own has to load the one page. How: This rewrites every such path to index.html with a 200 status rather than redirecting, while real files keep being served first.
+/*    /index.html   200

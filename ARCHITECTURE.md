@@ -1,16 +1,20 @@
-# Group Planner — Architecture Decisions
+# Come Hang: Architecture Decisions
 
 Living document. Updated as design decisions are made during planning
-conversations, before implementation starts. Sections marked **Open** are
-discussed but not yet locked in; everything else reflects a decision the
-project is currently committed to. Each decision section includes a
+conversations, before implementation starts. When a decision changes,
+every passage it affects is rewritten to match in the same change, so the
+whole document always reflects what the project is currently committed
+to. Open questions live in Section 13 and upcoming work in Section 14.
+Each decision section includes a
 **Pros** / **Cons** breakdown of the tradeoff actually being accepted;
 purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-22 (pre-implementation planning phase; data model
-approved, Firebase plan changed to Blaze, see Section 15).
+Last updated: 2026-10-24 (pre-implementation planning phase; data model
+approved, Firebase plan changed to Blaze, see Section 15; earlier passages
+brought in line with Sections 11.7 and 17; scroll behavior per screen added
+to Section 14's open items).
 
 ---
 
@@ -24,7 +28,7 @@ than one group.
 
 Original goal was a fully peer-to-peer app with no third-party server
 involved at all. That goal was revised after working through the real
-constraints (see Section 11): push notifications and reliable async
+constraints (see Section 3): push notifications and reliable async
 delivery are not achievable without *some* always-on infrastructure, so
 the design uses Firebase as a thin, largely transient relay instead of
 true P2P.
@@ -113,7 +117,7 @@ long-term data store, see Section 5 for retention rules per data type.
 | Firebase Auth | Anonymous identity, optional linked recovery credential |
 | Firestore | Structured, lower-frequency data: events, notes/assignments, group & membership metadata, invite tokens, live location |
 | Realtime Database (RTDB) | High-frequency, ephemeral data: chat messages, presence |
-| Cloud Messaging (FCM) | Push notifications — the only mechanism that can reach a backgrounded or closed app on either platform |
+| Cloud Messaging (FCM) | Push notifications, the only mechanism that can reach a backgrounded or closed app on either platform |
 | Storage | One-off bulk chat-history transfer blobs for history-sync requests between members, see Section 11.9 |
 
 No custom signaling server, TURN server, or WebRTC is used. Firebase's
@@ -152,7 +156,7 @@ from Spark's 100 to 200,000.
 - No server to build, host, patch, or scale ourselves. The only server
   code is a few small Cloud Functions (push sends, the billing cutoff),
   run and scaled by Firebase.
-- FCM solves push notifications outright — something no P2P/relay-of-our-
+- FCM solves push notifications outright, something no P2P/relay-of-our-
   own design could ever do, since waking a closed app requires the OS's
   own push service.
 - Firestore/RTDB client SDKs include offline caching and automatic
@@ -163,13 +167,13 @@ from Spark's 100 to 200,000.
 
 **Cons**
 - Abandons the original "no third-party server in the data path at all"
-  goal — Google's infrastructure does see encrypted-but-present traffic,
+  goal: Google's infrastructure does see encrypted-but-present traffic,
   even if it's designed not to retain it.
 - Vendor lock-in: the data model, security rules, and sync patterns are
   fairly Firebase-specific, migrating off it later would be a real
   rewrite, not a config change.
 - Correctness now depends on Firestore/RTDB security rules being written
-  right — a misconfigured rule is a real, easy-to-miss vulnerability
+  right; a misconfigured rule is a real, easy-to-miss vulnerability
   class this design didn't have to think about under pure P2P.
 - Cost is only "free" at the scale currently expected. Blaze has no
   built-in spending cap, so a viral spike or abuse would bill past the
@@ -185,7 +189,7 @@ from Spark's 100 to 200,000.
 | Group metadata (creator, name, etc.) | Firestore | `/groups/{groupId}` |
 | Group membership | Firestore | Map or subcollection under `/groups/{groupId}` |
 | Removed-member blocklist | Firestore | `/groups/{groupId}.removedUids` (or subcollection) |
-| Invite token | Firestore | `/invites/{token} → { groupId }` — one active token per group |
+| Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
 | Events | Firestore | Under the owning group |
 | Notes / task-assignments | Firestore | Under the owning event; single-owner field per claimable item |
 | Chat messages | RTDB | Under the owning group; ack-map pattern, see Section 5 |
@@ -221,7 +225,7 @@ from Spark's 100 to 200,000.
 ## 5. Data Retention & Deletion Policies
 
 ### Location
-- Not an append-only log — each update **overwrites** the previous value.
+- Not an append-only log: each update **overwrites** the previous value.
 - Deleted on an inactivity timer.
 - Always deleted at event-end, regardless of timer state.
 - Throttled client-side by time-since-last-update **and** distance moved
@@ -259,12 +263,13 @@ elapses; unlike chat, there's no recovery mechanism if 48 hours turns
 out to be too short for a given group, once it's gone, it's gone.
 
 ### Chat
-Strictly sync-based, not time-based, with two refinements:
+Strictly sync-based, not time-based, with these refinements:
 - A message's "has everyone received this" check is evaluated against
-  **current** group membership, not a snapshot taken at send time. A
-  member who leaves or is removed is dropped from the pending-ack list,
-  so they can't block cleanup after they're gone.
-- **Multi-device is explicitly out of scope** (see Section 8) — the app
+  the recipients snapshot taken at send time (`recipientUids`, Section
+  11.7), so a member who joins later is never waited on. A member who
+  leaves or is removed is dropped from the pending-ack list, so they
+  can't block cleanup after they're gone.
+- **Multi-device is explicitly out of scope** (see Section 8): the app
   is single-device per user, so "delivered" means delivered to that one
   device, no cross-device history backfill is attempted.
 - A safety-valve max-retention TTL exists as a backstop for a message
@@ -300,7 +305,7 @@ Strictly sync-based, not time-based, with two refinements:
   - Kept as an advanced/optional group setting rather than a prominent
     choice at group creation, most groups never need to touch it.
 - The user's own device retains full local chat history indefinitely
-  (IndexedDB) once synced — the server never holds history long-term,
+  (IndexedDB) once synced; the server never holds history long-term,
   the client does. This is what makes chat feel persistent for recurring
   users despite the server-side transience.
 
@@ -324,7 +329,7 @@ users of the "don't retain data" choice.
 ## 6. Encryption Model
 
 Explicitly **not** end-to-end (no per-device key verification, no
-ratcheting, no multi-device key exchange ceremony) — the goal is
+ratcheting, no multi-device key exchange ceremony): the goal is
 "not sent/stored in the clear," not defense against a compromised group
 member or full metadata privacy.
 
@@ -335,8 +340,9 @@ member or full metadata privacy.
   only ever sees ciphertext for actual content.
 - The group key is generated once per group and wrapped individually for
   each member using their own public key (WebCrypto ECDH) when they
-  join, so Firebase never sees an unwrapped key either.
-- Only routing metadata (sender uid, timestamps, group id) stays
+  join, by the member who approves the join (Section 17), so Firebase
+  never sees an unwrapped key either.
+- Only routing metadata (sender UID, timestamps, group ID) stays
   plaintext, since Firestore/RTDB need it to route/query.
 
 **Pros**
@@ -373,7 +379,7 @@ rejected and shown a "someone already claimed that" message, rather than
 one silently overwriting the other.
 
 A real CRDT library (Yjs/Automerge) was considered and explicitly not
-adopted — it would only be needed for live simultaneous free-text
+adopted, since it would only be needed for live simultaneous free-text
 co-editing, which isn't a planned feature. If that changes, this
 decision should be revisited.
 
@@ -386,7 +392,7 @@ in place of their name. The group can manually reassign it if needed.
 - Prevents real, silent data loss (two people stomping the same claim)
   without needing a heavyweight library.
 - Transactions are a native, well-tested primitive in both Firestore and
-  RTDB — no extra dependency, no custom conflict-resolution logic.
+  RTDB, with no extra dependency, no custom conflict-resolution logic.
 - Simple mental model for both engineering and UX: you either got it, or
   someone beat you to it.
 
@@ -406,7 +412,7 @@ in place of their name. The group can manually reassign it if needed.
 - **No signup required.** Firebase Anonymous Authentication
   (`signInAnonymously()`) generates a random UID per device with no
   user-provided credential.
-- **Single-device by design** — no multi-device sync is attempted or
+- **Single-device by design**: no multi-device sync is attempted or
   promised. The anonymous identity lives entirely in that browser's
   local storage; it's not portable on its own.
 - **Passkeys were considered and rejected**: not a first-class Firebase
@@ -484,7 +490,7 @@ in place of their name. The group can manually reassign it if needed.
   into an existing group chat, let people trickle in), rather than
   requiring a finalized guest list up front.
 - Data shape: `/invites/{token} → { groupId }`. The link is a disposable
-  pointer, entirely separate from the group's own data — regenerating it
+  pointer, entirely separate from the group's own data, so regenerating it
   never touches the group document, membership list, chat, notes, or
   events, all of which are keyed to `groupId`, not to any token.
 - The link is open-ended (multi-redeem, valid until revoked), not
@@ -504,7 +510,7 @@ in place of their name. The group can manually reassign it if needed.
   group link. Anyone with a link who hasn't joined yet will need the new
   one."), and the newly generated link is surfaced immediately after so
   it can be re-shared with anyone still pending.
-- **Removed-uid blocklist kept as defense-in-depth alongside rotation**:
+- **Removed-UID blocklist kept as defense-in-depth alongside rotation**:
   `removedUids` on the group blocks that specific identity from
   redeeming *any* link for that group (old or newly rotated), covering
   the case where the new link reaches them through some indirect route
@@ -518,7 +524,7 @@ in place of their name. The group can manually reassign it if needed.
   `removedUids` block by clearing local app data (or opening the link in
   a different browser), which mints a brand-new anonymous UID never on
   the blocklist. This is an inherent consequence of anonymous,
-  freely-regenerable identity, not a fixable bug — a durable ban requires
+  freely-regenerable identity, not a fixable bug: a durable ban requires
   a non-anonymous identity, which conflicts with the no-signup goal.
   Link rotation on every removal mitigates the realistic version of this
   (rejoining with the link they already had); it does not make bans
@@ -537,10 +543,11 @@ in place of their name. The group can manually reassign it if needed.
   at essentially no extra engineering cost.
 
 **Cons**
-- No per-person invite tracking, there's no "who's joined yet, who's
-  still pending" visibility with a single shared link.
-- Anyone holding the link can join until it's revoked, there's no
-  vetting step.
+- No per-person invite tracking: a single shared link can't say who it
+  was sent to. Pending join requests are visible (Section 17), but not
+  who has the link and hasn't used it yet.
+- Every join waits for a member's approval (Section 17), so a newcomer
+  can't get in while no member is around to let them in.
 - Rotation-on-removal creates real, deliberately-accepted friction: every
   removal invalidates the link for anyone still mid-invite, requiring
   the creator to notice and re-share the new one.
@@ -553,13 +560,13 @@ in place of their name. The group can manually reassign it if needed.
 ## 10. Location Sharing Design
 
 - Opt-in per event, not an always-on background feature.
-- **No reliable background location on either platform** — this is an OS
+- **No reliable background location on either platform**: this is an OS
   platform restriction, not something solvable via PWA architecture:
   - **iOS**: no background geolocation capability for web content at
     all, installed PWA or not. WebKit suspends JS execution for a
     backgrounded/locked-screen tab; there's no web-exposed equivalent to
     native `CoreLocation` background modes.
-  - **Android**: partially better but still unreliable — Chrome throttles
+  - **Android**: partially better but still unreliable: Chrome throttles
     background tabs, OS-level Doze/App Standby restrict further, and many
     OEMs' battery managers kill background web content aggressively. No
     dedicated background-geolocation API exists for web content.
@@ -610,10 +617,10 @@ in place of their name. The group can manually reassign it if needed.
 
 ## 11. Data Model
 
-Proposal, pending review. Field names ending in `Enc` store ciphertext;
+Reviewed and approved (2026-10-22). Field names ending in `Enc` store ciphertext;
 every such field has a sibling `Iv` field (or a shared `iv` on the same
 document) holding the AES-GCM initialization vector needed to decrypt
-it — the IV isn't secret, it's just required alongside the ciphertext.
+it. The IV isn't secret, it's just required alongside the ciphertext.
 A field with no `Enc` suffix is intentionally plaintext, either because
 it's routing/query metadata (Section 6's principle) or because it's
 inherently public (a public key).
@@ -624,7 +631,7 @@ One doc per anonymous identity, created on first sign-in.
 
 | Field | Type | Notes |
 |---|---|---|
-| `publicKey` | plaintext | This user's ECDH public key, used by others to wrap a group key for them on join. Can't be encrypted — nothing to encrypt it with yet. |
+| `publicKey` | plaintext | This user's ECDH public key, used by others to wrap a group key for them on join. Can't be encrypted: there is nothing to encrypt it with yet. |
 | `createdAt` | plaintext | Timestamp. |
 
 Global `displayName` deliberately **not** included here. **Resolved**:
@@ -657,7 +664,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 
 | Field | Type | Notes |
 |---|---|---|
-| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.5. |
+| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.7. |
 | `wrappedGroupKey` | ciphertext | The group's AES-GCM key, wrapped for this member's public key via ECDH. Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
@@ -671,7 +678,7 @@ through the same document.
 On removal, this document is deleted outright (not just excluded from
 some "active" list), consistent with the "attribute their old claims to
 a generic 'removed user'" decision in Section 7, nothing needs to look
-up their name after removal, the client just checks "is this uid still
+up their name after removal, the client just checks "is this UID still
 a member" and shows a generic label if not.
 
 ### 11.4 Firestore: `/groups/{groupId}/liveLocations/{uid}`
@@ -734,7 +741,7 @@ everything else, now including location, is Firestore).
 
 Rotation is a delete-and-recreate, not a flag flip, there's never more
 than one valid doc for a given group at a time, so redemption is just
-"does a doc exist at this token, and is its uid not in that group's
+"does a doc exist at this token, and is its UID not in that group's
 `removedUids`."
 
 **Token strength (decided 2026-10-22)**: the token is 128 random bits
@@ -760,7 +767,7 @@ plaintext copy of the group name, updated whenever the name changes, and
 
 ### 11.7 RTDB: `/chats/{conversationId}/messages/{messageId}`
 
-Keyed by conversation id rather than group id (decided 2026-10-22), so
+Keyed by conversation ID rather than group ID (decided 2026-10-22), so
 private messages (Section 19) can reuse this structure later. For now the
 only kind of conversation is a group's own chat.
 
@@ -769,13 +776,13 @@ only kind of conversation is a group's own chat.
 | `senderUid` | plaintext | Routing metadata. |
 | `sentAt` | plaintext | Ordering, and the TTL-safety-valve check below. |
 | `ciphertext` / `iv` | ciphertext | Message content. |
-| `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with 11.5's join-time cutoff) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
-| `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own uid in via a targeted field-path update on sync. |
+| `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with the join-time cutoff below) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
+| `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own UID in via a targeted field-path update on sync. |
 
 **Deletion, still opportunistic and client-triggered** (no Cloud
 Function, matching the rest of the design): whichever client is already
 reading/acking a message checks two conditions and deletes if either is
-true — (a) `recipientUids` minus anyone since removed from the group
+true: (a) `recipientUids` minus anyone since removed from the group
 minus `ackedBy` is empty, or (b) `sentAt` is older than that group's own
 `chatTtlDays` (Section 5, default 30, creator-adjustable 7-180, stored on
 `/groups/{groupId}`, Section 11.2). RTDB has no native TTL, so this
@@ -1093,6 +1100,13 @@ the Blaze change.
   settings, onboarding, the install screen from Section 16).
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
+- Scroll behavior per screen, decided as each data screen is built. The
+  app's scroll hook (`src/ui/scroll-top.ts`) restores a back, forward, or
+  reload position right after the page renders, so a screen whose Firebase
+  data arrives later can land short of where the person left it, and such a
+  screen re-applies the position once its content is in. Screens like the
+  chat will likely scroll inside their own container rather than the whole
+  window and open at the newest message, which the hook doesn't cover.
 
 **Infrastructure, decided 2026-10-22**:
 - Firebase Blaze plan with the cost protections in Section 15.
@@ -1263,17 +1277,17 @@ history requests). Declining is open to any member too.
 |---|---|---|
 | `nameText` | plaintext | The joiner's entered name. Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
 | `noteText` | plaintext, optional | The note to the group, same treatment. |
-| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the uid isn't in `removedUids`. |
+| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the UID isn't in `removedUids`. |
 | `requestedAt` | plaintext | Timestamp. |
 | `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. |
 
-The doc id is the joiner's uid, so one identity can have only one request
+The doc ID is the joiner's UID, so one identity can have only one request
 per group. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
 `/members/{uid}` with the group key wrapped for it, and delete the
 request. The joiner's listener sees the membership appear, unwraps the
 key, and writes their encrypted display name. **Declining** deletes the
-request; declining and blocking adds the uid to `removedUids` as well.
+request; declining and blocking adds the UID to `removedUids` as well.
 
 **Floods**:
 - Members get one grouped notification ("3 people want to join") rather
@@ -1331,7 +1345,7 @@ paywall is switched on before launch.
 
 **Buying (decided 2026-10-22)**:
 - Requires linking Google sign-in (Section 8). Paid status is tied to the
-  uid, and an anonymous uid can be lost with the device, so a purchase
+  UID, and an anonymous UID can be lost with the device, so a purchase
   without a recoverable sign-in would be a support problem. ease-my-life
   reached the same conclusion for its paid accounts.
 - Polar takes the payment, as in ease-my-life. Its webhook, a Cloud
@@ -1383,8 +1397,8 @@ Reasons for waiting: launch has plenty to prove without a second kind of
 conversation, and private messages need blocking and safety controls
 designed properly rather than rushed. It isn't a big architectural change,
 since it reuses chat:
-- **Built now**: chat is keyed by a conversation id rather than the group
-  id (`/chats/{conversationId}`), with a group's own chat as one kind of
+- **Built now**: chat is keyed by a conversation ID rather than the group
+  ID (`/chats/{conversationId}`), with a group's own chat as one kind of
   conversation. Everything in Section 11.7 (ack map, cleanup, TTL) then
   works for a two-person conversation unchanged, and adding private
   messages later needs no change to how group chat is stored.

@@ -1,0 +1,43 @@
+
+
+
+<!doctype html><!-- What: Document Type Declaration. Why: Browsers render the page in standards mode only with a doctype. How: This declares HTML5. -->
+
+
+
+<html lang='en'><!-- What: Root HTML Element. Why: Screen readers and translation tools need the page's language. How: This marks the document as English. -->
+
+
+	<head><!-- What: Document Head Element. Why: The page's metadata loads before the body paints. How: This holds it in the section below. -->
+
+
+		<!-- #region Document -->
+
+		<meta charset='UTF-8' />                                                 <!-- What: Character Set Meta. Why: The browser has to decode the page as UTF-8 before it reads anything else. How: This sits first in the head, inside the first 1,024 bytes the browser checks. -->
+		<meta name='viewport' content='width=device-width, initial-scale=1.0' /> <!-- What: Viewport Meta. Why: Phones should lay the app out at device width instead of a zoomed-out desktop width. How: This sets the layout width to the device's and starts at no zoom. -->
+		<title>Come Hang</title>                                                 <!-- What: Page Title Element. Why: The tab and bookmarks name the app by its title, and link checkers that never run the app's script read only this file. How: This names the app; the SEO pass gives it its full title. -->
+
+		<!-- #endregion Document -->
+
+
+	</head>
+
+
+
+	<body><!-- What: Document Body Element. Why: This holds the app's mount point and the entry script. How: The mount point stays empty until React renders the app into it. -->
+
+
+		<div id='appMouDiv'></div><!-- What: App Mount Div Element. Why: React needs one element to render the app into. How: main.tsx renders the app into this id. -->
+
+		<script
+			src='/src/main.tsx'
+			type='module'
+		>/* What: App Module Script Element. Why: This loads the app itself. How: Vite replaces it with the built, hashed bundle at build time. */</script>
+
+
+	</body>
+
+
+</html>
+
+
