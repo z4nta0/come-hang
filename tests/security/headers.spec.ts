@@ -27,7 +27,8 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
  * policy, such as refusing framing. The production build, which the security
  * suite's preview server builds before the run, has to hold no private key or
  * provider token. npm audit has to find no high or critical advisory in the
- * shipped dependencies, and skips with a message when npm can't be reached.
+ * shipped dependencies, and skips with a message when npm's registry can't
+ * be reached.
  *
  * Sections:
  *  - Constants
@@ -90,7 +91,7 @@ test( 'the content security policy allows only the app itself', () => { // What:
 
 
 
-test( 'the other hardening headers are set', () => { // What: Hardening Headers Test. Why: Each header closes a different gap: plain HTTP, sniffed file types, framing, referrer leaks, and unused browser features. How: This reads the policy, checks HSTS's age and subdomain flag and the nosniff and DENY values, and checks that a referrer policy and a permissions policy are set.
+test( 'the other hardening headers are set', () => { // What: Hardening Headers Test. Why: Each header closes a different gap: plain HTTP, sniffed file types, framing, referrer leaks, and unused browser features. How: This reads the headers, checks HSTS's age and subdomain flag and the nosniff and DENY values, and checks that a referrer policy and a permissions policy are set.
 
 
 	const heaAllObj = heaAllFun();                                    // What: Headers All Object. Why: Each header is looked up by name. How: This reads the /* block of public/_headers.

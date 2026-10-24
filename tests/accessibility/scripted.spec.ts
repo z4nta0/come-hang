@@ -450,15 +450,15 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
  * any element with a positive tabindex, which overrides the document order,
  * and every stop that comes earlier in the document than the stop before
  * it, sits off screen, is covered by something else, or looks the same
- * focused and unfocused. The walk ends when focus leaves the page, comes
- * back to the first stop, or stays on the same stop after a press, which is
- * how Firefox leaves its last stop; one that hasn't ended within TAB_MAX_NUM
- * presses counts as a keyboard trap. WebKit only tabs to links with Alt
- * held, the way Safari does by default, so the walk presses Alt+Tab there.
- * The caller requests reduced motion first, so the page jumps to each stop
- * instead of gliding and focus styles appear at once, and each press waits
- * for scrolling to settle, so every stop is measured where and how it ends
- * up.
+ * focused and unfocused. The walk ends when focus leaves the page, reaches a
+ * stop described the same as the first, or stays on the same stop after a
+ * press, which is how Firefox leaves its last stop; one that hasn't ended
+ * within TAB_MAX_NUM presses counts as a keyboard trap. WebKit only tabs to
+ * links with Alt held, the way Safari does by default, so the walk presses
+ * Alt+Tab there. The caller requests reduced motion first, so the page jumps
+ * to each stop instead of gliding and focus styles appear at once, and each
+ * press waits for scrolling to settle, so every stop is measured where and
+ * how it ends up.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *

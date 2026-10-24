@@ -80,7 +80,7 @@ async function polSetFun ( curPagObj : Page ) : Promise< void > {
 		const resCurObj = await rouCurObj.fetch(); // What: Response Current Object. Why: The page should get the real file. How: This fetches it from the preview server.
 
 
-		await rouCurObj.fulfill( { headers : { ...resCurObj.headers(), ...heaAllObj }, response : resCurObj } ); // What: Fulfill Call. Why: The browser enforces a policy only from a response's headers. How: This answers with the real response and the policy's headers on top.
+		await rouCurObj.fulfill( { headers : { ...resCurObj.headers(), ...heaAllObj }, response : resCurObj } ); // What: Fulfill Call. Why: The browser enforces this policy from a response's headers, which the preview server doesn't send. How: This answers with the real response and the policy's headers on top.
 
 
 	} );
