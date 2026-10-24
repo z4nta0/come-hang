@@ -19,10 +19,10 @@ import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scr
  * @summary
  * The app's root component, mounted by main.tsx inside the router: the main
  * landmark holding whichever page the address matches, in a one-cell grid at
- * least as tall as the screen. It also returns the window to the top after each
- * link-driven navigation. A new page is added as another route here, above
- * the catch-all route that sends every unknown address to the 404 page. The
- * shared navigation joins once the app has pages to move between.
+ * least as tall as the screen. It also returns the window to the top after
+ * each link-driven navigation. A new page is added as another route here,
+ * above the catch-all route that sends every unknown address to the 404 page.
+ * The shared navigation joins once the app has pages to move between.
  *
  * Sections:
  *  - Components
