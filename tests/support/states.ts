@@ -13,11 +13,10 @@ import type { Page } from '@playwright/test'; // What: Page. Why: Opening a stat
  * states.ts = States
  *
  * @summary
- * The page states the accessibility and interaction suites visit, and the
- * helper that opens one. A state is a page at a width: the home page and the
- * 404 page at phone and desktop widths, so far. opeStaFun sizes the viewport,
- * loads the page, waits for the fonts, and then waits for the page to stay
- * still so nothing is measured mid-fade.
+ * The page states the suites visit, and the helper that opens one. A state is
+ * a page at a width, such as the home page at a phone width. opeStaFun sizes
+ * the viewport, loads the page, waits for the fonts, and then waits for the
+ * page to stay still so nothing is measured mid-fade.
  *
  * Sections:
  *  - Types
@@ -199,7 +198,7 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 // #region Exports
 
-export { opeStaFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The accessibility and interaction specs share these states and their opener. How: This exports the state list, its type, and the helper that opens one.
+export { opeStaFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states and their opener. How: This exports the state list, its type, and the helper that opens one.
 
 // #endregion Exports
 

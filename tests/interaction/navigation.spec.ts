@@ -3,7 +3,7 @@
 
 // #region Imports
 
-import { expect      } from '@playwright/test';     // What: Expect. Why: Each check passes only when the page shows what it should. How: This asserts on the page's content, address, and styles.
+import { expect      } from '@playwright/test';     // What: Expect. Why: Each check passes only when the page shows what it should. How: This asserts on what each check reads.
 import { opeStaFun   } from '../support/states.ts'; // What: Open State Function. Why: Each check opens and settles its state first. How: This loads it and waits for it.
 import { STA_REC_ARR } from '../support/states.ts'; // What: State Record Array. Why: The checks reuse the shared states rather than defining their own. How: This lists them.
 import { test        } from '@playwright/test';     // What: Test. Why: Each behavior is its own test. How: This declares them.
