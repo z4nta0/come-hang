@@ -5,7 +5,7 @@
 
 import { useLayoutEffect   } from 'react';        // What: Use Layout Effect. Why: The page has to move before the browser draws the new route, or the old position would flash first. How: This runs the scroll right after React commits the new page.
 import { useLocation       } from 'react-router'; // What: Use Location. Why: The scroll should happen on every navigation, even back to the page already showing. How: Its key changes on each one, and its hash names any section to jump to.
-import { useNavigationType } from 'react-router'; // What: Use Navigation Type. Why: Back and forward should return to where the visitor was, not the top. How: This reports a POP for those, which restore their saved position instead.
+import { useNavigationType } from 'react-router'; // What: Use Navigation Type. Why: Back, forward, and a reload should return to where the visitor was, not the top. How: This reports a POP for those, which restore their saved position instead.
 
 // #endregion Imports
 
@@ -183,17 +183,17 @@ function useScrTopFun () : void {
 
 
 	const locCurObj = useLocation();       // What: Location Current Object. Why: Each navigation needs telling apart, and a hash can name a section. How: This holds the current address, whose key changes on every navigation.
-	const navTypStr = useNavigationType(); // What: Navigation Type String. Why: Back and forward should return to the recorded position rather than the top. How: This holds PUSH, REPLACE, or POP for the latest navigation.
+	const navTypStr = useNavigationType(); // What: Navigation Type String. Why: Back, forward, and a reload should return to the recorded position rather than the top. How: This holds PUSH, REPLACE, or POP for the latest navigation.
 
 
-	useLayoutEffect( () => { // What: Scroll Reset Effect. Why: A new page should open at its top, at the section its link names, or on back and forward at the position it was left at. How: This runs after each navigation commits and before the browser paints it.
+	useLayoutEffect( () => { // What: Scroll Reset Effect. Why: A new page should open at its top, at the section its link names, or on back, forward, and a reload at the position it was left at. How: This runs after each navigation commits and before the browser paints it.
 
 
 		scrKeyStr = locCurObj.key; // What: Scroll Key Assignment. Why: Scrolling from here on belongs to the entry now showing. How: This points the scroll recorder at the new location key.
 
 
 
-		const savTopNum = scrPosMap.get( locCurObj.key ); // What: Saved Top Number. Why: Back, forward, and a reload return to the entry's recorded position. How: This reads it, or holds undefined when none was recorded.
+		const savTopNum = locCurObj.key === 'default' && locCurObj.hash ? undefined : scrPosMap.get( locCurObj.key ); // What: Saved Top Number. Why: Back, forward, and a reload return to the entry's recorded position, but a hash typed into the address or followed from a plain link adds an entry with no router state, which shares the first entry's default key, so its saved position would override the jump to the section. How: This reads the entry's recorded position, or holds undefined when none was recorded or the entry is a default-key one with a hash.
 
 
 		if ( navTypStr === 'POP' && savTopNum !== undefined ) { window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); return; } // What: Back And Forward Restore Guard. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the recorded position and stops, leaving a POP with nothing recorded to the hash and top handling below.

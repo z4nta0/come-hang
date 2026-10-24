@@ -182,12 +182,34 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The hook reads the planted value as the app loads. How: This opens the unknown path.
 
-	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The recorder saves its record after the planted value was read, so a bad value left in it, or a failing save, would show up as an error. How: This jumps to the page's bottom.
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The recorder writes its record after the planted value was read, so a recorder or save that misbehaved on what the load left in the map would raise an error. How: This jumps to the page's bottom.
 
 	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll event, and the recorder with it, runs with the next frame. How: This waits two animation frames.
 
 	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll fires no scroll event, so the recorder and its save would never run and the check would cover only the load. How: This checks the page sits below its top.
 	expect( errLisArr ).toEqual( [] );                                               // What: No Error Assertion. Why: The page passes only when the hook handled the bad value. How: This compares the collected errors with an empty list, so a failure prints each one.
+
+
+} );
+
+
+
+test( 'a hash added to the address jumps to its section, not to a saved position', async ( { page : curPagObj } ) => { // What: Hash Entry Test. Why: A hash typed into the address adds an entry that shares the first entry's default key, whose saved position mustn't override the jump to the section. How: This scrolls the 404 page down, adds the main element's hash to the address, and checks the page jumps to it.
+
+
+	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to scroll for a saved position to differ from the section. How: This makes the screen too short to show the whole 404 page.
+
+	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page, the visit's first entry. How: This opens the unknown path.
+
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The first entry needs a saved position below the section. How: This jumps to the page's bottom.
+
+	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
+
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would leave nothing saved to wrongly restore. How: This checks the page sits below its top.
+
+	await curPagObj.evaluate( () => { location.hash = 'main'; } ); // What: Hash Change Call. Why: This is the navigation being checked, the same as typing the hash into the address. How: This adds #main to the address, which the router reports as a POP under the default key.
+
+	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 ); // What: Section Jump Assertion. Why: The page should land on the section the hash names, the main element at the top, not return to the saved position. How: This polls the scroll position until it reads the main element's top.
 
 
 } );
