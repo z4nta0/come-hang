@@ -179,12 +179,12 @@ async function conLisFun ( curPagObj : Page, conSelStr : string ) : Promise< Ele
  * snaEleFun = Snapshot Element Function
  *
  * @summary
- * Runs inside the page and records how an element looks right now, and
- * whether each part of that look would ease if it changed: for the element
- * and every element inside it, each probed property's computed value and the
- * duration of the transition covering it, listed by its own name, by a
- * shorthand holding it (background for background-color, border for
- * border-color), or by all, or 0 when none is.
+ * Runs inside the page and records how an element looks right now, and whether
+ * each part of that look would ease if it changed: for the element and every
+ * element inside it, each probed property's computed value and the duration of
+ * the transition covering it, listed by its own name, by a shorthand holding
+ * it (background for background-color, border for border-color, outline for
+ * the outline's color, offset, and width), or by all, or 0 when none is.
  * The border color reads only the sides actually drawn, those with a width
  * above zero, as one color when they all share it, since an undrawn side's
  * color can change without anything showing.
@@ -213,7 +213,7 @@ async function conLisFun ( curPagObj : Page, conSelStr : string ) : Promise< Ele
 function snaEleFun ( eleCurEle : Element, proNamArr : string[] ) : SnaRecTyp[] {
 
 
-	const parNamObj : Record< string, string > = { 'background-color' : 'background', 'border-color' : 'border' }; // What: Parent Name Object. Why: A transition listed by a shorthand covers the longhands inside it. How: This maps background-color to background and border-color to border.
+	const parNamObj : Record< string, string > = { 'background-color' : 'background', 'border-color' : 'border', 'outline-color' : 'outline', 'outline-offset' : 'outline', 'outline-width' : 'outline' }; // What: Parent Name Object. Why: A transition listed by a shorthand covers the longhands inside it. How: This maps background-color to background, border-color to border, and the outline's color, offset, and width to outline.
 
 
 
