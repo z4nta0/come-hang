@@ -140,6 +140,8 @@
 
 	/* #region Color Tokens */
 
+	/* CTRL+ALT+C to toggle color swatches on and off *Requires Extension Toggle by Peng Lv */
+
 	--acc-mai-col : #1f5bc4;              /* What: Accent Main Color = #1f5bc4. Why: The main actions need one color that stands out; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button fills with it, and the focus ring reads it. */
 	--acc-sec-col : ;                     /* What: Accent Secondary Color. Why: The standard role set includes a second accent. How: Nothing uses it yet, so it stays empty until the design pass. */
 	--acc-tin-col : ;                     /* What: Accent Tint Color. Why: The standard role set includes a pale tint of the main accent. How: Nothing uses it yet, so it stays empty until the design pass. */
