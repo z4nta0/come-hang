@@ -63,13 +63,13 @@ const TAB_MAX_NUM = 80;                                    // What: Tab Maximum 
  * between two frames. An event carries no duration, so the listener reads the
  * one the target's computed style gives that animation's name or that
  * transition's property. Each motion is labelled by its animation name or
- * transition property and the element it ran on, by its tag, its classes, and
- * any pseudo-element, and kept once however often it's seen. The 1ms floor
- * skips the .01ms reduced-motion exits the page waits on. The sweep is kept on
- * the window as __motPolFun, which runs one last sweep and returns every
- * label, so the check also catches anything still playing when it reads.
- * Passed to Playwright's addInitScript, so it can't read anything from this
- * file.
+ * transition property (or 'script animation' when it has neither) and the
+ * element it ran on, by its tag, its classes, and any pseudo-element, and kept
+ * once however often it's seen. The 1ms floor skips the .01ms reduced-motion
+ * exits the page waits on. The sweep is kept on the window as __motPolFun,
+ * which runs one last sweep and returns every label, so the check also catches
+ * anything still playing when it reads. Passed to Playwright's addInitScript,
+ * so it can't read anything from this file.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -194,7 +194,7 @@ async function namProFun ( curPagObj : Page ) : Promise< string[] > {
 
 
 	const ariSnaStr = await curPagObj.locator( 'body' ).ariaSnapshot();    // What: ARIA Snapshot String. Why: The accessibility tree shows each control's role and announced name. How: This reads the body's tree as text, one node per line.
-	const conLinArr = ariSnaStr.match( /- (link|button)\b[^\n]*/g ) || []; // What: Control Line Array. Why: Only links and buttons are checked here. How: This keeps every tree line for one of those roles.
+	const conLinArr = ariSnaStr.match( /- (link|button)\b[^\n]*/g ) || []; // What: Control Line Array. Why: Only links and buttons are checked here. How: This keeps each - link or - button match, from the role to the end of its line.
 
 	const proLisArr : string[] = []; // What: Problem List Array. Why: Every problem should be reported, not just the first. How: This collects them.
 
@@ -298,7 +298,7 @@ type StoInfTyp = { // What: Stop Information Type. Why: The keyboard walk judges
 
 	covBoo : boolean, // What: Covered Boolean. Why: A stop hidden behind another element can't be seen while focused. How: This is true when something else sits on top of the stop's center.
 	desStr : string,  // What: Description String. Why: A problem should name the element a person would recognize. How: This joins the stop's tag and the first 40 characters of its label, id, or text.
-	indBoo : boolean, // What: Indicator Boolean. Why: A keyboard user has to see where focus is. How: This is true when focusing the stop changes how it looks.
+	indBoo : boolean, // What: Indicator Boolean. Why: A keyboard user has to see where focus is. How: This is true when focusing the stop changes one of the compared styles (outline, shadow, border, background, color, or underline).
 	ordNum : number,  // What: Order Number. Why: Focus order is compared with document order. How: This is the stop's position among every element in the page.
 	visBoo : boolean  // What: Visible Boolean. Why: A stop off screen leaves a keyboard user lost. How: This is true when the stop has a size and overlaps the viewport.
 
@@ -426,7 +426,7 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
 
 		covBoo : !!topCurEle && !actCurEle.contains( topCurEle ),                               // What: Covered Boolean. Why: The stop is hidden when something else is on top of it. How: This is true when the top element at its center is neither the stop nor inside it.
 		desStr : `${ actCurEle.tagName.toLowerCase() } "${ stoLabStr.trim().slice( 0, 40 ) }"`, // What: Description String. Why: A problem should name the element a person would recognize. How: This joins the tag with the first 40 characters of its label, id, or text.
-		indBoo : focSigStr !== bluSigStr,                                                       // What: Indicator Boolean. Why: A keyboard user has to see where focus is. How: This is true when focusing the stop changes how it looks.
+		indBoo : focSigStr !== bluSigStr,                                                       // What: Indicator Boolean. Why: A keyboard user has to see where focus is. How: This is true when focusing the stop changes one of the compared styles (outline, shadow, border, background, color, or underline).
 		ordNum : Array.prototype.indexOf.call( document.querySelectorAll( '*' ), actCurEle ),   // What: Order Number. Why: Focus order is compared with document order. How: This is the stop's position among every element in the page.
 		visBoo : visStoBoo                                                                      // What: Visible Boolean. Why: A stop off screen leaves a keyboard user lost. How: This reads whether the stop has a size and overlaps the viewport.
 

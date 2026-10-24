@@ -194,7 +194,7 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Loop. Why: Every state t
 		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: The state should load everything it uses before the check reads the violations. How: This opens the state the way every suite does and waits for it to settle.
 
 
-		const opeRelArr = await curPagObj.locator( 'a[target="_blank"]' ).evaluateAll( ( ancEleArr ) => ancEleArr.map( ( ancCurEle ) => ancCurEle.getAttribute( 'rel' ) ?? '' ) ); // What: Opener Rel Array. Why: A new tab opened without noopener can reach back and change this page. How: This collects the rel of every link that opens a new tab.
+		const opeRelArr = await curPagObj.locator( 'a[target="_blank"]' ).evaluateAll( ( ancEleArr ) => ancEleArr.map( ( ancCurEle ) => ancCurEle.getAttribute( 'rel' ) ?? '' ) ); // What: Opener Rel Array. Why: A new tab opened without noopener can reach back and change this page. How: This collects the rel of every link whose target is _blank.
 
 
 		expect( await polVioFun( curPagObj ) ).toEqual( [] );                                             // What: No Violation Assertion. Why: Everything the state loads should be allowed by the policy. How: This checks none was refused.

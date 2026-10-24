@@ -25,9 +25,10 @@ import type { Page          } from '@playwright/test'; // What: Page. Why: The h
  * as a form field, has to look different in each state it responds to and ease
  * every property that change touches, on it or anything inside it. A control's
  * focus ring has to ease in to full width. Under reduced motion the changes
- * stay but nothing transitions. Every control on the page is found and probed,
- * so one added later is checked without a test of its own. Real clicks are
- * blocked during the checks, so pressing a control never navigates mid-check.
+ * stay but nothing transitions. Every reachable link, button, and form field
+ * on the page is found and probed, so one added later is checked without a
+ * test of its own. Real clicks are blocked during the checks, so pressing a
+ * control never navigates mid-check.
  *
  * Sections:
  *  - Types
