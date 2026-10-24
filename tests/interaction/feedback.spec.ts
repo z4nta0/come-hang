@@ -3,7 +3,7 @@
 
 // #region Imports
 
-import { expect      } from '@playwright/test';     // What: Expect. Why: Each state passes only when every control responds. How: This asserts on what each check reads, such as that its problem list is empty.
+import { expect      } from '@playwright/test';     // What: Expect. Why: Each state passes only when every reachable control responds. How: This asserts on what each check reads, such as that its problem list is empty.
 import { opeStaFun   } from '../support/states.ts'; // What: Open State Function. Why: Each check opens and settles its state first. How: This loads it and waits for it.
 import { STA_REC_ARR } from '../support/states.ts'; // What: State Record Array. Why: Every page state is checked. How: This lists them.
 import { test        } from '@playwright/test';     // What: Test. Why: Each check of each state is its own test. How: This declares them.
@@ -75,12 +75,12 @@ const SET_WAI_NUM = 400;                                                        
  * cliBloFun = Click Block Function
  *
  * @summary
- * Runs inside the page and cancels every click before anything handles it,
- * so pressing a control during a check never follows a link or runs its
+ * Runs inside the page and cancels every click before the app's own handlers
+ * run, so pressing a control during a check never follows a link or runs its
  * handler. It listens on the document in the capture phase, ahead of React's
  * own listener on the app's root, and both prevents the click's default and
- * stops it from going any further. Passed to
- * Playwright's evaluate, so it can't read anything from this file.
+ * stops it from going any further. Passed to Playwright's evaluate, so it
+ * can't read anything from this file.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -98,7 +98,7 @@ const SET_WAI_NUM = 400;                                                        
 function cliBloFun () : void {
 
 
-	document.addEventListener( 'click', ( cliEveObj ) => { // What: Click Block Listener. Why: A press during a check shouldn't do anything. How: This cancels every click in the capture phase, before the page or React sees it.
+	document.addEventListener( 'click', ( cliEveObj ) => { // What: Click Block Listener. Why: A press during a check shouldn't do anything. How: This cancels every click in the capture phase, before the page's own handlers or React see it.
 
 
 		cliEveObj.preventDefault(); // What: Default Prevention Call. Why: A link shouldn't navigate mid-check. How: This cancels the click's default.
@@ -106,7 +106,7 @@ function cliBloFun () : void {
 		cliEveObj.stopPropagation(); // What: Propagation Stop Call. Why: React's handlers, such as the skip link moving focus, shouldn't run either. How: This keeps the click from reaching the app's root.
 
 
-	}, true ); // What: Capture Phase Flag. Why: The block has to run before anything else sees the click. How: This registers the listener for the capture phase.
+	}, true ); // What: Capture Phase Flag. Why: The block has to run before the app's handlers see the click. How: This registers the listener for the capture phase.
 
 
 }
@@ -280,7 +280,7 @@ function snaEleFun ( eleCurEle : Element, proNamArr : string[] ) : SnaRecTyp[] {
 
 
 
-	for ( const snaRecObj of snaRecArr ) if ( borColBoo && snaRecObj.valArr[ borIndNum ] === snaRecObj.valArr[ colIndNum ] ) snaRecObj.durArr[ borIndNum ] = Math.max( snaRecObj.durArr[ borIndNum ], snaRecObj.durArr[ colIndNum ] ); // What: Current Color Border Loop. Why: A border color matching the element's own color is currentColor, which follows the color as it eases, so a text link with no border set doesn't snap one. How: This gives each such border color the longer of its own duration and the color's.
+	for ( const snaRecObj of snaRecArr ) if ( borColBoo && snaRecObj.valArr[ borIndNum ] === snaRecObj.valArr[ colIndNum ] ) snaRecObj.durArr[ borIndNum ] = Math.max( snaRecObj.durArr[ borIndNum ], snaRecObj.durArr[ colIndNum ] ); // What: Current Color Border Loop. Why: A border color matching the element's own color is currentColor, which follows the color as it eases, so a drawn border with no color set follows the text color as it eases rather than snapping. How: This gives each such border color the longer of its own duration and the color's.
 
 
 
@@ -589,15 +589,15 @@ async function fieProFun ( curPagObj : Page, redMotBoo : boolean ) : Promise< st
 for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every page state is checked. How: This declares each check once per state.
 
 
-	test( `${ staRecObj.ideStr } gives every control hover, press, and focus feedback`, async ( { page : curPagObj } ) => { // What: Feedback Test. Why: Every interaction should visibly register. How: This opens the state, blocks clicks, probes every control and every form field, and checks it finds no problems.
+	test( `${ staRecObj.ideStr } gives every control hover, press, and focus feedback`, async ( { page : curPagObj } ) => { // What: Feedback Test. Why: Every interaction should visibly register. How: This opens the state, blocks clicks, probes every reachable link, button, and form field, and checks it finds no problems.
 
 
 		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: The controls are probed with the state settled. How: This loads and settles it.
 
 		await curPagObj.evaluate( cliBloFun ); // What: Click Block Call. Why: Pressing a control shouldn't navigate or close anything. How: This cancels every click from here on.
 
-		expect( await feeProFun( curPagObj, 'a, button', false ) ).toEqual( [] ); // What: No Feedback Problems Assertion. Why: The state passes only when every control responds. How: This compares the problems with an empty list, so a failure prints each one.
-		expect( await fieProFun( curPagObj, false ) ).toEqual( [] );              // What: No Field Problems Assertion. Why: The state passes only when every form field shows focus. How: This compares the problems with an empty list, so a failure prints each one.
+		expect( await feeProFun( curPagObj, 'a, button', false ) ).toEqual( [] ); // What: No Feedback Problems Assertion. Why: The state passes only when every reachable link and button responds. How: This compares the problems with an empty list, so a failure prints each one.
+		expect( await fieProFun( curPagObj, false ) ).toEqual( [] );              // What: No Field Problems Assertion. Why: The state passes only when every reachable form field shows focus. How: This compares the problems with an empty list, so a failure prints each one.
 
 
 	} );
@@ -620,7 +620,7 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every pa
 
 
 
-	test( `${ staRecObj.ideStr } keeps feedback without motion under reduced motion`, async ( { page : curPagObj } ) => { // What: Reduced Motion Feedback Test. Why: Visitors who ask for less motion still need to see their actions register. How: This probes every control and every form field with reduced motion on and checks it finds no problems.
+	test( `${ staRecObj.ideStr } keeps feedback without motion under reduced motion`, async ( { page : curPagObj } ) => { // What: Reduced Motion Feedback Test. Why: Visitors who ask for less motion still need to see their actions register. How: This probes every reachable link, button, and form field with reduced motion on and checks it finds no problems.
 
 
 		await curPagObj.emulateMedia( { reducedMotion : 'reduce' } ); // What: Reduced Motion Emulation. Why: The preference has to be set before the page loads. How: This makes the page match prefers-reduced-motion: reduce.
@@ -629,8 +629,8 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every pa
 
 		await curPagObj.evaluate( cliBloFun ); // What: Click Block Call. Why: Pressing a control shouldn't navigate or close anything. How: This cancels every click from here on.
 
-		expect( await feeProFun( curPagObj, 'a, button', true ) ).toEqual( [] ); // What: No Reduced Motion Problems Assertion. Why: Every control has to respond without moving. How: This compares the problems with an empty list, so a failure prints each one.
-		expect( await fieProFun( curPagObj, true ) ).toEqual( [] );              // What: No Reduced Motion Field Problems Assertion. Why: Every form field has to show focus without moving. How: This compares the problems with an empty list, so a failure prints each one.
+		expect( await feeProFun( curPagObj, 'a, button', true ) ).toEqual( [] ); // What: No Reduced Motion Problems Assertion. Why: Every reachable link and button has to respond without moving. How: This compares the problems with an empty list, so a failure prints each one.
+		expect( await fieProFun( curPagObj, true ) ).toEqual( [] );              // What: No Reduced Motion Field Problems Assertion. Why: Every reachable form field has to show focus without moving. How: This compares the problems with an empty list, so a failure prints each one.
 
 
 	} );

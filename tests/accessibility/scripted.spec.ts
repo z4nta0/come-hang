@@ -148,7 +148,7 @@ function motRecFun () : void {
 		const motStyObj = getComputedStyle( tarEleObj, pseEleStr );                                                                                     // What: Motion Style Object. Why: The event doesn't carry the motion's duration. How: This reads the computed styles of the element, or of its pseudo-element.
 		const namLisArr = ( isaTraBoo ? motStyObj.transitionProperty : motStyObj.animationName ).split( ',' ).map( ( namCurStr ) => namCurStr.trim() ); // What: Name List Array. Why: An element can list several animations or transitioned properties. How: This splits the list that matches the event's kind.
 		const durLisArr = ( isaTraBoo ? motStyObj.transitionDuration : motStyObj.animationDuration ).split( ',' ).map( durMilFun );                     // What: Duration List Array. Why: Each name in the list has its own duration. How: This splits the matching duration list and converts each to milliseconds.
-		const namIndNum = namLisArr.includes( motNamStr ) ? namLisArr.lastIndexOf( motNamStr ) : namLisArr.lastIndexOf( 'all' );                        // What: Name Index Number. Why: The motion's duration sits at its name's place in the list, and a later entry wins over an earlier one. How: This finds the last entry naming the motion, or the last all entry for a transition, or -1.
+		const namIndNum = namLisArr.includes( motNamStr ) ? namLisArr.lastIndexOf( motNamStr ) : namLisArr.lastIndexOf( 'all' );                        // What: Name Index Number. Why: The motion's duration sits at its name's place in the list, and a later entry wins over an earlier one. How: This finds the last entry naming the motion, or the last all entry when none names it, or -1.
 		const motDurNum = namIndNum < 0 ? Math.max( ...durLisArr ) : durLisArr[ namIndNum % durLisArr.length ];                                         // What: Motion Duration Number. Why: The check needs the motion's own duration. How: This reads the duration at its name's place, wrapping round a shorter duration list as CSS does, or the longest one listed when no entry names it.
 
 
@@ -230,11 +230,11 @@ async function namProFun ( curPagObj : Page ) : Promise< string[] > {
  *
  * @summary
  * Runs inside the page and resolves once the page has stopped scrolling,
- * meaning its scroll position hasn't changed for 15 frames in a row (about a
- * quarter of a second), or after 2 seconds at most. WebKit scrolls a focused
- * text field into view a few frames after focusing it rather than at once,
- * so measuring a stop straight after the Tab press would find it still off
- * screen. Passed to Playwright's evaluate, so it can't read anything from
+ * meaning its vertical scroll position hasn't changed for 15 frames in a row
+ * (about a quarter of a second), or after 2 seconds at most. WebKit scrolls a
+ * focused text field into view a few frames after focusing it rather than at
+ * once, so measuring a stop straight after the Tab press would find it still
+ * off screen. Passed to Playwright's evaluate, so it can't read anything from
  * this file.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -258,14 +258,14 @@ function scrSetFun () : Promise< void > {
 
 		const staTimNum = performance.now(); // What: Start Time Number. Why: A page that never stops scrolling shouldn't hang the walk. How: This records when the wait began.
 
-		let preScrNum = scrollY; // What: Previous Scroll Number. Why: Each frame is compared with the one before. How: This holds the last frame's scroll position.
+		let preScrNum = scrollY; // What: Previous Scroll Number. Why: Each frame is compared with the one before. How: This holds the last frame's vertical scroll position.
 		let staFraNum = 0;       // What: Stable Frame Number. Why: Scrolling has settled only after several unchanged frames. How: This counts them in a row.
 
 
 		const fraCheFun = () => { // What: Frame Check Function. Why: Scrolling is judged once per frame. How: This counts unchanged frames and resolves after 15 of them or 2 seconds.
 
 
-			staFraNum = scrollY === preScrNum ? staFraNum + 1 : 0; // What: Stable Frame Update. Why: Any movement restarts the count. How: This adds one for an unchanged frame and resets it otherwise.
+			staFraNum = scrollY === preScrNum ? staFraNum + 1 : 0; // What: Stable Frame Update. Why: Any vertical movement restarts the count. How: This adds one for an unchanged frame and resets it otherwise.
 
 			preScrNum = scrollY; // What: Previous Scroll Update. Why: The next frame is compared with this one. How: This stores this frame's position.
 
@@ -360,14 +360,14 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
 
 	// #region Focus Indicator Check
 
-	const sigStyFun = () => { // What: Signature Style Function. Why: A focus indicator is any visible change between focused and unfocused. How: This reads the stop's styles as one string to compare.
+	const sigStyFun = () => { // What: Signature Style Function. Why: A focus indicator is usually a change in outline, shadow, border color, background, text color, or underline between focused and unfocused. How: This reads the stop's styles as one string to compare.
 
 
 		const styCurObj = getComputedStyle( actCurEle ); // What: Style Current Object. Why: The stop's styles are compared as they're drawn now. How: This reads its computed styles.
 
 
 
-		return [ styCurObj.outlineStyle, styCurObj.outlineWidth, styCurObj.outlineColor, styCurObj.boxShadow, styCurObj.borderColor, styCurObj.backgroundColor, styCurObj.color, styCurObj.textDecorationLine ].join( '|' ); // What: Signature Return. Why: Two looks compare as one string. How: This joins every style a focus indicator usually changes.
+		return [ styCurObj.outlineStyle, styCurObj.outlineWidth, styCurObj.outlineColor, styCurObj.boxShadow, styCurObj.borderColor, styCurObj.backgroundColor, styCurObj.color, styCurObj.textDecorationLine ].join( '|' ); // What: Signature Return. Why: Two looks compare as one string. How: This joins the styles a focus indicator usually changes.
 
 
 	};
