@@ -11,7 +11,7 @@ import { join          } from 'node:path';             // What: Join. Why: A bui
 import { readdirSync   } from 'node:fs';               // What: Read Directory Sync. Why: Every built file is searched for secrets. How: This lists the build folder's entries, recursively.
 import { readFileSync  } from 'node:fs';               // What: Read File Sync. Why: Each built file's text is searched. How: This reads a built file.
 import { relative      } from 'node:path';             // What: Relative. Why: A match is reported by its path inside the build. How: This trims the build folder off a file's path.
-import { test          } from '@playwright/test';      // What: Test. Why: Each part of the policy is its own test. How: This declares them.
+import { test          } from '@playwright/test';      // What: Test. Why: Each check is its own test. How: This declares them.
 
 // #endregion Imports
 

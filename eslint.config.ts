@@ -47,7 +47,7 @@ import tyeEslObj from 'typescript-eslint';         // What: TypeScript ESLint Ob
 const ESL_CON_ARR = [ // What: ESLint Config Array. Why: ESLint reads its flat config as an array of objects, each scoped to the files it lists. How: This holds the generated-output ignore, typescript-eslint's recommended configs and two rule overrides, the src/ undefined-component config, and the hooks config.
 
 
-	{ ignores : [ 'dist/**', 'tests/output/**' ] }, // What: Ignores Object. Why: The build output and the test suites' reports are generated, not hand-written, so their lint results mean nothing. How: This global ignores entry skips both folders for every config below; one glob each, since braces break ESLint's matching here.
+	{ ignores : [ 'dist/**', 'tests/output/**' ] }, // What: Ignores Object. Why: The build output and the test suites' reports are generated, not hand-written, so their lint results mean nothing. How: This global ignores entry skips both folders for every config below, one glob each.
 	...tyeEslObj.configs.recommended,               // What: Recommended Configs Spread. Why: typescript-eslint's recommended rules catch TypeScript mistakes the compiler allows, such as an unused variable. How: This spreads its recommended configs in, whose parser and rules apply to every file ESLint lints, while the one that switches off the core rules TypeScript already covers applies to TypeScript files only.
 
 	{ // What: Rule Overrides Object. Why: Two recommended rules flag patterns the formatting rules rely on. How: This re-sets both rules with an option that allows those patterns.
@@ -89,7 +89,7 @@ const ESL_CON_ARR = [ // What: ESLint Config Array. Why: ESLint reads its flat c
 	{ // What: Hooks Config Object. Why: Hook calls in components and custom hooks follow rules of their own. How: This adds the React Hooks recommended rules for every .tsx file and every .ts file under src/.
 
 
-		files   : [ '**/*.tsx', 'src/**/*.ts' ],                    // What: Files. Why: Hooks live in every component file and in custom hooks under src/ written without JSX, while tests stay out, since Playwright's test.use reads as React's use. How: This matches every .tsx file plus the .ts files under src/, as two globs, since braces break ESLint's matching here.
+		files   : [ '**/*.tsx', 'src/**/*.ts' ],                    // What: Files. Why: Hooks live in every component file and in custom hooks under src/ written without JSX, while tests stay out, since Playwright's test.use reads as React's use. How: This matches every .tsx file plus the .ts files under src/, as two globs.
 		plugins : { react : reaPluObj, 'react-hooks' : rehPluObj }, // What: Plugins. Why: The hooks rules come from the React Hooks plugin. How: This registers it beside the React plugin.
 
 		languageOptions : { // What: Language Options. Why: These files are TypeScript, the .tsx ones with JSX. How: This sets the TypeScript parser and turns on JSX parsing.

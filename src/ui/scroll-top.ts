@@ -58,7 +58,7 @@ let scrPosObj : Record< string, number > = {}; // What: Scroll Position Object. 
 
 try { scrPosObj = JSON.parse( sessionStorage.getItem( POS_STO_STR ) || '{}' ); } // What: Saved Positions Read. Why: A reload should find the positions recorded before it. How: This reads them from session storage, or starts empty when there are none.
 
-catch { scrPosObj = {}; } // What: Unreadable Positions Fallback. Why: Storage can be blocked, such as in some private windows, or hold something that isn't JSON. How: This starts with no saved positions, so pages simply open where the browser puts them.
+catch { scrPosObj = {}; } // What: Unreadable Positions Fallback. Why: Storage can be blocked, such as when a visitor turns off site data, or hold something that isn't JSON. How: This starts with no saved positions, so pages simply open where the browser puts them.
 
 // #endregion Module State
 

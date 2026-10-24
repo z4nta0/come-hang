@@ -33,7 +33,7 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
 // #region Constants
 
 const DES_STA_ARR = STA_REC_ARR.filter( ( staRecObj ) => staRecObj.ideStr.endsWith( '-desktop' ) ); // What: Desktop State Array. Why: The skip link is checked once on every page, at desktop size. How: This takes the shared desktop state of each page.
-const NOF_PHO_OBJ = STA_REC_ARR.find( ( staRecObj ) => staRecObj.ideStr === 'not-found-phone' )!;   // What: Not-Found Phone Object. Why: The 404 page checks start from it, since most people use the app on a phone. How: This takes the shared 404 phone state. // What: Non-Null Note. Why: find's return type allows undefined. How: states.ts always lists the not-found-phone state.
+const NOF_PHO_OBJ = STA_REC_ARR.find( ( staRecObj ) => staRecObj.ideStr === 'not-found-phone' )!;   // What: Not-Found Phone Object. Why: The 404 page checks start from it at the narrower of its two widths. How: This takes the shared 404 phone state. // What: Non-Null Note. Why: find's return type allows undefined. How: states.ts always lists the not-found-phone state.
 
 // #endregion Constants
 

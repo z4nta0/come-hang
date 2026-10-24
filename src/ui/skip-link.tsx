@@ -124,7 +124,7 @@ function SkiLinCom () : React.JSX.Element {
 			onClick={ ( cliEveObj ) => { // What: Skip Click Handler. Why: The jump should land in the content without leaving a hash in the address. How: This leaves a modified click to the browser, and otherwise cancels the default and focuses the main element.
 
 
-				if ( modCliFun( cliEveObj ) ) return; // What: Modified Click Guard. Why: A Ctrl, Cmd, Shift, or Alt click asks the browser to open the link its own way. How: This returns before the default is cancelled.
+				if ( modCliFun( cliEveObj ) ) return; // What: Modified Click Guard. Why: A click with a modifier key held, or with any button but the main one, asks the browser to handle the link its own way. How: This returns before the default is cancelled.
 
 
 
