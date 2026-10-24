@@ -41,7 +41,7 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
 
 // #region Constants
 
-const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
+const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                  // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
 const DIS_DIR_STR = fileURLToPath( new URL( '../../dist/', import.meta.url ) ); // What: Distribution Directory String. Why: The secret search reads what visitors download. How: This resolves the build folder, dist/.
 const ROO_DIR_STR = fileURLToPath( new URL( '../..', import.meta.url ) );       // What: Root Directory String. Why: npm audit reads the repo's lockfile. How: This resolves the repo root.
 
@@ -98,11 +98,11 @@ test( 'the other hardening headers are set', () => { // What: Hardening Headers 
 
 
 	expect( Number( hstValStr.match( /max-age=(\d+)/ )?.[ 1 ] ?? 0 ) ).toBeGreaterThanOrEqual( 31536000 ); // What: HSTS Age Assertion. Why: Browsers should stay on HTTPS for at least a year once they've seen the app. How: This checks max-age is at least 31,536,000 seconds.
-	expect( hstValStr ).toContain( 'includeSubDomains' );                                                 // What: HSTS Subdomains Assertion. Why: A plain HTTP subdomain could still be used against the app. How: This checks HSTS covers every subdomain.
-	expect( heaAllObj[ 'x-content-type-options' ] ).toBe( 'nosniff' );                                    // What: No Sniff Assertion. Why: A browser guessing a file's type could run a text file as script. How: This checks it's told not to guess.
-	expect( heaAllObj[ 'x-frame-options' ] ).toBe( 'DENY' );                                              // What: Frame Options Assertion. Why: Older browsers ignore frame-ancestors. How: This checks framing is refused the older way too.
-	expect( heaAllObj[ 'referrer-policy' ] ).toBeTruthy();                                                // What: Referrer Policy Assertion. Why: Without one, the full address can leak to other sites. How: This checks a policy is set.
-	expect( heaAllObj[ 'permissions-policy' ] ).toBeTruthy();                                             // What: Permissions Policy Assertion. Why: Browser features the app doesn't use shouldn't be available to injected code. How: This checks a policy is set.
+	expect( hstValStr ).toContain( 'includeSubDomains' );                                                  // What: HSTS Subdomains Assertion. Why: A plain HTTP subdomain could still be used against the app. How: This checks HSTS covers every subdomain.
+	expect( heaAllObj[ 'x-content-type-options' ] ).toBe( 'nosniff' );                                     // What: No Sniff Assertion. Why: A browser guessing a file's type could run a text file as script. How: This checks it's told not to guess.
+	expect( heaAllObj[ 'x-frame-options' ] ).toBe( 'DENY' );                                               // What: Frame Options Assertion. Why: Older browsers ignore frame-ancestors. How: This checks framing is refused the older way too.
+	expect( heaAllObj[ 'referrer-policy' ] ).toBeTruthy();                                                 // What: Referrer Policy Assertion. Why: Without one, the full address can leak to other sites. How: This checks a policy is set.
+	expect( heaAllObj[ 'permissions-policy' ] ).toBeTruthy();                                              // What: Permissions Policy Assertion. Why: Browser features the app doesn't use shouldn't be available to injected code. How: This checks a policy is set.
 
 
 } );
@@ -126,8 +126,8 @@ test( 'the built app holds no secrets', () => { // What: Secret Search Test. Why
 
 
 
-		const filPatStr = join( filEntObj.parentPath, filEntObj.name );     // What: File Path String. Why: The file is read, and reported, by its path. How: This joins the entry's folder and name.
-		const filTexStr = readFileSync( filPatStr, 'utf8' );                // What: File Text String. Why: Each pattern is searched in the file's text. How: This reads the built file.
+		const filPatStr = join( filEntObj.parentPath, filEntObj.name ); // What: File Path String. Why: The file is read, and reported, by its path. How: This joins the entry's folder and name.
+		const filTexStr = readFileSync( filPatStr, 'utf8' );            // What: File Text String. Why: Each pattern is searched in the file's text. How: This reads the built file.
 
 
 		for ( const secPatReg of SEC_PAT_ARR ) if ( secPatReg.test( filTexStr ) ) proLisArr.push( `${ relative( DIS_DIR_STR, filPatStr ) } matches ${ secPatReg }` ); // What: Pattern Loop. Why: Each kind of secret is searched for. How: This records the file, relative to the build, and the pattern for every match.
@@ -170,7 +170,7 @@ test( 'the shipped dependencies have no high or critical advisory', () => { // W
 
 
 	const audDatObj = JSON.parse( audTexStr || '{}' ) as { metadata? : { vulnerabilities? : Record< string, number > } }; // What: Audit Data Object. Why: The counts are read by severity. How: This parses npm's JSON, or an empty object when there was no output. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as names only the fields read.
-	const vulCouObj = audDatObj.metadata?.vulnerabilities;                                                                 // What: Vulnerability Count Object. Why: Only a real report has counts. How: This reads them, or undefined when npm couldn't reach its registry.
+	const vulCouObj = audDatObj.metadata?.vulnerabilities;                                                                // What: Vulnerability Count Object. Why: Only a real report has counts. How: This reads them, or undefined when npm couldn't reach its registry.
 
 
 	test.skip( !vulCouObj, 'npm audit could not reach the registry, so the dependencies went unchecked.' ); // What: Offline Skip. Why: Without a report there's nothing to check, and passing would hide that. How: This skips the test with a message saying why.

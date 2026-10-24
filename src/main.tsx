@@ -36,7 +36,7 @@ createRoot( document.getElementById( 'appMouDiv' )! ).render( // What: Root Rend
 	<StrictMode>{ /* What: App Strict Mode. Why: Development builds should flag unsafe patterns early. How: This double-invokes renders and effects in development only, and does nothing in production. */ }
 
 
-		<BrowserRouter>{ /* What: App Browser Router. Why: The routes read the real URL path. How: This provides history-based routing to everything inside AppRooCom. */ }
+		<BrowserRouter>{ /* What: App Browser Router. Why: The routes read the real URL path. How: This provides history-based routing to AppRooCom and everything it renders. */ }
 
 
 			<AppRooCom />{ /* What: App Root Component. Why: This is the whole app. How: This renders AppRooCom's routes. */ }

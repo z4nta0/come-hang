@@ -37,7 +37,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 
 	heiNum : number, // What: Height Number. Why: The viewport's height decides what's on screen. How: This is the viewport height in CSS pixels.
 	ideStr : string, // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
-	patStr : string, // What: Path String. Why: Each state opens one route. How: This is the path loaded from the dev server.
+	patStr : string, // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	widNum : number  // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -63,7 +63,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  *
  * - `ideStr` (String): Identifier String, the state's name in test titles.
  *
- * - `patStr` (String): Path String, the route loaded from the dev server.
+ * - `patStr` (String): Path String, the route loaded from the suite's server.
  *
  * - `widNum` (Number): Width Number, the viewport width in CSS pixels.
  *
@@ -181,7 +181,7 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 	await curPagObj.setViewportSize( { height : staRecObj.heiNum, width : staRecObj.widNum } ); // What: Viewport Size Call. Why: The state's layout depends on its width. How: This sizes the page before it loads, so breakpoints apply from the first paint.
 
-	await curPagObj.goto( staRecObj.patStr ); // What: Page Load Call. Why: Each state starts from a fresh load of its route. How: This opens the path on the suite's dev server.
+	await curPagObj.goto( staRecObj.patStr ); // What: Page Load Call. Why: Each state starts from a fresh load of its route. How: This opens the path on the suite's server.
 
 	await curPagObj.evaluate( () => document.fonts.ready ); // What: Fonts Ready Wait. Why: Text measured before its web font loads would have the wrong size and wrapping. How: This waits until every font face has loaded.
 

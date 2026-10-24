@@ -18,7 +18,7 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
  * @summary
  * Checks how the app behaves when someone moves through it and uses its
  * controls, in whichever engine the project runs, such as an unknown address
- * landing on the 404 page or the skip link moving focus to the content.
+ * landing on the 404 page.
  *
  * Sections:
  *  - Constants
@@ -154,7 +154,7 @@ for ( const staRecObj of DES_STA_ARR ) { // What: Skip Link Loop. Why: Every pag
 
 		await skiLinLoc.click(); // What: Skip Click Call. Why: This is the action under test. How: This clicks the focused skip link.
 
-		await expect( curPagObj.locator( 'main' ) ).toBeFocused();                   // What: Main Focus Assertion. Why: The jump has to land in the content, so the next Tab continues from there. How: This checks the main element holds focus.
+		await expect( curPagObj.locator( 'main' ) ).toBeFocused();                     // What: Main Focus Assertion. Why: The jump has to land in the content, so the next Tab continues from there. How: This checks the main element holds focus.
 		await expect( curPagObj ).toHaveURL( new RegExp( `${ staRecObj.patStr }$` ) ); // What: Clean Address Assertion. Why: The jump shouldn't leave a hash in the address. How: This checks the address still ends with the page's own path.
 
 
