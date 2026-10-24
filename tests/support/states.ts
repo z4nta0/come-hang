@@ -55,9 +55,9 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  * STA_REC_ARR = State Record Array
  *
  * @summary
- * Every state the checks visit: the home page and the 404 page at a phone
- * width (390px) and a desktop width (1,440px). Every row shares the
- * {@link StaRecTyp} shape, so its fields carry no comments of their own:
+ * Every state the checks visit: each page at a phone width and a desktop
+ * width. Every row shares the {@link StaRecTyp} shape, so its fields carry
+ * no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
  *

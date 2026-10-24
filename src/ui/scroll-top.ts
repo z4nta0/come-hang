@@ -151,7 +151,7 @@ function useScrTopFun () : void {
 history.scrollRestoration = 'manual'; // What: Manual Scroll Restoration Assignment. Why: Firefox would otherwise restore a position while the page being left is still drawn, cutting it short, before the hook's own restore runs. How: This stops the browser restoring positions on its own.
 
 
-window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Why: Back, forward, and a reload return to the position each entry was left at, and a mobile browser can discard a background tab without firing pagehide, so saving only as the page hides could lose it. How: On every scroll event, which the browser fires at most once a frame, this records the position under the showing entry's key and saves the positions to session storage, as a passive listener that never delays the scroll.
+window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Why: Back, forward, and a reload return to the position each entry was left at, and a mobile browser can discard a background tab without firing pagehide, so saving only as the page hides could lose it. How: On every scroll event, which the browser fires at most once a frame, this records the position under the showing entry's key and saves the positions to session storage.
 
 
 	scrPosObj[ scrKeyStr ] = window.scrollY; // What: Position Record Assignment. Why: The showing entry's latest position is the one to return to. How: This stores it under the entry's location key.
@@ -163,7 +163,7 @@ window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Wh
 	catch ( errCatObj ) { console.warn( errCatObj ); } // What: Positions Write Failure. Why: Storage can be full or blocked, and the failure should stay visible to anyone debugging. How: This logs it, and back and forward still restore from memory.
 
 
-}, { passive : true } ); // What: Passive Listener Option. Why: Recording must never delay the scroll itself. How: This marks the listener passive.
+} );
 
 // #endregion Module Init
 

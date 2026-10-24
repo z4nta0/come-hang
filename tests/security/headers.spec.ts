@@ -76,7 +76,7 @@ test( 'the content security policy allows only the app itself', () => { // What:
 	const cspValStr = heaAllFun()[ 'content-security-policy' ] ?? ''; // What: Content-Security-Policy Value String. Why: Each directive is checked in the policy's own text. How: This reads the header, or an empty string if it's missing.
 
 
-	expect( cspValStr ).toContain( "default-src 'self'" );     // What: Default Source Assertion. Why: Every resource type the policy doesn't name falls back to this. How: This checks it allows the app's own origin only.
+	expect( cspValStr ).toContain( "default-src 'self'" );     // What: Default Source Assertion. Why: Every resource type the policy doesn't name falls back to this. How: This checks the directive includes 'self'.
 	expect( cspValStr ).toContain( "base-uri 'self'" );        // What: Base URI Assertion. Why: An injected base tag could point every relative address at another site. How: This checks the base address stays on the app.
 	expect( cspValStr ).toContain( "form-action 'self'" );     // What: Form Action Assertion. Why: An injected form could post a visitor's details elsewhere. How: This checks forms post to the app only.
 	expect( cspValStr ).toContain( "frame-ancestors 'none'" ); // What: Frame Ancestors Assertion. Why: A site framing this app could trick visitors into clicks. How: This checks no page may frame it.
@@ -101,7 +101,7 @@ test( 'the other hardening headers are set', () => { // What: Hardening Headers 
 	expect( hstValStr ).toContain( 'includeSubDomains' );                                                  // What: HSTS Subdomains Assertion. Why: A plain HTTP subdomain could still be used against the app. How: This checks HSTS covers every subdomain.
 	expect( heaAllObj[ 'x-content-type-options' ] ).toBe( 'nosniff' );                                     // What: No Sniff Assertion. Why: A browser guessing a file's type could run a text file as script. How: This checks it's told not to guess.
 	expect( heaAllObj[ 'x-frame-options' ] ).toBe( 'DENY' );                                               // What: Frame Options Assertion. Why: Older browsers ignore frame-ancestors. How: This checks framing is refused the older way too.
-	expect( heaAllObj[ 'referrer-policy' ] ).toBeTruthy();                                                 // What: Referrer Policy Assertion. Why: Without one, the full address can leak to other sites. How: This checks a policy is set.
+	expect( heaAllObj[ 'referrer-policy' ] ).toBeTruthy();                                                 // What: Referrer Policy Assertion. Why: Without one, each browser's own default decides how much of the address other sites learn. How: This checks a policy is set.
 	expect( heaAllObj[ 'permissions-policy' ] ).toBeTruthy();                                              // What: Permissions Policy Assertion. Why: Browser features the app doesn't use shouldn't be available to injected code. How: This checks a policy is set.
 
 

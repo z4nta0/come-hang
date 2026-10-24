@@ -297,7 +297,7 @@ type StoInfTyp = { // What: Stop Information Type. Why: The keyboard walk judges
 
 
 	covBoo : boolean, // What: Covered Boolean. Why: A stop hidden behind another element can't be seen while focused. How: This is true when something else sits on top of the stop's center.
-	desStr : string,  // What: Description String. Why: A problem should name the element a person would recognize. How: This joins the stop's tag and its label or text.
+	desStr : string,  // What: Description String. Why: A problem should name the element a person would recognize. How: This joins the stop's tag and the first 40 characters of its label, id, or text.
 	indBoo : boolean, // What: Indicator Boolean. Why: A keyboard user has to see where focus is. How: This is true when focusing the stop changes how it looks.
 	ordNum : number,  // What: Order Number. Why: Focus order is compared with document order. How: This is the stop's position among every element in the page.
 	visBoo : boolean  // What: Visible Boolean. Why: A stop off screen leaves a keyboard user lost. How: This is true when the stop has a size and overlaps the viewport.
