@@ -45,7 +45,6 @@ test( 'an unknown address shows the 404 page, marked noindex', async ( { page : 
 
 	await opeStaFun( curPagObj, NOF_PHO_OBJ ); // What: State Open Call. Why: The checks read the settled 404 page. How: This loads and settles it.
 
-
 	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Page Not Found' );     // What: Heading Assertion. Why: The page should say what happened. How: This reads its one h1.
 	await expect( curPagObj ).toHaveTitle( 'Page Not Found | Come Hang' );                              // What: Title Assertion. Why: The tab should name the 404 page. How: This reads the document's title.
 	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveAttribute( 'content', 'noindex' ); // What: Robots Assertion. Why: The host answers unknown paths with a 200, so search engines must be told to skip the page. How: This reads the robots tag's content.
@@ -63,7 +62,6 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page. How: This opens the unknown path.
 
 	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: This is the navigation being checked. How: Playwright scrolls the link into view, scrolling the page down, then clicks it.
-
 
 	await expect( curPagObj ).toHaveURL( '/' );                                                // What: Address Assertion. Why: The link leads to the home page. How: This reads the address.
 	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Home Heading Assertion. Why: The home page should be what's showing. How: This reads its one h1.
@@ -115,7 +113,6 @@ test( "the 404 page's button still lifts under reduced motion, instantly", async
 
 
 	await butLinObj.hover(); // What: Hover Call. Why: This is the interaction being checked. How: Playwright moves the pointer onto the button.
-
 
 	await expect( butLinObj ).not.toHaveCSS( 'transform', 'none' );                                  // What: Lifted Assertion. Why: The lift should still apply. How: This checks the button carries a transform.
 	expect( await butLinObj.evaluate( ( butCurEle ) => butCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Easing Assertion. Why: The lift should apply at once, with nothing easing it. How: This checks the button holds no running animation or transition.

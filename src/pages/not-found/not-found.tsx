@@ -83,6 +83,8 @@ function NotFouCom () : React.JSX.Element {
 
 				<p className={ cssModObj.nofNotPar }>The address you followed doesn't lead anywhere in the app. It may be mistyped, or the page may have moved.</p>{ /* What: Not-Found Note Paragraph Element. Why: A short line explains what went wrong. How: This gives the two likely reasons. */ }
 
+
+
 				<Link
 					className={ cssModObj.butBasAnc }
 
