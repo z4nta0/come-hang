@@ -189,9 +189,9 @@ async function conLisFun ( curPagObj : Page, conSelStr : string ) : Promise< Ele
  * An inner element whose color matches its parent's takes the parent's
  * duration for it, since an inherited color eases with the parent's
  * transition, and a border color matching the element's own color takes the
- * color's duration, since an unset border color is currentColor and follows
- * the color as it eases. Passed to Playwright's evaluate, so it can't read
- * anything from this file.
+ * longer of its own duration and the color's, since an unset border color is
+ * currentColor and follows the color as it eases. Passed to Playwright's
+ * evaluate, so it can't read anything from this file.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -211,7 +211,7 @@ async function conLisFun ( curPagObj : Page, conSelStr : string ) : Promise< Ele
 function snaEleFun ( eleCurEle : Element, proNamArr : string[] ) : SnaRecTyp[] {
 
 
-	const parNamObj : Record< string, string > = { 'background-color' : 'background', 'border-color' : 'border' }; // What: Parent Name Object. Why: A transition listed by a shorthand covers the longhands inside it. How: This maps each probed longhand to its shorthand.
+	const parNamObj : Record< string, string > = { 'background-color' : 'background', 'border-color' : 'border' }; // What: Parent Name Object. Why: A transition listed by a shorthand covers the longhands inside it. How: This maps background-color to background and border-color to border.
 
 
 
@@ -473,7 +473,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		if ( redMotBoo && !/^0s(, 0s)*$/.test( traDurStr ) ) proLisArr.push( `${ conDesStr } still transitions under reduced motion (${ traDurStr })` ); // What: Reduced Motion Check. Why: Asking for less motion should stop every transition. How: This records a control with any duration above zero.
 
-		else if ( !redMotBoo && !traLisStr.includes( 'outline-width' ) ) proLisArr.push( `${ conDesStr } doesn't transition its focus ring` ); // What: Focus Ease Check. Why: The focus ring should ease in rather than snap. How: This records a control whose transition list doesn't include outline-width.
+		else if ( !redMotBoo && !traLisStr.includes( 'outline-width' ) ) proLisArr.push( `${ conDesStr } doesn't transition its focus ring` ); // What: Focus Ease Check. Why: The focus ring should ease in rather than snap. How: This records a control whose transition property text doesn't contain outline-width.
 
 
 

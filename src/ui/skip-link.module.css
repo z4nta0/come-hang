@@ -19,17 +19,17 @@
 .skiLinAnc { /* What: Skip Link Anchor. Why: A keyboard user should be able to jump to the content, and the link shouldn't show until it's needed. How: This draws a pill in the main accent with bold text, fixed just above the screen's top edge at the side gutter, and eases its slide back out on the accelerating curve, along with its hover color, hover lift, press scale, and focus ring. */
 
 
-	background-color : var( --acc-mai-col );                                     /* Accent Main Color = #1f5bc4 */
+	background-color : var( --acc-mai-col );                                   /* Accent Main Color = #1f5bc4 */
 	border-radius    : 999px;
-	color            : var( --tex-acc-col );                                     /* Text Accent Color = #ffffff */
+	color            : var( --tex-acc-col );                                   /* Text Accent Color = #ffffff */
 	font-weight      : 700;
-	left             : var( --gut-sid-pad );                                     /* Gutter Side Padding ~= 19.304px */
-	padding          : var( --spa-ver-bas ) var( --spa-hor-p03 );                /* Spacing Vertical Base ~= 14.572px, Spacing Horizontal Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	left             : var( --gut-sid-pad );                                   /* Gutter Side Padding ~= 19.304px */
+	padding          : var( --spa-ver-bas ) var( --spa-hor-p03 );              /* Spacing Vertical Base ~= 14.572px, Spacing Horizontal Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
 	position         : fixed;
-	top              : var( --spa-ver-m02 );                                     /* Spacing Vertical Base Minus 2 ~= 8.304px */
-	transform        : translateY( calc( -100% - var( --spa-ver-m02 ) * 2 ) );   /* Spacing Vertical Base Minus 2 ~= -16.608px */ /* What: Hidden Offset. Why: The link waits just above the screen until it's focused, clear of the edge so no rounded sliver of it shows. How: This raises it by its own height plus twice its top offset, leaving its bottom edge a top offset above the screen. */
+	top              : var( --spa-ver-m02 );                                   /* Spacing Vertical Base Minus 2 ~= 8.304px */
+	transform        : translateY( calc( -100% - var( --spa-ver-m02 ) * 2 ) ); /* Spacing Vertical Base Minus 2 ~= -16.608px */ /* What: Hidden Offset. Why: The link waits just above the screen until it's focused, clear of the edge so no rounded sliver of it shows. How: This raises it by its own height plus twice its top offset, leaving its bottom edge a top offset above the screen. */
 	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-acc-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ), Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
-	z-index          : 1;                                                        /* What: Skip Link Layer. Why: A page element that moves, such as a lifted button, paints above earlier elements, and the shown link has to stay on top. How: This sets it one layer above the page's content. */
+	z-index          : 1;                                                      /* What: Skip Link Layer. Why: A page element that moves, such as a lifted button, paints above earlier elements, and the shown link has to stay on top. How: This sets it one layer above the page's content. */
 
 
 }

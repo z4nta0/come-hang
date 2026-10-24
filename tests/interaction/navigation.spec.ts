@@ -55,7 +55,7 @@ test( 'an unknown address shows the 404 page, marked noindex', async ( { page : 
 
 
 
-test( "the 404 page's link opens the home page at its top", async ( { page : curPagObj } ) => { // What: Way Onward Test. Why: The 404 page's link is its way back into the app, and a new page should open at its top. How: This scrolls the 404 page down, clicks the link, and checks the home page is already at its top when it shows.
+test( "the 404 page's link opens the home page at its top", async ( { page : curPagObj } ) => { // What: Way Onward Test. Why: The 404 page's link is its way back into the app, and a new page should open at its top. How: This scrolls the 404 page down, clicks the link, and checks the address, the home heading, the missing robots tag, and that the home page can scroll yet already sits at its top when it shows.
 
 
 	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for the scroll reset to mean anything. How: This makes the screen too short to show the whole 404 page.
