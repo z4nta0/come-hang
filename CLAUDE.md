@@ -51,7 +51,8 @@ The suites start their own dev server on port 5198 (sibling projects use
   registered 2026-10-22, not yet deployed).
 - **Support email**: support@comehang.app.
 - **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
-  first file), `vite-plugin-pwa`.
+  first file), and `vite-plugin-pwa` once the service worker is built (not
+  yet installed).
 - **Backend**: Firebase on the Blaze plan (Auth, Firestore, Realtime
   Database, Cloud Messaging, Storage, Cloud Functions, App Check). No
   other server.

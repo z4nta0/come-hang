@@ -24,7 +24,7 @@ than one group.
 
 Original goal was a fully peer-to-peer app with no third-party server
 involved at all. That goal was revised after working through the real
-constraints (see Section 11): push notifications and reliable async
+constraints (see Section 3): push notifications and reliable async
 delivery are not achievable without *some* always-on infrastructure, so
 the design uses Firebase as a thin, largely transient relay instead of
 true P2P.
@@ -610,7 +610,7 @@ in place of their name. The group can manually reassign it if needed.
 
 ## 11. Data Model
 
-Proposal, pending review. Field names ending in `Enc` store ciphertext;
+Reviewed and approved (2026-10-22). Field names ending in `Enc` store ciphertext;
 every such field has a sibling `Iv` field (or a shared `iv` on the same
 document) holding the AES-GCM initialization vector needed to decrypt
 it. The IV isn't secret, it's just required alongside the ciphertext.
