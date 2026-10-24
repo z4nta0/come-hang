@@ -341,6 +341,8 @@ type StoInfTyp = { // What: Stop Information Type. Why: The keyboard walk judges
 async function stoInfFun () : Promise< StoInfTyp | null > {
 
 
+	// #region Walk End Detection
+
 	const actCurEle = document.activeElement as HTMLElement | null; // What: Active Current Element. Why: The stop is whatever holds focus after the press. How: This reads the focused element. // What: Type Assertion Note. Why: activeElement types as Element, which has no blur or focus. How: Every element that can hold focus in this app is an HTMLElement.
 
 	const actBodBoo = actCurEle === document.body; // What: Active Body Boolean. Why: Focus resting on the body means no stop holds it. How: This compares the focused element with the body.
@@ -352,7 +354,11 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
 
 	if ( walDonBoo ) return null; // What: Walk End Guard. Why: Focus on the body, nowhere, or outside the document means the walk has left the page. How: This returns null to end the walk.
 
+	// #endregion Walk End Detection
 
+
+
+	// #region Focus Indicator Check
 
 	const sigStyFun = () => { // What: Signature Style Function. Why: A focus indicator is any visible change between focused and unfocused. How: This reads the stop's styles as one string to compare.
 
@@ -384,6 +390,11 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
 
 	await Promise.allSettled( sliTraArr.map( ( sliCurObj ) => sliCurObj.finished ) ); // What: Slide Settled Wait. Why: Measuring mid-slide would find the stop partly off screen. How: This waits until each slide has finished, or been cancelled.
 
+	// #endregion Focus Indicator Check
+
+
+
+	// #region Stop Geometry And Label
 
 	const recCurObj = actCurEle.getBoundingClientRect();                                                                       // What: Rect Current Object. Why: A focused stop has to be on screen and uncovered. How: This measures the stop.
 	const topCurEle = document.elementFromPoint( recCurObj.left + recCurObj.width / 2, recCurObj.top + recCurObj.height / 2 ); // What: Top Current Element. Why: Whatever is drawn on top at the stop's center is what a person sees there. How: This asks the page which element sits at that point.
@@ -405,6 +416,8 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
 	const widPosBoo = recCurObj.width > 0;         // What: Width Positive Boolean. Why: A stop with no width can't be seen. How: This is true when it has some width.
 
 	const visStoBoo = botBelBoo && heiPosBoo && lefInsBoo && rigInsBoo && topAboBoo && widPosBoo; // What: Visible Stop Boolean. Why: A focused stop has to be on screen. How: This is true when it has a size and overlaps the viewport.
+
+	// #endregion Stop Geometry And Label
 
 
 
