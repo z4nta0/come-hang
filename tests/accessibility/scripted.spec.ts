@@ -20,10 +20,9 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The helpers th
  *
  * @summary
  * The accessibility checks axe-core can't make, run on every page state in
- * whichever engine the project runs. They cover how controls are named, how a
- * keyboard walks the page, whether it reflows at WCAG's narrowest width, and
- * whether it stays still when reduced motion is requested. Each failure lists
- * every problem found, by element.
+ * whichever engine the project runs. They read what a scan can't, such as a
+ * Tab walk through the page. Most checks list every problem they find, by
+ * element.
  *
  * Sections:
  *  - Constants

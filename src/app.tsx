@@ -6,7 +6,7 @@
 import { HomPagCom    } from './pages/home/home.tsx';           // What: Home Page Component. Why: The app's root address is its home page. How: The home route renders it.
 import { NotFouCom    } from './pages/not-found/not-found.tsx'; // What: Not Found Component. Why: Unknown addresses need a page of their own. How: The catch-all route renders it.
 import { Route        } from 'react-router';                    // What: Route. Why: Each page is matched to its path. How: This declares one route per page.
-import { Routes       } from 'react-router';                    // What: Routes. Why: Only one page should render for any path. How: This renders the first route whose path matches.
+import { Routes       } from 'react-router';                    // What: Routes. Why: Only one page should render for any path. How: This renders the single route that best matches the path.
 import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled. How: The app root calls it once, and it scrolls on every link-driven navigation.
 
 // #endregion Imports
@@ -80,7 +80,7 @@ function AppRooCom () : React.JSX.Element {
 		>{ /* What: App Main Element. Why: Each page's content is the main landmark, and it should fill the screen. How: This holds whichever page the address matches in a one-cell grid at least as tall as the screen, whose single row stretches the page to fill it, so the page needs no named area. */ }
 
 
-			<Routes>{ /* What: Page Routes. Why: Only one page should render for any path. How: This renders the first route below whose path matches. */ }
+			<Routes>{ /* What: Page Routes. Why: Only one page should render for any path. How: This renders the single route below that best matches the path. */ }
 
 
 				<Route
@@ -92,7 +92,7 @@ function AppRooCom () : React.JSX.Element {
 
 				<Route
 					element={ <NotFouCom /> }
-					path='*' // What: Catch-All Path. Why: Any address the app doesn't have should land on the 404 page. How: The asterisk matches every path no earlier route claimed.
+					path='*' // What: Catch-All Path. Why: Any address the app doesn't have should land on the 404 page. How: The asterisk matches every path, but ranks below a more specific route, such as the root path.
 				/>{ /* What: Not Found Route. Why: Unknown paths need a page of their own. How: This renders NotFouCom for every other path. */ }
 
 
