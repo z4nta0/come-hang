@@ -81,8 +81,6 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 test( 'back from the home page returns the 404 page to where it was left', async ( { page : curPagObj } ) => { // What: Back Position Test. Why: Back and forward are left to the browser, which should return the visitor to where they were. How: This scrolls the 404 page down, follows its link home, goes back, and checks the 404 page is scrolled down again.
 
 
-
-
 	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole 404 page.
 
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page. How: This opens the unknown path.
