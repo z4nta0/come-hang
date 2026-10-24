@@ -207,7 +207,7 @@ test( 'the skip link appears and lifts instantly under reduced motion', async ( 
 
 	await skiLinLoc.focus(); // What: Skip Focus Call. Why: Focus is what brings the link into view. How: This focuses it.
 
-	await expect( skiLinLoc ).toBeInViewport();                                                        // What: Skip Shown Assertion. Why: The link should be in view as soon as it's focused. How: This checks it sits on screen.
+	await expect( skiLinLoc ).toBeInViewport( { ratio : 1 } );                                         // What: Skip Shown Assertion. Why: The link should be in view as soon as it's focused. How: This checks the whole link sits on screen.
 	expect( await skiLinLoc.evaluate( ( skiCurEle ) => skiCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Slide Assertion. Why: The link should appear at once, with nothing easing it in. How: This checks it holds no running animation or transition.
 
 
@@ -238,8 +238,8 @@ for ( const staRecObj of DES_STA_ARR ) { // What: Skip Link Loop. Why: Every pag
 
 		await curPagObj.keyboard.press( broNamStr === 'webkit' ? 'Alt+Tab' : 'Tab' ); // What: First Tab Call. Why: The skip link should be the page's first stop. How: This presses Tab, or Alt+Tab in WebKit, whose plain Tab skips links the way Safari does by default.
 
-		await expect( skiLinLoc ).toBeFocused();    // What: Skip Focus Assertion. Why: The skip link has to be the page's first stop. How: This checks it holds focus after the first Tab.
-		await expect( skiLinLoc ).toBeInViewport(); // What: Skip Shown Assertion. Why: A focused link waiting above the screen would leave a keyboard user lost. How: This checks it has slid into view.
+		await expect( skiLinLoc ).toBeFocused();                   // What: Skip Focus Assertion. Why: The skip link has to be the page's first stop. How: This checks it holds focus after the first Tab.
+		await expect( skiLinLoc ).toBeInViewport( { ratio : 1 } ); // What: Skip Shown Assertion. Why: A focused link waiting above the screen would leave a keyboard user lost. How: This checks it has slid fully into view.
 
 		await skiLinLoc.click(); // What: Skip Click Call. Why: This is the action under test. How: This clicks the focused skip link.
 
