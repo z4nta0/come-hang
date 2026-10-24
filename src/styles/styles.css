@@ -423,7 +423,9 @@ body { /* What: Page Body. Why: Every page shares one font, color, and backgroun
 h1,
 h2,
 h3,
-h4 { /* What: Headings. Why: Headings set tight, each line as tall as its text. How: This gives them the m01 rhythm step as their line height. */
+h4,
+h5,
+h6 { /* What: Headings. Why: Headings set tight, each line as tall as its text. How: This gives them the m01 rhythm step as their line height. */
 
 
 	line-height : var( --ver-rhy-m01 ); /* Vertical Rhythm Base Minus 1 = 1 */
