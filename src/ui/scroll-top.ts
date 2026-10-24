@@ -54,6 +54,7 @@ const POS_STO_STR = 'scroll-positions'; // What: Position Storage String. Why: T
 // #region Module State
 
 let scrKeyStr = 'default'; // What: Scroll Key String. Why: A recorded position belongs to the history entry showing when the visitor scrolled. How: This holds the router's location key for that entry, which the hook updates on every navigation, starting from the key React Router gives a first load.
+let warLogBoo = false;     // What: Warning Logged Boolean. Why: A failing storage write would otherwise warn on every scroll frame. How: This turns true once the first failure has been logged.
 
 const scrPosMap = new Map< string, number >(); // What: Scroll Position Map. Why: Back, forward, and a reload return to where the visitor was. How: This maps each history entry's location key to its last scroll position, oldest entry first.
 
@@ -62,7 +63,7 @@ const scrPosMap = new Map< string, number >(); // What: Scroll Position Map. Why
 try { // What: Saved Positions Read. Why: A reload should find the positions recorded before it, and storage may hold something else entirely. How: This parses the saved pairs and keeps only those with a string key and a finite position.
 
 
-	const savPosAny : unknown = JSON.parse( sessionStorage.getItem( POS_STO_STR ) || '[]' ); // What: Saved Positions Any. Why: The stored text could be anything another version or a visitor left. How: This parses it without trusting its shape.
+	const savPosAny : unknown = JSON.parse( sessionStorage.getItem( POS_STO_STR ) || '[]' ); // What: Saved Position Any. Why: The stored text could be anything another version or a visitor left. How: This parses it without trusting its shape.
 
 
 	for ( const savEntAny of Array.isArray( savPosAny ) ? savPosAny : [] ) { // What: Saved Entry Loop. Why: Each pair is checked on its own, so one bad entry doesn't lose the rest. How: This walks the parsed list when it is one, and nothing otherwise.
@@ -98,13 +99,13 @@ const navEntObj = performance.getEntriesByType( 'navigation' )[ 0 ] as Performan
 // #region savPosFun
 
 /**
- * savPosFun = Save Positions Function
+ * savPosFun = Save Position Function
  *
  * @summary
  * Writes the recorded positions to session storage as a JSON list of key and
  * position pairs, oldest first, so a reload can read them back. A write that
- * fails, because storage is full or blocked, is logged and otherwise
- * ignored, since back and forward still restore from memory.
+ * fails, because storage is full or blocked, is logged the first time and
+ * otherwise ignored, since back and forward still restore from memory.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -124,7 +125,17 @@ function savPosFun () : void {
 
 	try { sessionStorage.setItem( POS_STO_STR, JSON.stringify( [ ...scrPosMap ] ) ); } // What: Positions Write Attempt. Why: The positions only survive a reload in storage. How: This saves them as a JSON list of key and position pairs, oldest first.
 
-	catch ( errCatObj ) { console.warn( errCatObj ); } // What: Positions Write Failure. Why: Storage can be full or blocked, and the failure should stay visible to anyone debugging. How: This logs it, and back and forward still restore from memory.
+	catch ( errCatObj ) { // What: Positions Write Failure. Why: Storage can be full or blocked, and the failure should stay visible to anyone debugging without repeating every frame. How: This logs the first failure and stays quiet after, while back and forward still restore from memory.
+
+
+		if ( !warLogBoo ) console.warn( errCatObj ); // What: First Failure Warning. Why: One warning is enough to show storage is failing. How: This logs the error unless one was already logged.
+
+
+
+		warLogBoo = true; // What: Warning Logged Assignment. Why: Later failures shouldn't warn again. How: This records that the warning was logged.
+
+
+	}
 
 
 }
@@ -245,7 +256,7 @@ window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Wh
 	scrPosMap.set( scrKeyStr, window.scrollY ); // What: Position Record Call. Why: The showing entry's latest position is the one to return to. How: This stores it under the entry's location key, as the newest entry.
 
 
-	if ( scrPosMap.size > POS_MAX_NUM ) scrPosMap.delete( scrPosMap.keys().next().value! ); // What: Oldest Position Trim. Why: The record shouldn't grow for as long as the tab stays open. How: This drops the oldest entry once there are more than POS_MAX_NUM. // What: Non-Null Note. Why: The iterator's first value types as possibly undefined. How: The map holds more than POS_MAX_NUM entries here, so a first key exists.
+	while ( scrPosMap.size > POS_MAX_NUM ) scrPosMap.delete( scrPosMap.keys().next().value! ); // What: Oldest Position Trim. Why: The record shouldn't grow for as long as the tab stays open, even when it was loaded over the cap, such as from an older build. How: This drops the oldest entries until no more than POS_MAX_NUM remain. // What: Non-Null Note. Why: The iterator's first value types as possibly undefined. How: The map holds more than POS_MAX_NUM entries here, so a first key exists.
 
 
 
