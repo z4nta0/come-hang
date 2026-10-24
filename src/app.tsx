@@ -11,7 +11,7 @@ import { NotFouCom    } from './pages/not-found/not-found.tsx'; // What: Not Fou
 import { Route        } from 'react-router';                    // What: Route. Why: Each page is matched to its path. How: This declares one route per page.
 import { Routes       } from 'react-router';                    // What: Routes. Why: Only one page should render for any path. How: This renders the single route that best matches the path.
 import { SkiLinCom    } from './ui/skip-link.tsx';              // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the main element.
-import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled. How: The app root calls it once, and it scrolls on every link-driven navigation.
+import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
 
 // #endregion Imports
 
@@ -24,10 +24,11 @@ import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scr
  * The app's root component, mounted by main.tsx inside the router: the skip
  * link every screen opens with, then the main landmark holding whichever page
  * the address matches, in a one-cell grid at least as tall as the screen. It
- * also returns the window to the top after each link-driven navigation. A
- * new page is added as another route here, above the catch-all route that
- * sends every unknown address to the 404 page. The shared navigation joins
- * once the app has pages to move between.
+ * also opens each page the way a site of real pages does, at its top after a
+ * link and at the earlier position on back, forward, and a reload. A new page
+ * is added as another route here, above the catch-all route that sends every
+ * unknown address to the 404 page. The shared navigation joins once the app
+ * has pages to move between.
  *
  * Sections:
  *  - Components
@@ -53,7 +54,8 @@ import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scr
  * as the 404 page can center itself in it. The main element is the skip
  * link's target, so it carries the main id and can take focus without joining
  * the Tab order. It calls useScrTopFun once, so every link-driven navigation
- * opens the new page at its top.
+ * opens the new page at its top, and back, forward, and a reload return to
+ * the earlier position.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -71,7 +73,7 @@ import { useScrTopFun } from './ui/scroll-top.ts';              // What: Use Scr
 function AppRooCom () : React.JSX.Element {
 
 
-	useScrTopFun(); // What: Scroll Top Call. Why: Every link to another page should open it at its top. How: This runs the hook once from the root, which stays mounted across every route.
+	useScrTopFun(); // What: Scroll Top Call. Why: Every link to another page should open it at its top, and back, forward, and a reload should return to the earlier position. How: This runs the hook once from the root, which stays mounted across every route.
 
 
 
