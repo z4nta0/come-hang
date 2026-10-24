@@ -161,10 +161,12 @@ function savPosFun () : void {
  * stylesheet's scroll-behavior. Back, forward, and a reload (a POP) return to
  * the position recorded for that history entry, after its page has rendered,
  * or are handled like any other navigation when none was recorded, such as on
- * a first visit. The jumps to the top and to a recorded position are instant
- * whatever the stylesheet's scroll-behavior says, since a smooth scroll down
- * a whole page reads as motion rather than as arriving on a new page. Call it
- * once, in a component inside the router that stays mounted across routes.
+ * a first visit, or when the entry is a default-key one carrying a hash,
+ * which has no router state of its own and so goes to its hash. The jumps to
+ * the top and to a recorded position are instant whatever the stylesheet's
+ * scroll-behavior says, since a smooth scroll down a whole page reads as
+ * motion rather than as arriving on a new page. Call it once, in a component
+ * inside the router that stays mounted across routes.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *

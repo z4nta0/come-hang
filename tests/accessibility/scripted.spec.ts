@@ -560,7 +560,7 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every ch
 
 
 
-	test( `${ staRecObj.ideStr } walks cleanly with the keyboard`, async ( { browserName : engNamStr, page : curPagObj } ) => { // What: Keyboard Test. Why: Everything has to be usable without a mouse. How: This opens the state under reduced motion, walks it with Tab, and checks that every stop is reachable, in order, on screen, uncovered, and visibly focused.
+	test( `${ staRecObj.ideStr } walks cleanly with the keyboard`, async ( { browserName : engNamStr, page : curPagObj } ) => { // What: Keyboard Test. Why: Everything has to be usable without a mouse. How: This opens the state under reduced motion, walks it with Tab, and checks it finds no keyboard problem: no positive tabindex, and every stop in order, on screen, uncovered, visibly focused, and escapable.
 
 
 		test.slow(); // What: Slow Test Mark. Why: A full walk measures every stop and can run past the default 30-second timeout, as it did in Firefox in tonys-toppers when every suite shared the machine. How: This triples this test's timeout.
@@ -569,7 +569,7 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every ch
 
 		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: The walk should start from the state settled. How: This loads and settles it.
 
-		expect( await keyProFun( curPagObj, engNamStr ) ).toEqual( [] ); // What: No Keyboard Problems Assertion. Why: The state passes only when every stop is reachable, in order, on screen, uncovered, and visibly focused. How: This compares the problems with an empty list, so a failure prints each one.
+		expect( await keyProFun( curPagObj, engNamStr ) ).toEqual( [] ); // What: No Keyboard Problems Assertion. Why: The state passes only when the walk finds no positive tabindex, no keyboard trap, and every stop in order, on screen, uncovered, and visibly focused. How: This compares the problems with an empty list, so a failure prints each one.
 
 
 	} );
