@@ -108,7 +108,7 @@ const ESL_CON_ARR = [ // What: ESLint Config Array. Why: ESLint reads its flat c
 
 			'react-hooks/preserve-manual-memoization' : 'off', // What: Preserve Manual Memoization Rule. Why: It only reports where the compiler would skip a component. How: This turns it off.
 			'react-hooks/purity'                      : 'off', // What: Purity Rule. Why: It flags impure calls the compiler can't place, including ones that only run in event handlers. How: This turns it off.
-			'react-hooks/refs'                        : 'off', // What: Refs Rule. Why: Reading a ref during render only conflicts with the compiler, not with React itself. How: This turns it off.
+			'react-hooks/refs'                        : 'off', // What: Refs Rule. Why: It flags refs read or written during render, a check aimed at whether the compiler can handle a component. How: This turns it off.
 			'react-hooks/set-state-in-effect'         : 'off'  // What: Set State In Effect Rule. Why: Syncing or measuring into state inside an effect is a working React pattern that only costs an extra render outside the compiler. How: This turns it off.
 
 

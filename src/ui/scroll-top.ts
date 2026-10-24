@@ -75,10 +75,11 @@ catch { scrPosObj = {}; } // What: Unreadable Positions Fallback. Why: Storage c
  * Scrolls the window to the top after every navigation a link or a redirect
  * makes, including a link to the page already showing, before the new page
  * is drawn. A navigation whose address carries a hash scrolls that section
- * into view instead, when an element with that id exists. Back, forward, and
- * a reload (a POP) return to the position recorded for that history entry,
- * after its page has rendered, or stay put when none was recorded, such as
- * on a first visit. Every jump is instant whatever the stylesheet's
+ * into view instead, when an element with that id exists, following the
+ * stylesheet's scroll-behavior. Back, forward, and a reload (a POP) return to
+ * the position recorded for that history entry, after its page has rendered,
+ * or stay put when none was recorded, such as on a first visit. The jumps to
+ * the top and to a recorded position are instant whatever the stylesheet's
  * scroll-behavior says, since a smooth scroll down a whole page reads as
  * motion rather than as arriving on a new page. Call it once, in a
  * component inside the router that stays mounted across routes.
