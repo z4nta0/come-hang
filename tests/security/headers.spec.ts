@@ -151,7 +151,7 @@ test( 'the shipped dependencies have no high or critical advisory', () => { // W
 
 
 
-	try {
+	try { // What: Audit Run Attempt. Why: npm audit exits with an error whenever it finds an advisory, which would otherwise end the test. How: This runs it and keeps its JSON output when it succeeds.
 
 
 		audTexStr = execFileSync( 'npm', [ 'audit', '--omit=dev', '--json' ], { cwd : ROO_DIR_STR, encoding : 'utf8' } ); // What: Audit Run Assignment. Why: The advisories come from npm's registry. How: This runs npm audit on the production dependencies.
@@ -159,7 +159,7 @@ test( 'the shipped dependencies have no high or critical advisory', () => { // W
 
 	}
 
-	catch ( errCatObj ) {
+	catch ( errCatObj ) { // What: Audit Failure Catch. Why: A run that found advisories still prints its JSON report. How: This reads the output the thrown error carries.
 
 
 		audTexStr = String( ( errCatObj as { stdout? : string } ).stdout ?? '' ); // What: Failed Audit Output Assignment. Why: npm audit exits with an error when it finds advisories, and still prints them. How: This keeps the output the error carries. // What: Type Assertion Note. Why: A failed execFileSync throws an error carrying the command's output. How: The as reads its stdout field.

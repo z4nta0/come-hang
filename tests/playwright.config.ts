@@ -4,7 +4,7 @@
 // #region Imports
 
 import { defineConfig  } from '@playwright/test'; // What: Define Config. Why: Playwright's config helper passes the config through with its types. How: This wraps the exported config object.
-import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why: The dev server has to start from the repo root, one folder above this file. How: This turns that folder's URL into a path for webServer.cwd.
+import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why: The servers have to start from the repo root, one folder above this file. How: This turns that folder's URL into a path for webServer.cwd.
 
 // #endregion Imports
 
@@ -20,12 +20,12 @@ import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why
  * nothing about the others. Chromium runs as Chrome's full headless mode
  * rather than Playwright's headless shell. Each suite is a folder under
  * tests/, such as accessibility, which the pre-commit check runs. Playwright
- * starts the Vite dev server on port 5200 for every suite but security, and a
- * production build served by vite preview on 5201 for the security suite,
- * and stops both afterwards, so a dev server already running on the usual
- * 5173, or a sibling project's suites on 5190 through 5199, are never
- * touched. Reports and failure screenshots land in tests/output, which git
- * ignores.
+ * starts the Vite dev server on port 5200, which every suite but security
+ * opens, and a production build served by vite preview on 5201, which the
+ * security suite opens, and stops both afterwards, so a dev server already
+ * running on the usual 5173, or a sibling project's suites on 5190 through
+ * 5199, are never touched. Reports and failure screenshots land in
+ * tests/output, which git ignores.
  *
  * Sections:
  *  - Constants
