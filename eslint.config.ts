@@ -27,8 +27,8 @@ import tyeEslObj from 'typescript-eslint';         // What: TypeScript ESLint Ob
  * without JSX), also gets the React Hooks plugin's recommended rules, minus
  * the four React Compiler readiness rules, which only matter to an app built
  * with the React Compiler, which this one isn't. Tests stay out, since
- * Playwright's test.use reads as React's use. Generated output (dist/ and
- * tests/output/) is ignored. npm run lint runs it across the repo, and an
+ * Playwright's test.use reads as React's use. Generated output, such as the
+ * build folder, is ignored. npm run lint runs it across the repo, and an
  * editor integration can run it per file. Adapted from ease-my-life's own
  * config.
  *

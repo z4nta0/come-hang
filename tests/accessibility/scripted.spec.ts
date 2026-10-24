@@ -9,7 +9,7 @@ import { STA_REC_ARR } from '../support/states.ts'; // What: State Record Array.
 import { test        } from '@playwright/test';     // What: Test. Why: Each check of each state is its own test. How: This declares them.
 
 
-import type { Page } from '@playwright/test'; // What: Page. Why: Every helper drives a Playwright page. How: This types their page parameters.
+import type { Page } from '@playwright/test'; // What: Page. Why: The helpers that drive a Playwright page need its type. How: This types their page parameters.
 
 // #endregion Imports
 
