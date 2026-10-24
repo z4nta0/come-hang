@@ -5,14 +5,13 @@
  * styles.css = Global Styles
  *
  * @summary
- * The app's global stylesheet, holding only what can't belong to one
- * component: the design tokens every module reads (the plastic-ratio core
- * design numbers, the color and font roles, and the scales and tiers that
- * size type, space, borders, and motion) and the base element styles every
- * page builds on (the root, the box reset, and the default look of text,
- * links, and buttons). The colors and the main font are placeholders until
- * the visual design is chosen, and the roles it doesn't fill yet stay empty.
- * Every component's own styles live in its CSS module.
+ * The app's one global stylesheet, holding only what belongs to the whole
+ * app rather than to one component. Its Tokens region defines every design
+ * token the modules read, the core design numbers first and then the rest,
+ * such as the colors, which are placeholders until the visual design is
+ * chosen. Its Base Elements region holds the reset and the bare element
+ * styles, such as the focus ring every link and button shares. Each
+ * component's own styles live in its CSS module instead.
  *
  * Sections:
  *  - Tokens
