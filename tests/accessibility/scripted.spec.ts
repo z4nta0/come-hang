@@ -446,19 +446,18 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
  * keyProFun = Keyboard Problems Function
  *
  * @summary
- * Walks the page with the Tab key from the top and returns every problem:
- * any element with a positive tabindex, which overrides the document order,
- * and every stop that comes earlier in the document than the stop before
- * it, sits off screen, is covered by something else, or looks the same
- * focused and unfocused. The walk ends when focus leaves the page, reaches a
- * stop described the same as the first, or stays on the same stop after a
- * press, which is how Firefox leaves its last stop; one that hasn't ended
- * within TAB_MAX_NUM presses counts as a keyboard trap. WebKit only tabs to
- * links with Alt held, the way Safari does by default, so the walk presses
- * Alt+Tab there. The caller requests reduced motion first, so the page jumps
- * to each stop instead of gliding and focus styles appear at once, and each
- * press waits for scrolling to settle, so every stop is measured where and
- * how it ends up.
+ * Walks the page with the Tab key from the top and returns every problem: any
+ * element with a positive tabindex, which overrides the document order, and
+ * every stop that comes earlier in the document than the stop before it, sits
+ * off screen, is covered by something else, or looks the same focused and
+ * unfocused. The walk ends when focus leaves the page, comes back to the first
+ * stop, or stays on the same stop after a press, which is how Firefox leaves
+ * its last stop; one that hasn't ended within TAB_MAX_NUM presses counts as a
+ * keyboard trap. WebKit only tabs to links with Alt held, the way Safari does
+ * by default, so the walk presses Alt+Tab there. The caller requests reduced
+ * motion first, so the page jumps to each stop instead of gliding and focus
+ * styles appear at once, and each press waits for scrolling to settle, so
+ * every stop is measured where and how it ends up.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -483,7 +482,7 @@ async function keyProFun ( curPagObj : Page, engNamStr : string ) : Promise< str
 
 	const proLisArr : string[] = posTabNum ? [ `${ posTabNum } element(s) use a positive tabindex` ] : []; // What: Problem List Array. Why: Every problem should be reported, not just the first. How: This starts with the positive tabindex count, when there is one, and collects the rest during the walk.
 
-	let firStoStr = ''; // What: First Stop String. Why: Focus coming back to the first stop means the walk went all the way around. How: This holds the first stop's description.
+	let firOrdNum = -1; // What: First Order Number. Why: Focus coming back to the first stop means the walk went all the way around. How: This holds the first stop's position among every element, which no other element shares, unlike a description two controls with the same label would.
 	let preOrdNum = -1; // What: Previous Order Number. Why: Each stop must come later in the document than the last. How: This holds the previous stop's position among every element.
 
 
@@ -496,14 +495,14 @@ async function keyProFun ( curPagObj : Page, engNamStr : string ) : Promise< str
 
 
 		const stoInfObj = await curPagObj.evaluate( stoInfFun );                                          // What: Stop Information Object. Why: The stop is described and measured inside the page. How: This runs stoInfFun there.
-		const walEndBoo = !stoInfObj || stoInfObj.desStr === firStoStr || stoInfObj.ordNum === preOrdNum; // What: Walk Ended Boolean. Why: Focus leaving the page, coming back around, or staying put means every stop was visited. How: This checks each in turn, the later two only once a stop exists, so the chain stays inline. // What: Firefox Walk End Note. Why: Firefox moves focus out to its own interface after the last stop but still reports that stop as focused. How: Focus staying on the same stop after a press is read as the walk leaving the page.
+		const walEndBoo = !stoInfObj || stoInfObj.ordNum === firOrdNum || stoInfObj.ordNum === preOrdNum; // What: Walk Ended Boolean. Why: Focus leaving the page, coming back around, or staying put means every stop was visited. How: This checks each in turn, the later two only once a stop exists, so the chain stays inline. // What: Firefox Walk End Note. Why: Firefox moves focus out to its own interface after the last stop but still reports that stop as focused. How: Focus staying on the same stop after a press is read as the walk leaving the page.
 
 
 		if ( walEndBoo ) return proLisArr; // What: Walk End Guard. Why: A walk that reaches its end has found every problem there is. How: This returns them, ending the walk.
 
 
 
-		if ( !firStoStr ) firStoStr = stoInfObj.desStr; // What: First Stop Record. Why: The walk ends if focus comes back to it. How: This remembers the first stop's description.
+		if ( firOrdNum < 0 ) firOrdNum = stoInfObj.ordNum; // What: First Stop Record. Why: The walk ends if focus comes back to it. How: This remembers the first stop's position.
 
 
 
