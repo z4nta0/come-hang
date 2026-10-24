@@ -13,7 +13,8 @@ there's no distinct decision to weigh there.
 
 Last updated: 2026-10-24 (pre-implementation planning phase; data model
 approved, Firebase plan changed to Blaze, see Section 15; earlier passages
-brought in line with Sections 11.7 and 17).
+brought in line with Sections 11.7 and 17; scroll behavior per screen added
+to Section 14's open items).
 
 ---
 
@@ -1099,6 +1100,13 @@ the Blaze change.
   settings, onboarding, the install screen from Section 16).
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
+- Scroll behavior per screen, decided as each data screen is built. The
+  app's scroll hook (`src/ui/scroll-top.ts`) restores a back, forward, or
+  reload position right after the page renders, so a screen whose Firebase
+  data arrives later can land short of where the person left it, and such a
+  screen re-applies the position once its content is in. Screens like the
+  chat will likely scroll inside their own container rather than the whole
+  window and open at the newest message, which the hook doesn't cover.
 
 **Infrastructure, decided 2026-10-22**:
 - Firebase Blaze plan with the cost protections in Section 15.

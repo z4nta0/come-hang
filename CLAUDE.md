@@ -81,6 +81,10 @@ a production build served by `vite preview` on 5201 (sibling projects use
   browser key (named here when it lands), and location sharing opens
   `geolocation` in the Permissions-Policy, each in the change that needs it.
 - **UI**: built in-house, no component library.
+- **Section links** (per the section links rule): the rule doesn't apply,
+  since the app moves between screens and has no links to sections of a
+  page. If the public landing page gains in-page links, the rule applies
+  to that page then.
 - **Main content** (per the skip link rule): the `<main>` element in
   `app.tsx`, which holds whichever page the address matches. There's no bar
   or tab bar yet, so it's everything after the skip link; once the tab bar
