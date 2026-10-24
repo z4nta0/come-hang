@@ -657,7 +657,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 
 | Field | Type | Notes |
 |---|---|---|
-| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.5. |
+| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.7. |
 | `wrappedGroupKey` | ciphertext | The group's AES-GCM key, wrapped for this member's public key via ECDH. Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
@@ -769,7 +769,7 @@ only kind of conversation is a group's own chat.
 | `senderUid` | plaintext | Routing metadata. |
 | `sentAt` | plaintext | Ordering, and the TTL-safety-valve check below. |
 | `ciphertext` / `iv` | ciphertext | Message content. |
-| `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with 11.5's join-time cutoff) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
+| `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with the join-time cutoff below) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
 | `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own uid in via a targeted field-path update on sync. |
 
 **Deletion, still opportunistic and client-triggered** (no Cloud
