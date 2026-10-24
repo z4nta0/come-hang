@@ -194,7 +194,7 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 
 
 
-test( 'a hash added to the address jumps to its section, not to a saved position', async ( { page : curPagObj } ) => { // What: Hash Entry Test. Why: A hash typed into the address adds an entry that shares the first entry's default key, whose saved position mustn't override the jump to the section. How: This scrolls the 404 page down, adds the main element's hash to the address, and checks the page jumps to it.
+test( 'a hash added to the address is not overridden by a saved position', async ( { page : curPagObj } ) => { // What: Hash Entry Test. Why: A hash typed into the address adds an entry that shares the first entry's default key, whose saved position mustn't override the hash. How: This scrolls the 404 page down, adds the main element's hash to the address, and checks the page leaves the saved position for the main element's top, which is the page's own top here, so the check proves the saved position lost rather than which way the page got there.
 
 
 	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to scroll for a saved position to differ from the section. How: This makes the screen too short to show the whole 404 page.
@@ -209,7 +209,7 @@ test( 'a hash added to the address jumps to its section, not to a saved position
 
 	await curPagObj.evaluate( () => { location.hash = 'main'; } ); // What: Hash Change Call. Why: This is the navigation being checked, the same as typing the hash into the address. How: This adds #main to the address, which the router reports as a POP under the default key.
 
-	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 ); // What: Section Jump Assertion. Why: The page should land on the section the hash names, the main element at the top, not return to the saved position. How: This polls the scroll position until it reads the main element's top.
+	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 ); // What: Hash Target Assertion. Why: The page should land where the hash points, the main element at the page's top, not return to the saved position. How: This polls the scroll position until it reads 0.
 
 
 } );
