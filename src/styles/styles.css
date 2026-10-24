@@ -13,8 +13,8 @@
  * the base element styles (the 11px root, the box reset, the page's font and
  * colors, tight headings, plain links and buttons, and the focus ring every
  * link and button grows on keyboard focus). The colors and the main font are
- * placeholders until the visual design is chosen, and roles nothing uses yet
- * stay empty. Every component's own styles live in its CSS module.
+ * placeholders until the visual design is chosen, and the roles it doesn't
+ * fill yet stay empty. Every component's own styles live in its CSS module.
  *
  * Sections:
  *  - Tokens
@@ -129,10 +129,10 @@
 
 	/* #region Border Width Tokens */
 
-	--bor-wid-sma : calc( var( --ver-rhy-m12 ) * 1rem ); /* What: Border Width Small ~= 0.499px. Why: This is the scale's hairline step, which nothing uses yet. How: This multiplies the m12 rhythm step by 1rem, which browsers snap to whole pixels. */
-	--bor-wid-bas : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Border Width Base ~= 1.160px. Why: This is the scale's thin everyday line, which nothing uses yet. How: This multiplies the m09 rhythm step by 1rem, which browsers snap to 1px. */
-	--bor-wid-lar : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Border Width Large ~= 2.035px. Why: The focus ring draws a heavier line. How: This multiplies the m07 rhythm step by 1rem, which browsers snap to 2px. */
-	--bor-wid-xla : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Border Width Extra Large ~= 3.572px. Why: This is the scale's heaviest line, which nothing uses yet. How: This multiplies the m05 rhythm step by 1rem, which browsers snap to 3px. */
+	--bor-wid-sma : calc( var( --ver-rhy-m12 ) * 1rem ); /* What: Border Width Small ~= 0.499px. Why: This is the border width scale's thinnest step, a hairline. How: This multiplies the m12 rhythm step by 1rem, which browsers snap to whole pixels. */
+	--bor-wid-bas : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Border Width Base ~= 1.160px. Why: This is the border width scale's base step. How: This multiplies the m09 rhythm step by 1rem, which browsers snap to 1px. */
+	--bor-wid-lar : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Border Width Large ~= 2.035px. Why: This is the border width scale's heavier step. How: This multiplies the m07 rhythm step by 1rem, which browsers snap to 2px. */
+	--bor-wid-xla : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Border Width Extra Large ~= 3.572px. Why: This is the border width scale's heaviest step. How: This multiplies the m05 rhythm step by 1rem, which browsers snap to 3px. */
 
 	/* #endregion Border Width Tokens */
 
@@ -142,31 +142,31 @@
 
 	/* CTRL+ALT+C to toggle color swatches on and off *Requires Extension Toggle by Peng Lv */
 
-	--acc-mai-col : #1f5bc4;              /* What: Accent Main Color. Why: The main actions need one color that stands out; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button fills with it, and the focus ring reads it. */
-	--acc-sec-col : ;                     /* What: Accent Secondary Color. Why: The standard role set includes a second accent. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--acc-tin-col : ;                     /* What: Accent Tint Color. Why: The standard role set includes a pale tint of the main accent. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--att-rin-col : ;                     /* What: Attention Ring Color. Why: The standard role set includes an attention ring. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--bac-hov-col : ;                     /* What: Background Hover Color. Why: The standard role set includes a hover overlay. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--bac-inv-col : ;                     /* What: Background Inverse Color. Why: The standard role set includes a dark surface. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--bac-pag-col : #ffffff;              /* What: Background Page Color. Why: Every page needs one background; this is a neutral placeholder until the visual design is chosen. How: The body reads it. */
-	--bac-sur-col : ;                     /* What: Background Surface Color. Why: The standard role set includes a card and panel surface. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--bor-mai-col : ;                     /* What: Border Main Color. Why: The standard role set includes borders and dividers. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--err-dar-col : ;                     /* What: Error Dark Color. Why: The standard role set includes the error family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--err-mai-col : ;                     /* What: Error Main Color. Why: The standard role set includes the error family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--err-tin-col : ;                     /* What: Error Tint Color. Why: The standard role set includes the error family. How: Nothing uses it yet, so it stays empty until the design pass. */
+	--acc-mai-col : #1f5bc4;              /* What: Accent Main Color. Why: This is the main accent, for actions and selection; it's a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #1f5bc4. */
+	--acc-sec-col : ;                     /* What: Accent Secondary Color. Why: The standard role set includes a second accent. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--acc-tin-col : ;                     /* What: Accent Tint Color. Why: The standard role set includes a pale tint of the main accent. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--att-rin-col : ;                     /* What: Attention Ring Color. Why: The standard role set includes an attention ring. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--bac-hov-col : ;                     /* What: Background Hover Color. Why: The standard role set includes a hover overlay. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--bac-inv-col : ;                     /* What: Background Inverse Color. Why: The standard role set includes a dark surface. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--bac-pag-col : #ffffff;              /* What: Background Page Color. Why: This is the page background; it's a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #ffffff. */
+	--bac-sur-col : ;                     /* What: Background Surface Color. Why: The standard role set includes a card and panel surface. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--bor-mai-col : ;                     /* What: Border Main Color. Why: The standard role set includes borders and dividers. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--err-dar-col : ;                     /* What: Error Dark Color. Why: The standard role set includes the error family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--err-mai-col : ;                     /* What: Error Main Color. Why: The standard role set includes the error family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--err-tin-col : ;                     /* What: Error Tint Color. Why: The standard role set includes the error family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
 	--foc-rin-col : var( --acc-mai-col ); /* What: Focus Ring Color. Why: Keyboard focus rings need 3:1 against the page. How: This reads the main accent, which reaches about 6.3:1 on the white page. */
-	--scr-mai-col : ;                     /* What: Scrim Main Color. Why: The standard role set includes the scrim behind modals. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--sha-mai-col : ;                     /* What: Shadow Main Color. Why: The standard role set includes the color shadows cast. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--suc-dar-col : ;                     /* What: Success Dark Color. Why: The standard role set includes the success family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--suc-mai-col : ;                     /* What: Success Main Color. Why: The standard role set includes the success family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--suc-tin-col : ;                     /* What: Success Tint Color. Why: The standard role set includes the success family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--tex-acc-col : #ffffff;              /* What: Text Accent Color. Why: Text on the main accent has to reach 4.5:1, which white does at about 6.3:1; this is a neutral placeholder until the visual design is chosen. How: The 404 page's button text reads it. */
-	--tex-mai-col : #1f2328;              /* What: Text Main Color. Why: Body text needs strong contrast on the page; this is a neutral placeholder until the visual design is chosen. How: The body and headings read it. */
-	--tex-mut-col : #59636e;              /* What: Text Muted Color. Why: Quieter text still has to reach 4.5:1 on the page, which this does at about 6.1:1; this is a neutral placeholder until the visual design is chosen. How: The home and 404 pages' notes read it. */
-	--tex-sec-col : ;                     /* What: Text Secondary Color. Why: The standard role set includes secondary text. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--war-dar-col : ;                     /* What: Warning Dark Color. Why: The standard role set includes the warning family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--war-mai-col : ;                     /* What: Warning Main Color. Why: The standard role set includes the warning family. How: Nothing uses it yet, so it stays empty until the design pass. */
-	--war-tin-col : ;                     /* What: Warning Tint Color. Why: The standard role set includes the warning family. How: Nothing uses it yet, so it stays empty until the design pass. */
+	--scr-mai-col : ;                     /* What: Scrim Main Color. Why: The standard role set includes the scrim behind modals. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--sha-mai-col : ;                     /* What: Shadow Main Color. Why: The standard role set includes the color shadows cast. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--suc-dar-col : ;                     /* What: Success Dark Color. Why: The standard role set includes the success family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--suc-mai-col : ;                     /* What: Success Main Color. Why: The standard role set includes the success family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--suc-tin-col : ;                     /* What: Success Tint Color. Why: The standard role set includes the success family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--tex-acc-col : #ffffff;              /* What: Text Accent Color. Why: Text on the main accent has to reach 4.5:1, which white does at about 6.3:1; this is a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #ffffff. */
+	--tex-mai-col : #1f2328;              /* What: Text Main Color. Why: This is the main text color, which needs strong contrast on the page; it's a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #1f2328. */
+	--tex-mut-col : #59636e;              /* What: Text Muted Color. Why: Quieter text still has to reach 4.5:1 on the page, which this does at about 6.1:1; this is a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #59636e. */
+	--tex-sec-col : ;                     /* What: Text Secondary Color. Why: The standard role set includes secondary text. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--war-dar-col : ;                     /* What: Warning Dark Color. Why: The standard role set includes the warning family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--war-mai-col : ;                     /* What: Warning Main Color. Why: The standard role set includes the warning family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--war-tin-col : ;                     /* What: Warning Tint Color. Why: The standard role set includes the warning family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
 
 	/* #endregion Color Tokens */
 
@@ -174,34 +174,34 @@
 
 	/* #region Duration Tokens */
 
-	--dur-ani-m03 : calc( var( --dur-ani-bas ) * var( --cdn-pow-003-rec ) ); /* What: Duration Animation Base Minus 3 ~= 67.9ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the reciprocal of the third power of the core design number. */
-	--dur-ani-m02 : calc( var( --dur-ani-bas ) * var( --cdn-pow-002-rec ) ); /* What: Duration Animation Base Minus 2 ~= 89.9ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the reciprocal of the second power of the core design number. */
-	--dur-ani-m01 : calc( var( --dur-ani-bas ) * var( --cdn-pow-001-rec ) ); /* What: Duration Animation Base Minus 1 ~= 119.2ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the reciprocal of the first power of the core design number. */
-	--dur-ani-bas : calc( var( --cdn-pow-018 ) * 1ms );                      /* What: Duration Animation Base ~= 157.8ms. Why: Animations read their lengths from one scale. How: This is the eighteenth power of the core design number in milliseconds, the duration scale's base. */
-	--dur-ani-p01 : calc( var( --dur-ani-bas ) * var( --cdn-pow-001 ) );     /* What: Duration Animation Base Plus 1 ~= 209.1ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the first power of the core design number. */
-	--dur-ani-p02 : calc( var( --dur-ani-bas ) * var( --cdn-pow-002 ) );     /* What: Duration Animation Base Plus 2 ~= 277.0ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the second power of the core design number. */
-	--dur-ani-p03 : calc( var( --dur-ani-bas ) * var( --cdn-pow-003 ) );     /* What: Duration Animation Base Plus 3 ~= 366.9ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the third power of the core design number. */
-	--dur-ani-p04 : calc( var( --dur-ani-bas ) * var( --cdn-pow-004 ) );     /* What: Duration Animation Base Plus 4 ~= 486.1ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the fourth power of the core design number. */
-	--dur-ani-p05 : calc( var( --dur-ani-bas ) * var( --cdn-pow-005 ) );     /* What: Duration Animation Base Plus 5 ~= 643.9ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the fifth power of the core design number. */
-	--dur-ani-p06 : calc( var( --dur-ani-bas ) * var( --cdn-pow-006 ) );     /* What: Duration Animation Base Plus 6 ~= 853.0ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the sixth power of the core design number. */
-	--dur-ani-p07 : calc( var( --dur-ani-bas ) * var( --cdn-pow-007 ) );     /* What: Duration Animation Base Plus 7 ~= 1,130.0ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the seventh power of the core design number. */
-	--dur-ani-p08 : calc( var( --dur-ani-bas ) * var( --cdn-pow-008 ) );     /* What: Duration Animation Base Plus 8 ~= 1,497.0ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the eighth power of the core design number. */
-	--dur-ani-p09 : calc( var( --dur-ani-bas ) * var( --cdn-pow-009 ) );     /* What: Duration Animation Base Plus 9 ~= 1,983.0ms. Why: Animations read their lengths from one scale. How: This multiplies the base step by the ninth power of the core design number. */
+	--dur-ani-m03 : calc( var( --dur-ani-bas ) * var( --cdn-pow-003-rec ) ); /* What: Duration Animation Base Minus 3 ~= 67.9ms. Why: This is the animation duration scale's step 3 below its base. How: This multiplies the base step by the reciprocal of the core design number to the power of 3. */
+	--dur-ani-m02 : calc( var( --dur-ani-bas ) * var( --cdn-pow-002-rec ) ); /* What: Duration Animation Base Minus 2 ~= 89.9ms. Why: This is the animation duration scale's step 2 below its base. How: This multiplies the base step by the reciprocal of the core design number to the power of 2. */
+	--dur-ani-m01 : calc( var( --dur-ani-bas ) * var( --cdn-pow-001-rec ) ); /* What: Duration Animation Base Minus 1 ~= 119.2ms. Why: This is the animation duration scale's step 1 below its base. How: This multiplies the base step by the reciprocal of the core design number to the power of 1. */
+	--dur-ani-bas : calc( var( --cdn-pow-018 ) * 1ms );                      /* What: Duration Animation Base ~= 157.8ms. Why: This is the animation duration scale's base step. How: This is the eighteenth power of the core design number in milliseconds, the base step every other step multiplies. */
+	--dur-ani-p01 : calc( var( --dur-ani-bas ) * var( --cdn-pow-001 ) );     /* What: Duration Animation Base Plus 1 ~= 209.1ms. Why: This is the animation duration scale's step 1 above its base. How: This multiplies the base step by the core design number to the power of 1. */
+	--dur-ani-p02 : calc( var( --dur-ani-bas ) * var( --cdn-pow-002 ) );     /* What: Duration Animation Base Plus 2 ~= 277.0ms. Why: This is the animation duration scale's step 2 above its base. How: This multiplies the base step by the core design number to the power of 2. */
+	--dur-ani-p03 : calc( var( --dur-ani-bas ) * var( --cdn-pow-003 ) );     /* What: Duration Animation Base Plus 3 ~= 366.9ms. Why: This is the animation duration scale's step 3 above its base. How: This multiplies the base step by the core design number to the power of 3. */
+	--dur-ani-p04 : calc( var( --dur-ani-bas ) * var( --cdn-pow-004 ) );     /* What: Duration Animation Base Plus 4 ~= 486.1ms. Why: This is the animation duration scale's step 4 above its base. How: This multiplies the base step by the core design number to the power of 4. */
+	--dur-ani-p05 : calc( var( --dur-ani-bas ) * var( --cdn-pow-005 ) );     /* What: Duration Animation Base Plus 5 ~= 643.9ms. Why: This is the animation duration scale's step 5 above its base. How: This multiplies the base step by the core design number to the power of 5. */
+	--dur-ani-p06 : calc( var( --dur-ani-bas ) * var( --cdn-pow-006 ) );     /* What: Duration Animation Base Plus 6 ~= 853.0ms. Why: This is the animation duration scale's step 6 above its base. How: This multiplies the base step by the core design number to the power of 6. */
+	--dur-ani-p07 : calc( var( --dur-ani-bas ) * var( --cdn-pow-007 ) );     /* What: Duration Animation Base Plus 7 ~= 1,130.0ms. Why: This is the animation duration scale's step 7 above its base. How: This multiplies the base step by the core design number to the power of 7. */
+	--dur-ani-p08 : calc( var( --dur-ani-bas ) * var( --cdn-pow-008 ) );     /* What: Duration Animation Base Plus 8 ~= 1,497.0ms. Why: This is the animation duration scale's step 8 above its base. How: This multiplies the base step by the core design number to the power of 8. */
+	--dur-ani-p09 : calc( var( --dur-ani-bas ) * var( --cdn-pow-009 ) );     /* What: Duration Animation Base Plus 9 ~= 1,983.0ms. Why: This is the animation duration scale's step 9 above its base. How: This multiplies the base step by the core design number to the power of 9. */
 
 
-	--dur-tra-m03 : calc( var( --dur-tra-bas ) * var( --cdn-pow-003-rec ) ); /* What: Duration Transition Base Minus 3 ~= 67.9ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the reciprocal of the third power of the core design number. */
-	--dur-tra-m02 : calc( var( --dur-tra-bas ) * var( --cdn-pow-002-rec ) ); /* What: Duration Transition Base Minus 2 ~= 89.9ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the reciprocal of the second power of the core design number. */
-	--dur-tra-m01 : calc( var( --dur-tra-bas ) * var( --cdn-pow-001-rec ) ); /* What: Duration Transition Base Minus 1 ~= 119.2ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the reciprocal of the first power of the core design number. */
-	--dur-tra-bas : calc( var( --cdn-pow-018 ) * 1ms );                      /* What: Duration Transition Base ~= 157.8ms. Why: Transitions read their lengths from one scale. How: This is the eighteenth power of the core design number in milliseconds, the duration scale's base. */
-	--dur-tra-p01 : calc( var( --dur-tra-bas ) * var( --cdn-pow-001 ) );     /* What: Duration Transition Base Plus 1 ~= 209.1ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the first power of the core design number. */
-	--dur-tra-p02 : calc( var( --dur-tra-bas ) * var( --cdn-pow-002 ) );     /* What: Duration Transition Base Plus 2 ~= 277.0ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the second power of the core design number. */
-	--dur-tra-p03 : calc( var( --dur-tra-bas ) * var( --cdn-pow-003 ) );     /* What: Duration Transition Base Plus 3 ~= 366.9ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the third power of the core design number. */
-	--dur-tra-p04 : calc( var( --dur-tra-bas ) * var( --cdn-pow-004 ) );     /* What: Duration Transition Base Plus 4 ~= 486.1ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the fourth power of the core design number. */
-	--dur-tra-p05 : calc( var( --dur-tra-bas ) * var( --cdn-pow-005 ) );     /* What: Duration Transition Base Plus 5 ~= 643.9ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the fifth power of the core design number. */
-	--dur-tra-p06 : calc( var( --dur-tra-bas ) * var( --cdn-pow-006 ) );     /* What: Duration Transition Base Plus 6 ~= 853.0ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the sixth power of the core design number. */
-	--dur-tra-p07 : calc( var( --dur-tra-bas ) * var( --cdn-pow-007 ) );     /* What: Duration Transition Base Plus 7 ~= 1,130.0ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the seventh power of the core design number. */
-	--dur-tra-p08 : calc( var( --dur-tra-bas ) * var( --cdn-pow-008 ) );     /* What: Duration Transition Base Plus 8 ~= 1,497.0ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the eighth power of the core design number. */
-	--dur-tra-p09 : calc( var( --dur-tra-bas ) * var( --cdn-pow-009 ) );     /* What: Duration Transition Base Plus 9 ~= 1,983.0ms. Why: Transitions read their lengths from one scale. How: This multiplies the base step by the ninth power of the core design number. */
+	--dur-tra-m03 : calc( var( --dur-tra-bas ) * var( --cdn-pow-003-rec ) ); /* What: Duration Transition Base Minus 3 ~= 67.9ms. Why: This is the transition duration scale's step 3 below its base. How: This multiplies the base step by the reciprocal of the core design number to the power of 3. */
+	--dur-tra-m02 : calc( var( --dur-tra-bas ) * var( --cdn-pow-002-rec ) ); /* What: Duration Transition Base Minus 2 ~= 89.9ms. Why: This is the transition duration scale's step 2 below its base. How: This multiplies the base step by the reciprocal of the core design number to the power of 2. */
+	--dur-tra-m01 : calc( var( --dur-tra-bas ) * var( --cdn-pow-001-rec ) ); /* What: Duration Transition Base Minus 1 ~= 119.2ms. Why: This is the transition duration scale's step 1 below its base. How: This multiplies the base step by the reciprocal of the core design number to the power of 1. */
+	--dur-tra-bas : calc( var( --cdn-pow-018 ) * 1ms );                      /* What: Duration Transition Base ~= 157.8ms. Why: This is the transition duration scale's base step. How: This is the eighteenth power of the core design number in milliseconds, the base step every other step multiplies. */
+	--dur-tra-p01 : calc( var( --dur-tra-bas ) * var( --cdn-pow-001 ) );     /* What: Duration Transition Base Plus 1 ~= 209.1ms. Why: This is the transition duration scale's step 1 above its base. How: This multiplies the base step by the core design number to the power of 1. */
+	--dur-tra-p02 : calc( var( --dur-tra-bas ) * var( --cdn-pow-002 ) );     /* What: Duration Transition Base Plus 2 ~= 277.0ms. Why: This is the transition duration scale's step 2 above its base. How: This multiplies the base step by the core design number to the power of 2. */
+	--dur-tra-p03 : calc( var( --dur-tra-bas ) * var( --cdn-pow-003 ) );     /* What: Duration Transition Base Plus 3 ~= 366.9ms. Why: This is the transition duration scale's step 3 above its base. How: This multiplies the base step by the core design number to the power of 3. */
+	--dur-tra-p04 : calc( var( --dur-tra-bas ) * var( --cdn-pow-004 ) );     /* What: Duration Transition Base Plus 4 ~= 486.1ms. Why: This is the transition duration scale's step 4 above its base. How: This multiplies the base step by the core design number to the power of 4. */
+	--dur-tra-p05 : calc( var( --dur-tra-bas ) * var( --cdn-pow-005 ) );     /* What: Duration Transition Base Plus 5 ~= 643.9ms. Why: This is the transition duration scale's step 5 above its base. How: This multiplies the base step by the core design number to the power of 5. */
+	--dur-tra-p06 : calc( var( --dur-tra-bas ) * var( --cdn-pow-006 ) );     /* What: Duration Transition Base Plus 6 ~= 853.0ms. Why: This is the transition duration scale's step 6 above its base. How: This multiplies the base step by the core design number to the power of 6. */
+	--dur-tra-p07 : calc( var( --dur-tra-bas ) * var( --cdn-pow-007 ) );     /* What: Duration Transition Base Plus 7 ~= 1,130.0ms. Why: This is the transition duration scale's step 7 above its base. How: This multiplies the base step by the core design number to the power of 7. */
+	--dur-tra-p08 : calc( var( --dur-tra-bas ) * var( --cdn-pow-008 ) );     /* What: Duration Transition Base Plus 8 ~= 1,497.0ms. Why: This is the transition duration scale's step 8 above its base. How: This multiplies the base step by the core design number to the power of 8. */
+	--dur-tra-p09 : calc( var( --dur-tra-bas ) * var( --cdn-pow-009 ) );     /* What: Duration Transition Base Plus 9 ~= 1,983.0ms. Why: This is the transition duration scale's step 9 above its base. How: This multiplies the base step by the core design number to the power of 9. */
 
 	/* #endregion Duration Tokens */
 
@@ -209,11 +209,11 @@
 
 	/* #region Easing Tokens */
 
-	--mot-acc-eas : cubic-bezier( .4, 0, 1, 1 );      /* What: Motion Accelerate Easing. Why: Things leaving should speed up as they go. How: Nothing uses it yet. */
-	--mot-bou-eas : cubic-bezier( .34, 1.56, .5, 1 ); /* What: Motion Bounce Easing. Why: A rare celebration can spring past its mark. How: Nothing uses it yet. */
-	--mot-dec-eas : cubic-bezier( .2, .7, .3, 1 );    /* What: Motion Decelerate Easing. Why: Things arriving should slow as they land. How: The focus ring growing in reads it. */
-	--mot-ove-eas : cubic-bezier( .34, 1.2, .5, 1 );  /* What: Motion Overshoot Easing. Why: A touch of flair can overshoot gently. How: Nothing uses it yet. */
-	--mot-sta-eas : ease;                             /* What: Motion Standard Easing. Why: Most motion uses the browser's standard ease. How: The 404 page's button hover reads it. */
+	--mot-acc-eas : cubic-bezier( .4, 0, 1, 1 );      /* What: Motion Accelerate Easing. Why: Things leaving the screen should speed up as they go. How: This is a curve that starts slow and leaves at full speed, read as a timing function. */
+	--mot-bou-eas : cubic-bezier( .34, 1.56, .5, 1 ); /* What: Motion Bounce Easing. Why: The easing set includes a strong spring past the target for playful motion. How: This is a curve whose first control point rises well past 1, read as a timing function. */
+	--mot-dec-eas : cubic-bezier( .2, .7, .3, 1 );    /* What: Motion Decelerate Easing. Why: Things arriving should start fast and land softly. How: This is a curve that starts fast and eases to a stop, read as a timing function. */
+	--mot-ove-eas : cubic-bezier( .34, 1.2, .5, 1 );  /* What: Motion Overshoot Easing. Why: The easing set includes a gentle overshoot past the target, for a touch of flair. How: This is a curve whose first control point rises just past 1, read as a timing function. */
+	--mot-sta-eas : ease;                             /* What: Motion Standard Easing. Why: Ordinary motion with no arrival or exit to stress shares one smooth curve. How: This is the browser's own ease curve, read as a timing function. */
 
 	/* #endregion Easing Tokens */
 
@@ -222,7 +222,7 @@
 	/* #region Font Family Tokens */
 
 	--fon-fam-bra : ;                                                         /* What: Font Family Brand. Why: The standard role set includes a brand font. How: None is chosen yet, so it stays empty until the design pass. */
-	--fon-fam-mai : system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; /* What: Font Family Main. Why: Every paragraph, label, and button shares one font. How: This is the device's own interface font, a placeholder until the visual design is chosen, and the body and buttons read it. */
+	--fon-fam-mai : system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; /* What: Font Family Main. Why: This is the main font, for running text and controls. How: This is the device's own interface font, a placeholder until the visual design is chosen. */
 	--fon-fam-sec : ;                                                         /* What: Font Family Secondary. Why: The standard role set includes a secondary font. How: None is chosen yet, so it stays empty until the design pass. */
 
 	/* #endregion Font Family Tokens */
@@ -232,14 +232,14 @@
 	/* #region Font Size Tokens */
 
 	--fon-siz-bas : 1rem;                                                /* What: Font Size Base = 11px. Why: The type scale starts at the smallest size accessibility tools accept. How: This is 1rem, the root's 11px at the browser's default size. */
-	--fon-siz-p01 : calc( var( --fon-siz-bas ) * var( --cdn-pow-001 ) ); /* What: Font Size Base Plus 1 ~= 14.572px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the first power. */
-	--fon-siz-p02 : calc( var( --fon-siz-bas ) * var( --cdn-pow-002 ) ); /* What: Font Size Base Plus 2 ~= 19.304px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the second power. */
-	--fon-siz-p03 : calc( var( --fon-siz-bas ) * var( --cdn-pow-003 ) ); /* What: Font Size Base Plus 3 ~= 25.572px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the third power. */
-	--fon-siz-p04 : calc( var( --fon-siz-bas ) * var( --cdn-pow-004 ) ); /* What: Font Size Base Plus 4 ~= 33.876px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the fourth power. */
-	--fon-siz-p05 : calc( var( --fon-siz-bas ) * var( --cdn-pow-005 ) ); /* What: Font Size Base Plus 5 ~= 44.876px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the fifth power. */
-	--fon-siz-p06 : calc( var( --fon-siz-bas ) * var( --cdn-pow-006 ) ); /* What: Font Size Base Plus 6 ~= 59.447px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the sixth power. */
-	--fon-siz-p07 : calc( var( --fon-siz-bas ) * var( --cdn-pow-007 ) ); /* What: Font Size Base Plus 7 ~= 78.751px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the seventh power. */
-	--fon-siz-p08 : calc( var( --fon-siz-bas ) * var( --cdn-pow-008 ) ); /* What: Font Size Base Plus 8 ~= 104.323px. Why: Each step up the type scale is one more power of the core design number. How: This multiplies the base size by the eighth power. */
+	--fon-siz-p01 : calc( var( --fon-siz-bas ) * var( --cdn-pow-001 ) ); /* What: Font Size Base Plus 1 ~= 14.572px. Why: This is the font size scale's step 1 above its base. How: This multiplies the base size by the first power. */
+	--fon-siz-p02 : calc( var( --fon-siz-bas ) * var( --cdn-pow-002 ) ); /* What: Font Size Base Plus 2 ~= 19.304px. Why: This is the font size scale's step 2 above its base. How: This multiplies the base size by the second power. */
+	--fon-siz-p03 : calc( var( --fon-siz-bas ) * var( --cdn-pow-003 ) ); /* What: Font Size Base Plus 3 ~= 25.572px. Why: This is the font size scale's step 3 above its base. How: This multiplies the base size by the third power. */
+	--fon-siz-p04 : calc( var( --fon-siz-bas ) * var( --cdn-pow-004 ) ); /* What: Font Size Base Plus 4 ~= 33.876px. Why: This is the font size scale's step 4 above its base. How: This multiplies the base size by the fourth power. */
+	--fon-siz-p05 : calc( var( --fon-siz-bas ) * var( --cdn-pow-005 ) ); /* What: Font Size Base Plus 5 ~= 44.876px. Why: This is the font size scale's step 5 above its base. How: This multiplies the base size by the fifth power. */
+	--fon-siz-p06 : calc( var( --fon-siz-bas ) * var( --cdn-pow-006 ) ); /* What: Font Size Base Plus 6 ~= 59.447px. Why: This is the font size scale's step 6 above its base. How: This multiplies the base size by the sixth power. */
+	--fon-siz-p07 : calc( var( --fon-siz-bas ) * var( --cdn-pow-007 ) ); /* What: Font Size Base Plus 7 ~= 78.751px. Why: This is the font size scale's step 7 above its base. How: This multiplies the base size by the seventh power. */
+	--fon-siz-p08 : calc( var( --fon-siz-bas ) * var( --cdn-pow-008 ) ); /* What: Font Size Base Plus 8 ~= 104.323px. Why: This is the font size scale's step 8 above its base, its largest step. How: This multiplies the base size by the eighth power. */
 
 	/* #endregion Font Size Tokens */
 
@@ -247,7 +247,7 @@
 
 	/* #region Layout Tokens */
 
-	--gut-sid-pad : var( --spa-hor-p01 ); /* What: Gutter Side Padding ~= 19.304px. Why: Content should never touch the screen's edges. How: Every page pads its sides with the p01 horizontal spacing step, which becomes fluid once the app's horizontal sizing system is chosen. */
+	--gut-sid-pad : var( --spa-hor-p01 ); /* What: Gutter Side Padding ~= 19.304px. Why: Content should never touch the screen's edges. How: This reads the p01 horizontal spacing step, to become fluid once the app's horizontal sizing system is chosen. */
 
 	/* #endregion Layout Tokens */
 
@@ -255,11 +255,11 @@
 
 	/* #region Radius Tokens */
 
-	--rad-bor-xsm : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Radius Border Extra Small ~= 3.572px. Why: Corners round to one of five sizes. How: This multiplies the m05 rhythm step by 1rem; nothing uses it yet. */
-	--rad-bor-sma : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Radius Border Small ~= 8.304px. Why: Corners round to one of five sizes. How: This multiplies the m02 rhythm step by 1rem; nothing uses it yet. */
-	--rad-bor-med : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Radius Border Medium = 11px. Why: Corners round to one of five sizes. How: This multiplies the m01 rhythm step by 1rem; nothing uses it yet. */
-	--rad-bor-lar : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Radius Border Large ~= 14.572px. Why: Corners round to one of five sizes. How: This multiplies the bas rhythm step by 1rem; nothing uses it yet. */
-	--rad-bor-xla : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Radius Border Extra Large ~= 19.304px. Why: Corners round to one of five sizes. How: This multiplies the p01 rhythm step by 1rem; nothing uses it yet. */
+	--rad-bor-xsm : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Radius Border Extra Small ~= 3.572px. Why: This is the border radius scale's smallest step. How: This multiplies the m05 rhythm step by 1rem. */
+	--rad-bor-sma : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Radius Border Small ~= 8.304px. Why: This is the border radius scale's small step. How: This multiplies the m02 rhythm step by 1rem. */
+	--rad-bor-med : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Radius Border Medium = 11px. Why: This is the border radius scale's medium step. How: This multiplies the m01 rhythm step by 1rem. */
+	--rad-bor-lar : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Radius Border Large ~= 14.572px. Why: This is the border radius scale's large step. How: This multiplies the bas rhythm step by 1rem. */
+	--rad-bor-xla : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Radius Border Extra Large ~= 19.304px. Why: This is the border radius scale's largest step. How: This multiplies the p01 rhythm step by 1rem. */
 
 	/* #endregion Radius Tokens */
 
@@ -267,42 +267,42 @@
 
 	/* #region Spacing Tokens */
 
-	--spa-hor-m09 : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Spacing Horizontal Base Minus 9 ~= 1.160px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m09 rhythm step by 1rem. */
-	--spa-hor-m08 : calc( var( --ver-rhy-m08 ) * 1rem ); /* What: Spacing Horizontal Base Minus 8 ~= 1.536px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m08 rhythm step by 1rem. */
-	--spa-hor-m07 : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Spacing Horizontal Base Minus 7 ~= 2.035px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m07 rhythm step by 1rem. */
-	--spa-hor-m06 : calc( var( --ver-rhy-m06 ) * 1rem ); /* What: Spacing Horizontal Base Minus 6 ~= 2.696px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m06 rhythm step by 1rem. */
-	--spa-hor-m05 : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Spacing Horizontal Base Minus 5 ~= 3.572px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m05 rhythm step by 1rem. */
-	--spa-hor-m04 : calc( var( --ver-rhy-m04 ) * 1rem ); /* What: Spacing Horizontal Base Minus 4 ~= 4.732px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m04 rhythm step by 1rem. */
-	--spa-hor-m03 : calc( var( --ver-rhy-m03 ) * 1rem ); /* What: Spacing Horizontal Base Minus 3 ~= 6.268px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m03 rhythm step by 1rem. */
-	--spa-hor-m02 : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Spacing Horizontal Base Minus 2 ~= 8.304px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m02 rhythm step by 1rem. */
-	--spa-hor-m01 : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Spacing Horizontal Base Minus 1 = 11px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the m01 rhythm step by 1rem. */
-	--spa-hor-bas : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Spacing Horizontal Base ~= 14.572px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the bas rhythm step by 1rem. */
-	--spa-hor-p01 : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Spacing Horizontal Base Plus 1 ~= 19.304px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p01 rhythm step by 1rem. */
-	--spa-hor-p02 : calc( var( --ver-rhy-p02 ) * 1rem ); /* What: Spacing Horizontal Base Plus 2 ~= 25.572px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p02 rhythm step by 1rem. */
-	--spa-hor-p03 : calc( var( --ver-rhy-p03 ) * 1rem ); /* What: Spacing Horizontal Base Plus 3 ~= 33.876px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p03 rhythm step by 1rem. */
-	--spa-hor-p04 : calc( var( --ver-rhy-p04 ) * 1rem ); /* What: Spacing Horizontal Base Plus 4 ~= 44.876px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p04 rhythm step by 1rem. */
-	--spa-hor-p05 : calc( var( --ver-rhy-p05 ) * 1rem ); /* What: Spacing Horizontal Base Plus 5 ~= 59.447px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p05 rhythm step by 1rem. */
-	--spa-hor-p06 : calc( var( --ver-rhy-p06 ) * 1rem ); /* What: Spacing Horizontal Base Plus 6 ~= 78.751px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p06 rhythm step by 1rem. */
-	--spa-hor-p07 : calc( var( --ver-rhy-p07 ) * 1rem ); /* What: Spacing Horizontal Base Plus 7 ~= 104.323px. Why: Left and right padding, margins, and gaps read their own family. How: This multiplies the p07 rhythm step by 1rem. */
+	--spa-hor-m09 : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Spacing Horizontal Base Minus 9 ~= 1.160px. Why: This is the horizontal spacing scale's step 9 below its base. How: This multiplies the m09 rhythm step by 1rem. */
+	--spa-hor-m08 : calc( var( --ver-rhy-m08 ) * 1rem ); /* What: Spacing Horizontal Base Minus 8 ~= 1.536px. Why: This is the horizontal spacing scale's step 8 below its base. How: This multiplies the m08 rhythm step by 1rem. */
+	--spa-hor-m07 : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Spacing Horizontal Base Minus 7 ~= 2.035px. Why: This is the horizontal spacing scale's step 7 below its base. How: This multiplies the m07 rhythm step by 1rem. */
+	--spa-hor-m06 : calc( var( --ver-rhy-m06 ) * 1rem ); /* What: Spacing Horizontal Base Minus 6 ~= 2.696px. Why: This is the horizontal spacing scale's step 6 below its base. How: This multiplies the m06 rhythm step by 1rem. */
+	--spa-hor-m05 : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Spacing Horizontal Base Minus 5 ~= 3.572px. Why: This is the horizontal spacing scale's step 5 below its base. How: This multiplies the m05 rhythm step by 1rem. */
+	--spa-hor-m04 : calc( var( --ver-rhy-m04 ) * 1rem ); /* What: Spacing Horizontal Base Minus 4 ~= 4.732px. Why: This is the horizontal spacing scale's step 4 below its base. How: This multiplies the m04 rhythm step by 1rem. */
+	--spa-hor-m03 : calc( var( --ver-rhy-m03 ) * 1rem ); /* What: Spacing Horizontal Base Minus 3 ~= 6.268px. Why: This is the horizontal spacing scale's step 3 below its base. How: This multiplies the m03 rhythm step by 1rem. */
+	--spa-hor-m02 : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Spacing Horizontal Base Minus 2 ~= 8.304px. Why: This is the horizontal spacing scale's step 2 below its base. How: This multiplies the m02 rhythm step by 1rem. */
+	--spa-hor-m01 : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Spacing Horizontal Base Minus 1 = 11px. Why: This is the horizontal spacing scale's step 1 below its base. How: This multiplies the m01 rhythm step by 1rem. */
+	--spa-hor-bas : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Spacing Horizontal Base ~= 14.572px. Why: This is the horizontal spacing scale's base step. How: This multiplies the bas rhythm step by 1rem. */
+	--spa-hor-p01 : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Spacing Horizontal Base Plus 1 ~= 19.304px. Why: This is the horizontal spacing scale's step 1 above its base. How: This multiplies the p01 rhythm step by 1rem. */
+	--spa-hor-p02 : calc( var( --ver-rhy-p02 ) * 1rem ); /* What: Spacing Horizontal Base Plus 2 ~= 25.572px. Why: This is the horizontal spacing scale's step 2 above its base. How: This multiplies the p02 rhythm step by 1rem. */
+	--spa-hor-p03 : calc( var( --ver-rhy-p03 ) * 1rem ); /* What: Spacing Horizontal Base Plus 3 ~= 33.876px. Why: This is the horizontal spacing scale's step 3 above its base. How: This multiplies the p03 rhythm step by 1rem. */
+	--spa-hor-p04 : calc( var( --ver-rhy-p04 ) * 1rem ); /* What: Spacing Horizontal Base Plus 4 ~= 44.876px. Why: This is the horizontal spacing scale's step 4 above its base. How: This multiplies the p04 rhythm step by 1rem. */
+	--spa-hor-p05 : calc( var( --ver-rhy-p05 ) * 1rem ); /* What: Spacing Horizontal Base Plus 5 ~= 59.447px. Why: This is the horizontal spacing scale's step 5 above its base. How: This multiplies the p05 rhythm step by 1rem. */
+	--spa-hor-p06 : calc( var( --ver-rhy-p06 ) * 1rem ); /* What: Spacing Horizontal Base Plus 6 ~= 78.751px. Why: This is the horizontal spacing scale's step 6 above its base. How: This multiplies the p06 rhythm step by 1rem. */
+	--spa-hor-p07 : calc( var( --ver-rhy-p07 ) * 1rem ); /* What: Spacing Horizontal Base Plus 7 ~= 104.323px. Why: This is the horizontal spacing scale's step 7 above its base. How: This multiplies the p07 rhythm step by 1rem. */
 
 
-	--spa-ver-m09 : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Spacing Vertical Base Minus 9 ~= 1.160px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m09 rhythm step by 1rem. */
-	--spa-ver-m08 : calc( var( --ver-rhy-m08 ) * 1rem ); /* What: Spacing Vertical Base Minus 8 ~= 1.536px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m08 rhythm step by 1rem. */
-	--spa-ver-m07 : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Spacing Vertical Base Minus 7 ~= 2.035px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m07 rhythm step by 1rem. */
-	--spa-ver-m06 : calc( var( --ver-rhy-m06 ) * 1rem ); /* What: Spacing Vertical Base Minus 6 ~= 2.696px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m06 rhythm step by 1rem. */
-	--spa-ver-m05 : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Spacing Vertical Base Minus 5 ~= 3.572px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m05 rhythm step by 1rem. */
-	--spa-ver-m04 : calc( var( --ver-rhy-m04 ) * 1rem ); /* What: Spacing Vertical Base Minus 4 ~= 4.732px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m04 rhythm step by 1rem. */
-	--spa-ver-m03 : calc( var( --ver-rhy-m03 ) * 1rem ); /* What: Spacing Vertical Base Minus 3 ~= 6.268px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m03 rhythm step by 1rem. */
-	--spa-ver-m02 : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Spacing Vertical Base Minus 2 ~= 8.304px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m02 rhythm step by 1rem. */
-	--spa-ver-m01 : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Spacing Vertical Base Minus 1 = 11px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the m01 rhythm step by 1rem. */
-	--spa-ver-bas : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Spacing Vertical Base ~= 14.572px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the bas rhythm step by 1rem. */
-	--spa-ver-p01 : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Spacing Vertical Base Plus 1 ~= 19.304px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p01 rhythm step by 1rem. */
-	--spa-ver-p02 : calc( var( --ver-rhy-p02 ) * 1rem ); /* What: Spacing Vertical Base Plus 2 ~= 25.572px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p02 rhythm step by 1rem. */
-	--spa-ver-p03 : calc( var( --ver-rhy-p03 ) * 1rem ); /* What: Spacing Vertical Base Plus 3 ~= 33.876px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p03 rhythm step by 1rem. */
-	--spa-ver-p04 : calc( var( --ver-rhy-p04 ) * 1rem ); /* What: Spacing Vertical Base Plus 4 ~= 44.876px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p04 rhythm step by 1rem. */
-	--spa-ver-p05 : calc( var( --ver-rhy-p05 ) * 1rem ); /* What: Spacing Vertical Base Plus 5 ~= 59.447px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p05 rhythm step by 1rem. */
-	--spa-ver-p06 : calc( var( --ver-rhy-p06 ) * 1rem ); /* What: Spacing Vertical Base Plus 6 ~= 78.751px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p06 rhythm step by 1rem. */
-	--spa-ver-p07 : calc( var( --ver-rhy-p07 ) * 1rem ); /* What: Spacing Vertical Base Plus 7 ~= 104.323px. Why: Top and bottom padding, margins, and gaps read their own family. How: This multiplies the p07 rhythm step by 1rem. */
+	--spa-ver-m09 : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Spacing Vertical Base Minus 9 ~= 1.160px. Why: This is the vertical spacing scale's step 9 below its base. How: This multiplies the m09 rhythm step by 1rem. */
+	--spa-ver-m08 : calc( var( --ver-rhy-m08 ) * 1rem ); /* What: Spacing Vertical Base Minus 8 ~= 1.536px. Why: This is the vertical spacing scale's step 8 below its base. How: This multiplies the m08 rhythm step by 1rem. */
+	--spa-ver-m07 : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Spacing Vertical Base Minus 7 ~= 2.035px. Why: This is the vertical spacing scale's step 7 below its base. How: This multiplies the m07 rhythm step by 1rem. */
+	--spa-ver-m06 : calc( var( --ver-rhy-m06 ) * 1rem ); /* What: Spacing Vertical Base Minus 6 ~= 2.696px. Why: This is the vertical spacing scale's step 6 below its base. How: This multiplies the m06 rhythm step by 1rem. */
+	--spa-ver-m05 : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Spacing Vertical Base Minus 5 ~= 3.572px. Why: This is the vertical spacing scale's step 5 below its base. How: This multiplies the m05 rhythm step by 1rem. */
+	--spa-ver-m04 : calc( var( --ver-rhy-m04 ) * 1rem ); /* What: Spacing Vertical Base Minus 4 ~= 4.732px. Why: This is the vertical spacing scale's step 4 below its base. How: This multiplies the m04 rhythm step by 1rem. */
+	--spa-ver-m03 : calc( var( --ver-rhy-m03 ) * 1rem ); /* What: Spacing Vertical Base Minus 3 ~= 6.268px. Why: This is the vertical spacing scale's step 3 below its base. How: This multiplies the m03 rhythm step by 1rem. */
+	--spa-ver-m02 : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Spacing Vertical Base Minus 2 ~= 8.304px. Why: This is the vertical spacing scale's step 2 below its base. How: This multiplies the m02 rhythm step by 1rem. */
+	--spa-ver-m01 : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Spacing Vertical Base Minus 1 = 11px. Why: This is the vertical spacing scale's step 1 below its base. How: This multiplies the m01 rhythm step by 1rem. */
+	--spa-ver-bas : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Spacing Vertical Base ~= 14.572px. Why: This is the vertical spacing scale's base step. How: This multiplies the bas rhythm step by 1rem. */
+	--spa-ver-p01 : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Spacing Vertical Base Plus 1 ~= 19.304px. Why: This is the vertical spacing scale's step 1 above its base. How: This multiplies the p01 rhythm step by 1rem. */
+	--spa-ver-p02 : calc( var( --ver-rhy-p02 ) * 1rem ); /* What: Spacing Vertical Base Plus 2 ~= 25.572px. Why: This is the vertical spacing scale's step 2 above its base. How: This multiplies the p02 rhythm step by 1rem. */
+	--spa-ver-p03 : calc( var( --ver-rhy-p03 ) * 1rem ); /* What: Spacing Vertical Base Plus 3 ~= 33.876px. Why: This is the vertical spacing scale's step 3 above its base. How: This multiplies the p03 rhythm step by 1rem. */
+	--spa-ver-p04 : calc( var( --ver-rhy-p04 ) * 1rem ); /* What: Spacing Vertical Base Plus 4 ~= 44.876px. Why: This is the vertical spacing scale's step 4 above its base. How: This multiplies the p04 rhythm step by 1rem. */
+	--spa-ver-p05 : calc( var( --ver-rhy-p05 ) * 1rem ); /* What: Spacing Vertical Base Plus 5 ~= 59.447px. Why: This is the vertical spacing scale's step 5 above its base. How: This multiplies the p05 rhythm step by 1rem. */
+	--spa-ver-p06 : calc( var( --ver-rhy-p06 ) * 1rem ); /* What: Spacing Vertical Base Plus 6 ~= 78.751px. Why: This is the vertical spacing scale's step 6 above its base. How: This multiplies the p06 rhythm step by 1rem. */
+	--spa-ver-p07 : calc( var( --ver-rhy-p07 ) * 1rem ); /* What: Spacing Vertical Base Plus 7 ~= 104.323px. Why: This is the vertical spacing scale's step 7 above its base. How: This multiplies the p07 rhythm step by 1rem. */
 
 	/* #endregion Spacing Tokens */
 
@@ -310,8 +310,8 @@
 
 	/* #region Text Width Tokens */
 
-	--tex-wid-sma : calc( var( --cdn-pow-011 ) * 1em ); /* What: Text Width Small ~= 22.047em. Why: Notes and captions read best near 50 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 50 in the sibling sites' fonts, to re-measure once it is; the home and 404 pages' notes read it. */
-	--tex-wid-bas : calc( var( --cdn-pow-012 ) * 1em ); /* What: Text Width Base ~= 29.207em. Why: Paragraphs read best near 66 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 66 in the sibling sites' fonts, to re-measure once it is; nothing uses it yet. */
+	--tex-wid-sma : calc( var( --cdn-pow-011 ) * 1em ); /* What: Text Width Small ~= 22.047em. Why: Notes and captions read best near 50 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 50 in the sibling sites' fonts, to re-measure once it is. */
+	--tex-wid-bas : calc( var( --cdn-pow-012 ) * 1em ); /* What: Text Width Base ~= 29.207em. Why: Paragraphs read best near 66 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 66 in the sibling sites' fonts, to re-measure once it is. */
 
 	/* #endregion Text Width Tokens */
 
@@ -338,33 +338,33 @@
 
 	/* #region Vertical Rhythm Tokens */
 
-	--ver-rhy-m12 : var( --cdn-pow-011-rec ); /* What: Vertical Rhythm Base Minus 12 ~= 0.045. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -11, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m11 : var( --cdn-pow-010-rec ); /* What: Vertical Rhythm Base Minus 11 ~= 0.060. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -10, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m10 : var( --cdn-pow-009-rec ); /* What: Vertical Rhythm Base Minus 10 ~= 0.080. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -9, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m09 : var( --cdn-pow-008-rec ); /* What: Vertical Rhythm Base Minus 9 ~= 0.105. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -8, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m08 : var( --cdn-pow-007-rec ); /* What: Vertical Rhythm Base Minus 8 ~= 0.140. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -7, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m07 : var( --cdn-pow-006-rec ); /* What: Vertical Rhythm Base Minus 7 ~= 0.185. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -6, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m06 : var( --cdn-pow-005-rec ); /* What: Vertical Rhythm Base Minus 6 ~= 0.245. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -5, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m05 : var( --cdn-pow-004-rec ); /* What: Vertical Rhythm Base Minus 5 ~= 0.325. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -4, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m04 : var( --cdn-pow-003-rec ); /* What: Vertical Rhythm Base Minus 4 ~= 0.430. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -3, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m03 : var( --cdn-pow-002-rec ); /* What: Vertical Rhythm Base Minus 3 ~= 0.570. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -2, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m02 : var( --cdn-pow-001-rec ); /* What: Vertical Rhythm Base Minus 2 ~= 0.755. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of -1, multiplied by 1rem where it sets a length. */
-	--ver-rhy-m01 : var( --cdn-pow-000 );     /* What: Vertical Rhythm Base Minus 1 = 1. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 0, multiplied by 1rem where it sets a length. */
-	--ver-rhy-bas : var( --cdn-pow-001 );     /* What: Vertical Rhythm Base ~= 1.325. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 1, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p01 : var( --cdn-pow-002 );     /* What: Vertical Rhythm Base Plus 1 ~= 1.755. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 2, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p02 : var( --cdn-pow-003 );     /* What: Vertical Rhythm Base Plus 2 ~= 2.325. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 3, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p03 : var( --cdn-pow-004 );     /* What: Vertical Rhythm Base Plus 3 ~= 3.080. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 4, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p04 : var( --cdn-pow-005 );     /* What: Vertical Rhythm Base Plus 4 ~= 4.080. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 5, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p05 : var( --cdn-pow-006 );     /* What: Vertical Rhythm Base Plus 5 ~= 5.404. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 6, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p06 : var( --cdn-pow-007 );     /* What: Vertical Rhythm Base Plus 6 ~= 7.159. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 7, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p07 : var( --cdn-pow-008 );     /* What: Vertical Rhythm Base Plus 7 ~= 9.484. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 8, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p08 : var( --cdn-pow-009 );     /* What: Vertical Rhythm Base Plus 8 ~= 12.564. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 9, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p09 : var( --cdn-pow-010 );     /* What: Vertical Rhythm Base Plus 9 ~= 16.643. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 10, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p10 : var( --cdn-pow-011 );     /* What: Vertical Rhythm Base Plus 10 ~= 22.047. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 11, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p11 : var( --cdn-pow-012 );     /* What: Vertical Rhythm Base Plus 11 ~= 29.207. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 12, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p12 : var( --cdn-pow-013 );     /* What: Vertical Rhythm Base Plus 12 ~= 38.691. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 13, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p13 : var( --cdn-pow-014 );     /* What: Vertical Rhythm Base Plus 13 ~= 51.254. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 14, multiplied by 1rem where it sets a length. */
-	--ver-rhy-p14 : var( --cdn-pow-015 );     /* What: Vertical Rhythm Base Plus 14 ~= 67.897. Why: Every height and line height is a power of the core design number. How: This is the core design number to the power of 15, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m12 : var( --cdn-pow-011-rec ); /* What: Vertical Rhythm Base Minus 12 ~= 0.045. Why: This is the vertical rhythm's step 12 below its base. How: This is the core design number to the power of -11, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m11 : var( --cdn-pow-010-rec ); /* What: Vertical Rhythm Base Minus 11 ~= 0.060. Why: This is the vertical rhythm's step 11 below its base. How: This is the core design number to the power of -10, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m10 : var( --cdn-pow-009-rec ); /* What: Vertical Rhythm Base Minus 10 ~= 0.080. Why: This is the vertical rhythm's step 10 below its base. How: This is the core design number to the power of -9, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m09 : var( --cdn-pow-008-rec ); /* What: Vertical Rhythm Base Minus 9 ~= 0.105. Why: This is the vertical rhythm's step 9 below its base. How: This is the core design number to the power of -8, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m08 : var( --cdn-pow-007-rec ); /* What: Vertical Rhythm Base Minus 8 ~= 0.140. Why: This is the vertical rhythm's step 8 below its base. How: This is the core design number to the power of -7, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m07 : var( --cdn-pow-006-rec ); /* What: Vertical Rhythm Base Minus 7 ~= 0.185. Why: This is the vertical rhythm's step 7 below its base. How: This is the core design number to the power of -6, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m06 : var( --cdn-pow-005-rec ); /* What: Vertical Rhythm Base Minus 6 ~= 0.245. Why: This is the vertical rhythm's step 6 below its base. How: This is the core design number to the power of -5, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m05 : var( --cdn-pow-004-rec ); /* What: Vertical Rhythm Base Minus 5 ~= 0.325. Why: This is the vertical rhythm's step 5 below its base. How: This is the core design number to the power of -4, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m04 : var( --cdn-pow-003-rec ); /* What: Vertical Rhythm Base Minus 4 ~= 0.430. Why: This is the vertical rhythm's step 4 below its base. How: This is the core design number to the power of -3, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m03 : var( --cdn-pow-002-rec ); /* What: Vertical Rhythm Base Minus 3 ~= 0.570. Why: This is the vertical rhythm's step 3 below its base. How: This is the core design number to the power of -2, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m02 : var( --cdn-pow-001-rec ); /* What: Vertical Rhythm Base Minus 2 ~= 0.755. Why: This is the vertical rhythm's step 2 below its base. How: This is the core design number to the power of -1, multiplied by 1rem where it sets a length. */
+	--ver-rhy-m01 : var( --cdn-pow-000 );     /* What: Vertical Rhythm Base Minus 1 = 1. Why: This is the vertical rhythm's step 1 below its base. How: This is the core design number to the power of 0, multiplied by 1rem where it sets a length. */
+	--ver-rhy-bas : var( --cdn-pow-001 );     /* What: Vertical Rhythm Base ~= 1.325. Why: This is the vertical rhythm's base step. How: This is the core design number to the power of 1, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p01 : var( --cdn-pow-002 );     /* What: Vertical Rhythm Base Plus 1 ~= 1.755. Why: This is the vertical rhythm's step 1 above its base. How: This is the core design number to the power of 2, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p02 : var( --cdn-pow-003 );     /* What: Vertical Rhythm Base Plus 2 ~= 2.325. Why: This is the vertical rhythm's step 2 above its base. How: This is the core design number to the power of 3, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p03 : var( --cdn-pow-004 );     /* What: Vertical Rhythm Base Plus 3 ~= 3.080. Why: This is the vertical rhythm's step 3 above its base. How: This is the core design number to the power of 4, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p04 : var( --cdn-pow-005 );     /* What: Vertical Rhythm Base Plus 4 ~= 4.080. Why: This is the vertical rhythm's step 4 above its base. How: This is the core design number to the power of 5, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p05 : var( --cdn-pow-006 );     /* What: Vertical Rhythm Base Plus 5 ~= 5.404. Why: This is the vertical rhythm's step 5 above its base. How: This is the core design number to the power of 6, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p06 : var( --cdn-pow-007 );     /* What: Vertical Rhythm Base Plus 6 ~= 7.159. Why: This is the vertical rhythm's step 6 above its base. How: This is the core design number to the power of 7, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p07 : var( --cdn-pow-008 );     /* What: Vertical Rhythm Base Plus 7 ~= 9.484. Why: This is the vertical rhythm's step 7 above its base. How: This is the core design number to the power of 8, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p08 : var( --cdn-pow-009 );     /* What: Vertical Rhythm Base Plus 8 ~= 12.564. Why: This is the vertical rhythm's step 8 above its base. How: This is the core design number to the power of 9, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p09 : var( --cdn-pow-010 );     /* What: Vertical Rhythm Base Plus 9 ~= 16.643. Why: This is the vertical rhythm's step 9 above its base. How: This is the core design number to the power of 10, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p10 : var( --cdn-pow-011 );     /* What: Vertical Rhythm Base Plus 10 ~= 22.047. Why: This is the vertical rhythm's step 10 above its base. How: This is the core design number to the power of 11, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p11 : var( --cdn-pow-012 );     /* What: Vertical Rhythm Base Plus 11 ~= 29.207. Why: This is the vertical rhythm's step 11 above its base. How: This is the core design number to the power of 12, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p12 : var( --cdn-pow-013 );     /* What: Vertical Rhythm Base Plus 12 ~= 38.691. Why: This is the vertical rhythm's step 12 above its base. How: This is the core design number to the power of 13, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p13 : var( --cdn-pow-014 );     /* What: Vertical Rhythm Base Plus 13 ~= 51.254. Why: This is the vertical rhythm's step 13 above its base. How: This is the core design number to the power of 14, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p14 : var( --cdn-pow-015 );     /* What: Vertical Rhythm Base Plus 14 ~= 67.897. Why: This is the vertical rhythm's step 14 above its base. How: This is the core design number to the power of 15, multiplied by 1rem where it sets a length. */
 
 	/* #endregion Vertical Rhythm Tokens */
 

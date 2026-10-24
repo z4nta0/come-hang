@@ -9,8 +9,7 @@
  * heading, note, and link stacked in named areas and centered both ways, a
  * tier 3 space apart, the note in the muted text color, and the link drawn
  * as a pill button that shifts color and lifts on hover, presses in, and
- * grows its focus ring in. Its transitions are off under reduced motion,
- * while the lift and press still apply at once.
+ * grows its focus ring in.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
