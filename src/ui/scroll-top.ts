@@ -24,8 +24,9 @@ import { useNavigationType } from 'react-router'; // What: Use Navigation Type. 
  * those positions itself rather than leaving them to the browser, since
  * Firefox restores one while the page being left is still drawn, cutting it
  * short when that page is shorter. Each history entry's position is recorded
- * and saved to session storage as the visitor scrolls, so a reload returns
- * to it too.
+ * and saved to session storage as the visitor scrolls, keeping the most
+ * recent entries, so a reload returns to it too. A fresh load of an address
+ * forgets the position its first entry was left at, since it's a new visit.
  *
  * Sections:
  *  - Constants
@@ -42,6 +43,7 @@ import { useNavigationType } from 'react-router'; // What: Use Navigation Type. 
 
 // #region Constants
 
+const POS_MAX_NUM = 100;                // What: Position Maximum Number. Why: Every navigation adds a history entry, and the whole record is saved on each scroll, so it mustn't grow for as long as a tab stays open. How: This is how many of the most recent entries' positions are kept.
 const POS_STO_STR = 'scroll-positions'; // What: Position Storage String. Why: The recorded positions have to survive a reload. How: This is the session storage key they're saved under.
 
 // #endregion Constants
@@ -52,13 +54,42 @@ const POS_STO_STR = 'scroll-positions'; // What: Position Storage String. Why: T
 
 let scrKeyStr = 'default'; // What: Scroll Key String. Why: A recorded position belongs to the history entry showing when the visitor scrolled. How: This holds the router's location key for that entry, which the hook updates on every navigation, starting from the key React Router gives a first load.
 
-let scrPosObj : Record< string, number > = {}; // What: Scroll Position Object. Why: Back, forward, and a reload return to where the visitor was. How: This maps each history entry's location key to its last scroll position.
+const scrPosMap = new Map< string, number >(); // What: Scroll Position Map. Why: Back, forward, and a reload return to where the visitor was. How: This maps each history entry's location key to its last scroll position, oldest entry first.
 
 
 
-try { scrPosObj = JSON.parse( sessionStorage.getItem( POS_STO_STR ) || '{}' ); } // What: Saved Positions Read. Why: A reload should find the positions recorded before it. How: This reads them from session storage, or starts empty when there are none.
+try { // What: Saved Positions Read. Why: A reload should find the positions recorded before it, and storage may hold something else entirely. How: This parses the saved pairs and keeps only those with a string key and a finite position.
 
-catch { scrPosObj = {}; } // What: Unreadable Positions Fallback. Why: Storage can be blocked, such as when a visitor turns off site data, or hold something that isn't JSON. How: This starts with no saved positions, so pages simply open where the browser puts them.
+
+	const savPosAny : unknown = JSON.parse( sessionStorage.getItem( POS_STO_STR ) || '[]' ); // What: Saved Positions Any. Why: The stored text could be anything another version or a visitor left. How: This parses it without trusting its shape.
+
+
+	for ( const savEntAny of Array.isArray( savPosAny ) ? savPosAny : [] ) { // What: Saved Entry Loop. Why: Each pair is checked on its own, so one bad entry doesn't lose the rest. How: This walks the parsed list when it is one, and nothing otherwise.
+
+
+		const entArrBoo = Array.isArray( savEntAny );                                                           // What: Entry Array Boolean. Why: A saved entry is a key and position pair. How: This is true when the entry is a list.
+		const entKeyBoo = entArrBoo && typeof savEntAny[ 0 ] === 'string';                                      // What: Entry Key Boolean. Why: A location key is a string. How: This is true when the pair's first item is one.
+		const entTopBoo = entArrBoo && typeof savEntAny[ 1 ] === 'number' && Number.isFinite( savEntAny[ 1 ] ); // What: Entry Top Boolean. Why: A scroll position has to be a real number. How: This is true when the pair's second item is a finite number.
+
+		const entValBoo = entKeyBoo && entTopBoo; // What: Entry Valid Boolean. Why: Only a well-formed pair can be restored. How: This combines both checks.
+
+
+		if ( entValBoo ) scrPosMap.set( savEntAny[ 0 ], savEntAny[ 1 ] ); // What: Valid Entry Record. Why: A well-formed pair is a position worth returning to. How: This adds it to the map in its saved order.
+
+
+	}
+
+
+}
+
+catch { scrPosMap.clear(); } // What: Unreadable Positions Fallback. Why: Storage can be blocked, such as when a visitor turns off site data, or hold something that isn't JSON. How: This starts with no saved positions, so pages simply open at their top.
+
+
+
+const navEntObj = performance.getEntriesByType( 'navigation' )[ 0 ] as PerformanceNavigationTiming | undefined; // What: Navigation Entry Object. Why: A reload or a return through history should restore the first entry's position, but a fresh load of an address in the same tab starts a new visit under the same default key. How: This reads how the page was loaded. // What: Type Assertion Note. Why: getEntriesByType types its entries as the general PerformanceEntry. How: The navigation type only ever lists a PerformanceNavigationTiming, or nothing in an old engine.
+
+
+if ( navEntObj?.type === 'navigate' ) scrPosMap.delete( 'default' ); // What: Fresh Load Guard. Why: A new visit shouldn't open where an earlier one was left. How: This forgets the default key's position when the page was loaded fresh.
 
 // #endregion Module State
 
@@ -78,7 +109,8 @@ catch { scrPosObj = {}; } // What: Unreadable Positions Fallback. Why: Storage c
  * into view instead, when an element with that id exists, following the
  * stylesheet's scroll-behavior. Back, forward, and a reload (a POP) return to
  * the position recorded for that history entry, after its page has rendered,
- * or stay put when none was recorded, such as on a first visit. The jumps to
+ * or are handled like any other navigation when none was recorded, such as on
+ * a first visit. The jumps to
  * the top and to a recorded position are instant whatever the stylesheet's
  * scroll-behavior says, since a smooth scroll down a whole page reads as
  * motion rather than as arriving on a new page. Call it once, in a
@@ -111,7 +143,10 @@ function useScrTopFun () : void {
 
 
 
-		if ( navTypStr === 'POP' ) { window.scrollTo( { behavior : 'instant', left : 0, top : scrPosObj[ locCurObj.key ] ?? window.scrollY } ); return; } // What: Back And Forward Restore Guard. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the position recorded for the entry, or stays put when none was, and stops.
+		const savTopNum = scrPosMap.get( locCurObj.key ); // What: Saved Top Number. Why: Back, forward, and a reload return to the entry's recorded position. How: This reads it, or holds undefined when none was recorded.
+
+
+		if ( navTypStr === 'POP' && savTopNum !== undefined ) { window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); return; } // What: Back And Forward Restore Guard. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the recorded position and stops, leaving a POP with nothing recorded to the hash and top handling below.
 
 
 
@@ -151,14 +186,19 @@ function useScrTopFun () : void {
 history.scrollRestoration = 'manual'; // What: Manual Scroll Restoration Assignment. Why: Firefox would otherwise restore a position while the page being left is still drawn, cutting it short, before the hook's own restore runs. How: This stops the browser restoring positions on its own.
 
 
-window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Why: Back, forward, and a reload return to the position each entry was left at, and a mobile browser can discard a background tab without firing pagehide, so saving only as the page hides could lose it. How: On every scroll event, which the browser fires at most once a frame, this records the position under the showing entry's key and saves the positions to session storage.
+window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Why: Back, forward, and a reload return to the position each entry was left at, and a mobile browser can discard a background tab without firing pagehide, so saving only as the page hides could lose it. How: On every scroll event, which the browser fires at most once a frame, this records the position under the showing entry's key, trims the oldest, and saves the positions to session storage.
 
 
-	scrPosObj[ scrKeyStr ] = window.scrollY; // What: Position Record Assignment. Why: The showing entry's latest position is the one to return to. How: This stores it under the entry's location key.
+	scrPosMap.delete( scrKeyStr ); // What: Position Removal Call. Why: Re-adding an entry moves it to the end, so the map stays ordered oldest first. How: This removes the showing entry's old position, if any.
+
+	scrPosMap.set( scrKeyStr, window.scrollY ); // What: Position Record Call. Why: The showing entry's latest position is the one to return to. How: This stores it under the entry's location key, as the newest entry.
+
+
+	if ( scrPosMap.size > POS_MAX_NUM ) scrPosMap.delete( scrPosMap.keys().next().value! ); // What: Oldest Position Trim. Why: The record shouldn't grow for as long as the tab stays open. How: This drops the oldest entry once there are more than POS_MAX_NUM. // What: Non-Null Note. Why: The iterator's first value types as possibly undefined. How: The map holds more than POS_MAX_NUM entries here, so a first key exists.
 
 
 
-	try { sessionStorage.setItem( POS_STO_STR, JSON.stringify( scrPosObj ) ); } // What: Positions Write Attempt. Why: The positions only survive a reload in storage. How: This saves them as JSON.
+	try { sessionStorage.setItem( POS_STO_STR, JSON.stringify( [ ...scrPosMap ] ) ); } // What: Positions Write Attempt. Why: The positions only survive a reload in storage. How: This saves them as a JSON list of key and position pairs, oldest first.
 
 	catch ( errCatObj ) { console.warn( errCatObj ); } // What: Positions Write Failure. Why: Storage can be full or blocked, and the failure should stay visible to anyone debugging. How: This logs it, and back and forward still restore from memory.
 

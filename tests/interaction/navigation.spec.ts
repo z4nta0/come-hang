@@ -99,6 +99,10 @@ test( 'back from the home page returns the 404 page to where it was left', async
 
 	await expect( curPagObj ).toHaveURL( '/' ); // What: Home Address Assertion. Why: Back has to start from the home page. How: This waits for the address to change.
 
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Home Heading Assertion. Why: The address changes before the home page has rendered, so its height is read once it shows. How: This waits for the home page's heading.
+
+	expect( await curPagObj.evaluate( () => document.documentElement.scrollHeight - window.innerHeight ) ).toBeLessThan( leaScrNum ); // What: Shorter Page Assertion. Why: Back only proves the hook's own restoring when the page in between can't scroll as far as the page being returned to, the case Firefox cut short. How: This checks the home page's scroll range falls short of the leaving position.
+
 	await curPagObj.goBack(); // What: Back Navigation Call. Why: This is the navigation being checked. How: This presses the browser's back.
 
 	await expect( curPagObj ).toHaveURL( NOF_PHO_OBJ.patStr );                               // What: Return Address Assertion. Why: Back should land on the 404 page again. How: This waits for the address to change back.
@@ -129,6 +133,56 @@ test( 'a reload returns the 404 page to where it was left', async ( { page : cur
 	await curPagObj.reload(); // What: Page Reload Call. Why: This is the navigation being checked. How: This reloads the 404 page.
 
 	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( leaScrNum ); // What: Reloaded Position Assertion. Why: A reload should open the page where it was left. How: This polls the scroll position until it matches the leaving position.
+
+
+} );
+
+
+
+test( 'a fresh load of an address opens at its top, not where an earlier visit left it', async ( { page : curPagObj } ) => { // What: Fresh Load Test. Why: A new visit in the same tab reuses the first entry's default key, and shouldn't open where the last visit was left. How: This scrolls the 404 page down, loads its address afresh, and checks it opens at the top.
+
+
+	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a leftover position to mean anything. How: This makes the screen too short to show the whole 404 page.
+
+	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The earlier visit starts on the 404 page. How: This opens the unknown path.
+
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The earlier visit has to leave a position below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
+
+	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
+
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without a position to forget. How: This checks the page sits below its top.
+
+	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Fresh Load Call. Why: This is the navigation being checked. How: This loads the same address again as a new navigation, not a reload.
+
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Page Not Found' ); // What: Heading Assertion. Why: The position is read once the page has rendered and the hook has run. How: This waits for the 404 heading.
+
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 ); // What: Top Assertion. Why: A new visit should open at the top. How: This reads the scroll position once the page shows.
+
+
+} );
+
+
+
+test( 'malformed saved scroll positions are ignored rather than breaking the page', async ( { page : curPagObj } ) => { // What: Malformed Storage Test. Why: Session storage can hold something another version or a visitor left, and the scroll hook reads it on every load. How: This plants a value that parses but isn't a list of pairs, scrolls, and checks the page raised no error.
+
+
+	const errLisArr : string[] = []; // What: Error List Array. Why: An uncaught error in the page would mean the hook choked on the stored value. How: This collects every one the page raises.
+
+
+
+	curPagObj.on( 'pageerror', ( errCurObj ) => errLisArr.push( errCurObj.message ) ); // What: Page Error Listener. Why: Errors thrown in the page don't fail the test by themselves. How: This records each one's message.
+
+	await curPagObj.addInitScript( () => sessionStorage.setItem( 'scroll-positions', 'null' ) ); // What: Malformed Storage Plant. Why: A stored null parses as JSON, so only the hook's own checks can reject it. How: This writes it before the app's scripts run.
+
+	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to scroll for the recorder to run. How: This makes the screen too short to show the whole 404 page.
+
+	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The hook reads the planted value as the app loads. How: This opens the unknown path.
+
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The recorder writes into the positions it read, which a bad value would break. How: This jumps to the page's bottom.
+
+	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll event, and the recorder with it, runs with the next frame. How: This waits two animation frames.
+
+	expect( errLisArr ).toEqual( [] ); // What: No Error Assertion. Why: The page passes only when the hook handled the bad value. How: This compares the collected errors with an empty list, so a failure prints each one.
 
 
 } );
