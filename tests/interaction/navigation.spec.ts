@@ -62,12 +62,49 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page. How: This opens the unknown path.
 
-	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: This is the navigation being checked. How: Playwright scrolls the link into view, scrolling the page down, then clicks it.
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The reset only proves something if the page starts scrolled down. How: This jumps to the page's bottom, past any smooth scroll-behavior.
+
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without the reset. How: This checks the page sits below its top.
+
+	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: This is the navigation being checked. How: Playwright clicks the link, already in view at the page's bottom.
 
 	await expect( curPagObj ).toHaveURL( '/' );                                                // What: Address Assertion. Why: The link leads to the home page. How: This reads the address.
 	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Home Heading Assertion. Why: The home page should be what's showing. How: This reads its one h1.
 	await expect( curPagObj.locator( 'meta[name="robots"]' ) ).toHaveCount( 0 );               // What: Robots Removed Assertion. Why: The home page must not keep the 404 page's noindex. How: This checks the tag left with the page.
 	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( 0 );           // What: Top Assertion. Why: A new page should open at its top. How: This polls the scroll position until it reads zero.
+
+
+} );
+
+
+
+test( 'back from the home page returns the 404 page to where it was left', async ( { browserName : broNamStr, page : curPagObj } ) => { // What: Back Position Test. Why: Back and forward are left to the browser, which should return the visitor to where they were. How: This scrolls the 404 page down, follows its link home, goes back, and checks the 404 page is scrolled down again.
+
+
+	test.skip( broNamStr === 'firefox', 'Firefox restores the position before the 404 page renders again, capping it at the short home page, an open question in the audit report' ); // What: Firefox Skip Call. Why: Firefox restores the earlier position against the page it's leaving, so with the placeholder home page only 26px tall to scroll, the position comes back capped, which is logged for the user rather than worked around. How: This skips the check in Firefox and says why.
+
+
+
+	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole 404 page.
+
+	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page. How: This opens the unknown path.
+
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
+
+
+	const leaScrNum = await curPagObj.evaluate( () => window.scrollY ); // What: Leaving Scroll Number. Why: Back should return the page to this position. How: This reads how far down the page sits before the link is followed.
+
+
+	expect( leaScrNum ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without anything restored. How: This checks the page sits below its top.
+
+	await curPagObj.getByRole( 'link', { name : 'Go to the home page' } ).click(); // What: Link Click Call. Why: The visitor leaves for the home page. How: This clicks the 404 page's link.
+
+	await expect( curPagObj ).toHaveURL( '/' ); // What: Home Address Assertion. Why: Back has to start from the home page. How: This waits for the address to change.
+
+	await curPagObj.goBack(); // What: Back Navigation Call. Why: This is the navigation being checked. How: This presses the browser's back.
+
+	await expect( curPagObj ).toHaveURL( NOF_PHO_OBJ.patStr );                                               // What: Return Address Assertion. Why: Back should land on the 404 page again. How: This waits for the address to change back.
+	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( leaScrNum / 2 ); // What: Restored Position Assertion. Why: The browser should return the page near where it was left, not to its top. How: This polls the scroll position until it sits past half the leaving position.
 
 
 } );
@@ -151,6 +188,36 @@ test( 'the skip link eases its slide, hover, press, and focus', async ( { page :
 	expect( skiTraObj[ 'background-color' ] ).toBeGreaterThan( 0 ); // What: Hover Color Assertion. Why: The hover's color shift should ease. How: This checks its duration.
 	expect( skiTraObj[ 'transform' ] ).toBeGreaterThan( 0 );        // What: Slide, Lift, And Press Assertion. Why: The slide into view, the hover lift, and the press all move by transform, which should ease. How: This checks its duration.
 	expect( skiTraObj[ 'outline-width' ] ).toBeGreaterThan( 0 );    // What: Focus Assertion. Why: The focus ring should grow in rather than snap. How: This checks its duration.
+
+
+} );
+
+
+
+test( 'the skip link appears and lifts instantly under reduced motion', async ( { page : curPagObj } ) => { // What: Reduced Motion Skip Link Test. Why: Under reduced motion the link should appear without sliding, while its hover lift still applies as feedback. How: This focuses and hovers the link with reduced motion requested and checks each change applies with nothing animating.
+
+
+	const skiLinLoc = curPagObj.getByRole( 'link', { name : 'Skip to main content' } ); // What: Skip Link Locator. Why: Each step below reaches the same link. How: This finds it by its role and name.
+
+
+
+	await curPagObj.emulateMedia( { reducedMotion : 'reduce' } ); // What: Reduced Motion Emulation. Why: The preference has to be set before the page loads. How: This makes the page match prefers-reduced-motion: reduce.
+
+	await opeStaFun( curPagObj, DES_STA_ARR[ 0 ] ); // What: State Open Call. Why: The link is checked on a settled page. How: This loads and settles the first desktop state.
+
+	await skiLinLoc.focus(); // What: Skip Focus Call. Why: Focus is what brings the link into view. How: This focuses it.
+
+	await expect( skiLinLoc ).toBeInViewport();                                                        // What: Skip Shown Assertion. Why: The link should be in view as soon as it's focused. How: This checks it sits on screen.
+	expect( await skiLinLoc.evaluate( ( skiCurEle ) => skiCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Slide Assertion. Why: The link should appear at once, with nothing easing it in. How: This checks it holds no running animation or transition.
+
+
+	const focTraStr = await skiLinLoc.evaluate( ( skiCurEle ) => getComputedStyle( skiCurEle ).transform ); // What: Focused Transform String. Why: The hover lift is judged against the focused position. How: This reads the link's transform before the hover.
+
+
+	await skiLinLoc.hover(); // What: Hover Call. Why: The lift is the feedback being checked. How: Playwright moves the pointer onto the link.
+
+	await expect( skiLinLoc ).not.toHaveCSS( 'transform', focTraStr );                                 // What: Lifted Assertion. Why: The lift should still apply. How: This checks the transform changed from the focused position.
+	expect( await skiLinLoc.evaluate( ( skiCurEle ) => skiCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Easing Assertion. Why: The lift should apply at once, with nothing easing it. How: This checks the link holds no running animation or transition.
 
 
 } );
