@@ -52,7 +52,7 @@
 
 }
 
-.butBasAnc { /* What: Button Base Anchor. Why: The way onward should read as the page's one clear action. How: This draws a pill in the main accent with bold text, in its own area at the bottom, easing its color, lift, and focus ring. */
+.butBasAnc { /* What: Button Base Anchor. Why: The way onward should read as the page's one clear action. How: This draws a pill in the main accent with bold text, in its own area at the bottom, easing its hover color, hover lift, press scale, and focus ring. */
 
 
 	background-color : var( --acc-mai-col );                      /* Accent Main Color = #1f5bc4 */

@@ -16,7 +16,7 @@ import cssModObj from './home.module.css'; // What: CSS Module Object. Why: The 
  * The page at the app's root address. For now it's a placeholder naming the
  * app and saying it's being built, centered in the screen; the group list
  * and the install and invite screens replace it as they're built. Its title
- * and description come from index.html.
+ * comes from index.html.
  *
  * Sections:
  *  - Components
