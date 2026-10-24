@@ -1,0 +1,28 @@
+
+
+
+/**
+ * app.module.css = App Module
+ *
+ * @summary
+ * Styles for AppRooCom's main element, the landmark that holds whichever page
+ * the address matches: a one-cell grid at least as tall as the screen, so
+ * each page can fill it and center its content. Each page styles its own
+ * content in its own module.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+.appConMai { /* What: App Content Main. Why: Each page should be able to fill the screen, however little it holds. How: This makes the main element a one-cell grid at least as tall as the viewport, which the page's own root fills. */
+
+
+	display    : grid;
+	min-height : 100vh;
+
+
+}
+
+

@@ -3,6 +3,9 @@
 
 // #region Imports
 
+import cssModObj from './app.module.css'; // What: CSS Module Object. Why: The main element is styled in the app's own module, whose class names Vite hashes. How: The main element reads its class from this object.
+
+
 import { HomPagCom    } from './pages/home/home.tsx';           // What: Home Page Component. Why: The app's root address is its home page. How: The home route renders it.
 import { NotFouCom    } from './pages/not-found/not-found.tsx'; // What: Not Found Component. Why: Unknown addresses need a page of their own. How: The catch-all route renders it.
 import { Route        } from 'react-router';                    // What: Route. Why: Each page is matched to its path. How: This declares one route per page.
@@ -85,13 +88,10 @@ function AppRooCom () : React.JSX.Element {
 			<main
 				id='main' // What: Main Identifier. Why: The skip link's #main names this element, and as a navigation target its id keeps its plain name. How: This gives the main element the id the skip link points at.
 
-				style={{
-					display   : 'grid',
-					minHeight : '100vh'
-				}}
+				className={ cssModObj.appConMai }
 
 				tabIndex={ -1 } // What: Main Tab Index. Why: The skip link moves focus here, but the main element isn't a control. How: This lets it take focus from a script without joining the Tab order.
-			>{ /* What: App Main Element. Why: Each page's content is the main landmark, and it should fill the screen. How: This holds whichever page the address matches in a one-cell grid at least as tall as the screen, whose single row stretches the page to fill it, so the page needs no named area. */ }
+			>{ /* What: App Content Main Element. Why: Each page's content is the main landmark, and it should fill the screen. How: This holds whichever page the address matches in a one-cell grid at least as tall as the screen, whose single row stretches the page to fill it, so the page needs no named area. */ }
 
 
 				<Routes>{ /* What: Page Routes. Why: Only one page should render for any path. How: This renders the single route below that best matches the path. */ }
