@@ -417,7 +417,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 
 
-	for ( const conCurObj of conHanArr ) { // What: Control Probe Loop. Why: Every reachable control has to respond. How: This reads each reachable one the selector matches at rest, hovered, and pressed.
+	for ( const conCurObj of conHanArr ) { // What: Control Probe Loop. Why: Every reachable control has to respond. How: This reads each reachable one the selector matches at rest, hovered, pressed, blurred, and focused.
 
 
 		const conDesStr = await conCurObj.evaluate( ( conCurEle ) => `${ conCurEle.tagName.toLowerCase() } "${ ( conCurEle.getAttribute( 'aria-label' ) || conCurEle.textContent || '' ).trim().slice( 0, 30 ) }"` ); // What: Control Description String. Why: A problem should name the control a person would recognize. How: This joins its tag with its label or text.
