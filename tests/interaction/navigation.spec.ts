@@ -168,7 +168,7 @@ test( 'a fresh load of an address opens at its top, not where an earlier visit l
 
 
 
-test( 'malformed saved scroll positions are ignored rather than breaking the page', async ( { page : curPagObj } ) => { // What: Malformed Storage Test. Why: Session storage can hold something another version or a visitor left, and the scroll hook reads it on every load. How: This plants a value that parses but isn't a list of pairs, scrolls, and checks the page raised no error.
+test( 'malformed saved scroll positions are ignored rather than breaking the page', async ( { page : curPagObj } ) => { // What: Malformed Storage Test. Why: Session storage can hold something another version or a visitor left, and the scroll hook reads it as the app loads. How: This plants a value that parses but isn't a list of pairs before the app loads, scrolls so the recorder and its save run too, and checks the page raised no error.
 
 
 	const errLisArr : string[] = []; // What: Error List Array. Why: An uncaught error in the page would mean the hook choked on the stored value. How: This collects every one the page raises.
@@ -178,15 +178,15 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 
 	await curPagObj.addInitScript( () => sessionStorage.setItem( 'scroll-positions', 'null' ) ); // What: Malformed Storage Plant. Why: A stored null parses as JSON, so only the hook's own checks can reject it. How: This writes it before the app's scripts run.
 
-	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to scroll for the recorder to run. How: This makes the screen too short to show the whole 404 page.
+	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The recorder and its save should run after the planted value was read, and they only run on a page that scrolls. How: This makes the screen too short to show the whole 404 page.
 
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The hook reads the planted value as the app loads. How: This opens the unknown path.
 
-	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The recorder writes into the positions it read, which a bad value would break. How: This jumps to the page's bottom.
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The recorder saves its record after the planted value was read, so a bad value left in it, or a failing save, would show up as an error. How: This jumps to the page's bottom.
 
 	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll event, and the recorder with it, runs with the next frame. How: This waits two animation frames.
 
-	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll fires no scroll event, so the recorder would never write into the planted value and the check would pass without exercising it. How: This checks the page sits below its top.
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll fires no scroll event, so the recorder and its save would never run and the check would cover only the load. How: This checks the page sits below its top.
 	expect( errLisArr ).toEqual( [] );                                               // What: No Error Assertion. Why: The page passes only when the hook handled the bad value. How: This compares the collected errors with an empty list, so a failure prints each one.
 
 
