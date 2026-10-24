@@ -18,7 +18,7 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
  * @summary
  * Checks how the app behaves when someone moves through it and uses its
  * controls, in whichever engine the project runs, such as an unknown address
- * landing on the 404 page and its link returning home.
+ * landing on the 404 page.
  *
  * Sections:
  *  - Constants

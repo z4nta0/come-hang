@@ -48,7 +48,7 @@ const ESL_CON_ARR = [ // What: ESLint Config Array. Why: ESLint reads its flat c
 
 
 	{ ignores : [ 'dist/**', 'tests/output/**' ] }, // What: Ignores Object. Why: The build output and the test suites' reports are generated, not hand-written, so their lint results mean nothing. How: This global ignores entry skips both folders for every config below; one glob each, since braces break ESLint's matching here.
-	...tyeEslObj.configs.recommended,               // What: Recommended Configs Spread. Why: typescript-eslint's recommended rules catch TypeScript mistakes the compiler allows, such as an any or an unused variable. How: This spreads its recommended configs in, which apply to every file ESLint lints and switch off the core rules TypeScript already covers.
+	...tyeEslObj.configs.recommended,               // What: Recommended Configs Spread. Why: typescript-eslint's recommended rules catch TypeScript mistakes the compiler allows, such as an unused variable. How: This spreads its recommended configs in, which apply to every file ESLint lints and switch off the core rules TypeScript already covers.
 
 	{ // What: Rule Overrides Object. Why: Two recommended rules flag patterns the formatting rules rely on. How: This re-sets both rules with an option that allows those patterns.
 
@@ -104,7 +104,7 @@ const ESL_CON_ARR = [ // What: ESLint Config Array. Why: ESLint reads its flat c
 		rules : { // What: Rules. Why: The plugin's recommended set is the standard hooks checks, but four of its rules only judge whether a component suits the React Compiler, which this app doesn't use. How: This spreads the recommended set in, then turns those four off.
 
 
-			...rehPluObj.configs.recommended.rules, // What: Recommended Rules Spread. Why: These are the standard hooks checks, rules-of-hooks and exhaustive-deps among them. How: This spreads the plugin's recommended set in first, so the overrides below win.
+			...rehPluObj.configs.recommended.rules, // What: Recommended Rules Spread. Why: These are the standard hooks checks, such as exhaustive-deps. How: This spreads the plugin's recommended set in first, so the overrides below win.
 
 			'react-hooks/preserve-manual-memoization' : 'off', // What: Preserve Manual Memoization Rule. Why: It only reports where the compiler would skip a component. How: This turns it off.
 			'react-hooks/purity'                      : 'off', // What: Purity Rule. Why: It flags impure calls the compiler can't place, including ones that only run in event handlers. How: This turns it off.
