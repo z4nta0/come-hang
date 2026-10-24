@@ -71,6 +71,10 @@ a production build served by `vite preview` on 5201 (sibling projects use
   browser key (named here when it lands), and location sharing opens
   `geolocation` in the Permissions-Policy, each in the change that needs it.
 - **UI**: built in-house, no component library.
+- **Main content** (per the skip link rule): the `<main>` element in
+  `app.tsx`, which holds whichever page the address matches. There's no bar
+  or tab bar yet, so it's everything after the skip link; once the tab bar
+  joins, it stays the open screen's content, past the bar.
 - **Horizontal sizing system**: not yet chosen (per the global CSS rules,
   discuss with the user before converting any widths).
 - **Layout and spacing** (per the global grid-first and spacing tier

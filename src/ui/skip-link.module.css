@@ -1,0 +1,74 @@
+
+
+
+/**
+ * skip-link.module.css = Skip Link Module
+ *
+ * @summary
+ * Styles for SkiLinCom: the skip link drawn as one of the app's pill buttons,
+ * fixed just above the top edge of the screen until it's focused, when it
+ * slides down into view at the side gutter. Like the app's other buttons, it
+ * shifts color and lifts on hover, presses in, and grows its focus ring in.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+.skiLinAnc { /* What: Skip Link Anchor. Why: A keyboard user should be able to jump to the content, and the link shouldn't show until it's needed. How: This draws a pill in the main accent with bold text, fixed just above the screen's top edge at the side gutter, and eases its slide back out on the accelerating curve, along with its hover color, hover lift, press scale, and focus ring. */
+
+
+	background-color : var( --acc-mai-col );                                     /* Accent Main Color = #1f5bc4 */
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                                     /* Text Accent Color = #ffffff */
+	font-weight      : 700;
+	left             : var( --gut-sid-pad );                                     /* Gutter Side Padding ~= 19.304px */
+	padding          : var( --spa-ver-bas ) var( --spa-hor-p03 );                /* Spacing Vertical Base ~= 14.572px, Spacing Horizontal Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	position         : fixed;
+	top              : var( --spa-ver-m02 );                                     /* Spacing Vertical Base Minus 2 ~= 8.304px */
+	transform        : translateY( calc( -100% - var( --spa-ver-m02 ) * 2 ) );   /* Spacing Vertical Base Minus 2 ~= -16.608px */ /* What: Hidden Offset. Why: The link waits just above the screen until it's focused, clear of the edge so no rounded sliver of it shows. How: This raises it by its own height plus twice its top offset, leaving its bottom edge a top offset above the screen. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-acc-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ), Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	z-index          : 1;                                                        /* What: Skip Link Layer. Why: A page element that moves, such as a lifted button, paints above earlier elements, and the shown link has to stay on top. How: This sets it one layer above the page's content. */
+
+
+}
+.skiLinAnc:focus { /* What: Focused Skip Link Anchor. Why: The link has to come into view however focus reaches it. How: This slides it down into view on the decelerating curve, still easing its hover color, hover lift, press scale, and focus ring, on :focus rather than :focus-visible so a script's focus shows it too. */
+
+
+	transform  : translateY( 0 );
+	transition : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.skiLinAnc:hover { /* What: Hovered Skip Link Anchor. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the pill 2px. */
+
+
+	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #1f5bc4, darkened by 0.08 lightness */
+	transform        : translateY( calc( var( --spa-ver-m07 ) * -1 ) );         /* Spacing Vertical Base Minus 7 ~= -2.035px */
+
+
+}
+.skiLinAnc:active { /* What: Pressed Skip Link Anchor. Why: A press should register before focus moves. How: This presses the pill in slightly, which also undoes its hover lift. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Skip Link Anchor. Why: Someone who asked for less motion shouldn't see the link slide. How: This applies only when the reduced-motion preference is set. */
+
+
+	.skiLinAnc,
+	.skiLinAnc:focus { /* What: Motionless Skip Link Anchor. Why: The link should simply appear and its hover, press, and focus looks switch at once, the lift and press still applying instantly. How: This turns the transition off on both the hidden and the focused rule, since the focused rule outranks the base. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+

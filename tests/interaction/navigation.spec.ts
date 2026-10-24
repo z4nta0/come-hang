@@ -18,7 +18,7 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
  * @summary
  * Checks how the app behaves when someone moves through it and uses its
  * controls, in whichever engine the project runs, such as an unknown address
- * landing on the 404 page.
+ * landing on the 404 page or the skip link moving focus to the content.
  *
  * Sections:
  *  - Constants
@@ -32,7 +32,8 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
 
 // #region Constants
 
-const NOF_PHO_OBJ = STA_REC_ARR.find( ( staRecObj ) => staRecObj.ideStr === 'not-found-phone' )!; // What: Not-Found Phone Object. Why: Every check here starts from the 404 page, and most people use the app on a phone. How: This takes the shared 404 phone state. // What: Non-Null Note. Why: find's return type allows undefined. How: states.ts always lists the not-found-phone state.
+const DES_STA_ARR = STA_REC_ARR.filter( ( staRecObj ) => staRecObj.ideStr.endsWith( '-desktop' ) ); // What: Desktop State Array. Why: The skip link is checked once on every page, at the size a keyboard user most often browses at. How: This takes the shared desktop state of each page.
+const NOF_PHO_OBJ = STA_REC_ARR.find( ( staRecObj ) => staRecObj.ideStr === 'not-found-phone' )!;   // What: Not-Found Phone Object. Why: The 404 page checks start from it, since most people use the app on a phone. How: This takes the shared 404 phone state. // What: Non-Null Note. Why: find's return type allows undefined. How: states.ts always lists the not-found-phone state.
 
 // #endregion Constants
 
@@ -119,6 +120,70 @@ test( "the 404 page's button still lifts under reduced motion, instantly", async
 
 
 } );
+
+
+
+test( 'the skip link eases its slide, hover, press, and focus', async ( { page : curPagObj } ) => { // What: Skip Link Feedback Test. Why: Every interaction should visibly ease rather than snap, the skip link's slide into view included. How: This focuses the link, reads its transitions, and checks each look it changes is eased.
+
+
+	const skiLinLoc = curPagObj.getByRole( 'link', { name : 'Skip to main content' } ); // What: Skip Link Locator. Why: The focus and the read below reach the same link. How: This finds it by its role and name.
+
+
+
+	await opeStaFun( curPagObj, DES_STA_ARR[ 0 ] ); // What: State Open Call. Why: The link's styles are read on a settled page. How: This loads and settles the first desktop state.
+
+	await skiLinLoc.focus(); // What: Skip Focus Call. Why: The link only shows once it's focused, and its focused rule carries the slide in. How: This focuses it.
+
+
+	const skiTraObj = await skiLinLoc.evaluate( ( skiCurEle ) => { // What: Skip Transition Object. Why: Each eased property is paired with its duration. How: This reads the computed transition lists and pairs them.
+
+
+		const styCurObj = getComputedStyle( skiCurEle ); // What: Style Current Object. Why: The browser's computed transition is what actually plays. How: This reads the link's computed styles.
+
+
+
+		return Object.fromEntries( styCurObj.transitionProperty.split( ', ' ).map( ( proNamStr, proIndNum ) => [ proNamStr, parseFloat( styCurObj.transitionDuration.split( ', ' )[ proIndNum ] ) ] ) ); // What: Property Duration Return. Why: Each property's duration is checked by name. How: This maps each transitioned property to its duration in seconds.
+
+
+	} );
+
+
+	expect( skiTraObj[ 'background-color' ] ).toBeGreaterThan( 0 ); // What: Hover Color Assertion. Why: The hover's color shift should ease. How: This checks its duration.
+	expect( skiTraObj[ 'transform' ] ).toBeGreaterThan( 0 );        // What: Slide, Lift, And Press Assertion. Why: The slide into view, the hover lift, and the press all move by transform, which should ease. How: This checks its duration.
+	expect( skiTraObj[ 'outline-width' ] ).toBeGreaterThan( 0 );    // What: Focus Assertion. Why: The focus ring should grow in rather than snap. How: This checks its duration.
+
+
+} );
+
+
+
+for ( const staRecObj of DES_STA_ARR ) { // What: Skip Link Loop. Why: Every page opens with the skip link. How: This declares one check per page's desktop state.
+
+
+	test( `the first Tab in ${ staRecObj.ideStr } reaches the skip link, which moves focus to the main content`, async ( { browserName : broNamStr, page : curPagObj } ) => { // What: Skip Link Test. Why: A keyboard user has to be able to jump straight to the content. How: This presses Tab once, checks the skip link holds focus on screen, then clicks it and checks focus moved to the main element with a clean address.
+
+
+		const skiLinLoc = curPagObj.getByRole( 'link', { name : 'Skip to main content' } ); // What: Skip Link Locator. Why: Each step below reaches the same link. How: This finds it by its role and name.
+
+
+
+		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: The skip link is checked on each page. How: This loads and settles the page at desktop size.
+
+		await curPagObj.keyboard.press( broNamStr === 'webkit' ? 'Alt+Tab' : 'Tab' ); // What: First Tab Call. Why: The skip link should be the page's first stop. How: This presses Tab, or Alt+Tab in WebKit, whose plain Tab skips links the way Safari does by default.
+
+		await expect( skiLinLoc ).toBeFocused();    // What: Skip Focus Assertion. Why: The skip link has to be the page's first stop. How: This checks it holds focus after the first Tab.
+		await expect( skiLinLoc ).toBeInViewport(); // What: Skip Shown Assertion. Why: A focused link waiting above the screen would leave a keyboard user lost. How: This checks it has slid into view.
+
+		await skiLinLoc.click(); // What: Skip Click Call. Why: This is the action under test. How: This clicks the focused skip link.
+
+		await expect( curPagObj.locator( 'main' ) ).toBeFocused();                   // What: Main Focus Assertion. Why: The jump has to land in the content, so the next Tab continues from there. How: This checks the main element holds focus.
+		await expect( curPagObj ).toHaveURL( new RegExp( `${ staRecObj.patStr }$` ) ); // What: Clean Address Assertion. Why: The jump shouldn't leave a hash in the address. How: This checks the address still ends with the page's own path.
+
+
+	} );
+
+
+}
 
 // #endregion Module Init
 
