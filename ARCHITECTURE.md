@@ -1,16 +1,19 @@
 # Come Hang: Architecture Decisions
 
 Living document. Updated as design decisions are made during planning
-conversations, before implementation starts. Sections marked **Open** are
-discussed but not yet locked in; everything else reflects a decision the
-project is currently committed to. Each decision section includes a
+conversations, before implementation starts. When a decision changes,
+every passage it affects is rewritten to match in the same change, so the
+whole document always reflects what the project is currently committed
+to. Open questions live in Section 13 and upcoming work in Section 14.
+Each decision section includes a
 **Pros** / **Cons** breakdown of the tradeoff actually being accepted;
 purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-22 (pre-implementation planning phase; data model
-approved, Firebase plan changed to Blaze, see Section 15).
+Last updated: 2026-10-24 (pre-implementation planning phase; data model
+approved, Firebase plan changed to Blaze, see Section 15; earlier passages
+brought in line with Sections 11.7 and 17).
 
 ---
 
@@ -261,9 +264,10 @@ out to be too short for a given group, once it's gone, it's gone.
 ### Chat
 Strictly sync-based, not time-based, with these refinements:
 - A message's "has everyone received this" check is evaluated against
-  **current** group membership, not a snapshot taken at send time. A
-  member who leaves or is removed is dropped from the pending-ack list,
-  so they can't block cleanup after they're gone.
+  the recipients snapshot taken at send time (`recipientUids`, Section
+  11.7), so a member who joins later is never waited on. A member who
+  leaves or is removed is dropped from the pending-ack list, so they
+  can't block cleanup after they're gone.
 - **Multi-device is explicitly out of scope** (see Section 8): the app
   is single-device per user, so "delivered" means delivered to that one
   device, no cross-device history backfill is attempted.
@@ -335,7 +339,8 @@ member or full metadata privacy.
   only ever sees ciphertext for actual content.
 - The group key is generated once per group and wrapped individually for
   each member using their own public key (WebCrypto ECDH) when they
-  join, so Firebase never sees an unwrapped key either.
+  join, by the member who approves the join (Section 17), so Firebase
+  never sees an unwrapped key either.
 - Only routing metadata (sender UID, timestamps, group ID) stays
   plaintext, since Firestore/RTDB need it to route/query.
 
@@ -537,10 +542,11 @@ in place of their name. The group can manually reassign it if needed.
   at essentially no extra engineering cost.
 
 **Cons**
-- No per-person invite tracking, there's no "who's joined yet, who's
-  still pending" visibility with a single shared link.
-- Anyone holding the link can join until it's revoked, there's no
-  vetting step.
+- No per-person invite tracking: a single shared link can't say who it
+  was sent to. Pending join requests are visible (Section 17), but not
+  who has the link and hasn't used it yet.
+- Every join waits for a member's approval (Section 17), so a newcomer
+  can't get in while no member is around to let them in.
 - Rotation-on-removal creates real, deliberately-accepted friction: every
   removal invalidates the link for anyone still mid-invite, requiring
   the creator to notice and re-share the new one.

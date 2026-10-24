@@ -14,8 +14,18 @@ sharing on the day of an event. People can belong to more than one group.
 **Read [ARCHITECTURE.md](ARCHITECTURE.md) before designing or building
 anything.** It's the decision record from the planning conversations: the
 Firebase setup, the data model, encryption, retention, invites, join
-approval, billing, and every open question. When a decision changes or a
-new one is made, update it there in the same change.
+approval, billing, and every open question. It always reflects the
+current decisions:
+- **A new or changed decision updates it in the same change**, including
+  every earlier passage the decision affects. Search the whole document for
+  the topic (the data it touches, the section numbers that discuss it) and
+  rewrite each passage that no longer holds, a Pros/Cons entry included, so
+  nothing contradicts the latest decision. A new section never sits beside
+  an old passage it overturns.
+- **Passages are rewritten in place, never marked superseded**: git keeps
+  the history, and the document stays a description of the present.
+- **The header's "Last updated" line** moves to the date of the change,
+  naming what changed.
 
 ## Status
 
