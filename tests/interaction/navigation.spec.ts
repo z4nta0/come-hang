@@ -118,7 +118,7 @@ test( "the 404 page's button still lifts under reduced motion, instantly", async
 
 
 	await expect( butLinObj ).not.toHaveCSS( 'transform', 'none' );                                  // What: Lifted Assertion. Why: The lift should still apply. How: This checks the button carries a transform.
-	expect( await butLinObj.evaluate( ( butCurEle ) => butCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Easing Assertion. Why: The lift should apply at once, with nothing easing it. How: This checks the button holds no running transition.
+	expect( await butLinObj.evaluate( ( butCurEle ) => butCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Easing Assertion. Why: The lift should apply at once, with nothing easing it. How: This checks the button holds no running animation or transition.
 
 
 } );
