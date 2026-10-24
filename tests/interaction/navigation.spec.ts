@@ -78,10 +78,8 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 
 
 
-test( 'back from the home page returns the 404 page to where it was left', async ( { browserName : broNamStr, page : curPagObj } ) => { // What: Back Position Test. Why: Back and forward are left to the browser, which should return the visitor to where they were. How: This scrolls the 404 page down, follows its link home, goes back, and checks the 404 page is scrolled down again.
+test( 'back from the home page returns the 404 page to where it was left', async ( { page : curPagObj } ) => { // What: Back Position Test. Why: Back and forward are left to the browser, which should return the visitor to where they were. How: This scrolls the 404 page down, follows its link home, goes back, and checks the 404 page is scrolled down again.
 
-
-	test.skip( broNamStr === 'firefox', 'Firefox restores the position before the 404 page renders again, capping it at the short home page, an open question in the audit report' ); // What: Firefox Skip Call. Why: Firefox restores the earlier position against the page it's leaving, so with the placeholder home page only 26px tall to scroll, the position comes back capped, which is logged for the user rather than worked around. How: This skips the check in Firefox and says why.
 
 
 
@@ -90,6 +88,8 @@ test( 'back from the home page returns the 404 page to where it was left', async
 	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page. How: This opens the unknown path.
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
+
+	await curPagObj.evaluate( () => new Promise( ( resFun ) => requestAnimationFrame( () => requestAnimationFrame( resFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
 
 
 	const leaScrNum = await curPagObj.evaluate( () => window.scrollY ); // What: Leaving Scroll Number. Why: Back should return the page to this position. How: This reads how far down the page sits before the link is followed.
@@ -103,8 +103,34 @@ test( 'back from the home page returns the 404 page to where it was left', async
 
 	await curPagObj.goBack(); // What: Back Navigation Call. Why: This is the navigation being checked. How: This presses the browser's back.
 
-	await expect( curPagObj ).toHaveURL( NOF_PHO_OBJ.patStr );                                               // What: Return Address Assertion. Why: Back should land on the 404 page again. How: This waits for the address to change back.
-	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( leaScrNum / 2 ); // What: Restored Position Assertion. Why: The browser should return the page near where it was left, not to its top. How: This polls the scroll position until it sits past half the leaving position.
+	await expect( curPagObj ).toHaveURL( NOF_PHO_OBJ.patStr );                               // What: Return Address Assertion. Why: Back should land on the 404 page again. How: This waits for the address to change back.
+	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( leaScrNum ); // What: Restored Position Assertion. Why: Back should return the page exactly where it was left, in every engine, even though the home page is too short to scroll that far. How: This polls the scroll position until it matches the leaving position.
+
+
+} );
+
+
+
+test( 'a reload returns the 404 page to where it was left', async ( { page : curPagObj } ) => { // What: Reload Position Test. Why: The hook takes over the browser's restoring, so a reload has to find the position it recorded. How: This scrolls the 404 page down, reloads it, and checks it opens at the same position.
+
+
+	await curPagObj.setViewportSize( { height : 200, width : NOF_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole 404 page.
+
+	await curPagObj.goto( NOF_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the 404 page. How: This opens the unknown path.
+
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
+
+	await curPagObj.evaluate( () => new Promise( ( resFun ) => requestAnimationFrame( () => requestAnimationFrame( resFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
+
+
+	const leaScrNum = await curPagObj.evaluate( () => window.scrollY ); // What: Leaving Scroll Number. Why: The reload should return the page to this position. How: This reads how far down the page sits before the reload.
+
+
+	expect( leaScrNum ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without anything restored. How: This checks the page sits below its top.
+
+	await curPagObj.reload(); // What: Page Reload Call. Why: This is the navigation being checked. How: This reloads the 404 page.
+
+	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( leaScrNum ); // What: Reloaded Position Assertion. Why: A reload should open the page where it was left. How: This polls the scroll position until it matches the leaving position.
 
 
 } );
