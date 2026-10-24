@@ -176,7 +176,7 @@ test( 'the policy refuses an injected inline script', async ( { page : curPagObj
 
 
 	expect( injRanBoo ).toBe( false );                                                                // What: Script Refused Assertion. Why: The policy has to stop inline script. How: This checks the injected script never ran.
-	expect( await polVioFun( curPagObj ) ).toContainEqual( expect.stringContaining( 'script-src' ) ); // What: Violation Reported Assertion. Why: The later checks rely on violations being recorded. How: This checks a recorded violation's directive contains script-src, such as script-src-elem.
+	expect( await polVioFun( curPagObj ) ).toContainEqual( expect.stringContaining( 'script-src' ) ); // What: Violation Reported Assertion. Why: The later checks rely on violations being recorded. How: This checks a recorded violation line contains script-src, such as one for script-src-elem.
 
 
 } );

@@ -78,8 +78,8 @@ test( 'the content security policy allows only the app itself', () => { // What:
 
 
 	expect( cspValStr ).toContain( "default-src 'self'" );     // What: Default Source Assertion. Why: Every resource type the policy doesn't name falls back to this. How: This checks the directive includes 'self'.
-	expect( cspValStr ).toContain( "base-uri 'self'" );        // What: Base URI Assertion. Why: An injected base tag could point every relative address at another site. How: This checks the base address stays on the app.
-	expect( cspValStr ).toContain( "form-action 'self'" );     // What: Form Action Assertion. Why: An injected form could post a visitor's details elsewhere. How: This checks forms post to the app only.
+	expect( cspValStr ).toContain( "base-uri 'self'" );        // What: Base URI Assertion. Why: An injected base tag could point every relative address at another site. How: This checks the directive includes 'self'.
+	expect( cspValStr ).toContain( "form-action 'self'" );     // What: Form Action Assertion. Why: An injected form could post a visitor's details elsewhere. How: This checks the directive includes 'self'.
 	expect( cspValStr ).toContain( "frame-ancestors 'none'" ); // What: Frame Ancestors Assertion. Why: A site framing this app could trick visitors into clicks. How: This checks no page may frame it.
 	expect( cspValStr ).toContain( "object-src 'none'" );      // What: Object Source Assertion. Why: Plugins can run code outside the policy. How: This checks none can load.
 	expect( cspValStr ).not.toContain( 'unsafe-inline' );      // What: No Unsafe Inline Assertion. Why: Allowing inline script or style lets injected markup run. How: This checks the policy never allows it.

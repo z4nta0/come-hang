@@ -60,7 +60,7 @@ type SnaRecTyp = { // What: Snapshot Record Type. Why: An element's look, and wh
 
 const CON_PRO_ARR = [ 'color', 'background-color', 'border-color', 'transform', 'opacity' ]; // What: Control Property Array. Why: Hover and press feedback changes these, on a control and on what's inside it, such as an icon's lines. How: Each is compared between moments, and each that changes has to be transitioned.
 const FIE_PRO_ARR = [ 'border-color', 'outline-color', 'outline-width' ];                    // What: Field Property Array. Why: A field's focus changes its border and its outline. How: Each is compared between rest and focus, and each that changes has to be transitioned.
-const SET_WAI_NUM = 400;                                                                     // What: Settle Wait Number. Why: Each look is read once its transition has finished, and the longest interface transition runs about 277ms. How: This is the pause, in milliseconds, after each hover, press, or focus.
+const SET_WAI_NUM = 400;                                                                     // What: Settle Wait Number. Why: Each look is read once its transition has finished, and the longest interface transition runs about 277ms. How: This is the pause, in milliseconds, before each look is read.
 
 // #endregion Constants
 
@@ -414,7 +414,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 
 
-	for ( const conCurObj of conHanArr ) { // What: Control Probe Loop. Why: Every reachable control has to respond. How: This reads each one the selector matches at rest, hovered, and pressed.
+	for ( const conCurObj of conHanArr ) { // What: Control Probe Loop. Why: Every reachable control has to respond. How: This reads each reachable one the selector matches at rest, hovered, and pressed.
 
 
 		const conDesStr = await conCurObj.evaluate( ( conCurEle ) => `${ conCurEle.tagName.toLowerCase() } "${ ( conCurEle.getAttribute( 'aria-label' ) || conCurEle.textContent || '' ).trim().slice( 0, 30 ) }"` ); // What: Control Description String. Why: A problem should name the control a person would recognize. How: This joins its tag with its label or text.
