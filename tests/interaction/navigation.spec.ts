@@ -114,7 +114,7 @@ test( "the 404 page's button still lifts under reduced motion, instantly", async
 
 	await butLinObj.hover(); // What: Hover Call. Why: This is the interaction being checked. How: Playwright moves the pointer onto the button.
 
-	await expect( butLinObj ).not.toHaveCSS( 'transform', 'none' );                                  // What: Lifted Assertion. Why: The lift should still apply. How: This checks the button carries a transform.
+	await expect( butLinObj ).not.toHaveCSS( 'transform', 'none' );                                    // What: Lifted Assertion. Why: The lift should still apply. How: This checks the button carries a transform.
 	expect( await butLinObj.evaluate( ( butCurEle ) => butCurEle.getAnimations().length ) ).toBe( 0 ); // What: No Easing Assertion. Why: The lift should apply at once, with nothing easing it. How: This checks the button holds no running animation or transition.
 
 
