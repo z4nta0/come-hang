@@ -87,7 +87,7 @@ function NotFouCom () : React.JSX.Element {
 					className={ cssModObj.butBasAnc }
 
 					to='/'
-				>Go to the home page</Link>{ /* What: Button Base Anchor Element. Why: The visitor needs a clear way onward. How: This returns to the home page. */ }
+				>Go to the home page</Link>{ /* What: Button Base Anchor Link. Why: The visitor needs a clear way onward. How: This returns to the home page. */ }
 
 
 			</section>
