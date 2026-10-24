@@ -336,7 +336,7 @@ member or full metadata privacy.
 - The group key is generated once per group and wrapped individually for
   each member using their own public key (WebCrypto ECDH) when they
   join, so Firebase never sees an unwrapped key either.
-- Only routing metadata (sender uid, timestamps, group id) stays
+- Only routing metadata (sender UID, timestamps, group ID) stays
   plaintext, since Firestore/RTDB need it to route/query.
 
 **Pros**
@@ -504,7 +504,7 @@ in place of their name. The group can manually reassign it if needed.
   group link. Anyone with a link who hasn't joined yet will need the new
   one."), and the newly generated link is surfaced immediately after so
   it can be re-shared with anyone still pending.
-- **Removed-uid blocklist kept as defense-in-depth alongside rotation**:
+- **Removed-UID blocklist kept as defense-in-depth alongside rotation**:
   `removedUids` on the group blocks that specific identity from
   redeeming *any* link for that group (old or newly rotated), covering
   the case where the new link reaches them through some indirect route
@@ -671,7 +671,7 @@ through the same document.
 On removal, this document is deleted outright (not just excluded from
 some "active" list), consistent with the "attribute their old claims to
 a generic 'removed user'" decision in Section 7, nothing needs to look
-up their name after removal, the client just checks "is this uid still
+up their name after removal, the client just checks "is this UID still
 a member" and shows a generic label if not.
 
 ### 11.4 Firestore: `/groups/{groupId}/liveLocations/{uid}`
@@ -734,7 +734,7 @@ everything else, now including location, is Firestore).
 
 Rotation is a delete-and-recreate, not a flag flip, there's never more
 than one valid doc for a given group at a time, so redemption is just
-"does a doc exist at this token, and is its uid not in that group's
+"does a doc exist at this token, and is its UID not in that group's
 `removedUids`."
 
 **Token strength (decided 2026-10-22)**: the token is 128 random bits
@@ -760,7 +760,7 @@ plaintext copy of the group name, updated whenever the name changes, and
 
 ### 11.7 RTDB: `/chats/{conversationId}/messages/{messageId}`
 
-Keyed by conversation id rather than group id (decided 2026-10-22), so
+Keyed by conversation ID rather than group ID (decided 2026-10-22), so
 private messages (Section 19) can reuse this structure later. For now the
 only kind of conversation is a group's own chat.
 
@@ -770,7 +770,7 @@ only kind of conversation is a group's own chat.
 | `sentAt` | plaintext | Ordering, and the TTL-safety-valve check below. |
 | `ciphertext` / `iv` | ciphertext | Message content. |
 | `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with the join-time cutoff below) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
-| `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own uid in via a targeted field-path update on sync. |
+| `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own UID in via a targeted field-path update on sync. |
 
 **Deletion, still opportunistic and client-triggered** (no Cloud
 Function, matching the rest of the design): whichever client is already
@@ -1263,17 +1263,17 @@ history requests). Declining is open to any member too.
 |---|---|---|
 | `nameText` | plaintext | The joiner's entered name. Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
 | `noteText` | plaintext, optional | The note to the group, same treatment. |
-| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the uid isn't in `removedUids`. |
+| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the UID isn't in `removedUids`. |
 | `requestedAt` | plaintext | Timestamp. |
 | `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. |
 
-The doc id is the joiner's uid, so one identity can have only one request
+The doc ID is the joiner's UID, so one identity can have only one request
 per group. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
 `/members/{uid}` with the group key wrapped for it, and delete the
 request. The joiner's listener sees the membership appear, unwraps the
 key, and writes their encrypted display name. **Declining** deletes the
-request; declining and blocking adds the uid to `removedUids` as well.
+request; declining and blocking adds the UID to `removedUids` as well.
 
 **Floods**:
 - Members get one grouped notification ("3 people want to join") rather
@@ -1331,7 +1331,7 @@ paywall is switched on before launch.
 
 **Buying (decided 2026-10-22)**:
 - Requires linking Google sign-in (Section 8). Paid status is tied to the
-  uid, and an anonymous uid can be lost with the device, so a purchase
+  UID, and an anonymous UID can be lost with the device, so a purchase
   without a recoverable sign-in would be a support problem. ease-my-life
   reached the same conclusion for its paid accounts.
 - Polar takes the payment, as in ease-my-life. Its webhook, a Cloud
@@ -1383,8 +1383,8 @@ Reasons for waiting: launch has plenty to prove without a second kind of
 conversation, and private messages need blocking and safety controls
 designed properly rather than rushed. It isn't a big architectural change,
 since it reuses chat:
-- **Built now**: chat is keyed by a conversation id rather than the group
-  id (`/chats/{conversationId}`), with a group's own chat as one kind of
+- **Built now**: chat is keyed by a conversation ID rather than the group
+  ID (`/chats/{conversationId}`), with a group's own chat as one kind of
   conversation. Everything in Section 11.7 (ack map, cleanup, TTL) then
   works for a two-person conversation unchanged, and adding private
   messages later needs no change to how group chat is stored.
