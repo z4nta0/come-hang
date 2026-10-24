@@ -12,8 +12,8 @@
 # directives listed either need a different value than 'self', are never
 # covered by default-src at all, such as frame-ancestors, or just state the
 # default for clarity, such as script-src. style-src needs no 'unsafe-inline':
-# the build ships no inline styles, and React sets its few dynamic styles
-# through the DOM, which the policy doesn't restrict.
+# the build ships no inline styles, and a style React sets later through the
+# DOM isn't restricted by the policy.
 #
 # Strict-Transport-Security keeps browsers on HTTPS for two years across every
 # subdomain, leaving out preload, which commits the domain to the browsers'
