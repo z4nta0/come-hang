@@ -9,7 +9,7 @@ import reaPluFun from '@vitejs/plugin-react'; // What: React Plugin Function. Wh
 import { defineConfig } from 'vite'; // What: Define Config. Why: Vite's config helper passes the config through with its types. How: This wraps VIT_CON_OBJ.
 
 
-import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a Vite plugin. How: This types minHtmFun's return, which types its hook.
+import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a Vite plugin. How: This types minHtmFun's return value.
 
 // #endregion Imports
 
@@ -49,10 +49,10 @@ import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a
  * it as written, with every comment and indentation level the formatting
  * rules give it. For production builds only, this strips the page's HTML
  * comments and the comment inside its external script tag, trims every
- * line, and drops blank lines. The
- * newlines between lines are kept, so text wrapped across lines keeps the
- * space between its words. It runs after Vite's own transforms, so the tags
- * Vite injects are compacted too. The dev server serves the page as written.
+ * line, and drops blank lines. The newlines between lines are kept, so text
+ * wrapped across lines keeps the space between its words. It runs after
+ * Vite's own transforms, so the tags Vite injects are compacted too. The dev
+ * server serves the page as written.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *

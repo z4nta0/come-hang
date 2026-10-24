@@ -3,13 +3,13 @@
 
 // #region Imports
 
-import { expect      } from '@playwright/test';     // What: Expect. Why: Each state passes only when every control responds. How: This asserts on what each check reads, most often that its problem list is empty, and waits for content a check needs.
+import { expect      } from '@playwright/test';     // What: Expect. Why: Each state passes only when every control responds. How: This asserts on what each check reads, such as that its problem list is empty.
 import { opeStaFun   } from '../support/states.ts'; // What: Open State Function. Why: Each check opens and settles its state first. How: This loads it and waits for it.
 import { STA_REC_ARR } from '../support/states.ts'; // What: State Record Array. Why: Every page state is checked. How: This lists them.
 import { test        } from '@playwright/test';     // What: Test. Why: Each check of each state is its own test. How: This declares them.
 
 
-import type { ElementHandle } from '@playwright/test'; // What: Element Handle. Why: Each control is probed through a handle to its element. How: This types the element handles the helpers collect and record.
+import type { ElementHandle } from '@playwright/test'; // What: Element Handle. Why: Each control is probed through a handle to its element. How: This types the element handles the control list helper collects and returns.
 import type { Page          } from '@playwright/test'; // What: Page. Why: The helpers that drive the page from the test take a Playwright page, while those that run inside it take none. How: This types the driving helpers' page parameters.
 
 // #endregion Imports
