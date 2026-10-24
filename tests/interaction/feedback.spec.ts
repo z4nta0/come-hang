@@ -410,7 +410,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 	const conHanArr = await conLisFun( curPagObj, conSelStr ); // What: Control Handle Array. Why: Every reachable control the selector matches is probed. How: This collects their handles.
 
 
-	if ( !conHanArr.length ) proLisArr.push( 'no control to probe' ); // What: Empty Probe Check. Why: A probe that finds nothing would pass without checking anything, and every page has at least its skip link. How: This records a problem when no control is found.
+	if ( !conHanArr.length ) proLisArr.push( 'no control to probe' ); // What: Empty Probe Check. Why: A probe that finds nothing would pass without checking anything, and a probe of every link and button always finds at least the skip link. How: This records a problem when no control is found.
 
 
 
