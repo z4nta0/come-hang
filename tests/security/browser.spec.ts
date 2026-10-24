@@ -165,7 +165,7 @@ test( 'the policy refuses an injected inline script', async ( { page : curPagObj
 
 		document.body.append( scrNewEle ); // What: Script Append Call. Why: An inline script runs as soon as it joins the page, unless the policy refuses it. How: This adds it to the body.
 
-		await new Promise( ( resFunObj ) => setTimeout( resFunObj, 100 ) ); // What: Event Wait Call. Why: The browser reports a violation as an event shortly after refusing the script. How: This waits 100ms for it.
+		await new Promise( ( resProFun ) => setTimeout( resProFun, 100 ) ); // What: Event Wait Call. Why: The browser reports a violation as an event shortly after refusing the script. How: This waits 100ms for it.
 
 
 

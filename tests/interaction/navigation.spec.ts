@@ -64,7 +64,7 @@ test( "the 404 page's link opens the home page at its top", async ( { page : cur
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The reset only proves something if the page starts scrolled down. How: This jumps to the page's bottom, past any smooth scroll-behavior.
 
-	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
 
 	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without the reset. How: This checks the page sits below its top.
 
@@ -90,7 +90,7 @@ test( 'back from the home page returns the 404 page to where it was left', async
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
 
-	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
 
 
 	const leaScrNum = await curPagObj.evaluate( () => window.scrollY ); // What: Leaving Scroll Number. Why: Back should return the page to this position. How: This reads how far down the page sits before the link is followed.
@@ -123,7 +123,7 @@ test( 'a reload returns the 404 page to where it was left', async ( { page : cur
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
 
-	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame, and a visitor never leaves within the same frame as a scroll. How: This waits two animation frames, after which that frame's scroll event has run.
 
 
 	const leaScrNum = await curPagObj.evaluate( () => window.scrollY ); // What: Leaving Scroll Number. Why: The reload should return the page to this position. How: This reads how far down the page sits before the reload.
@@ -149,7 +149,7 @@ test( 'a fresh load of an address opens at its top, not where an earlier visit l
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The earlier visit has to leave a position below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
 
-	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
 
 	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without a position to forget. How: This checks the page sits below its top.
 
@@ -184,7 +184,7 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The recorder writes its record after the planted value was read, so a recorder or save that misbehaved on what the load left in the map would raise an error. How: This jumps to the page's bottom.
 
-	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll event, and the recorder with it, runs with the next frame. How: This waits two animation frames.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll event, and the recorder with it, runs with the next frame. How: This waits two animation frames.
 
 	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll fires no scroll event, so the recorder and its save would never run and the check would cover only the load. How: This checks the page sits below its top.
 	expect( errLisArr ).toEqual( [] );                                               // What: No Error Assertion. Why: The page passes only when the hook handled the bad value. How: This compares the collected errors with an empty list, so a failure prints each one.
@@ -203,7 +203,7 @@ test( 'a hash added to the address is not overridden by a saved position', async
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) ); // What: Bottom Scroll Call. Why: The first entry needs a saved position below the section. How: This jumps to the page's bottom.
 
-	await curPagObj.evaluate( () => new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
 
 	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would leave nothing saved to wrongly restore. How: This checks the page sits below its top.
 
