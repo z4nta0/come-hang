@@ -259,7 +259,7 @@ elapses; unlike chat, there's no recovery mechanism if 48 hours turns
 out to be too short for a given group, once it's gone, it's gone.
 
 ### Chat
-Strictly sync-based, not time-based, with two refinements:
+Strictly sync-based, not time-based, with these refinements:
 - A message's "has everyone received this" check is evaluated against
   **current** group membership, not a snapshot taken at send time. A
   member who leaves or is removed is dropped from the pending-ack list,
