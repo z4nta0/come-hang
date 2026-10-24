@@ -244,6 +244,7 @@ function snaEleFun ( eleCurEle : Element, proNamArr : string[] ) : SnaRecTyp[] {
 
 
 			durArr : proNamArr.map( durProFun ), // What: Duration Array. Why: A property that changes has to ease rather than snap. How: This reads the duration of the transition covering each probed property, or 0 when none does.
+
 			valArr : proNamArr.map( ( proNamStr ) => ( proNamStr === 'border-color' ? borValFun( styCurObj ) : styCurObj.getPropertyValue( proNamStr ) ) ) // What: Value Array. Why: Two moments are compared property by property. How: This reads each probed property's computed value, taking the border color from its drawn sides only.
 
 
@@ -547,7 +548,6 @@ async function fieProFun ( curPagObj : Page, redMotBoo : boolean ) : Promise< st
 		const focFieBoo = await fieCurObj.evaluate( ( fieCurEle ) => fieCurEle === document.activeElement );             // What: Focused Field Boolean. Why: The focused look only counts when the Tab press landed on the field. How: This checks the field holds focus.
 		const focSnaArr = await fieCurObj.evaluate( snaEleFun, FIE_PRO_ARR );                                            // What: Focus Snapshot Array. Why: The focused look is compared with rest. How: This records the field's border color and outline.
 		const traDurStr = await fieCurObj.evaluate( ( fieCurEle ) => getComputedStyle( fieCurEle ).transitionDuration ); // What: Transition Duration String. Why: Reduced motion should leave nothing moving. How: This reads the field's transition durations.
-
 
 
 		if ( !focFieBoo ) proLisArr.push( `${ fieDesStr } isn't reached by Tab` ); // What: Keyboard Reach Check. Why: A keyboard user has to be able to reach every field. How: This records one the Tab press didn't land on.
