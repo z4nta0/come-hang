@@ -29,9 +29,9 @@ current decisions:
 
 ## Status
 
-Scaffolded: the app shell, a placeholder home page, the 404 page, the
-global stylesheet, and the accessibility and interaction suites. No
-Firebase code yet. Next steps are in ARCHITECTURE.md's Section 14.
+Scaffolded: the app shell answering at one address, a placeholder home page,
+the global stylesheet, and the accessibility, interaction, and security
+suites. No Firebase code yet. Next steps are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -57,9 +57,10 @@ a production build served by `vite preview` on 5201 (sibling projects use
 
 ## Project facts
 
-- **Kind of site** (per the SEO rules): a web app. Public pages (landing,
-  help, legal) are indexed; every screen behind identity or holding
-  personal data carries `noindex`. Live URL: https://comehang.app (domain
+- **Kind of site** (per the SEO rules): a web app. Its public addresses (the
+  root, which a signed-out visitor meets as the landing, and the legal
+  pages) are indexed; every screen behind identity or holding personal data
+  carries `noindex`. Live URL: https://comehang.app (domain
   registered 2026-10-22, not yet deployed).
 - **Support email**: support@comehang.app.
 - **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
@@ -89,20 +90,46 @@ a production build served by `vite preview` on 5201 (sibling projects use
   `app.tsx`, which holds whichever page the address matches. There's no bar
   or tab bar yet, so it's everything after the skip link; once the tab bar
   joins, it stays the open screen's content, past the bar.
-- **Horizontal sizing system**: not yet chosen (per the global CSS rules,
-  discuss with the user before converting any widths).
+- **Routing** (decided 2026-10-25, an app rather than a website): the app
+  answers at one address, its root. React Router stays, with a single path:
+  - **Unknown addresses** render a redirect that replaces the address with
+    the root, so the bar never keeps a path the app doesn't use and back
+    doesn't return to it. There's no 404 page (the "Required Pages: 404"
+    rule's app exception).
+  - **Screens are history entries, not paths**: moving to a screen adds an
+    entry that records the screen in its state, so the back gesture walks
+    back through screens while the address stays the root. Built with the
+    first screens.
+  - **Entry addresses** carry something in from outside, such as an invite
+    link (`/join/<token>`) or a notification's target: the app reads one as
+    it starts, acts on it, then replaces the address with the root. Each is
+    built with the feature it serves.
+- **Legal pages** (decided 2026-10-25): the privacy policy and terms get fixed
+  addresses, `/privacy` and `/terms`, as static pages in `public/`, which
+  Netlify serves ahead of its every-path rewrite. Google's sign-in
+  verification and app listings ask for those URLs. They're written before
+  Google sign-in is set up.
+- **Horizontal sizing** (decided 2026-10-25): every horizontal size, widths
+  and spacing alike, reads the horizontal rhythm, `--hor-rhy-*` (the
+  viewport width divided by powers of the core design number). There's no
+  `--spa-hor-*` family. A value that gets too small or too big on some
+  screens becomes fluid, `clamp()` with a `--hor-rhy-*` step in the middle
+  and fixed ends written as a vertical rhythm step times `1rem`, as the
+  gutter and the skip link's padding do.
 - **Layout and spacing** (per the global grid-first and spacing tier
   rules): grid with areas named after each child's class, and five
   spacing tiers, each two rhythm steps below the one above it, starting
-  from p04 (decided 2026-10-22):
+  from p04 vertically and horizontal rhythm step 14 horizontally (decided
+  2026-10-22, horizontal moved to the horizontal rhythm 2026-10-25, values at
+  a 1,920px wide screen):
 
-  | Tier | Tokens | Value | Separates |
-  |---|---|---|---|
-  | 1 | `--tie-ver-001` / `--tie-hor-001` | p04, ~44.9px | The page frame: the tab bar or header and a screen's content |
-  | 2 | `--tie-ver-002` / `--tie-hor-002` | p02, ~25.6px | Sections of one screen |
-  | 3 | `--tie-ver-003` / `--tie-hor-003` | bas, ~14.6px | Items in a list; a heading and its content |
-  | 4 | `--tie-ver-004` / `--tie-hor-004` | m02, ~8.3px | The parts of one item (title, details, actions) |
-  | 5 | `--tie-ver-005` / `--tie-hor-005` | m04, ~4.7px | The pieces of one part (an icon and its label, a label and its field) |
+  | Tier | Tokens | Vertical | Horizontal | Separates |
+  |---|---|---|---|---|
+  | 1 | `--tie-ver-001` / `--tie-hor-001` | p04, ~44.9px | step 14, ~49.6px | The page frame: the tab bar or header and a screen's content |
+  | 2 | `--tie-ver-002` / `--tie-hor-002` | p02, ~25.6px | step 12, ~28.3px | Sections of one screen |
+  | 3 | `--tie-ver-003` / `--tie-hor-003` | bas, ~14.6px | step 10, ~16.1px | Items in a list; a heading and its content |
+  | 4 | `--tie-ver-004` / `--tie-hor-004` | m02, ~8.3px | step 8, ~9.2px | The parts of one item (title, details, actions) |
+  | 5 | `--tie-ver-005` / `--tie-hor-005` | m04, ~4.7px | step 6, ~5.2px | The pieces of one part (an icon and its label, a label and its field) |
 
 ## Don't forget
 

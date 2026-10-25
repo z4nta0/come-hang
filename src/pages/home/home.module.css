@@ -25,7 +25,7 @@
 	display             : grid;
 	grid-template-areas : 'homTitHea' 'homNotPar';
 	justify-items       : center;
-	padding             : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding ~= 19.304px */
+	padding             : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
 	row-gap             : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
 	text-align          : center;
 

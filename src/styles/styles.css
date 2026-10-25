@@ -242,9 +242,43 @@
 
 
 
+	/* #region Horizontal Rhythm Tokens */
+
+	--hor-rhy-min : calc( 100vw / var( --cdn-pow-027 ) ); /* What: Horizontal Rhythm Minimum ~= 0.968px @ 1,920px width. Why: This is the horizontal rhythm's narrowest step. How: This divides the full viewport width by the twenty-seventh power of the core design number. */
+	--hor-rhy-001 : calc( 100vw / var( --cdn-pow-026 ) ); /* What: Horizontal Rhythm 1 ~= 1.283px @ 1,920px width. Why: This is the horizontal rhythm's step 1 up from its minimum. How: This divides the full viewport width by the twenty-sixth power of the core design number. */
+	--hor-rhy-002 : calc( 100vw / var( --cdn-pow-025 ) ); /* What: Horizontal Rhythm 2 ~= 1.699px @ 1,920px width. Why: This is the horizontal rhythm's step 2 up from its minimum. How: This divides the full viewport width by the twenty-fifth power of the core design number. */
+	--hor-rhy-003 : calc( 100vw / var( --cdn-pow-024 ) ); /* What: Horizontal Rhythm 3 ~= 2.251px @ 1,920px width. Why: This is the horizontal rhythm's step 3 up from its minimum. How: This divides the full viewport width by the twenty-fourth power of the core design number. */
+	--hor-rhy-004 : calc( 100vw / var( --cdn-pow-023 ) ); /* What: Horizontal Rhythm 4 ~= 2.982px @ 1,920px width. Why: This is the horizontal rhythm's step 4 up from its minimum. How: This divides the full viewport width by the twenty-third power of the core design number. */
+	--hor-rhy-005 : calc( 100vw / var( --cdn-pow-022 ) ); /* What: Horizontal Rhythm 5 ~= 3.950px @ 1,920px width. Why: This is the horizontal rhythm's step 5 up from its minimum. How: This divides the full viewport width by the twenty-second power of the core design number. */
+	--hor-rhy-006 : calc( 100vw / var( --cdn-pow-021 ) ); /* What: Horizontal Rhythm 6 ~= 5.233px @ 1,920px width. Why: This is the horizontal rhythm's step 6 up from its minimum. How: This divides the full viewport width by the twenty-first power of the core design number. */
+	--hor-rhy-007 : calc( 100vw / var( --cdn-pow-020 ) ); /* What: Horizontal Rhythm 7 ~= 6.932px @ 1,920px width. Why: This is the horizontal rhythm's step 7 up from its minimum. How: This divides the full viewport width by the twentieth power of the core design number. */
+	--hor-rhy-008 : calc( 100vw / var( --cdn-pow-019 ) ); /* What: Horizontal Rhythm 8 ~= 9.182px @ 1,920px width. Why: This is the horizontal rhythm's step 8 up from its minimum. How: This divides the full viewport width by the nineteenth power of the core design number. */
+	--hor-rhy-009 : calc( 100vw / var( --cdn-pow-018 ) ); /* What: Horizontal Rhythm 9 ~= 12.164px @ 1,920px width. Why: This is the horizontal rhythm's step 9 up from its minimum. How: This divides the full viewport width by the eighteenth power of the core design number. */
+	--hor-rhy-010 : calc( 100vw / var( --cdn-pow-017 ) ); /* What: Horizontal Rhythm 10 ~= 16.114px @ 1,920px width. Why: This is the horizontal rhythm's step 10 up from its minimum. How: This divides the full viewport width by the seventeenth power of the core design number. */
+	--hor-rhy-011 : calc( 100vw / var( --cdn-pow-016 ) ); /* What: Horizontal Rhythm 11 ~= 21.346px @ 1,920px width. Why: This is the horizontal rhythm's step 11 up from its minimum. How: This divides the full viewport width by the sixteenth power of the core design number. */
+	--hor-rhy-012 : calc( 100vw / var( --cdn-pow-015 ) ); /* What: Horizontal Rhythm 12 ~= 28.278px @ 1,920px width. Why: This is the horizontal rhythm's step 12 up from its minimum. How: This divides the full viewport width by the fifteenth power of the core design number. */
+	--hor-rhy-013 : calc( 100vw / var( --cdn-pow-014 ) ); /* What: Horizontal Rhythm 13 ~= 37.460px @ 1,920px width. Why: This is the horizontal rhythm's step 13 up from its minimum. How: This divides the full viewport width by the fourteenth power of the core design number. */
+	--hor-rhy-014 : calc( 100vw / var( --cdn-pow-013 ) ); /* What: Horizontal Rhythm 14 ~= 49.625px @ 1,920px width. Why: This is the horizontal rhythm's step 14 up from its minimum. How: This divides the full viewport width by the thirteenth power of the core design number. */
+	--hor-rhy-015 : calc( 100vw / var( --cdn-pow-012 ) ); /* What: Horizontal Rhythm 15 ~= 65.739px @ 1,920px width. Why: This is the horizontal rhythm's step 15 up from its minimum. How: This divides the full viewport width by the twelfth power of the core design number. */
+	--hor-rhy-016 : calc( 100vw / var( --cdn-pow-011 ) ); /* What: Horizontal Rhythm 16 ~= 87.085px @ 1,920px width. Why: This is the horizontal rhythm's step 16 up from its minimum. How: This divides the full viewport width by the eleventh power of the core design number. */
+	--hor-rhy-017 : calc( 100vw / var( --cdn-pow-010 ) ); /* What: Horizontal Rhythm 17 ~= 115.363px @ 1,920px width. Why: This is the horizontal rhythm's step 17 up from its minimum. How: This divides the full viewport width by the tenth power of the core design number. */
+	--hor-rhy-018 : calc( 100vw / var( --cdn-pow-009 ) ); /* What: Horizontal Rhythm 18 ~= 152.824px @ 1,920px width. Why: This is the horizontal rhythm's step 18 up from its minimum. How: This divides the full viewport width by the ninth power of the core design number. */
+	--hor-rhy-019 : calc( 100vw / var( --cdn-pow-008 ) ); /* What: Horizontal Rhythm 19 ~= 202.448px @ 1,920px width. Why: This is the horizontal rhythm's step 19 up from its minimum. How: This divides the full viewport width by the eighth power of the core design number. */
+	--hor-rhy-020 : calc( 100vw / var( --cdn-pow-007 ) ); /* What: Horizontal Rhythm 20 ~= 268.187px @ 1,920px width. Why: This is the horizontal rhythm's step 20 up from its minimum. How: This divides the full viewport width by the seventh power of the core design number. */
+	--hor-rhy-021 : calc( 100vw / var( --cdn-pow-006 ) ); /* What: Horizontal Rhythm 21 ~= 355.272px @ 1,920px width. Why: This is the horizontal rhythm's step 21 up from its minimum. How: This divides the full viewport width by the sixth power of the core design number. */
+	--hor-rhy-022 : calc( 100vw / var( --cdn-pow-005 ) ); /* What: Horizontal Rhythm 22 ~= 470.635px @ 1,920px width. Why: This is the horizontal rhythm's step 22 up from its minimum. How: This divides the full viewport width by the fifth power of the core design number. */
+	--hor-rhy-023 : calc( 100vw / var( --cdn-pow-004 ) ); /* What: Horizontal Rhythm 23 ~= 623.458px @ 1,920px width. Why: This is the horizontal rhythm's step 23 up from its minimum. How: This divides the full viewport width by the fourth power of the core design number. */
+	--hor-rhy-024 : calc( 100vw / var( --cdn-pow-003 ) ); /* What: Horizontal Rhythm 24 ~= 825.907px @ 1,920px width. Why: This is the horizontal rhythm's step 24 up from its minimum. How: This divides the full viewport width by the third power of the core design number. */
+	--hor-rhy-025 : calc( 100vw / var( --cdn-pow-002 ) ); /* What: Horizontal Rhythm 25 ~= 1,094.093px @ 1,920px width. Why: This is the horizontal rhythm's step 25 up from its minimum. How: This divides the full viewport width by the second power of the core design number. */
+	--hor-rhy-max : calc( 100vw / var( --cdn-pow-001 ) ); /* What: Horizontal Rhythm Maximum ~= 1,449.365px @ 1,920px width. Why: This is the horizontal rhythm's widest step, about three quarters of the viewport. How: This divides the full viewport width by the first power of the core design number. */
+
+	/* #endregion Horizontal Rhythm Tokens */
+
+
+
 	/* #region Layout Tokens */
 
-	--gut-sid-pad : var( --spa-hor-p01 ); /* What: Gutter Side Padding ~= 19.304px. Why: Content should never touch the screen's edges. How: This reads the p01 horizontal spacing step, to become fluid once the app's horizontal sizing system is chosen. */
+	--gut-sid-pad : clamp( calc( var( --ver-rhy-p01 ) * 1rem ), var( --hor-rhy-016 ), calc( var( --ver-rhy-p04 ) * 1rem ) ); /* What: Gutter Side Padding, about 19.304px - 44.876px. Why: Content should never touch the screen's edges, and its margins should grow with the screen within sensible bounds. How: This holds horizontal rhythm step 16 between the vertical rhythm's p01 and p04 steps. */
 
 	/* #endregion Layout Tokens */
 
@@ -263,25 +297,6 @@
 
 
 	/* #region Spacing Tokens */
-
-	--spa-hor-m09 : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Spacing Horizontal Base Minus 9 ~= 1.160px. Why: This is the horizontal spacing scale's step 9 below its base. How: This multiplies the m09 rhythm step by 1rem. */
-	--spa-hor-m08 : calc( var( --ver-rhy-m08 ) * 1rem ); /* What: Spacing Horizontal Base Minus 8 ~= 1.536px. Why: This is the horizontal spacing scale's step 8 below its base. How: This multiplies the m08 rhythm step by 1rem. */
-	--spa-hor-m07 : calc( var( --ver-rhy-m07 ) * 1rem ); /* What: Spacing Horizontal Base Minus 7 ~= 2.035px. Why: This is the horizontal spacing scale's step 7 below its base. How: This multiplies the m07 rhythm step by 1rem. */
-	--spa-hor-m06 : calc( var( --ver-rhy-m06 ) * 1rem ); /* What: Spacing Horizontal Base Minus 6 ~= 2.696px. Why: This is the horizontal spacing scale's step 6 below its base. How: This multiplies the m06 rhythm step by 1rem. */
-	--spa-hor-m05 : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Spacing Horizontal Base Minus 5 ~= 3.572px. Why: This is the horizontal spacing scale's step 5 below its base. How: This multiplies the m05 rhythm step by 1rem. */
-	--spa-hor-m04 : calc( var( --ver-rhy-m04 ) * 1rem ); /* What: Spacing Horizontal Base Minus 4 ~= 4.732px. Why: This is the horizontal spacing scale's step 4 below its base. How: This multiplies the m04 rhythm step by 1rem. */
-	--spa-hor-m03 : calc( var( --ver-rhy-m03 ) * 1rem ); /* What: Spacing Horizontal Base Minus 3 ~= 6.268px. Why: This is the horizontal spacing scale's step 3 below its base. How: This multiplies the m03 rhythm step by 1rem. */
-	--spa-hor-m02 : calc( var( --ver-rhy-m02 ) * 1rem ); /* What: Spacing Horizontal Base Minus 2 ~= 8.304px. Why: This is the horizontal spacing scale's step 2 below its base. How: This multiplies the m02 rhythm step by 1rem. */
-	--spa-hor-m01 : calc( var( --ver-rhy-m01 ) * 1rem ); /* What: Spacing Horizontal Base Minus 1 = 11px. Why: This is the horizontal spacing scale's step 1 below its base. How: This multiplies the m01 rhythm step by 1rem. */
-	--spa-hor-bas : calc( var( --ver-rhy-bas ) * 1rem ); /* What: Spacing Horizontal Base ~= 14.572px. Why: This is the horizontal spacing scale's base step. How: This multiplies the bas rhythm step by 1rem. */
-	--spa-hor-p01 : calc( var( --ver-rhy-p01 ) * 1rem ); /* What: Spacing Horizontal Base Plus 1 ~= 19.304px. Why: This is the horizontal spacing scale's step 1 above its base. How: This multiplies the p01 rhythm step by 1rem. */
-	--spa-hor-p02 : calc( var( --ver-rhy-p02 ) * 1rem ); /* What: Spacing Horizontal Base Plus 2 ~= 25.572px. Why: This is the horizontal spacing scale's step 2 above its base. How: This multiplies the p02 rhythm step by 1rem. */
-	--spa-hor-p03 : calc( var( --ver-rhy-p03 ) * 1rem ); /* What: Spacing Horizontal Base Plus 3 ~= 33.876px. Why: This is the horizontal spacing scale's step 3 above its base. How: This multiplies the p03 rhythm step by 1rem. */
-	--spa-hor-p04 : calc( var( --ver-rhy-p04 ) * 1rem ); /* What: Spacing Horizontal Base Plus 4 ~= 44.876px. Why: This is the horizontal spacing scale's step 4 above its base. How: This multiplies the p04 rhythm step by 1rem. */
-	--spa-hor-p05 : calc( var( --ver-rhy-p05 ) * 1rem ); /* What: Spacing Horizontal Base Plus 5 ~= 59.447px. Why: This is the horizontal spacing scale's step 5 above its base. How: This multiplies the p05 rhythm step by 1rem. */
-	--spa-hor-p06 : calc( var( --ver-rhy-p06 ) * 1rem ); /* What: Spacing Horizontal Base Plus 6 ~= 78.751px. Why: This is the horizontal spacing scale's step 6 above its base. How: This multiplies the p06 rhythm step by 1rem. */
-	--spa-hor-p07 : calc( var( --ver-rhy-p07 ) * 1rem ); /* What: Spacing Horizontal Base Plus 7 ~= 104.323px. Why: This is the horizontal spacing scale's step 7 above its base. How: This multiplies the p07 rhythm step by 1rem. */
-
 
 	--spa-ver-m09 : calc( var( --ver-rhy-m09 ) * 1rem ); /* What: Spacing Vertical Base Minus 9 ~= 1.160px. Why: This is the vertical spacing scale's step 9 below its base. How: This multiplies the m09 rhythm step by 1rem. */
 	--spa-ver-m08 : calc( var( --ver-rhy-m08 ) * 1rem ); /* What: Spacing Vertical Base Minus 8 ~= 1.536px. Why: This is the vertical spacing scale's step 8 below its base. How: This multiplies the m08 rhythm step by 1rem. */
@@ -316,11 +331,11 @@
 
 	/* #region Tier Tokens */
 
-	--tie-hor-001 : var( --spa-hor-p04 ); /* What: Tier Horizontal 1 ~= 44.876px. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads the p04 horizontal spacing step, the top tier, chosen first. */
-	--tie-hor-002 : var( --spa-hor-p02 ); /* What: Tier Horizontal 2 ~= 25.572px. Why: Sections of one screen sit apart. How: This reads the p02 horizontal spacing step, two rhythm steps below tier 1. */
-	--tie-hor-003 : var( --spa-hor-bas ); /* What: Tier Horizontal 3 ~= 14.572px. Why: Items in a list, and a heading and its content, sit apart. How: This reads the bas horizontal spacing step, two rhythm steps below tier 2. */
-	--tie-hor-004 : var( --spa-hor-m02 ); /* What: Tier Horizontal 4 ~= 8.304px. Why: The parts of one item, such as its title, sit apart. How: This reads the m02 horizontal spacing step, two rhythm steps below tier 3. */
-	--tie-hor-005 : var( --spa-hor-m04 ); /* What: Tier Horizontal 5 ~= 4.732px. Why: The pieces of one part, such as an icon and its label, sit closest. How: This reads the m04 horizontal spacing step, two rhythm steps below tier 4. */
+	--tie-hor-001 : var( --hor-rhy-014 ); /* What: Tier Horizontal 1 ~= 49.625px @ 1,920px width. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads horizontal rhythm step 14, the top tier. */
+	--tie-hor-002 : var( --hor-rhy-012 ); /* What: Tier Horizontal 2 ~= 28.278px @ 1,920px width. Why: Sections of one screen sit apart. How: This reads horizontal rhythm step 12, two rhythm steps below tier 1. */
+	--tie-hor-003 : var( --hor-rhy-010 ); /* What: Tier Horizontal 3 ~= 16.114px @ 1,920px width. Why: Items in a list, and a heading and its content, sit apart. How: This reads horizontal rhythm step 10, two rhythm steps below tier 2. */
+	--tie-hor-004 : var( --hor-rhy-008 ); /* What: Tier Horizontal 4 ~= 9.182px @ 1,920px width. Why: The parts of one item, such as its title, sit apart. How: This reads horizontal rhythm step 8, two rhythm steps below tier 3. */
+	--tie-hor-005 : var( --hor-rhy-006 ); /* What: Tier Horizontal 5 ~= 5.233px @ 1,920px width. Why: The pieces of one part, such as an icon and its label, sit closest. How: This reads horizontal rhythm step 6, two rhythm steps below tier 4. */
 
 
 	--tie-ver-001 : var( --spa-ver-p04 ); /* What: Tier Vertical 1 ~= 44.876px. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads the p04 vertical spacing step, the top tier, chosen first. */
