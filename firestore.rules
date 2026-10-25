@@ -13,10 +13,18 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * firestore.rules = Firestore Security Rules
  *
  * @summary
- * Decides who may read and write the app's Firestore documents. No collection
- * has a rule of its own yet, so a catch-all rule refuses every read and write.
- * Each collection's rules are added as its part of the data model is built,
- * along with the tests in tests/rules that prove them in the local emulator.
+ * Decides who may read and write the app's Firestore documents. Firestore
+ * refuses any request no rule allows, so each collection's rules open only
+ * what its part of the data model needs, and the tests in tests/rules prove
+ * them in the local emulator.
+ *
+ * Each signed-in identity has two documents. accounts/{uid} holds its group
+ * memberships and paid flag, which only its owner may read, and starts with
+ * no groups, since the paid flag is written only by the payment webhook,
+ * which these rules don't govern. users/{uid} holds its public key, which
+ * anyone signed in may fetch by UID, so an approving member can wrap a group
+ * key for a joiner, while nobody may list the collection. Only the identity
+ * itself writes either one.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -32,10 +40,141 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 	match /databases/{database}/documents { // What: Documents Match. Why: Every rule applies inside the project's database. How: This matches its documents.
 
 
-		match /{docPatStr=**} { // What: Every Document Match. Why: A match needs at least one declaration, and no collection has a rule of its own yet. How: This matches every document at any depth.
+		// #region isaSigFun
+
+		function isaSigFun () { // What: Is-A Signed-In Function. Why: Most requests need an identity behind them, even an anonymous one. How: This is true when the request carries a sign-in.
 
 
-			allow read, write : if false; // What: Refuse All Rule. Why: Nothing may be read or written until its collection's rule is written. How: This refuses every request, and goes once the first collection's rules land.
+			return request.auth != null; // What: Signed-In Return. Why: A request with no sign-in has no auth. How: This checks that it has one.
+
+
+		}
+
+		// #endregion isaSigFun
+
+
+
+		// #region isaOwnFun
+
+		function isaOwnFun ( uidValStr ) { // What: Is-An Owner Function. Why: A user's own documents are written by that user alone. How: This is true for a signed-in identity whose UID matches the document's.
+
+
+			return isaSigFun() && request.auth.uid == uidValStr; // What: Owner Return. Why: The path's UID names whose document it is. How: This compares it with the requester's UID.
+
+
+		}
+
+		// #endregion isaOwnFun
+
+
+
+		// #region creAccFun
+
+		function creAccFun ( uidValStr ) { // What: Create Account Function. Why: An account starts with no groups and unpaid, and no client may grant itself the paid flag. How: This is true for the owner writing a document that holds only an empty groups map.
+
+
+			let groEmpBoo = request.resource.data.groups == {};                   // What: Groups Empty Boolean. Why: Groups join an account only through the batches that create or join one. How: This requires an empty map.
+			let isaOwnBoo = isaOwnFun( uidValStr );                               // What: Is-An Owner Boolean. Why: Only the identity itself starts its account. How: This checks the requester owns it.
+			let keyOnlBoo = request.resource.data.keys().hasOnly( [ 'groups' ] ); // What: Keys Only Boolean. Why: A paid flag, or anything else, mustn't arrive with the new account. How: This allows the groups field alone.
+
+			let creAllBoo = groEmpBoo && isaOwnBoo && keyOnlBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creAccFun
+
+
+
+		// #region valUseFun
+
+		function valUseFun () { // What: Valid User Function. Why: A user document anyone may fetch holds only its public key and creation time, so nothing else can be stored in it. How: This checks the incoming document's fields and their types.
+
+
+			let useDatObj = request.resource.data; // What: User Data Object. Why: Every check reads the incoming document. How: This names it once.
+
+			let creTimBoo = useDatObj.createdAt is timestamp;                                                                     // What: Creation Timestamp Boolean. Why: The creation time is a timestamp. How: This requires one.
+			let fieOnlBoo = useDatObj.keys().hasOnly( [ 'createdAt', 'publicKey' ] );                                             // What: Fields Only Boolean. Why: A field the app doesn't write has no business in the document. How: This allows only the two named fields.
+			let keyValBoo = useDatObj.publicKey is string && useDatObj.publicKey.size() > 0 && useDatObj.publicKey.size() <= 256; // What: Key Valid Boolean. Why: A key is text, an empty one can't wrap anything, and a P-256 public key fits well under 256 characters in any text form, so the cap stops the field holding anything else. How: This checks the type, then the length, which the type check guards, so the chain stays inline.
+
+			let valUseBoo = creTimBoo && fieOnlBoo && keyValBoo; // What: Valid User Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valUseBoo; // What: Valid User Return. Why: The create and update rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valUseFun
+
+
+
+		// #region creUseFun
+
+		function creUseFun ( uidValStr ) { // What: Create User Function. Why: Only the identity itself publishes its key, and its creation time has to be real. How: This is true for the owner writing a valid document stamped with the server's time.
+
+
+			let isaOwnBoo = isaOwnFun( uidValStr );                          // What: Is-An Owner Boolean. Why: Only the identity itself publishes its key. How: This checks the requester owns it.
+			let timSerBoo = request.resource.data.createdAt == request.time; // What: Time Server Boolean. Why: A client could otherwise backdate its creation time. How: This requires the server's own time, which a server timestamp write supplies.
+			let useValBoo = valUseFun();                                     // What: User Valid Boolean. Why: The document has to keep its shape. How: This checks it.
+
+			let creAllBoo = isaOwnBoo && timSerBoo && useValBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creUseFun
+
+
+
+		// #region updUseFun
+
+		function updUseFun ( uidValStr ) { // What: Update User Function. Why: A key changes when a linked identity moves to a new device, while the creation time never does. How: This is true for the owner writing a valid document whose creation time is unchanged.
+
+
+			let isaOwnBoo = isaOwnFun( uidValStr );                                     // What: Is-An Owner Boolean. Why: Only the identity itself replaces its key. How: This checks the requester owns it.
+			let timKeeBoo = request.resource.data.createdAt == resource.data.createdAt; // What: Time Kept Boolean. Why: The creation time records when the identity began. How: This requires it unchanged.
+			let useValBoo = valUseFun();                                                // What: User Valid Boolean. Why: The document has to keep its shape. How: This checks it.
+
+			let updAllBoo = isaOwnBoo && timKeeBoo && useValBoo; // What: Update Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updUseFun
+
+
+
+		match /accounts/{uidValStr} { // What: Account Match. Why: Each identity's memberships and paid flag live here. How: This matches one account document by UID.
+
+
+			allow get    : if isaOwnFun( uidValStr ); // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
+			allow create : if creAccFun( uidValStr ); // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
+
+
+		}
+
+
+
+		match /users/{uidValStr} { // What: User Match. Why: Each identity's public key lives here. How: This matches one user document by UID.
+
+
+			allow get    : if isaSigFun();            // What: User Get Rule. Why: An approving member fetches a joiner's public key to wrap the group key for them. How: This lets anyone signed in fetch one document by its UID, while listing stays refused.
+			allow create : if creUseFun( uidValStr ); // What: User Create Rule. Why: The identity publishes its key on first sign-in. How: This allows it when creUseFun passes.
+			allow update : if updUseFun( uidValStr ); // What: User Update Rule. Why: The identity replaces its key when it moves to a new device. How: This allows it when updUseFun passes.
 
 
 		}
