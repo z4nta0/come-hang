@@ -11,10 +11,10 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-24 (pre-implementation planning phase; data model
-approved, Firebase plan changed to Blaze, see Section 15; earlier passages
-brought in line with Sections 11.7 and 17; scroll behavior per screen added
-to Section 14's open items; routing decided in Section 14 on 2026-10-25).
+Last updated: 2026-10-25 (the emulator harness for the security rules
+noted in Section 14; routing decided in Section 14 the same day; data model
+approved and the Firebase plan changed to Blaze, see Section 15, on
+2026-10-24).
 
 ---
 
@@ -1137,7 +1137,10 @@ the Blaze change.
 **Infrastructure, still open**:
 - Security rules for Firestore, RTDB, and Storage, written and tested
   against the emulator (the biggest remaining task). The user wants a
-  walkthrough of each rule as it's written.
+  walkthrough of each rule as it's written. The harness is in place
+  (2026-10-25): `firebase.json`, a `firestore.rules` that refuses
+  everything, and a rules suite in `tests/rules/` run by `npm run
+  test:rules`.
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM

@@ -1,0 +1,14 @@
+{
+	"emulators": {
+		"firestore": {
+			"port": 8200
+		},
+		"singleProjectMode": true,
+		"ui": {
+			"enabled": false
+		}
+	},
+	"firestore": {
+		"rules": "firestore.rules"
+	}
+}

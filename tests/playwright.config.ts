@@ -14,13 +14,15 @@ import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why
  * playwright.config.ts = Playwright Config
  *
  * @summary
- * The config behind npm test and its suites, each run against the real app in
- * all three of Playwright's engines (Chromium, Firefox, and WebKit), one
- * project per suite and engine, since a check that passes in one engine proves
- * nothing about the others. Chromium runs as Chrome's full headless mode
- * rather than Playwright's headless shell. Each suite is a folder under
- * tests/, such as accessibility, which the pre-commit check runs. Playwright
- * starts the Vite dev server on port 5200, which every suite but security
+ * The config behind npm test and its suites. Each browser suite runs against
+ * the real app in all three of Playwright's engines (Chromium, Firefox, and
+ * WebKit), one project per suite and engine, since a check that passes in one
+ * engine proves nothing about the others. Chromium runs as Chrome's full
+ * headless mode rather than Playwright's headless shell. The rules suite opens
+ * no browser, checking the Firestore security rules in the Firebase Emulator
+ * on port 8200 instead, so it runs once. Each suite is a folder under tests/,
+ * such as accessibility, which the pre-commit check runs. Playwright starts
+ * the Vite dev server on port 5200, which every browser suite but security
  * opens, and a production build served by vite preview on 5201, which the
  * security suite opens, and stops both afterwards, so a dev server already
  * running on the usual 5173, or a sibling project's suites on 5190 through
@@ -71,24 +73,32 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 	testDir       : '.',              // What: Test Directory. Why: Each project picks its own folder below. How: This roots test discovery at tests/.
 	workers       : 3,                // What: Workers. Why: The engines are independent, but each worker drives a full browser. How: This runs up to three spec files at once.
 
-	projects : SUI_NAM_ARR.flatMap( ( suiNamStr ) => ENG_NAM_ARR.map( ( engNamStr ) => ({ // What: Projects. Why: Each suite runs on its own in each engine. How: This crosses every suite with every engine into a project named after both, runnable alone with --project.
+	projects : [ // What: Projects. Why: Each suite runs on its own, a browser suite once in each engine. How: This crosses every browser suite with every engine into a project named after both, then adds the rules project, each runnable alone with --project.
 
 
-		name      : `${ suiNamStr }-${ engNamStr }`, // What: Name. Why: A failure has to say which suite and engine it came from. How: This names the project after both.
-		testMatch : `${ suiNamStr }/**/*.spec.ts`,   // What: Test Match. Why: Each suite lives in its own folder. How: This runs every spec in the suite's folder under tests/.
-
-		use : { // What: Use. Why: The project has to launch its own engine, and the security suite its own server. How: This sets the browser it runs in, which build of it, and the server its pages open from.
+		...SUI_NAM_ARR.flatMap( ( suiNamStr ) => ENG_NAM_ARR.map( ( engNamStr ) => ({ // What: Browser Projects. Why: A browser suite runs on its own in each engine. How: This crosses every suite with every engine into a project named after both.
 
 
-			baseURL     : suiNamStr === 'security' ? PRE_URL_STR : SER_URL_STR, // What: Base URL. Why: The security suite checks the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
-			browserName : engNamStr,                                            // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
-			channel     : engNamStr === 'chromium' ? 'chromium' : undefined     // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
+			name      : `${ suiNamStr }-${ engNamStr }`, // What: Name. Why: A failure has to say which suite and engine it came from. How: This names the project after both.
+			testMatch : `${ suiNamStr }/**/*.spec.ts`,   // What: Test Match. Why: Each suite lives in its own folder. How: This runs every spec in the suite's folder under tests/.
+
+			use : { // What: Use. Why: The project has to launch its own engine, and the security suite its own server. How: This sets the browser it runs in, which build of it, and the server its pages open from.
 
 
-		}
+				baseURL     : suiNamStr === 'security' ? PRE_URL_STR : SER_URL_STR, // What: Base URL. Why: The security suite checks the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
+				browserName : engNamStr,                                            // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
+				channel     : engNamStr === 'chromium' ? 'chromium' : undefined     // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
 
 
-	}) ) ),
+			}
+
+
+		}) ) ),
+
+		{ name : 'rules', testMatch : 'rules/**/*.spec.ts' } // What: Rules Project. Why: The Firestore security rules are checked in the local emulator, which test:rules starts around it, with no browser, so the project runs once rather than in each engine. How: This runs every spec in tests/rules.
+
+
+	],
 
 	reporter : [ // What: Reporter. Why: A run needs a live summary in the terminal and a browsable report afterwards. How: This prints a line per test and writes an HTML report to tests/output/report.
 

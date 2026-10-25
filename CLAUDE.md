@@ -31,7 +31,9 @@ current decisions:
 
 Scaffolded: the app shell answering at one address, a placeholder home page,
 the global stylesheet, and the accessibility, interaction, and security
-suites. No Firebase code yet. Next steps are in ARCHITECTURE.md's Section 14.
+suites, and the Firebase Emulator harness with a rules suite whose
+`firestore.rules` still refuses everything. No Firebase code in the app yet.
+Next steps are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -45,15 +47,20 @@ npm run dev                  # Vite dev server
 npm run build                # type check, then production build to dist/
 npm run lint                 # ESLint across the repo
 npm run typecheck            # tsc -b
-npm test                     # every suite, in Chromium, Firefox, and WebKit
+npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
 npm run test:interaction     # navigation and interaction feedback
+npm run test:rules           # Firestore security rules, in the emulator
 npm run test:security        # headers policy, build secrets, npm audit
 ```
 
 The suites start their own dev server on port 5200, and the security suite
 a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
+`npm test` and `npm run test:rules` run inside `firebase emulators:exec`,
+which starts the Firestore emulator on 8200 (ease-my-life's uses 8080) under
+the `demo-come-hang` project, which can't reach a real one. The emulator
+needs Java, 21 installed.
 
 ## Project facts
 
@@ -81,6 +88,11 @@ a production build served by `vite preview` on 5201 (sibling projects use
   search's Google key pattern into an allowance for the Firebase web config's
   browser key (named here when it lands), and location sharing opens
   `geolocation` in the Permissions-Policy, each in the change that needs it.
+- **Firestore SDK override**: the Firestore SDK's Node build pins
+  `@grpc/grpc-js` to 1.9, which carries a high advisory and failed the
+  security suite's audit, so `package.json` overrides it to 1.14.6 under
+  `@firebase/firestore` only. The browser build never loads gRPC; the rules
+  suite runs on the override. Drop it once the SDK moves past 1.13.5 itself.
 - **UI**: built in-house, no component library.
 - **Section links** (per the section links rule): the rule doesn't apply,
   since the app moves between screens and has no links to sections of a

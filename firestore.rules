@@ -1,0 +1,51 @@
+
+
+
+// #region Rules Version
+
+rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wildcards and the newer rule functions. How: This selects it.
+
+// #endregion Rules Version
+
+
+
+/**
+ * firestore.rules = Firestore Security Rules
+ *
+ * @summary
+ * Decides who may read and write the app's Firestore documents. No collection
+ * has a rule of its own yet, so a catch-all rule refuses every read and write.
+ * Each collection's rules are added as its part of the data model is built,
+ * along with the tests in tests/rules that prove them in the local emulator.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+// #region Firestore Service
+
+service cloud.firestore { // What: Firestore Service. Why: These rules cover the Firestore database. How: This scopes them to it.
+
+
+	match /databases/{database}/documents { // What: Documents Match. Why: Every rule applies inside the project's database. How: This matches its documents.
+
+
+		match /{docPatStr=**} { // What: Every Document Match. Why: A match needs at least one declaration, and no collection has a rule of its own yet. How: This matches every document at any depth.
+
+
+			allow read, write : if false; // What: Refuse All Rule. Why: Nothing may be read or written until its collection's rule is written. How: This refuses every request, and goes once the first collection's rules land.
+
+
+		}
+
+
+	}
+
+
+}
+
+// #endregion Firestore Service
+
+
