@@ -23,8 +23,16 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * no groups, since the paid flag is written only by the payment webhook,
  * which these rules don't govern. users/{uid} holds its public key, which
  * anyone signed in may fetch by UID, so an approving member can wrap a group
- * key for a joiner, while nobody may list the collection. Only the identity
- * itself writes either one.
+ * key for a joiner, while nobody may list the collection.
+ *
+ * A group is created in one batch: the group document, its creator's member
+ * document, its first invite, and the group added to the creator's account
+ * as owned. Each of the four checks that the other three are written beside
+ * it, so none can exist without the rest, and the account's map is checked
+ * against the caps on groups owned and belonged to. The caps read the
+ * paywall's switch, payLocFun, which reports every identity as paid until
+ * the paywall is turned on. Members read their group and its member list,
+ * and anyone signed in may fetch one invite by its token, never list them.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -39,6 +47,8 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 	match /databases/{database}/documents { // What: Documents Match. Why: Every rule applies inside the project's database. How: This matches its documents.
 
+
+		// #region Identity Checks
 
 		// #region isaSigFun
 
@@ -56,17 +66,155 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region isaOwnFun
 
-		function isaOwnFun ( uidValStr ) { // What: Is-An Owner Function. Why: A user's own documents are written by that user alone. How: This is true for a signed-in identity whose UID matches the document's.
+		function isaOwnFun ( uidValStr ) { // What: Is-An Owner Function. Why: A user's own documents are written by that user alone. How: This is true for a signed-in identity whose UID matches the one given.
 
 
-			return isaSigFun() && request.auth.uid == uidValStr; // What: Owner Return. Why: The path's UID names whose document it is. How: This compares it with the requester's UID.
+			return isaSigFun() && request.auth.uid == uidValStr; // What: Owner Return. Why: The UID names whose document it is. How: This compares it with the requester's UID.
 
 
 		}
 
 		// #endregion isaOwnFun
 
+		// #endregion Identity Checks
 
+
+
+		// #region Document Paths
+
+		// #region accPatFun
+
+		function accPatFun ( uidValStr ) { // What: Account Path Function. Why: Several rules look up an identity's account. How: This returns the account document's path.
+
+
+			return /databases/$(database)/documents/accounts/$(uidValStr); // What: Account Path Return. Why: A lookup needs the full path. How: This builds it from the UID.
+
+
+		}
+
+		// #endregion accPatFun
+
+
+
+		// #region groPatFun
+
+		function groPatFun ( groIdeStr ) { // What: Group Path Function. Why: Several rules look up a group. How: This returns the group document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr); // What: Group Path Return. Why: A lookup needs the full path. How: This builds it from the group ID.
+
+
+		}
+
+		// #endregion groPatFun
+
+
+
+		// #region invPatFun
+
+		function invPatFun ( tokValStr ) { // What: Invite Path Function. Why: A group's creation checks its first invite. How: This returns the invite document's path.
+
+
+			return /databases/$(database)/documents/invites/$(tokValStr); // What: Invite Path Return. Why: A lookup needs the full path. How: This builds it from the token.
+
+
+		}
+
+		// #endregion invPatFun
+
+
+
+		// #region memPatFun
+
+		function memPatFun ( groIdeStr, uidValStr ) { // What: Member Path Function. Why: Several rules look up a membership. How: This returns the member document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/members/$(uidValStr); // What: Member Path Return. Why: A lookup needs the full path. How: This builds it from the group ID and the UID.
+
+
+		}
+
+		// #endregion memPatFun
+
+		// #endregion Document Paths
+
+
+
+		// #region isaMemFun
+
+		function isaMemFun ( groIdeStr ) { // What: Is-A Member Function. Why: A group's documents are for its members. How: This is true when the requester has a member document in the group.
+
+
+			return isaSigFun() && exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Member Return. Why: Membership is a member document's existence. How: This checks for the requester's.
+
+
+		}
+
+		// #endregion isaMemFun
+
+
+
+		// #region Group Caps
+
+		// #region payLocFun
+
+		function payLocFun () { // What: Paywall Locked Function. Why: The paywall stays open for everyone until it's switched on before launch. How: This is the switch: false while open, true once the paid caps need a purchase.
+
+
+			return false; // What: Paywall Locked Return. Why: The paywall is still open. How: This reports it unlocked, and the rules suite tests the locked answer in a second emulator project.
+
+
+		}
+
+		// #endregion payLocFun
+
+
+
+		// #region isaPaiFun
+
+		function isaPaiFun ( uidValStr ) { // What: Is-A Paid Function. Why: The caps depend on whether an identity has paid. How: This is true while the paywall is open, or when the identity's account carries the paid flag.
+
+
+			return !payLocFun() || get( accPatFun( uidValStr ) ).data.get( 'paid', false ) == true; // What: Paid Return. Why: Only the payment webhook sets the flag. How: This skips the lookup while the paywall is open, and treats a missing flag as unpaid.
+
+
+		}
+
+		// #endregion isaPaiFun
+
+
+
+		// #region belCapFun
+
+		function belCapFun ( uidValStr ) { // What: Belong Cap Function. Why: The number of groups someone belongs to, owned or not, is capped (Section 18). How: This returns the cap for their paid status.
+
+
+			return isaPaiFun( uidValStr ) ? 20 : 10; // What: Belong Cap Return. Why: Paid users may belong to 20 groups, and free ones to 10. How: This picks one.
+
+
+		}
+
+		// #endregion belCapFun
+
+
+
+		// #region ownCapFun
+
+		function ownCapFun ( uidValStr ) { // What: Own Cap Function. Why: The number of groups someone owns is capped (Section 18). How: This returns the cap for their paid status.
+
+
+			return isaPaiFun( uidValStr ) ? 10 : 1; // What: Own Cap Return. Why: Paid users may own 10 groups, and free ones 1. How: This picks one.
+
+
+		}
+
+		// #endregion ownCapFun
+
+		// #endregion Group Caps
+
+
+
+		// #region Account Rules
 
 		// #region creAccFun
 
@@ -90,6 +238,290 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region capAccFun
+
+		function capAccFun ( uidValStr, newGroObj ) { // What: Cap Account Function. Why: An account's groups stay under both caps (Section 18). How: This is true when the map as it will be is within the belong cap and the own cap.
+
+
+			let belCapBoo = newGroObj.size() <= belCapFun( uidValStr );                                    // What: Belong Cap Boolean. Why: The groups someone belongs to are capped. How: This counts every entry against the cap.
+			let ownCapBoo = newGroObj.values().removeAll( [ 'member' ] ).size() <= ownCapFun( uidValStr ); // What: Own Cap Boolean. Why: The groups someone owns are capped. How: This counts the entries that aren't member entries against the cap.
+
+			let capValBoo = belCapBoo && ownCapBoo; // What: Cap Valid Boolean. Why: Both caps have to hold. How: This combines them.
+
+
+
+			return capValBoo; // What: Cap Valid Return. Why: The account rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion capAccFun
+
+
+
+		// #region newOwnFun
+
+		function newOwnFun ( uidValStr, groIdeStr ) { // What: New Owned Function. Why: An owned entry is added only while its group is being created by this identity. How: This is true when the group doesn't exist before the batch and names this identity as owner after it.
+
+
+			let groNewBoo = !exists( groPatFun( groIdeStr ) );                             // What: Group New Boolean. Why: The group is being created in this batch. How: This requires it not to exist before.
+			let groOwnBoo = getAfter( groPatFun( groIdeStr ) ).data.ownerUid == uidValStr; // What: Group Owner Boolean. Why: The group has to be this identity's own. How: This checks the group's owner once the batch is applied.
+
+			let newOwnBoo = groNewBoo && groOwnBoo; // What: New Owned Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return newOwnBoo; // What: New Owned Return. Why: The account rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion newOwnFun
+
+
+
+		// #region addOwnFun
+
+		function addOwnFun ( uidValStr ) { // What: Add Owned Function. Why: A group joins its creator's account only as part of its own creation, within the caps. How: This is true for the owner adding one owned group being created in the same batch, with the map still under both caps.
+
+
+			let newGroObj = request.resource.data.groups;                              // What: New Groups Object. Why: The checks read the map as it will be. How: This names it.
+			let addKeyArr = newGroObj.keys().removeAll( resource.data.groups.keys() ); // What: Added Keys Array. Why: The one group being added has to be found. How: This lists the keys the new map has and the old one lacks.
+			let groIdeStr = addKeyArr[ 0 ];                                            // What: Group Identifier String. Why: The checks look up the group being added. How: This takes the first added key, and a missing one fails the lookup, refusing the write.
+
+			let capValBoo = capAccFun( uidValStr, newGroObj );                                                  // What: Cap Valid Boolean. Why: The map has to stay under both caps. How: This checks it.
+			let fieOnlBoo = request.resource.data.diff( resource.data ).affectedKeys().hasOnly( [ 'groups' ] ); // What: Fields Only Boolean. Why: Only the map may change, never the paid flag. How: This allows changes to groups alone.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                                             // What: Is-An Owner Boolean. Why: Only the identity itself adds a group it creates. How: This checks the requester owns the account.
+			let newOwnBoo = newOwnFun( uidValStr, groIdeStr );                                                  // What: New Owned Boolean. Why: The group is being created by this identity. How: This checks it.
+			let oneAddBoo = newGroObj.diff( resource.data.groups ).affectedKeys().size() == 1;                  // What: One Added Boolean. Why: One batch creates one group, and no other entry may change with it. How: This requires exactly one key to differ.
+			let ownValBoo = newGroObj[ groIdeStr ] == 'owner';                                                  // What: Owner Value Boolean. Why: A creator owns the group. How: This requires the entry to say so.
+
+			let addAllBoo = capValBoo && fieOnlBoo && isaOwnBoo && newOwnBoo && oneAddBoo && ownValBoo; // What: Add Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return addAllBoo; // What: Add Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion addOwnFun
+
+		// #endregion Account Rules
+
+
+
+		// #region Group Rules
+
+		// #region namGroFun
+
+		function namGroFun ( namValStr ) { // What: Name Group Function. Why: A group's name is plaintext a stranger sees on the invite screen, so it keeps to readable characters (Section 11.10). How: This is true for 1 to 50 characters of letters, numbers, basic punctuation, and emoji, separated by single spaces.
+
+
+			let chaClaStr = "[\\p{L}\\p{M}\\p{N}\\p{So}\\x{1F3FB}-\\x{1F3FF}\\x{200D}\\x{E0020}-\\x{E007F}.,'’\\-&!?():#/+]"; // What: Character Class String. Why: Letters, marks, and numbers in any script, basic punctuation, and emoji are allowed, while control, invisible, and direction-changing characters aren't. How: This lists the allowed classes, with the emoji skin tones, joiner, and flag tags emoji sequences use.
+
+			let lenValBoo = namValStr.size() > 0 && namValStr.size() <= 50;                    // What: Length Valid Boolean. Why: A name has 1 to 50 characters. How: This checks its length, counted as JavaScript counts it.
+			let spaValBoo = namValStr.matches( '^' + chaClaStr + '+( ' + chaClaStr + '+)*$' ); // What: Spacing Valid Boolean. Why: Only allowed characters, with no leading, trailing, or doubled spaces. How: This matches runs of allowed characters joined by single spaces.
+
+			let namValBoo = lenValBoo && spaValBoo; // What: Name Valid Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return namValBoo; // What: Name Valid Return. Why: The group and its invite read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion namGroFun
+
+
+
+		// #region valGroFun
+
+		function valGroFun ( groDatObj ) { // What: Valid Group Function. Why: A group document has a fixed set of fields, each of its own type. How: This checks the fields, their types, the name, and the chat retention's range.
+
+
+			let fieAllBoo = groDatObj.keys().toSet() == [ 'chatTtlDays', 'createdAt', 'currentInviteToken', 'memberCount', 'name', 'ownerUid', 'pendingOwnerUid', 'removedUids' ].toSet(); // What: Fields All Boolean. Why: Every field is always present, and nothing else. How: This compares the document's fields with the full set.
+			let invTokBoo = groDatObj.currentInviteToken is string;                                                     // What: Invite Token Boolean. Why: The current token is text. How: This requires a string.
+			let memCouBoo = groDatObj.memberCount is int;                                                               // What: Member Count Boolean. Why: The count is a whole number. How: This requires an integer.
+			let namValBoo = namGroFun( groDatObj.name );                                                                // What: Name Valid Boolean. Why: The name keeps to its limits. How: This checks it.
+			let ownUidBoo = groDatObj.ownerUid is string;                                                               // What: Owner UID Boolean. Why: The owner is a UID. How: This requires a string.
+			let penOwnBoo = groDatObj.pendingOwnerUid == null || groDatObj.pendingOwnerUid is string;                   // What: Pending Owner Boolean. Why: An ownership offer names a UID, or there's none. How: This allows null or a string.
+			let remUidBoo = groDatObj.removedUids is map;                                                               // What: Removed UIDs Boolean. Why: The blocklist is a map of UIDs. How: This requires a map.
+			let ttlDayBoo = groDatObj.chatTtlDays is int && groDatObj.chatTtlDays >= 7 && groDatObj.chatTtlDays <= 180; // What: TTL Days Boolean. Why: Chat retention runs 7 to 180 days (Section 11.2). How: This checks the type, then the range, which the type check guards, so the chain stays inline.
+
+			let valGroBoo = fieAllBoo && invTokBoo && memCouBoo && namValBoo && ownUidBoo && penOwnBoo && remUidBoo && ttlDayBoo; // What: Valid Group Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valGroBoo; // What: Valid Group Return. Why: The rules that write a group read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valGroFun
+
+
+
+		// #region newGroFun
+
+		function newGroFun ( groDatObj ) { // What: New Group Function. Why: A group starts with one member, no ownership offer, no blocked UIDs, and a real creation time. How: This checks those starting values.
+
+
+			let creTimBoo = groDatObj.createdAt == request.time; // What: Creation Time Boolean. Why: A client could otherwise backdate the group. How: This requires the server's own time.
+			let memOneBoo = groDatObj.memberCount == 1;          // What: Member One Boolean. Why: The creator is the only member. How: This requires a count of 1.
+			let penNulBoo = groDatObj.pendingOwnerUid == null;   // What: Pending Null Boolean. Why: Nobody has been offered the group yet. How: This requires no offer.
+			let remEmpBoo = groDatObj.removedUids == {};         // What: Removed Empty Boolean. Why: Nobody has been removed yet. How: This requires an empty map.
+
+			let newGroBoo = creTimBoo && memOneBoo && penNulBoo && remEmpBoo; // What: New Group Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return newGroBoo; // What: New Group Return. Why: The group's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion newGroFun
+
+
+
+		// #region creGroFun
+
+		function creGroFun ( groIdeStr ) { // What: Create Group Function. Why: A group is created whole, so it can't exist without its owner's membership, first invite, and owned slot. How: This is true for a valid new group whose owner is the requester, with the other three written in the same batch.
+
+
+			let groDatObj = request.resource.data; // What: Group Data Object. Why: Every check reads the incoming group. How: This names it once.
+
+			let accOwnBoo = getAfter( accPatFun( groDatObj.ownerUid ) ).data.groups.get( groIdeStr, '' ) == 'owner'; // What: Account Owner Boolean. Why: The group takes one of its owner's owned slots. How: This requires the owner's account to list it as owned once the batch is applied.
+			let invNewBoo = getAfter( invPatFun( groDatObj.currentInviteToken ) ).data.groupId == groIdeStr;         // What: Invite New Boolean. Why: A group always has a working invite. How: This requires the current token's invite to point at this group once the batch is applied.
+			let isaOwnBoo = isaOwnFun( groDatObj.ownerUid );                                                         // What: Is-An Owner Boolean. Why: Nobody creates a group in someone else's name. How: This requires the requester to be the owner.
+			let memNewBoo = existsAfter( memPatFun( groIdeStr, groDatObj.ownerUid ) );                               // What: Member New Boolean. Why: The owner is the first member. How: This requires their member document once the batch is applied.
+			let newGroBoo = newGroFun( groDatObj );                                                                  // What: New Group Boolean. Why: A group starts empty and unoffered. How: This checks its starting values.
+			let valGroBoo = valGroFun( groDatObj );                                                                  // What: Valid Group Boolean. Why: The group keeps its shape. How: This checks it.
+
+			let creAllBoo = accOwnBoo && invNewBoo && isaOwnBoo && memNewBoo && newGroBoo && valGroBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creGroFun
+
+		// #endregion Group Rules
+
+
+
+		// #region Member Rules
+
+		// #region valNamFun
+
+		function valNamFun ( memDatObj ) { // What: Valid Name Function. Why: A member's encrypted display name arrives with its IV, or neither is there yet. How: This is true when both are absent, or when both are bytes of the right size.
+
+
+			let encValBoo = memDatObj.displayNameEnc is bytes && memDatObj.displayNameEnc.size() > 0 && memDatObj.displayNameEnc.size() <= 136; // What: Encrypted Valid Boolean. Why: A 40-character name is at most 120 bytes, plus the 16-byte tag (Section 11.3). How: This checks the type, then the size, which the type check guards, so the chain stays inline.
+			let iniVecBoo = memDatObj.iv is bytes && memDatObj.iv.size() == 12;                                                                 // What: Initialization Vector Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let namAbsBoo = !memDatObj.keys().hasAny( [ 'displayNameEnc', 'iv' ] );                                                             // What: Name Absent Boolean. Why: A member writes their name after joining, so it may not be there yet. How: This is true when neither field is.
+
+			let namPreBoo = encValBoo && iniVecBoo; // What: Name Present Boolean. Why: A name is only readable with its IV. How: This requires both valid together.
+
+			let valNamBoo = namAbsBoo || namPreBoo; // What: Valid Name Boolean. Why: Either state is allowed. How: This is true when the fields are both absent or both valid.
+
+
+
+			return valNamBoo; // What: Valid Name Return. Why: The member check reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valNamFun
+
+
+
+		// #region valMemFun
+
+		function valMemFun () { // What: Valid Member Function. Why: A new member document holds the wrapped group key and real times, plus the optional encrypted name. How: This checks the incoming document's fields, types, and times.
+
+
+			let memDatObj = request.resource.data; // What: Member Data Object. Why: Every check reads the incoming document. How: This names it once.
+
+			let fieOnlBoo = memDatObj.keys().hasOnly( [ 'displayNameEnc', 'iv', 'joinedAt', 'lastActiveAt', 'wrappedGroupKey' ] );                 // What: Fields Only Boolean. Why: A field the app doesn't write has no business in the document. How: This allows only the five named fields.
+			let joiTimBoo = memDatObj.joinedAt == request.time;                                                                                    // What: Joined Time Boolean. Why: The join time gates which chat history a member sees (Section 11.7), so it has to be real. How: This requires the server's own time.
+			let lasTimBoo = memDatObj.lastActiveAt == request.time;                                                                                // What: Last Time Boolean. Why: A new member is active now. How: This requires the server's own time.
+			let namValBoo = valNamFun( memDatObj );                                                                                                // What: Name Valid Boolean. Why: The encrypted name keeps its shape. How: This checks it.
+			let wraKeyBoo = memDatObj.wrappedGroupKey is bytes && memDatObj.wrappedGroupKey.size() > 0 && memDatObj.wrappedGroupKey.size() <= 256; // What: Wrapped Key Boolean. Why: A wrapped key fits in 256 bytes (Section 6), and the cap stops the field holding anything else. How: This checks the type, then the size, which the type check guards.
+
+			let valMemBoo = fieOnlBoo && joiTimBoo && lasTimBoo && namValBoo && wraKeyBoo; // What: Valid Member Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valMemBoo; // What: Valid Member Return. Why: The member create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valMemFun
+
+
+
+		// #region creMemFun
+
+		function creMemFun ( groIdeStr, uidValStr ) { // What: Create Member Function. Why: For now a member document is created only for the owner, as the group is created. How: This is true for the requester's own valid membership in a group they're creating in the same batch.
+
+
+			let groNewBoo = !exists( groPatFun( groIdeStr ) );                             // What: Group New Boolean. Why: This path is the group's creation, before any member exists. How: This requires the group not to exist before the batch.
+			let groOwnBoo = getAfter( groPatFun( groIdeStr ) ).data.ownerUid == uidValStr; // What: Group Owner Boolean. Why: Only the creator becomes the first member. How: This requires the new group's owner to be this member.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                        // What: Is-An Owner Boolean. Why: A creator writes only their own membership. How: This checks the requester is the member.
+			let valMemBoo = valMemFun();                                                   // What: Valid Member Boolean. Why: The document keeps its shape. How: This checks it.
+
+			let creAllBoo = groNewBoo && groOwnBoo && isaOwnBoo && valMemBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creMemFun
+
+		// #endregion Member Rules
+
+
+
+		// #region creInvFun
+
+		function creInvFun ( tokValStr ) { // What: Create Invite Function. Why: An invite is written by its group's owner, under the token the group names, carrying the group's real name. How: This is true when the token has its form and the group, once the batch is applied, matches the invite.
+
+
+			let invDatObj = request.resource.data;                           // What: Invite Data Object. Why: Every check reads the incoming invite. How: This names it once.
+			let groAftObj = getAfter( groPatFun( invDatObj.groupId ) ).data; // What: Group After Object. Why: The invite has to match its group as the batch leaves it. How: This reads the group after the batch.
+
+			let creTimBoo = invDatObj.createdAt == request.time;                                         // What: Creation Time Boolean. Why: A client could otherwise backdate the invite. How: This requires the server's own time.
+			let curTokBoo = groAftObj.currentInviteToken == tokValStr;                                   // What: Current Token Boolean. Why: A group has one working invite, the one it names. How: This requires the group to name this token.
+			let fieAllBoo = invDatObj.keys().toSet() == [ 'createdAt', 'groupId', 'groupName' ].toSet(); // What: Fields All Boolean. Why: An invite holds exactly its three fields. How: This compares them with the full set.
+			let groNamBoo = invDatObj.groupName == groAftObj.name;                                       // What: Group Name Boolean. Why: The invite screen shows the group's real name. How: This requires the copy to match.
+			let isaOwnBoo = isaOwnFun( groAftObj.ownerUid );                                             // What: Is-An Owner Boolean. Why: Only the owner issues an invite. How: This requires the requester to own the group.
+			let tokForBoo = tokValStr.matches( '^[A-Za-z0-9_-]{22}$' );                                  // What: Token Form Boolean. Why: A token is 128 random bits in 22 base64url characters (Section 11.6), so nothing guessable fits. How: This matches that form.
+
+			let creAllBoo = creTimBoo && curTokBoo && fieAllBoo && groNamBoo && isaOwnBoo && tokForBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creInvFun
+
+
+
+		// #region User Rules
+
 		// #region valUseFun
 
 		function valUseFun () { // What: Valid User Function. Why: A user document anyone may fetch holds only its public key and creation time, so nothing else can be stored in it. How: This checks the incoming document's fields and their types.
@@ -97,9 +529,9 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			let useDatObj = request.resource.data; // What: User Data Object. Why: Every check reads the incoming document. How: This names it once.
 
-			let creTimBoo = useDatObj.createdAt is timestamp;                                                                     // What: Creation Timestamp Boolean. Why: The creation time is a timestamp. How: This requires one.
-			let fieOnlBoo = useDatObj.keys().hasOnly( [ 'createdAt', 'publicKey' ] );                                             // What: Fields Only Boolean. Why: A field the app doesn't write has no business in the document. How: This allows only the two named fields.
-			let keyValBoo = useDatObj.publicKey is string && useDatObj.publicKey.size() > 0 && useDatObj.publicKey.size() <= 256; // What: Key Valid Boolean. Why: A key is text, an empty one can't wrap anything, and a P-256 public key fits well under 256 characters in any text form, so the cap stops the field holding anything else. How: This checks the type, then the length, which the type check guards, so the chain stays inline.
+			let creTimBoo = useDatObj.createdAt is timestamp;                                 // What: Creation Timestamp Boolean. Why: The creation time is a timestamp. How: This requires one.
+			let fieOnlBoo = useDatObj.keys().hasOnly( [ 'createdAt', 'publicKey' ] );         // What: Fields Only Boolean. Why: A field the app doesn't write has no business in the document. How: This allows only the two named fields.
+			let keyValBoo = useDatObj.publicKey is bytes && useDatObj.publicKey.size() == 65; // What: Key Valid Boolean. Why: A public key is the raw 65-byte P-256 point (Section 6), so the field can't hold anything else. How: This checks the type, then the size, which the type check guards.
 
 			let valUseBoo = creTimBoo && fieOnlBoo && keyValBoo; // What: Valid User Boolean. Why: Every check has to pass. How: This combines them.
 
@@ -156,6 +588,8 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #endregion updUseFun
 
+		// #endregion User Rules
+
 
 
 		match /accounts/{uidValStr} { // What: Account Match. Why: Each identity's memberships and paid flag live here. How: This matches one account document by UID.
@@ -163,6 +597,40 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			allow get    : if isaOwnFun( uidValStr ); // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
 			allow create : if creAccFun( uidValStr ); // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
+			allow update : if addOwnFun( uidValStr ); // What: Account Update Rule. Why: A group joins its creator's account as it's created. How: This allows it when addOwnFun passes.
+
+
+		}
+
+
+
+		match /groups/{groIdeStr} { // What: Group Match. Why: Each group's own settings live here. How: This matches one group document by ID.
+
+
+			allow get    : if isaMemFun( groIdeStr ); // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
+			allow create : if creGroFun( groIdeStr ); // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
+
+
+
+			match /members/{uidValStr} { // What: Member Match. Why: Each membership is its own document. How: This matches one member document by UID.
+
+
+				allow read   : if isaMemFun( groIdeStr );            // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
+				allow create : if creMemFun( groIdeStr, uidValStr ); // What: Member Create Rule. Why: The owner becomes the first member as the group is created. How: This allows it when creMemFun passes.
+
+
+			}
+
+
+		}
+
+
+
+		match /invites/{tokValStr} { // What: Invite Match. Why: Each invite link's token names one document. How: This matches one invite by token.
+
+
+			allow get    : if isaSigFun();            // What: Invite Get Rule. Why: Whoever holds the link sees which group it opens. How: This lets anyone signed in fetch one invite by its token, while listing stays refused, so tokens can't be collected.
+			allow create : if creInvFun( tokValStr ); // What: Invite Create Rule. Why: The owner issues the group's invite. How: This allows it when creInvFun passes.
 
 
 		}
