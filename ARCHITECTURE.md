@@ -14,7 +14,7 @@ there's no distinct decision to weigh there.
 Last updated: 2026-10-24 (pre-implementation planning phase; data model
 approved, Firebase plan changed to Blaze, see Section 15; earlier passages
 brought in line with Sections 11.7 and 17; scroll behavior per screen added
-to Section 14's open items).
+to Section 14's open items; routing decided in Section 14 on 2026-10-25).
 
 ---
 
@@ -653,7 +653,7 @@ different names.
 
 **Exception to "encrypt all content"**: the group's own name is the one
 piece of content proposed to stay plaintext, not encrypted like
-everything else. Reason: an invite landing page needs to show *something*
+everything else. Reason: an invite screen needs to show *something*
 identifying the group before the person has joined and been handed the
 wrapped key, if the name were encrypted, there'd be nothing to show
 except "you've been invited to a group." A group name is also a much
@@ -756,14 +756,14 @@ only way to learn a token is to be given the link.
 **Rules (decided 2026-10-22)**: `/invites/{token}` allows `get` (fetching
 one doc whose token you already hold) and never `list` or queries, so
 the collection can't be enumerated. Rules can't see a token unless it's
-in the path, so the invite landing page can't be allowed to read
+in the path, so the invite screen can't be allowed to read
 `/groups/{groupId}` by token. Instead the invite doc carries its own
 plaintext copy of the group name, updated whenever the name changes, and
 `/groups/{groupId}` stays readable by members only.
 
 | Field | Type | Notes |
 |---|---|---|
-| `groupName` | plaintext | Denormalized copy of `/groups/{groupId}.name`, for the invite landing page. |
+| `groupName` | plaintext | Denormalized copy of `/groups/{groupId}.name`, for the invite screen. |
 
 ### 11.7 RTDB: `/chats/{conversationId}/messages/{messageId}`
 
@@ -1093,11 +1093,24 @@ the Blaze change.
   - The app calls `navigator.storage.persist()` on every launch, so the
     browser treats its storage as worth keeping.
 - UI: no component library; every component is built in-house.
+- Routing (decided 2026-10-25): the app answers at one address, its root,
+  since it's an app rather than a website with pages to land on:
+  - An address the app doesn't use is replaced with the root, so the address
+    bar never keeps it and back doesn't return to it. There's no 404 page.
+  - Screens (the group list, a group's chat, events, notes, and location
+    views, settings, onboarding, and the install screen from Section 16) are
+    history entries that record the screen in their state, not paths, so the
+    back gesture walks back through screens while the address stays the
+    root.
+  - Entry addresses bring something in from outside and are read once as
+    the app starts, then replaced with the root: an invite link
+    (`/join/<token>`) opens the invite screen, and a notification's target
+    opens its screen. Each is built with the feature it serves.
+  - The legal pages, `/privacy` and `/terms`, are static pages served at
+    fixed addresses, outside the app, since Google's sign-in verification
+    and app listings link to them.
 
 **App structure, still open**:
-- Routing structure: what pages/routes exist (group list, a group's
-  chat/events/notes/location views, invite-redemption landing page,
-  settings, onboarding, the install screen from Section 16).
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The
@@ -1144,6 +1157,9 @@ the Blaze change.
 - [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
 - [ ] Authorized domains, API key restrictions, and CSP, per the hosting
       bullet above.
+- [ ] The privacy policy and terms written and published at `/privacy` and
+      `/terms`, before Google sign-in is set up (its verification asks for
+      both URLs).
 
 **Lower priority, not needed before launch**:
 - Testing follows the global rules (Playwright in Chromium, Firefox, and
@@ -1228,7 +1244,7 @@ the app**, not only an install workaround. The installed app's first
 screen offers it, and so does the group list for existing users, who
 paste a link someone sent them instead of opening it in the browser
 (which, on iOS, would land in Safari's separate storage rather than the
-installed app). The invite landing page offers to copy its link before
+installed app). The invite screen offers to copy its link before
 showing the install steps, so the paste is ready once the app opens.
 
 **Pros**: protects the identity and history the whole design relies on;
