@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-25 (the private `/accounts/{uid}` doc, the group's
+Last updated: 2026-10-25 (text limits in Section 11.10 and binary formats
+in Section 6; the private `/accounts/{uid}` doc, the group's
 `memberCount`, and the paywall's switch decided for the caps' enforcement,
 Sections 4, 9, 11.1, 11.2, 17, and 18; the emulator harness for the
 security rules noted in Section 14; routing decided in Section 14).
@@ -346,6 +347,14 @@ member or full metadata privacy.
   never sees an unwrapped key either.
 - Only routing metadata (sender UID, timestamps, group ID) stays
   plaintext, since Firestore/RTDB need it to route/query.
+- **Formats (decided 2026-10-25)**: the ECDH curve is P-256, and every
+  binary value (a public key, an IV, ciphertext, a wrapped key) is stored
+  as Firestore bytes rather than text, so the security rules can check its
+  exact size. A public key is the raw 65-byte point WebCrypto exports. A
+  wrapped group key is one opaque bytes field of at most 256 bytes, which
+  leaves the exact wrapping scheme (how the joiner derives the same
+  unwrapping key as the approver) to be settled when the encryption is
+  built. An AES-GCM IV is 12 bytes.
 
 **Pros**
 - Firebase itself can never read actual content, satisfying "not sent in
@@ -640,7 +649,7 @@ UID (`get`), never list the collection, and only its owner may write it.
 
 | Field | Type | Notes |
 |---|---|---|
-| `publicKey` | plaintext | This user's ECDH public key, used by others to wrap a group key for them on join. Can't be encrypted: there is nothing to encrypt it with yet. |
+| `publicKey` | plaintext bytes | This user's ECDH P-256 public key, the raw 65-byte point (Section 6), used by others to wrap a group key for them on join. Can't be encrypted: there is nothing to encrypt it with yet. |
 | `createdAt` | plaintext | Timestamp. |
 
 `/accounts/{uid}`, the private half, readable only by its owner. The rules
@@ -664,7 +673,7 @@ different names.
 |---|---|---|
 | `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
 | `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept or the offer is withdrawn (Section 18). |
-| `name` | plaintext | The group's own name. Deliberately not encrypted, see below. |
+| `name` | plaintext | The group's own name. Deliberately not encrypted, see below. At most 50 characters, emoji allowed (Section 11.10). |
 | `createdAt` | plaintext | Timestamp. |
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
 | `removedUids` | plaintext map `{ uid: true }` | Checked by security rules to block redemption by a specific identity; low write-frequency, so a map field (not a subcollection) is fine here. |
@@ -685,8 +694,8 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 | Field | Type | Notes |
 |---|---|---|
 | `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.7. |
-| `wrappedGroupKey` | ciphertext | The group's AES-GCM key, wrapped for this member's public key via ECDH. Decrypting this is how a member gets the group key at all. |
-| `displayNameEnc` / `iv` | ciphertext | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. |
+| `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
+| `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Absent until the member writes it, right after the group is created or their join is approved. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
 
 A subcollection, not a map field on the group doc, specifically so many
@@ -1007,6 +1016,29 @@ once one person claims it matters.
   interrupting modal, consistent with minimizing popup fatigue generally,
   not just at the dismissal step.
 
+### 11.10 Text Limits
+
+Decided 2026-10-25. Every field a person types has a length and a set of
+characters it allows, so names stay readable and recognizable, and nobody
+can disguise one with invisible or direction-reversing characters. Lengths
+count the way JavaScript's `.length` and the rules' `size()` both do (UTF-16
+units, measured in the emulator), so a form field's `maxLength` and the rule
+always agree. An emoji counts 2 or more.
+
+| Field | Length | Allowed |
+|---|---|---|
+| Group name | 1 to 50 | Letters in any language with their accents, numbers, spaces, basic punctuation (`. , ' ’ - & ! ? ( ) : # / +`), and emoji, as Discord's display names allow by its own help center. |
+| Person name (the join request's name, then the per-group display name) | 1 to 40 | Letters in any language with their accents, spaces, apostrophes, hyphens, and periods. No numbers, symbols, or emoji: it's a real name the approver has to recognize (Section 17), and decoration only makes look-alike names easier. |
+| Join request note | 0 to 150 | Letters, numbers, spaces, and basic punctuation, no emoji. |
+
+All three refuse leading or trailing spaces and runs of two or more
+spaces, and the app trims, collapses spaces, and normalizes text (Unicode
+NFC) before saving, so what a person types usually passes. The rules check
+every plaintext field directly; for the encrypted display name the app
+checks it before encrypting, and the rules can only cap the ciphertext's
+size. Encrypted content (chat, events, notes) gets its limits as each
+feature is built.
+
 ---
 
 ## 12. Known Limitations & Accepted Tradeoffs
@@ -1314,8 +1346,8 @@ history requests). Declining is open to any member too.
 
 | Field | Type | Notes |
 |---|---|---|
-| `nameText` | plaintext | The joiner's entered name. Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
-| `noteText` | plaintext, optional | The note to the group, same treatment. |
+| `nameText` | plaintext | The joiner's entered name, under the person name limits (Section 11.10). Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
+| `noteText` | plaintext, optional | The note to the group, same treatment, under the note limits (Section 11.10). |
 | `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the UID isn't in `removedUids`. |
 | `requestedAt` | plaintext | Timestamp. |
 | `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. |
@@ -1423,8 +1455,9 @@ paywall is switched on before launch.
 - **The paywall's switch** (decided 2026-10-25): while it's unlocked, one
   rules function reports every user as paid, so the paid caps apply to
   everyone. The real checks are written and tested under both answers from
-  the start, and switching the paywall on before launch changes that one
-  function.
+  the start (the rules suite loads the paywall-on version into a second
+  emulator project), and switching the paywall on before launch changes
+  that one function.
 
 **Decided (2026-10-22): an owner who disappears.** If the owner stops using the app
 without transferring (a lost phone with no linked sign-in, an
