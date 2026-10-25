@@ -23,8 +23,8 @@
 	border-radius    : 999px;
 	color            : var( --tex-acc-col );                                   /* Text Accent Color = #ffffff */
 	font-weight      : 700;
-	left             : var( --gut-sid-pad );                                   /* Gutter Side Padding ~= 19.304px */
-	padding          : var( --spa-ver-bas ) var( --spa-hor-p03 );              /* Spacing Vertical Base ~= 14.572px, Spacing Horizontal Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	left             : var( --gut-sid-pad );                                   /* Gutter Side Padding, about 19.304px - 44.876px */
+	padding          : var( --spa-ver-bas ) clamp( calc( var( --ver-rhy-p01 ) * 1rem ), var( --hor-rhy-013 ), calc( var( --ver-rhy-p03 ) * 1rem ) ); /* Spacing Vertical Base ~= 14.572px, Vertical Rhythm Base Plus 1 ~= 19.304px, Horizontal Rhythm 13 ~= 37.460px @ 1,920px width, Vertical Rhythm Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing and rhythm steps directly, outside the tiers, its sides holding horizontal rhythm step 13 between the vertical rhythm's p01 and p03 steps. */
 	position         : fixed;
 	top              : var( --spa-ver-m02 );                                   /* Spacing Vertical Base Minus 2 ~= 8.304px */
 	transform        : translateY( calc( -100% - var( --spa-ver-m02 ) * 2 ) ); /* Spacing Vertical Base Minus 2 ~= -16.608px */ /* What: Hidden Offset. Why: The link waits just above the screen until it's focused, clear of the edge so no rounded sliver of it shows. How: This raises it by its own height plus twice its top offset, leaving its bottom edge a top offset above the screen. */
