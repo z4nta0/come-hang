@@ -11,12 +11,12 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-25 (untrusted text and paths in Section 11.11; text
-limits in Section 11.10 and binary formats in Section 6; the private
-`/accounts/{uid}` doc, the group's `memberCount`, and the paywall's switch
-decided for the caps' enforcement, Sections 4, 9, 11.1, 11.2, 17, and 18;
-the emulator harness for the security rules noted in Section 14; routing
-decided in Section 14).
+Last updated: 2026-10-25 (the group's `countedUid` in Section 11.2;
+untrusted text and paths in Section 11.11; text limits in Section 11.10 and
+binary formats in Section 6; the private `/accounts/{uid}` doc, the group's
+`memberCount`, and the paywall's switch decided for the caps' enforcement,
+Sections 4, 9, 11.1, 11.2, 17, and 18; the emulator harness for the
+security rules noted in Section 14; routing decided in Section 14).
 
 ---
 
@@ -529,7 +529,8 @@ in place of their name. The group can manually reassign it if needed.
   (e.g. someone else re-shares it into a channel the removed person still
   sees).
 - The full removal operation (remove from members, drop the group from
-  the removed member's `/accounts/{uid}` map, lower `memberCount` by one,
+  the removed member's `/accounts/{uid}` map, lower `memberCount` by one
+  with `countedUid` set to the removed member,
   add to `removedUids`, deactivate old invite doc, create new invite doc)
   is bundled as a **single Firestore transaction**, so a partial failure
   can't leave the group in an inconsistent state.
@@ -679,6 +680,7 @@ different names.
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
 | `removedUids` | plaintext map `{ uid: true }` | Checked by security rules to block redemption by a specific identity; low write-frequency, so a map field (not a subcollection) is fine here. |
 | `memberCount` | plaintext number | How many member docs the group has, since rules can't count documents. Moves by exactly one in the same batch as each join, leave, and removal, and the rules check it against the member cap (Section 18). |
+| `countedUid` | plaintext | The UID whose join, leave, or removal the last `memberCount` change counted, starting as the creator (decided 2026-10-25). Rules can't see which member doc a batch creates or deletes, so the count may change only when the member doc for this UID is created or deleted in the same batch. Without it, any member could raise the count to the cap and block every join. |
 | `chatTtlDays` | plaintext, creator-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic ack/TTL check (11.7) for this group's chat instead of a hardcoded constant. |
 
 **Exception to "encrypt all content"**: the group's own name is the one
@@ -697,7 +699,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 | `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.7. |
 | `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Absent until the member writes it, right after the group is created or their join is approved. |
-| `lastActiveAt` | plaintext | Updated at most once a day on app open. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
+| `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
 
 A subcollection, not a map field on the group doc, specifically so many
 members can update their own entry (or be added) without contending on
@@ -1384,8 +1386,8 @@ edited once filed, and it ends when the joiner withdraws it or any member
 declines or approves it. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
 `/members/{uid}` with the group key wrapped for it, add the group to the
-joiner's `/accounts/{uid}` map, raise the group's `memberCount` by one,
-and delete the request. The rules let a member change another person's
+joiner's `/accounts/{uid}` map, raise the group's `memberCount` by one and
+set its `countedUid` to the joiner, and delete the request. The rules let a member change another person's
 account only that way: adding this one group, alongside creating their
 member doc, within the joiner's and the group's caps (Section 18). The joiner's listener sees the membership appear, unwraps the
 key, and writes their encrypted display name. **Declining** deletes the

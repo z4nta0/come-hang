@@ -40,6 +40,14 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * nor blocked. The joiner and the members read a request, the joiner may
  * withdraw it, any member may decline it, and nobody edits it.
  *
+ * Any member answers a request in one batch. An approval creates the
+ * joiner's membership, adds the group to their account as a member, raises
+ * the group's count by one, and deletes the request, within the joiner's
+ * caps and the owner's member cap. The count names the member it counted,
+ * countedUid, so it moves only with a membership the same batch creates. A
+ * block adds the requester to the group's blocklist as it deletes their
+ * request. A member then writes their own encrypted name and activity time.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -144,6 +152,20 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region reqPatFun
+
+		function reqPatFun ( groIdeStr, uidValStr ) { // What: Request Path Function. Why: Approving or blocking a joiner checks their pending request. How: This returns the join request document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/joinRequests/$(uidValStr); // What: Request Path Return. Why: A lookup needs the full path. How: This builds it from the group ID and the UID.
+
+
+		}
+
+		// #endregion reqPatFun
+
+
+
 		// #region usePatFun
 
 		function usePatFun ( uidValStr ) { // What: User Path Function. Why: A join request checks the joiner has published a key. How: This returns the user document's path.
@@ -215,6 +237,20 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion belCapFun
+
+
+
+		// #region memCapFun
+
+		function memCapFun ( uidValStr ) { // What: Member Cap Function. Why: A group's members are capped by its owner's status (Section 18). How: This returns the cap for the owner given.
+
+
+			return isaPaiFun( uidValStr ) ? 50 : 20; // What: Member Cap Return. Why: A paid owner's group may hold 50 members, and a free owner's 20. How: This picks one.
+
+
+		}
+
+		// #endregion memCapFun
 
 
 
@@ -425,7 +461,8 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		function valGroFun ( groDatObj ) { // What: Valid Group Function. Why: A group document has a fixed set of fields, each of its own type. How: This checks the fields, their types, the name, and the chat retention's range.
 
 
-			let fieAllBoo = groDatObj.keys().toSet() == [ 'chatTtlDays', 'createdAt', 'currentInviteToken', 'memberCount', 'name', 'ownerUid', 'pendingOwnerUid', 'removedUids' ].toSet(); // What: Fields All Boolean. Why: Every field is always present, and nothing else. How: This compares the document's fields with the full set.
+			let couUidBoo = groDatObj.countedUid is string;                                                             // What: Counted UID Boolean. Why: The member whose join or leave last changed the count is a UID. How: This requires a string.
+			let fieAllBoo = groDatObj.keys().toSet() == [ 'chatTtlDays', 'countedUid', 'createdAt', 'currentInviteToken', 'memberCount', 'name', 'ownerUid', 'pendingOwnerUid', 'removedUids' ].toSet(); // What: Fields All Boolean. Why: Every field is always present, and nothing else. How: This compares the document's fields with the full set.
 			let invTokBoo = groDatObj.currentInviteToken is string;                                                     // What: Invite Token Boolean. Why: The current token is text. How: This requires a string.
 			let memCouBoo = groDatObj.memberCount is int;                                                               // What: Member Count Boolean. Why: The count is a whole number. How: This requires an integer.
 			let namValBoo = namGroFun( groDatObj.name );                                                                // What: Name Valid Boolean. Why: The name keeps to its limits. How: This checks it.
@@ -434,7 +471,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 			let remUidBoo = groDatObj.removedUids is map;                                                               // What: Removed UIDs Boolean. Why: The blocklist is a map of UIDs. How: This requires a map.
 			let ttlDayBoo = groDatObj.chatTtlDays is int && groDatObj.chatTtlDays >= 7 && groDatObj.chatTtlDays <= 180; // What: TTL Days Boolean. Why: Chat retention runs 7 to 180 days (Section 11.2). How: This checks the type, then the range, which the type check guards, so the chain stays inline.
 
-			let valGroBoo = fieAllBoo && invTokBoo && memCouBoo && namValBoo && ownUidBoo && penOwnBoo && remUidBoo && ttlDayBoo; // What: Valid Group Boolean. Why: Every check has to pass. How: This combines them.
+			let valGroBoo = couUidBoo && fieAllBoo && invTokBoo && memCouBoo && namValBoo && ownUidBoo && penOwnBoo && remUidBoo && ttlDayBoo; // What: Valid Group Boolean. Why: Every check has to pass. How: This combines them.
 
 
 
@@ -452,12 +489,13 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		function newGroFun ( groDatObj ) { // What: New Group Function. Why: A group starts with one member, no ownership offer, no blocked UIDs, and a real creation time. How: This checks those starting values.
 
 
-			let creTimBoo = groDatObj.createdAt == request.time; // What: Creation Time Boolean. Why: A client could otherwise backdate the group. How: This requires the server's own time.
-			let memOneBoo = groDatObj.memberCount == 1;          // What: Member One Boolean. Why: The creator is the only member. How: This requires a count of 1.
-			let penNulBoo = groDatObj.pendingOwnerUid == null;   // What: Pending Null Boolean. Why: Nobody has been offered the group yet. How: This requires no offer.
-			let remEmpBoo = groDatObj.removedUids == {};         // What: Removed Empty Boolean. Why: Nobody has been removed yet. How: This requires an empty map.
+			let couOwnBoo = groDatObj.countedUid == groDatObj.ownerUid; // What: Counted Owner Boolean. Why: The count's one member is the creator. How: This requires the counted UID to be the owner's.
+			let creTimBoo = groDatObj.createdAt == request.time;        // What: Creation Time Boolean. Why: A client could otherwise backdate the group. How: This requires the server's own time.
+			let memOneBoo = groDatObj.memberCount == 1;                 // What: Member One Boolean. Why: The creator is the only member. How: This requires a count of 1.
+			let penNulBoo = groDatObj.pendingOwnerUid == null;          // What: Pending Null Boolean. Why: Nobody has been offered the group yet. How: This requires no offer.
+			let remEmpBoo = groDatObj.removedUids == {};                // What: Removed Empty Boolean. Why: Nobody has been removed yet. How: This requires an empty map.
 
-			let newGroBoo = creTimBoo && memOneBoo && penNulBoo && remEmpBoo; // What: New Group Boolean. Why: Every check has to pass. How: This combines them.
+			let newGroBoo = couOwnBoo && creTimBoo && memOneBoo && penNulBoo && remEmpBoo; // What: New Group Boolean. Why: Every check has to pass. How: This combines them.
 
 
 
@@ -572,6 +610,31 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #endregion creMemFun
 
+
+
+		// #region updMemFun
+
+		function updMemFun ( groIdeStr, uidValStr ) { // What: Update Member Function. Why: A member writes their own encrypted display name, and marks when they were last active, while the rest of the membership stays as it was granted. How: This is true for the member changing only those fields, validly.
+
+
+			let memNewObj = request.resource.data; // What: Member New Object. Why: The checks read the membership as it will be. How: This names it.
+
+			let fieOnlBoo = memNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'displayNameEnc', 'iv', 'lastActiveAt' ] ); // What: Fields Only Boolean. Why: The wrapped key and join time are set by whoever let the member in. How: This allows changes to the name, its IV, and the activity time alone.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                                                               // What: Is-An Owner Boolean. Why: Only the member themselves writes their name. How: This requires the requester to be the member.
+			let lasTimBoo = memNewObj.lastActiveAt == resource.data.lastActiveAt || memNewObj.lastActiveAt == request.time;       // What: Last Time Boolean. Why: The activity time decides when ownership can be claimed (Section 18), so it can only move to now. How: This allows it unchanged or set to the server's time.
+			let namValBoo = valNamFun( memNewObj );                                                                               // What: Name Valid Boolean. Why: The encrypted name keeps its shape. How: This checks it.
+
+			let updAllBoo = fieOnlBoo && isaOwnBoo && lasTimBoo && namValBoo; // What: Update Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updMemFun
+
 		// #endregion Member Rules
 
 
@@ -648,7 +711,165 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #endregion creReqFun
 
+
+
+		// #region penReqFun
+
+		function penReqFun ( groIdeStr, uidValStr ) { // What: Pending Request Function. Why: Approving or blocking someone answers their pending request, which ends with it. How: This is true when the UID's request exists before the batch and is deleted by it.
+
+
+			let reqGonBoo = !existsAfter( reqPatFun( groIdeStr, uidValStr ) ); // What: Request Gone Boolean. Why: An answered request ends. How: This requires it deleted by the batch.
+			let reqOldBoo = exists( reqPatFun( groIdeStr, uidValStr ) );       // What: Request Old Boolean. Why: Only someone who asked can be let in or blocked this way. How: This requires the request to exist before the batch.
+
+			let penReqBoo = reqGonBoo && reqOldBoo; // What: Pending Request Boolean. Why: Both have to hold. How: This combines them.
+
+
+
+			return penReqBoo; // What: Pending Request Return. Why: The approval and block rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion penReqFun
+
 		// #endregion Join Request Rules
+
+
+
+		// #region Approval Rules
+
+		// #region newMemFun
+
+		function newMemFun ( groIdeStr, uidValStr ) { // What: New Member Function. Why: A membership counts as new only while the same batch creates it. How: This is true when the member document doesn't exist before the batch and does after.
+
+
+			let memAbsBoo = !exists( memPatFun( groIdeStr, uidValStr ) );     // What: Member Absent Boolean. Why: The membership has to be new. How: This requires no member document before the batch.
+			let memAftBoo = existsAfter( memPatFun( groIdeStr, uidValStr ) ); // What: Member After Boolean. Why: The batch has to create it. How: This requires the member document after.
+
+			let newMemBoo = memAbsBoo && memAftBoo; // What: New Member Boolean. Why: Both have to hold. How: This combines them.
+
+
+
+			return newMemBoo; // What: New Member Return. Why: The approval rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion newMemFun
+
+
+
+		// #region addMemFun
+
+		function addMemFun ( uidValStr ) { // What: Add Member Function. Why: An approval puts the group in the joiner's account, the one change a member may make to someone else's account, and only within the joiner's caps. How: This is true for a member adding one member entry for the group whose membership the same batch creates for this account's owner.
+
+
+			let newGroObj = request.resource.data.groups;                              // What: New Groups Object. Why: The checks read the map as it will be. How: This names it.
+			let addKeyArr = newGroObj.keys().removeAll( resource.data.groups.keys() ); // What: Added Keys Array. Why: The one group being added has to be found. How: This lists the keys the new map has and the old one lacks.
+			let groIdeStr = addKeyArr[ 0 ];                                            // What: Group Identifier String. Why: The checks look up the group being added. How: This takes the first added key, and a missing one fails the lookup, refusing the write.
+
+			let capValBoo = capAccFun( uidValStr, newGroObj );                                                  // What: Cap Valid Boolean. Why: The joiner's map has to stay under both caps. How: This checks it.
+			let fieOnlBoo = request.resource.data.diff( resource.data ).affectedKeys().hasOnly( [ 'groups' ] ); // What: Fields Only Boolean. Why: Only the map may change, never the paid flag. How: This allows changes to groups alone.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                             // What: Is-A Member Boolean. Why: Only a member lets someone in. How: This requires the requester to be a member before the batch.
+			let memValBoo = newGroObj[ groIdeStr ] == 'member';                                                 // What: Member Value Boolean. Why: A joiner is a member, not an owner. How: This requires the entry to say so.
+			let newMemBoo = newMemFun( groIdeStr, uidValStr );                                                  // What: New Member Boolean. Why: The entry comes with the membership itself. How: This requires the joiner's member document created in the batch.
+			let oneAddBoo = newGroObj.diff( resource.data.groups ).affectedKeys().size() == 1;                  // What: One Added Boolean. Why: One approval adds one group, and no other entry may change with it. How: This requires exactly one key to differ.
+
+			let addAllBoo = capValBoo && fieOnlBoo && isaMemBoo && memValBoo && newMemBoo && oneAddBoo; // What: Add Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return addAllBoo; // What: Add Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion addMemFun
+
+
+
+		// #region appMemFun
+
+		function appMemFun ( groIdeStr, uidValStr ) { // What: Approve Member Function. Why: A member lets a joiner in by answering their request in one batch with the membership, the account entry, and the count (Section 17). How: This is true for a member creating a valid membership for someone with a pending, unblocked request, with the other parts in the same batch.
+
+
+			let groAftObj = getAfter( groPatFun( groIdeStr ) ).data; // What: Group After Object. Why: The count has to move with this membership. How: This reads the group as the batch leaves it.
+
+			let accMemBoo = getAfter( accPatFun( uidValStr ) ).data.groups.get( groIdeStr, '' ) == 'member'; // What: Account Member Boolean. Why: The joiner takes a slot in their account. How: This requires the account to list the group once the batch is applied.
+			let couOneBoo = groAftObj.memberCount == get( groPatFun( groIdeStr ) ).data.memberCount + 1;     // What: Count One Boolean. Why: Each approval counts one member. How: This requires the count to rise by exactly one.
+			let couUidBoo = groAftObj.countedUid == uidValStr;                                               // What: Counted UID Boolean. Why: The count's change has to be for this member. How: This requires the group to name them.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                          // What: Is-A Member Boolean. Why: Only a member lets someone in. How: This requires the requester to be a member before the batch.
+			let penReqBoo = penReqFun( groIdeStr, uidValStr );                                               // What: Pending Request Boolean. Why: Only someone who asked is let in, and their request ends. How: This checks it.
+			let remAbsBoo = !( uidValStr in groAftObj.removedUids );                                         // What: Removed Absent Boolean. Why: A blocked identity stays out. How: This requires the UID off the blocklist.
+			let valMemBoo = valMemFun();                                                                     // What: Valid Member Boolean. Why: The membership keeps its shape. How: This checks it.
+
+			let appAllBoo = accMemBoo && couOneBoo && couUidBoo && isaMemBoo && penReqBoo && remAbsBoo && valMemBoo; // What: Approve Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return appAllBoo; // What: Approve Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion appMemFun
+
+
+
+		// #region joiGroFun
+
+		function joiGroFun ( groIdeStr ) { // What: Join Group Function. Why: A group's count rises only as an approval creates a membership, and never past its owner's member cap (Section 18). How: This is true for a member raising the count by one for a membership the same batch creates, within the cap.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'countedUid', 'memberCount' ] ); // What: Fields Only Boolean. Why: An approval changes the count and nothing else of the group's. How: This allows changes to those two fields alone.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                    // What: Is-A Member Boolean. Why: Only a member approves. How: This requires the requester to be a member before the batch.
+			let memCapBoo = groNewObj.memberCount <= memCapFun( resource.data.ownerUid );                              // What: Member Cap Boolean. Why: A group holds at most its owner's member cap. How: This checks the new count against it.
+			let newMemBoo = newMemFun( groIdeStr, groNewObj.countedUid );                                              // What: New Member Boolean. Why: The count only moves with a real membership, so it can't be inflated to block joins. How: This requires the counted UID's membership created in the batch.
+			let oneUppBoo = groNewObj.memberCount == resource.data.memberCount + 1;                                    // What: One Up Boolean. Why: One approval counts one member. How: This requires the count to rise by exactly one.
+
+			let joiAllBoo = fieOnlBoo && isaMemBoo && memCapBoo && newMemBoo && oneUppBoo; // What: Join Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return joiAllBoo; // What: Join Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion joiGroFun
+
+
+
+		// #region bloGroFun
+
+		function bloGroFun ( groIdeStr ) { // What: Block Group Function. Why: Any member may decline a request and block its sender, so that identity can't redeem any link for the group again (Sections 9 and 17). How: This is true for a member adding one UID to the blocklist while deleting that UID's pending request, when the UID isn't a member.
+
+
+			let groNewObj = request.resource.data;                                                      // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+			let addKeyArr = groNewObj.removedUids.keys().removeAll( resource.data.removedUids.keys() ); // What: Added Keys Array. Why: The one UID being blocked has to be found. How: This lists the keys the new blocklist has and the old one lacks.
+			let uidBloStr = addKeyArr[ 0 ];                                                             // What: UID Blocked String. Why: The checks look up the UID being blocked. How: This takes the first added key, and a missing one fails the lookup, refusing the write.
+
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'removedUids' ] );        // What: Fields Only Boolean. Why: A block changes the blocklist and nothing else of the group's. How: This allows changes to it alone.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                             // What: Is-A Member Boolean. Why: Only a member declines. How: This requires the requester to be a member.
+			let memAbsBoo = !exists( memPatFun( groIdeStr, uidBloStr ) );                                       // What: Member Absent Boolean. Why: Removing a member is the owner's action, not a decline (Section 9). How: This requires the blocked UID not to be a member.
+			let oneAddBoo = groNewObj.removedUids.diff( resource.data.removedUids ).affectedKeys().size() == 1; // What: One Added Boolean. Why: One decline blocks one identity. How: This requires exactly one key to differ.
+			let penReqBoo = penReqFun( groIdeStr, uidBloStr );                                                  // What: Pending Request Boolean. Why: A block answers a pending request, which ends with it. How: This checks it.
+			let truValBoo = groNewObj.removedUids[ uidBloStr ] == true;                                         // What: True Value Boolean. Why: The blocklist maps each UID to true (Section 11.2). How: This requires it.
+
+			let bloAllBoo = fieOnlBoo && isaMemBoo && memAbsBoo && oneAddBoo && penReqBoo && truValBoo; // What: Block Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return bloAllBoo; // What: Block Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion bloGroFun
+
+		// #endregion Approval Rules
 
 
 
@@ -755,9 +976,9 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		match /accounts/{uidValStr} { // What: Account Match. Why: Each identity's memberships and paid flag live here. How: This matches one account document by UID.
 
 
-			allow get    : if isaOwnFun( uidValStr ); // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
-			allow create : if creAccFun( uidValStr ); // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
-			allow update : if addOwnFun( uidValStr ); // What: Account Update Rule. Why: A group joins its creator's account as it's created. How: This allows it when addOwnFun passes.
+			allow get    : if isaOwnFun( uidValStr );                           // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
+			allow create : if creAccFun( uidValStr );                           // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
+			allow update : if addOwnFun( uidValStr ) || addMemFun( uidValStr ); // What: Account Update Rule. Why: A group joins its creator's account as it's created, and a joiner's account as they're approved. How: This allows it when addOwnFun or addMemFun passes.
 
 
 		}
@@ -767,16 +988,18 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		match /groups/{groIdeStr} { // What: Group Match. Why: Each group's own settings live here. How: This matches one group document by ID.
 
 
-			allow get    : if isaMemFun( groIdeStr ); // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
-			allow create : if creGroFun( groIdeStr ); // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
+			allow get    : if isaMemFun( groIdeStr );                           // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
+			allow create : if creGroFun( groIdeStr );                           // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
+			allow update : if joiGroFun( groIdeStr ) || bloGroFun( groIdeStr ); // What: Group Update Rule. Why: An approval raises the count, and a decline can block its sender. How: This allows it when joiGroFun or bloGroFun passes.
 
 
 
 			match /members/{uidValStr} { // What: Member Match. Why: Each membership is its own document. How: This matches one member document by UID.
 
 
-				allow read   : if isaMemFun( groIdeStr );            // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
-				allow create : if creMemFun( groIdeStr, uidValStr ); // What: Member Create Rule. Why: The owner becomes the first member as the group is created. How: This allows it when creMemFun passes.
+				allow read   : if isaMemFun( groIdeStr );                                                 // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
+				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr ); // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
+				allow update : if updMemFun( groIdeStr, uidValStr );                                      // What: Member Update Rule. Why: A member writes their own name and activity time. How: This allows it when updMemFun passes.
 
 
 			}

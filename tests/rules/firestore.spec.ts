@@ -11,6 +11,7 @@ import { deleteDoc                 } from 'firebase/firestore';           // Wha
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every request names a document. How: This builds a reference.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Fetch rules are checked. How: This reads one document.
 import { getDocs                   } from 'firebase/firestore';           // What: Get Docs. Why: List rules are checked. How: This reads a whole collection.
+import { increment                 } from 'firebase/firestore';           // What: Increment. Why: An approval raises the member count the way the app will. How: This asks the server to add to the stored count.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The rules run in the local emulator. How: This connects to it with the project's rules.
 import { readFileSync              } from 'node:fs';                      // What: Read File Sync. Why: The emulator is given the real rules file. How: This reads it.
 import { serverTimestamp           } from 'firebase/firestore';           // What: Server Timestamp. Why: A creation time has to be the server's own. How: This asks the server to fill it in.
@@ -200,6 +201,7 @@ const groBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : GbfOp
 
 
 		chatTtlDays        : 30,
+		countedUid         : uidValStr,
 		createdAt          : serverTimestamp(),
 		currentInviteToken : tokValStr,
 		memberCount        : 1,
@@ -320,6 +322,204 @@ const seeJoiFun = async ( uidValArr : string[] ) => { // What: Seed Join Functio
 };
 
 // #endregion seeJoiFun
+
+
+
+// #region seeReqFun
+
+/**
+ * seeReqFun = Seed Request Function
+ *
+ * @summary
+ * Writes, with the rules off, everything a joiner has once their request is
+ * pending in gro1: an empty account, a published key, and the request.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param envTesObj - Environment Test Object: Which emulator project to write
+ *                    to.
+ * @param uidValStr - UID Value String: The joiner's UID.
+ *
+ * @returns A promise that settles once everything is written, with no value.
+ *
+ * @example
+ * ```ts
+ * seeReqFun(tesEnvObj, 'carol') // => Promise<void>
+ * ```
+ *
+*/
+
+const seeReqFun = async ( envTesObj : RulesTestEnvironment, uidValStr : string ) => { // What: Seed Request Function. Why: Approval and block tests start from a pending request. How: This seeds the joiner's documents and their request.
+
+
+	await seeDocFun( envTesObj, `accounts/${ uidValStr }`, { groups : {} } );                                                        // What: Joiner Account Seed. Why: An approval adds to the joiner's account. How: This writes an empty one.
+	await seeDocFun( envTesObj, `users/${ uidValStr }`, { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Joiner Key Seed. Why: A joiner has published a key. How: This writes it.
+	await seeDocFun( envTesObj, `groups/gro1/joinRequests/${ uidValStr }`, { expireAt : Timestamp.fromMillis( Date.now() + 7 * DAY_MIL_NUM ), inviteToken : TOK_ONE_STR, nameText : 'Bob Jones', requestedAt : Timestamp.fromMillis( 1000 ) } ); // What: Request Seed. Why: The request is what an approval or block answers. How: This writes it.
+
+
+};
+
+// #endregion seeReqFun
+
+
+
+// #region seeAppFun
+
+/**
+ * seeAppFun = Seed Approval Function
+ *
+ * @summary
+ * Writes, with the rules off, the state approval tests start from: Alice's
+ * group gro1 holding a chosen member count, her membership, her account
+ * owning it (paid when asked), its invite, and Bob's pending request.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param envTesObj - Environment Test Object: Which emulator project to write
+ *                    to.
+ * @param memCouNum - Member Count Number: The group's member count, 1 by
+ *                    default.
+ * @param paiOwnBoo - Paid Owner Boolean: Whether Alice has paid, false by
+ *                    default.
+ *
+ * @returns A promise that settles once everything is written, with no value.
+ *
+ * @example
+ * ```ts
+ * seeAppFun(locEnvObj, 19, true) // => Promise<void>
+ * ```
+ *
+*/
+
+const seeAppFun = async ( envTesObj : RulesTestEnvironment, memCouNum = 1, paiOwnBoo = false ) => { // What: Seed Approval Function. Why: Approval tests need a group at a chosen count without creating it member by member. How: This seeds the group and its people directly.
+
+
+	await seeDocFun( envTesObj, 'groups/gro1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : memCouNum, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Group Seed. Why: The approval changes this group. How: This writes it at the chosen count.
+	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } ); // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
+	await seeDocFun( envTesObj, 'accounts/alice', paiOwnBoo ? { groups : { gro1 : 'owner' }, paid : true } : { groups : { gro1 : 'owner' } } );                                              // What: Owner Account Seed. Why: The member cap follows the owner's paid status. How: This writes Alice's account, paid when asked.
+	await seeDocFun( envTesObj, `invites/${ TOK_ONE_STR }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } );                                       // What: Invite Seed. Why: The group has its working invite. How: This writes it.
+
+	await seeReqFun( envTesObj, 'bob' ); // What: Bob Request Seed. Why: Bob is the joiner being approved. How: This seeds his pending request.
+
+
+};
+
+// #endregion seeAppFun
+
+
+
+type AbfOptTyp = { accObj? : Record< string, unknown >, accStr? : string | null, couNum? : number, couStr? : string, groObj? : Record< string, unknown > | null, memObj? : Record< string, unknown > | null, reqBoo? : boolean }; // What: ABF Options Type. Why: Each approval test changes or leaves out one part of the batch. How: This lists the overrides, where null or a false reqBoo leaves that part out and accObj adds fields to the account write.
+
+// #region appBatFun
+
+/**
+ * appBatFun = Approval Batch Function
+ *
+ * @summary
+ * Commits the four writes that approve a joiner into gro1, as the app will:
+ * the joiner's membership, the group added to their account as a member,
+ * the group's count raised by one for them, and their request deleted. Each
+ * part can be changed or left out by an option, and the account write can
+ * carry extra fields.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The approving member's
+ *                    connection.
+ * @param uidValStr - UID Value String: The joiner's UID.
+ * @param optValObj - Option Value Object: {@link AbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * appBatFun(aliStoObj, 'bob', { couNum : 2 }) // => Promise<void>
+ * ```
+ *
+*/
+
+const appBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : AbfOptTyp = {} ) => { // What: Approval Batch Function. Why: Most approval tests commit the same four writes with one part changed. How: This builds and commits the batch.
+
+
+	const batWriObj = writeBatch( stoConObj ); // What: Batch Write Object. Why: The four writes have to land together. How: This starts the batch.
+
+
+	if ( optValObj.memObj !== null ) batWriObj.set( doc( stoConObj, `groups/gro1/members/${ uidValStr }` ), { joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ), ...optValObj.memObj } ); // What: Member Write. Why: The joiner becomes a member. How: This adds their membership unless the test leaves it out.
+
+
+
+	if ( optValObj.accStr !== null ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { 'groups.gro1' : optValObj.accStr ?? 'member', ...optValObj.accObj } ); // What: Account Write. Why: The joiner takes a slot. How: This adds the entry, member unless the test says otherwise, plus any extra fields the test adds, unless the test leaves it out.
+
+
+
+	if ( optValObj.groObj !== null ) batWriObj.update( doc( stoConObj, 'groups/gro1' ), { countedUid : optValObj.couStr ?? uidValStr, memberCount : increment( optValObj.couNum ?? 1 ), ...optValObj.groObj } ); // What: Group Write. Why: The count rises for the joiner. How: This raises it and names them, unless the test leaves it out.
+
+
+
+	if ( optValObj.reqBoo !== false ) batWriObj.delete( doc( stoConObj, `groups/gro1/joinRequests/${ uidValStr }` ) ); // What: Request Delete. Why: An answered request ends. How: This deletes it unless the test keeps it.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion appBatFun
+
+
+
+type BbfOptTyp = { delBoo? : boolean, extObj? : Record< string, unknown > }; // What: BBF Options Type. Why: Each block test changes one part of the batch. How: This lists the overrides, where a false delBoo keeps the request and extObj adds group changes.
+
+// #region bloBatFun
+
+/**
+ * bloBatFun = Block Batch Function
+ *
+ * @summary
+ * Commits a decline-and-block of a joiner in gro1, as the app will: the
+ * joiner's UID added to the blocklist and their request deleted. An option
+ * can keep the request or add other group changes.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The declining member's
+ *                    connection.
+ * @param uidValStr - UID Value String: The UID to block.
+ * @param optValObj - Option Value Object: {@link BbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * bloBatFun(aliStoObj, 'bob', { delBoo : false }) // => Promise<void>
+ * ```
+ *
+*/
+
+const bloBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : BbfOptTyp = {} ) => { // What: Block Batch Function. Why: The block tests commit the same two writes with one part changed. How: This builds and commits the batch.
+
+
+	const batWriObj = writeBatch( stoConObj ); // What: Batch Write Object. Why: The block and the request's end land together. How: This starts the batch.
+
+
+	batWriObj.update( doc( stoConObj, 'groups/gro1' ), { [ `removedUids.${ uidValStr }` ] : true, ...optValObj.extObj } ); // What: Block Write. Why: The UID joins the blocklist. How: This adds it, with any extra changes the test asks for.
+
+
+	if ( optValObj.delBoo !== false ) batWriObj.delete( doc( stoConObj, `groups/gro1/joinRequests/${ uidValStr }` ) ); // What: Request Delete. Why: A decline ends the request. How: This deletes it unless the test keeps it.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion bloBatFun
 
 // #endregion Helpers
 
@@ -524,6 +724,7 @@ test( 'a group starts with valid fields, one member, and nothing offered or bloc
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { pendingOwnerUid : 'bob' } } ) );                  // What: Offered Group. Why: Nobody has been offered a new group. How: This expects an offer refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { removedUids : { bob : true } } } ) );             // What: Blocked UID. Why: Nobody has been removed yet. How: This expects a blocked UID refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { createdAt : Timestamp.fromMillis( 1000 ) } } ) ); // What: Backdated Group. Why: The creation time has to be the server's. How: This expects a chosen time refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { countedUid : 'bob' } } ) );                       // What: Other Counted. Why: The count's one member is the creator. How: This expects another UID refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { ownerUid : 'bob' } } ) );                         // What: Other Owner. Why: Nobody creates a group in someone else's name. How: This expects Bob as owner refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 6 } } ) );                          // What: Short Retention. Why: Chat retention runs at least 7 days. How: This expects 6 refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 181 } } ) );                        // What: Long Retention. Why: Chat retention runs at most 180 days. How: This expects 181 refused.
@@ -676,7 +877,7 @@ test( "an account's groups change only by one owned entry, as that group is crea
 
 
 	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The changes need an account to change. How: This writes Alice's empty one.
-	await seeDocFun( tesEnvObj, 'groups/old1', { chatTtlDays : 30, createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : 1, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Old Group Seed Call. Why: A group that already exists can't be claimed as newly created. How: This writes one owned by Alice.
+	await seeDocFun( tesEnvObj, 'groups/old1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : 1, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Old Group Seed Call. Why: A group that already exists can't be claimed as newly created. How: This writes one owned by Alice.
 
 	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'groups.ghost' : 'owner' } ) ); // What: Ghost Entry. Why: An entry is added only as its group is created. How: This expects an entry for a group that doesn't exist refused.
 	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'groups.old1' : 'owner' } ) );  // What: Old Group Entry. Why: Only a group created in the same batch joins the account this way. How: This expects an entry for an existing group refused.
@@ -737,6 +938,7 @@ test( "a join request is refused without a working invite, from a blocked, exist
 
 
 	await seeJoiFun( [ 'bob', 'alice', 'carol' ] ); // What: Join Seed Call. Why: The requests need a group and fully set-up joiners, so each refusal below has one cause. How: This sets them up, with Alice's and Carol's keys too.
+
 	await seeDocFun( tesEnvObj, `invites/${ 'B'.repeat( 22 ) }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro2', groupName : 'Other Club' } ); // What: Other Invite Seed. Why: Another group's invite mustn't open this one. How: This writes an invite for gro2.
 	await seeDocFun( tesEnvObj, 'accounts/dave', { groups : {} } );                                                                                          // What: Keyless Account Seed. Why: Dave has an account but never published a key. How: This writes his empty account alone.
 
@@ -871,6 +1073,166 @@ test( 'the joiner may withdraw and any member may decline, while nobody else del
 	await assertSucceeds( deleteDoc( doc( aliStoObj, 'groups/gro1/joinRequests/bob' ) ) );                             // What: Member Decline. Why: Any member may decline. How: This expects Alice allowed.
 	await assertSucceeds( reqSetFun( bobStoObj, 'bob' ) );                                                             // What: Request Refiled. Why: A declined joiner who isn't blocked may ask again. How: This expects Bob allowed.
 	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/joinRequests/bob' ) ) );                             // What: Own Withdrawal. Why: A joiner may change their mind. How: This expects Bob allowed.
+
+
+} );
+
+
+
+test( 'a member approves a request in one batch, and the joiner becomes a member', async () => { // What: Approval Test. Why: Any member can let a joiner in, and the joiner then reads the group as a member (Section 17). How: This approves Bob as Alice, then reads the group and his account as Bob.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob is the joiner. How: This acts as him.
+
+
+	await seeAppFun( tesEnvObj ); // What: Approval Seed Call. Why: The approval needs a group and a pending request. How: This seeds them.
+
+	await assertSucceeds( appBatFun( accStoFun( 'alice' ), 'bob' ) );   // What: Bob Approved. Why: A valid approval batch goes through. How: This expects Alice's approval allowed.
+	await assertSucceeds( getDoc( doc( bobStoObj, 'groups/gro1' ) ) );  // What: New Member Read. Why: Bob is now a member. How: This expects him allowed to read the group.
+	await assertSucceeds( getDoc( doc( bobStoObj, 'accounts/bob' ) ) ); // What: Own Account Read. Why: Bob's account now lists the group. How: This expects him allowed to read it.
+
+
+} );
+
+
+
+test( 'an approval missing or changing any part of its batch is refused', async () => { // What: Approval Parts Test. Why: A membership can't exist without its account entry, count, and answered request, and the batch can't change anything else. How: This changes or leaves out one part at a time, then commits the whole batch.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice approves. How: This acts as her.
+
+
+	await seeAppFun( tesEnvObj ); // What: Approval Seed Call. Why: The approval needs a group and a pending request. How: This seeds them.
+
+	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : null } ) );                                        // What: Missing Member. Why: The other parts belong to a new membership. How: This expects a batch without it refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accStr : null } ) );                                        // What: Missing Account Entry. Why: A membership takes a slot. How: This expects a batch that skips the account refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { groObj : null } ) );                                        // What: Missing Count. Why: Every membership is counted. How: This expects a batch that skips the group refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { reqBoo : false } ) );                                       // What: Kept Request. Why: An approved request ends. How: This expects a batch that keeps it refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accObj : { paid : true } } ) );                             // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused inside an approval.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accObj : { 'groups.zzz1' : 'member' } } ) );                // What: Extra Entry. Why: One approval adds one group to the joiner's account. How: This expects a second entry refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'accounts/bob' ), { 'groups.gro1' : 'member' } ) );             // What: Account Padding. Why: A member mustn't fill someone's slots without letting them in, which would lock them out of other groups. How: This expects an entry written without the membership refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accStr : 'owner' } ) );                                     // What: Owner Entry. Why: A joiner is a member, not an owner. How: This expects an owner entry refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { couNum : 2 } ) );                                           // What: Double Count. Why: One approval counts one member. How: This expects a rise of 2 refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { couStr : 'carol' } ) );                                     // What: Other Counted. Why: The count's change is for the joiner. How: This expects another UID refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { groObj : { name : 'New Name' } } ) );                       // What: Smuggled Rename. Why: An approval changes only the count. How: This expects a rename in the batch refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : { joinedAt : Timestamp.fromMillis( 1000 ) } } ) ); // What: Backdated Join. Why: The join time gates chat history. How: This expects a chosen time refused.
+	await assertSucceeds( appBatFun( aliStoObj, 'bob' ) );                                                        // What: Whole Approval. Why: The batches above failed only for their one part. How: This expects the whole batch allowed.
+
+
+} );
+
+
+
+test( 'only a member approves, only a pending request, and never a blocked or capped joiner', async () => { // What: Approval Eligibility Test. Why: Letting someone in is a member's call, answers a real request, and respects the blocklist and the joiner's cap. How: This tries each disqualified approval.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member. How: This acts as her.
+
+
+	await seeAppFun( tesEnvObj );                                                                                          // What: Approval Seed Call. Why: The approvals need a group and a pending request. How: This seeds them.
+
+	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } );                                                       // What: Outsider Account Seed. Why: Carol is signed in but not a member. How: This writes her account.
+	await seeDocFun( tesEnvObj, 'accounts/dave', { groups : {} } );                                                        // What: Requestless Account Seed. Why: Dave never asked to join. How: This writes his account alone.
+	await seeDocFun( tesEnvObj, 'users/dave', { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Requestless Key Seed. Why: Dave's only missing piece is a request. How: This writes his key.
+
+	await assertFails( appBatFun( accStoFun( 'carol' ), 'bob' ) );           // What: Outsider Approval. Why: Only a member lets someone in. How: This expects Carol refused.
+	await assertFails( appBatFun( accStoFun( 'bob' ), 'bob' ) );             // What: Self Approval. Why: Nobody lets themselves in. How: This expects Bob refused.
+	await assertFails( appBatFun( aliStoObj, 'dave', { reqBoo : false } ) ); // What: Requestless Approval. Why: Only someone who asked is let in. How: This expects Dave refused.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : groMapFun( 'mem', 20, 'member' ) } ); // What: Full Account Seed. Why: A joiner at the cap has no slot. How: This gives Bob 20 groups.
+
+	await assertFails( appBatFun( aliStoObj, 'bob' ) ); // What: Capped Approval. Why: Joining would put Bob over his cap. How: This expects the approval refused.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : {} } );                                                                                            // What: Account Reset Seed. Why: The block check needs Bob otherwise eligible. How: This empties his account again.
+	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1' ), { removedUids : { bob : true } } ) ); // What: Block Seed. Why: A blocked identity stays out. How: This puts Bob on the blocklist.
+
+	await assertFails( appBatFun( aliStoObj, 'bob' ) ); // What: Blocked Approval. Why: Bob is blocked. How: This expects the approval refused.
+
+
+} );
+
+
+
+test( "approvals stop at the owner's member cap, 50 while the paywall is open, and 20 for a free owner or 50 for a paid one once it's locked", async () => { // What: Member Cap Test. Why: A group's size follows its owner's status (Section 18). How: This approves up to each cap and one past it, in both projects.
+
+
+	await seeAppFun( tesEnvObj, 49 ); // What: Open Seed Call. Why: The fiftieth member is the last allowed while the paywall is open. How: This seeds the group at 49.
+	await seeAppFun( locEnvObj, 19 ); // What: Locked Seed Call. Why: The twentieth member is a free owner's last. How: This seeds the locked group at 19.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Open Second Request Seed. Why: A second joiner tests the cap. How: This seeds Carol's request.
+	await seeReqFun( locEnvObj, 'carol' ); // What: Locked Second Request Seed. Why: A second joiner tests the cap. How: This seeds Carol's request.
+
+	await assertSucceeds( appBatFun( accStoFun( 'alice' ), 'bob' ) ); // What: Fiftieth Member. Why: 50 is the open cap. How: This expects Bob approved.
+	await assertFails( appBatFun( accStoFun( 'alice' ), 'carol' ) );  // What: Fifty-First Member. Why: 51 is over the cap. How: This expects Carol refused.
+	await assertSucceeds( appBatFun( locStoFun( 'alice' ), 'bob' ) ); // What: Twentieth Free Member. Why: 20 is a free owner's cap. How: This expects Bob approved.
+	await assertFails( appBatFun( locStoFun( 'alice' ), 'carol' ) );  // What: Twenty-First Free Member. Why: 21 is over a free owner's cap. How: This expects Carol refused.
+
+	await locEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'accounts/alice' ), { paid : true } ) ); // What: Owner Paid Seed. Why: Paying lifts the member cap. How: This sets Alice's paid flag.
+
+	await assertSucceeds( appBatFun( locStoFun( 'alice' ), 'carol' ) ); // What: Twenty-First Paid Member. Why: A paid owner's cap is 50. How: This expects Carol approved.
+
+
+} );
+
+
+
+test( 'a member may decline and block a pending requester, and change nothing else on the blocklist', async () => { // What: Block Test. Why: Declining and blocking keeps that identity out for good, but the blocklist can't be used to remove members or block at random (Sections 9 and 17). How: This tries each improper block, then blocks Bob.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who declines. How: This acts as her.
+
+
+	await seeAppFun( tesEnvObj );                                    // What: Block Seed Call. Why: The block needs a group and a pending request. How: This seeds them.
+
+	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } ); // What: Outsider Account Seed. Why: Carol is signed in but not a member. How: This writes her account.
+
+	await assertFails( bloBatFun( accStoFun( 'carol' ), 'bob' ) );                                  // What: Outsider Block. Why: Only a member declines. How: This expects Carol refused.
+	await assertFails( bloBatFun( aliStoObj, 'bob', { delBoo : false } ) );                         // What: Kept Request Block. Why: A block answers the request, which ends. How: This expects a block that keeps it refused.
+	await assertFails( bloBatFun( aliStoObj, 'dave', { delBoo : false } ) );                        // What: Requestless Block. Why: Only a pending requester is blocked this way. How: This expects Dave refused.
+	await assertFails( bloBatFun( aliStoObj, 'bob', { extObj : { 'removedUids.eve' : true } } ) );  // What: Double Block. Why: One decline blocks one identity. How: This expects a second UID refused.
+	await assertFails( bloBatFun( aliStoObj, 'bob', { extObj : { name : 'New Name' } } ) );         // What: Smuggled Rename. Why: A block changes only the blocklist. How: This expects a rename in the batch refused.
+	await assertFails( bloBatFun( aliStoObj, 'bob', { extObj : { 'removedUids.bob' : 'yes' } } ) ); // What: Wrong Value Block. Why: The blocklist maps each UID to true. How: This expects another value refused.
+	await assertSucceeds( bloBatFun( aliStoObj, 'bob' ) );                                          // What: Bob Blocked. Why: The blocks above failed only for their one part. How: This expects the block allowed.
+
+
+} );
+
+
+
+test( 'a member writes only their own encrypted name and activity time', async () => { // What: Member Update Test. Why: A new member names themselves after joining, while the key and join time stay as granted (Section 17). How: This approves Bob, then changes his membership as him and as Alice.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is another member. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is the new member. How: This acts as him.
+
+
+	await seeAppFun( tesEnvObj ); // What: Approval Seed Call. Why: Bob needs a membership to change. How: This seeds the group and his request.
+
+	await appBatFun( aliStoObj, 'bob' ); // What: Approval Call. Why: Bob becomes a member. How: This approves him.
+
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { displayNameEnc : bytFilFun( 40 ), iv : bytFilFun( 12 ) } ) ); // What: Own Name Write. Why: A new member writes their encrypted name. How: This expects Bob allowed.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { lastActiveAt : serverTimestamp() } ) );                       // What: Own Activity Write. Why: A member marks when they were last active. How: This expects the server's time allowed.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { lastActiveAt : Timestamp.fromMillis( 9e12 ) } ) );               // What: Forged Activity. Why: The activity time decides when ownership can be claimed. How: This expects a chosen time refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { displayNameEnc : bytFilFun( 137 ) } ) );                         // What: Large Name. Why: A name encrypts to at most 136 bytes. How: This expects 137 refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { wrappedGroupKey : bytFilFun( 104 ) } ) );                        // What: Key Change. Why: The wrapped key is set by whoever let the member in. How: This expects a change refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { joinedAt : serverTimestamp() } ) );                              // What: Join Time Change. Why: The join time gates chat history. How: This expects a change refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1/members/bob' ), { displayNameEnc : bytFilFun( 40 ) } ) );                          // What: Other Name Write. Why: Only the member names themselves. How: This expects Alice refused.
+
+
+} );
+
+
+
+test( 'the member count moves only with a membership the same batch creates', async () => { // What: Count Test. Why: An inflated count could block every join, so it can't move on its own. How: This raises the count as Alice for an existing member and for nobody.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member. How: This acts as her.
+
+
+	await seeAppFun( tesEnvObj ); // What: Count Seed Call. Why: The count needs a group. How: This seeds it.
+
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { countedUid : 'alice', memberCount : 2 } ) ); // What: Existing Member Count. Why: Alice's membership isn't new. How: This expects the rise refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { countedUid : 'ghost', memberCount : 2 } ) ); // What: Nobody Count. Why: No membership is being created. How: This expects the rise refused.
 
 
 } );
