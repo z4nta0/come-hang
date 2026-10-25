@@ -11,11 +11,12 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-25 (text limits in Section 11.10 and binary formats
-in Section 6; the private `/accounts/{uid}` doc, the group's
-`memberCount`, and the paywall's switch decided for the caps' enforcement,
-Sections 4, 9, 11.1, 11.2, 17, and 18; the emulator harness for the
-security rules noted in Section 14; routing decided in Section 14).
+Last updated: 2026-10-25 (untrusted text and paths in Section 11.11; text
+limits in Section 11.10 and binary formats in Section 6; the private
+`/accounts/{uid}` doc, the group's `memberCount`, and the paywall's switch
+decided for the caps' enforcement, Sections 4, 9, 11.1, 11.2, 17, and 18;
+the emulator harness for the security rules noted in Section 14; routing
+decided in Section 14).
 
 ---
 
@@ -1038,6 +1039,31 @@ every plaintext field directly; for the encrypted display name the app
 checks it before encrypting, and the rules can only cap the ciphertext's
 size. Encrypted content (chat, events, notes) gets its limits as each
 feature is built.
+
+### 11.11 Untrusted Text And Paths
+
+Decided 2026-10-25. Firestore has no query language that strings are
+pasted into, and the SDK sends every value typed, so text can't become a
+database command the way SQL injection works. Two neighbours of it are
+real, and the app is built against both:
+
+- **Paths**: a value that becomes part of a document path could point
+  somewhere else. The app builds every path from separate segments
+  (`doc( db, 'invites', tokStr )`) and every map key with `FieldPath`,
+  never by joining strings, and checks a value from outside (an invite
+  link's token) against its form before using it. The security rules
+  cross-check every lookup they build from request data, so a path-shaped
+  value is refused there too, which the rules suite tests.
+- **Display**: most text is encrypted, so only the clients ever see it,
+  and a modified client can skip the app's own checks before encrypting.
+  So every client treats text from another member, decrypted or plaintext,
+  as untrusted: it renders it only as text (React's escaping, never
+  `innerHTML` or `dangerouslySetInnerHTML`), isolates its direction
+  (`<bdi>` or `unicode-bidi : isolate`) so a direction override can't flip
+  the interface around it, applies Section 11.10's limits again when
+  showing it, and only links an address it has checked is `https:`. The
+  security suite's untrusted input checks cover each screen that shows such
+  text, as the screens are built.
 
 ---
 
