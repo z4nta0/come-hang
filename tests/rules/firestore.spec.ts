@@ -57,6 +57,7 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
 
 // #region Constants
 
+const DAY_MIL_NUM = 86400000;                                       // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
 const GRO_NAM_STR = 'Dinner Club';                                  // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
 const LOC_SWI_STR = 'return false; // What: Paywall Locked Return'; // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
 const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                       // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
@@ -235,6 +236,90 @@ const groBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : GbfOp
 };
 
 // #endregion groBatFun
+
+
+
+// #region reqSetFun
+
+/**
+ * reqSetFun = Request Set Function
+ *
+ * @summary
+ * Writes a join request to gro1 as the given identity, the way the app's
+ * invite screen will: the typed name and note, the invite token, the
+ * server's time, and an expiry 7 days out by the client's clock. Any field
+ * can be changed by the overrides, and a field set to undefined is left out.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The joiner's signed-in
+ *                    connection.
+ * @param uidValStr - UID Value String: The UID the request is filed under.
+ * @param ovrValObj - Override Value Object: Fields to change, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the request is written, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * reqSetFun(bobStoObj, 'bob', { noteText : '' }) // => Promise<void>
+ * ```
+ *
+*/
+
+const reqSetFun = ( stoConObj : StoConTyp, uidValStr : string, ovrValObj : Record< string, unknown > = {} ) => setDoc( doc( stoConObj, `groups/gro1/joinRequests/${ uidValStr }` ), Object.fromEntries( Object.entries( { expireAt : Timestamp.fromMillis( Date.now() + 7 * DAY_MIL_NUM ), inviteToken : TOK_ONE_STR, nameText : 'Bob Jones', noteText : "Dana's cousin", requestedAt : serverTimestamp(), ...ovrValObj } ).filter( ( entValArr ) => entValArr[ 1 ] !== undefined ) ) ); // What: Request Set Function. Why: Most request tests write the same request with one field changed. How: This merges the overrides over valid defaults, drops any left undefined, and writes the request.
+
+// #endregion reqSetFun
+
+
+
+// #region seeJoiFun
+
+/**
+ * seeJoiFun = Seed Join Function
+ *
+ * @summary
+ * Sets up the state every join test starts from: Alice's group gro1,
+ * created through the real batch, and the given joiners' empty accounts and
+ * published keys, written with the rules off.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param uidValArr - UID Value Array: The joiners to set up.
+ *
+ * @returns A promise that settles once everything is written, with no value.
+ *
+ * @example
+ * ```ts
+ * seeJoiFun(['bob', 'carol']) // => Promise<void>
+ * ```
+ *
+*/
+
+const seeJoiFun = async ( uidValArr : string[] ) => { // What: Seed Join Function. Why: Every join test starts from a group and some would-be joiners. How: This creates the group and seeds each joiner.
+
+
+	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Owner Seed Call. Why: The creation batch adds to an existing account. How: This writes Alice's empty one.
+
+
+	await groBatFun( accStoFun( 'alice' ), 'alice' ); // What: Group Creation Call. Why: The requests need a group and its invite. How: This creates gro1 through the real rules.
+
+
+
+	for ( const uidValStr of uidValArr ) { // What: Joiner Seed Loop. Why: Each joiner needs an account and a key. How: This seeds both for each UID.
+
+
+		await seeDocFun( tesEnvObj, `accounts/${ uidValStr }`, { groups : {} } );                                                        // What: Joiner Account Seed. Why: The belong cap reads the joiner's account. How: This writes an empty one.
+		await seeDocFun( tesEnvObj, `users/${ uidValStr }`, { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Joiner Key Seed. Why: The approver will need the joiner's key. How: This writes it.
+
+
+	}
+
+
+};
+
+// #endregion seeJoiFun
 
 // #endregion Helpers
 
@@ -616,6 +701,176 @@ test( 'nobody joins an existing group, or adds a second invite, by writing the d
 	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) ); // What: Group Creation. Why: The joins below need an existing group. How: This expects Alice's group allowed.
 	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ) } ) ); // What: Self Join. Why: A membership comes only from the creation batch, or later from an approval. How: This expects Bob's own membership refused.
 	await assertFails( setDoc( doc( aliStoObj, `invites/${ 'B'.repeat( 22 ) }` ), { createdAt : serverTimestamp(), groupId : 'gro1', groupName : GRO_NAM_STR } ) );                     // What: Second Invite. Why: A group's one working invite is the token it names. How: This expects another token for the group refused.
+
+
+} );
+
+
+
+test( "someone holding the invite asks to join, which they and the members can read but outsiders can't", async () => { // What: Request Create Test. Why: A request goes in through the invite and is seen only by the joiner and the approvers (Section 17). How: This files Bob's request, then reads it as Bob, Alice, and Carol.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who reviews requests. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob asks to join. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol is an outsider. How: This acts as her.
+
+
+	await seeJoiFun( [ 'bob', 'carol' ] ); // What: Join Seed Call. Why: The request needs a group and a joiner. How: This sets them up.
+
+	await assertSucceeds( reqSetFun( bobStoObj, 'bob' ) );                                  // What: Request Filed. Why: A valid request through the invite goes in. How: This expects Bob allowed.
+	await assertSucceeds( getDoc( doc( bobStoObj, 'groups/gro1/joinRequests/bob' ) ) );     // What: Own Request Read. Why: A joiner checks on their request. How: This expects Bob allowed.
+	await assertSucceeds( getDocs( collection( aliStoObj, 'groups/gro1/joinRequests' ) ) ); // What: Member List Read. Why: Members review every pending request. How: This expects Alice allowed.
+	await assertFails( getDoc( doc( carStoObj, 'groups/gro1/joinRequests/bob' ) ) );        // What: Outsider Read. Why: A request's name and note are for the group. How: This expects Carol refused.
+	await assertFails( getDocs( collection( carStoObj, 'groups/gro1/joinRequests' ) ) );    // What: Outsider List. Why: Outsiders don't see who's asking. How: This expects Carol refused.
+	await assertSucceeds( reqSetFun( carStoObj, 'carol', { noteText : undefined } ) );      // What: Noteless Request. Why: The note is optional. How: This expects Carol's request without one allowed.
+
+
+} );
+
+
+
+test( "a join request is refused without a working invite, from a blocked, existing, or capped identity, or in someone else's name", async () => { // What: Request Eligibility Test. Why: Only someone holding this group's working invite, who can actually be let in, may ask (Section 17). How: This tries each disqualified request.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is already a member. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob asks to join. How: This acts as him.
+
+
+	await seeJoiFun( [ 'bob', 'alice', 'carol' ] ); // What: Join Seed Call. Why: The requests need a group and fully set-up joiners, so each refusal below has one cause. How: This sets them up, with Alice's and Carol's keys too.
+	await seeDocFun( tesEnvObj, `invites/${ 'B'.repeat( 22 ) }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro2', groupName : 'Other Club' } ); // What: Other Invite Seed. Why: Another group's invite mustn't open this one. How: This writes an invite for gro2.
+	await seeDocFun( tesEnvObj, 'accounts/dave', { groups : {} } );                                                                                          // What: Keyless Account Seed. Why: Dave has an account but never published a key. How: This writes his empty account alone.
+
+	await assertFails( reqSetFun( bobStoObj, 'bob', { inviteToken : 'C'.repeat( 22 ) } ) ); // What: Missing Invite. Why: A rotated or made-up token opens nothing. How: This expects a token with no invite refused.
+	await assertFails( reqSetFun( bobStoObj, 'bob', { inviteToken : 'B'.repeat( 22 ) } ) ); // What: Other Group Invite. Why: An invite opens only its own group. How: This expects gro2's token refused.
+	await assertFails( reqSetFun( bobStoObj, 'carol' ) );                                   // What: Other Name Request. Why: Nobody asks in someone else's name. How: This expects Bob filing under Carol refused.
+	await assertFails( reqSetFun( aliStoObj, 'alice' ) );                                   // What: Member Request. Why: A member has nothing to ask for. How: This expects Alice refused.
+	await assertFails( reqSetFun( accStoFun( 'dave' ), 'dave' ) );                          // What: Keyless Request. Why: The approver needs the joiner's key. How: This expects Dave, with an account but no user document, refused.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : groMapFun( 'mem', 20, 'member' ) } ); // What: Full Account Seed. Why: A joiner at the cap has no slot for another group. How: This gives Bob 20 groups.
+
+	await assertFails( reqSetFun( bobStoObj, 'bob' ) ); // What: Capped Request. Why: Joining would put Bob over the cap. How: This expects him refused.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : {} } );                                                                                            // What: Account Reset Seed. Why: The block check needs Bob otherwise eligible. How: This empties his account again.
+	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1' ), { removedUids : { bob : true } } ) ); // What: Block Seed. Why: A blocked identity can't redeem any link. How: This puts Bob on the group's blocklist.
+
+	await assertFails( reqSetFun( bobStoObj, 'bob' ) ); // What: Blocked Request. Why: Bob was removed and blocked. How: This expects him refused.
+
+
+} );
+
+
+
+test( 'a join request keeps real times, its own fields, and the name and note limits', async () => { // What: Request Shape Test. Why: The name and note are plaintext members read, and the times have to be real (Section 11.10, Section 17). How: This files each allowed request and withdraws it, then tries each refused one.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob asks to join. How: This acts as him.
+
+	const namAllArr = [ // What: Name Allowed Array. Why: Each kind of allowed name needs to pass. How: This lists one of each.
+
+
+		'José María',        // What: Accented Name. Why: Letters with accents are allowed. How: This holds them.
+		"O'Brien-Smith Jr.", // What: Joined Name. Why: Apostrophes, hyphens, and periods are allowed. How: This holds each.
+		'李小龙',               // What: Chinese Name. Why: Letters in any script are allowed. How: This is written in Chinese.
+		'A'.repeat( 40 )     // What: Longest Name. Why: 40 characters is the limit. How: This is exactly 40.
+
+
+	];
+
+	const namRefArr = [ // What: Name Refused Array. Why: Each kind of refused name needs to fail. How: This lists one of each.
+
+
+		'',               // What: Empty Name. Why: A request needs a name. How: This has none.
+		'A'.repeat( 41 ), // What: Long Name. Why: 40 characters is the limit. How: This is 41.
+		'Bob 2',          // What: Numbered Name. Why: A person's name holds no numbers. How: This holds one.
+		'Bob 🙂',          // What: Emoji Name. Why: A person's name holds no emoji. How: This holds one.
+		' Bob',           // What: Leading Space Name. Why: Names don't start with a space. How: This does.
+		'Bob  Jones',     // What: Doubled Space Name. Why: Words are separated by one space. How: This uses two.
+		'Bob\u202EJones'  // What: Direction Override Name. Why: A right-to-left override can disguise a name. How: This holds one.
+
+
+	];
+
+	const notAllArr = [ // What: Note Allowed Array. Why: Each kind of allowed note needs to pass. How: This lists one of each.
+
+
+		'',                            // What: Empty Note. Why: An empty note is allowed. How: This has no text.
+		'From the Tuesday book club!', // What: Punctuated Note. Why: Letters and basic punctuation are allowed. How: This holds both.
+		'A'.repeat( 150 )              // What: Longest Note. Why: 150 characters is the limit. How: This is exactly 150.
+
+
+	];
+
+	const notRefArr = [ // What: Note Refused Array. Why: Each kind of refused note needs to fail. How: This lists one of each.
+
+
+		'A'.repeat( 151 ),   // What: Long Note. Why: 150 characters is the limit. How: This is 151.
+		'See you there 🎉',   // What: Emoji Note. Why: A note holds no emoji. How: This holds one.
+		'Line one\nLine two' // What: Line Break Note. Why: A note is one line. How: This breaks it.
+
+
+	];
+
+
+	await seeJoiFun( [ 'bob' ] ); // What: Join Seed Call. Why: The requests need a group and a joiner. How: This sets them up.
+
+
+	for ( const namValStr of namAllArr ) { // What: Allowed Name Loop. Why: Every allowed name has to pass. How: This files a request with each, then withdraws it so the next can be filed.
+
+
+		await assertSucceeds( reqSetFun( bobStoObj, 'bob', { nameText : namValStr } ) );       // What: Name Request Filed. Why: The name is allowed. How: This expects the request allowed.
+		await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/joinRequests/bob' ) ) ); // What: Name Request Withdrawn. Why: One request per joiner, so the next needs this gone. How: This expects Bob's withdrawal allowed.
+
+
+	}
+
+
+
+	for ( const notValStr of notAllArr ) { // What: Allowed Note Loop. Why: Every allowed note has to pass. How: This files a request with each, then withdraws it.
+
+
+		await assertSucceeds( reqSetFun( bobStoObj, 'bob', { noteText : notValStr } ) );       // What: Note Request Filed. Why: The note is allowed. How: This expects the request allowed.
+		await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/joinRequests/bob' ) ) ); // What: Note Request Withdrawn. Why: The next request needs this gone. How: This expects the withdrawal allowed.
+
+
+	}
+
+
+
+	for ( const namValStr of namRefArr ) await assertFails( reqSetFun( bobStoObj, 'bob', { nameText : namValStr } ) ); // What: Refused Name Loop. Why: Every refused name has to fail. How: This tries each.
+
+
+
+	for ( const notValStr of notRefArr ) await assertFails( reqSetFun( bobStoObj, 'bob', { noteText : notValStr } ) ); // What: Refused Note Loop. Why: Every refused note has to fail. How: This tries each.
+
+
+
+	await assertFails( reqSetFun( bobStoObj, 'bob', { requestedAt : Timestamp.fromMillis( 1000 ) } ) );                       // What: Backdated Request. Why: The request time has to be the server's. How: This expects a chosen time refused.
+	await assertFails( reqSetFun( bobStoObj, 'bob', { expireAt : Timestamp.fromMillis( Date.now() + DAY_MIL_NUM ) } ) );      // What: Early Expiry. Why: A request lasts about 7 days. How: This expects a 1-day expiry refused.
+	await assertFails( reqSetFun( bobStoObj, 'bob', { expireAt : Timestamp.fromMillis( Date.now() + 30 * DAY_MIL_NUM ) } ) ); // What: Late Expiry. Why: An ignored request has to clear itself. How: This expects a 30-day expiry refused.
+	await assertFails( reqSetFun( bobStoObj, 'bob', { nameText : undefined } ) );                                             // What: Nameless Request. Why: The approver has to see a name. How: This expects a request without one refused.
+	await assertFails( reqSetFun( bobStoObj, 'bob', { extra : true } ) );                                                     // What: Extra Field Request. Why: A request holds only its own fields. How: This expects another refused.
+
+
+} );
+
+
+
+test( 'the joiner may withdraw and any member may decline, while nobody else deletes and nobody changes a request', async () => { // What: Request Delete Test. Why: A request ends by the joiner's withdrawal or a member's decline, and its text can't be edited after members have read it (Section 17). How: This files Bob's request, then changes and deletes it as each identity.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who may decline. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob filed the request. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol is an outsider. How: This acts as her.
+
+
+	await seeJoiFun( [ 'bob', 'carol' ] ); // What: Join Seed Call. Why: The request needs a group and a joiner. How: This sets them up.
+
+	await assertSucceeds( reqSetFun( bobStoObj, 'bob' ) );                                                             // What: Request Filed. Why: The changes below need a request. How: This expects Bob's allowed.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/joinRequests/bob' ), { nameText : 'Robert Jones' } ) ); // What: Request Edit. Why: The name members reviewed can't change under them. How: This expects Bob's edit refused.
+	await assertFails( deleteDoc( doc( carStoObj, 'groups/gro1/joinRequests/bob' ) ) );                                // What: Outsider Delete. Why: Only the joiner and the members end a request. How: This expects Carol refused.
+	await assertSucceeds( deleteDoc( doc( aliStoObj, 'groups/gro1/joinRequests/bob' ) ) );                             // What: Member Decline. Why: Any member may decline. How: This expects Alice allowed.
+	await assertSucceeds( reqSetFun( bobStoObj, 'bob' ) );                                                             // What: Request Refiled. Why: A declined joiner who isn't blocked may ask again. How: This expects Bob allowed.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/joinRequests/bob' ) ) );                             // What: Own Withdrawal. Why: A joiner may change their mind. How: This expects Bob allowed.
 
 
 } );

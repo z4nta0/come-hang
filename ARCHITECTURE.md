@@ -1374,12 +1374,14 @@ history requests). Declining is open to any member too.
 |---|---|---|
 | `nameText` | plaintext | The joiner's entered name, under the person name limits (Section 11.10). Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
 | `noteText` | plaintext, optional | The note to the group, same treatment, under the note limits (Section 11.10). |
-| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the UID isn't in `removedUids`. |
+| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group), that the UID isn't in `removedUids` and isn't already a member, that the joiner has published a public key (11.1), and that they have a free slot under their belong cap, which the approval checks again (Section 18). |
 | `requestedAt` | plaintext | Timestamp. |
-| `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. |
+| `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. The client sets it from its own clock, so the rules accept anything from 6 to 8 days after the server's time. |
 
 The doc ID is the joiner's UID, so one identity can have only one request
-per group. **Approval** is one transaction by the approving member: read
+per group. The joiner and the members can read a request; it can't be
+edited once filed, and it ends when the joiner withdraws it or any member
+declines or approves it. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
 `/members/{uid}` with the group key wrapped for it, add the group to the
 joiner's `/accounts/{uid}` map, raise the group's `memberCount` by one,

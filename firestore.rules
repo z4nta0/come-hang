@@ -34,6 +34,12 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * the paywall is turned on. Members read their group and its member list,
  * and anyone signed in may fetch one invite by its token, never list them.
  *
+ * Someone holding a group's working invite asks to join by filing a request
+ * under their own UID, with a name and optional note under the text limits.
+ * They must have published a key, have a free slot, and be neither a member
+ * nor blocked. The joiner and the members read a request, the joiner may
+ * withdraw it, any member may decline it, and nobody edits it.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -136,6 +142,20 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #endregion memPatFun
 
+
+
+		// #region usePatFun
+
+		function usePatFun ( uidValStr ) { // What: User Path Function. Why: A join request checks the joiner has published a key. How: This returns the user document's path.
+
+
+			return /databases/$(database)/documents/users/$(uidValStr); // What: User Path Return. Why: A lookup needs the full path. How: This builds it from the UID.
+
+
+		}
+
+		// #endregion usePatFun
+
 		// #endregion Document Paths
 
 
@@ -211,6 +231,93 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		// #endregion ownCapFun
 
 		// #endregion Group Caps
+
+
+
+		// #region Text Checks
+
+		// #region spaMatFun
+
+		function spaMatFun ( texValStr, chaClaStr ) { // What: Spacing Match Function. Why: Every typed field allows only its own characters, with no leading, trailing, or doubled spaces (Section 11.10). How: This is true when the text is runs of the allowed characters joined by single spaces.
+
+
+			return texValStr.matches( '^' + chaClaStr + '+( ' + chaClaStr + '+)*$' ); // What: Spacing Match Return. Why: One pattern serves every field. How: This matches runs of the class joined by single spaces.
+
+
+		}
+
+		// #endregion spaMatFun
+
+
+
+		// #region namGroFun
+
+		function namGroFun ( namValStr ) { // What: Name Group Function. Why: A group's name is plaintext a stranger sees on the invite screen, so it keeps to readable characters (Section 11.10). How: This is true for 1 to 50 characters of letters, numbers, basic punctuation, and emoji, separated by single spaces.
+
+
+			let chaClaStr = "[\\p{L}\\p{M}\\p{N}\\p{So}\\x{1F3FB}-\\x{1F3FF}\\x{200D}\\x{E0020}-\\x{E007F}.,'’\\-&!?():#/+]"; // What: Character Class String. Why: Letters, marks, and numbers in any script, basic punctuation, and emoji are allowed, while control, invisible, and direction-changing characters aren't. How: This lists the allowed classes, with the emoji skin tones, joiner, and flag tags emoji sequences use.
+
+			let lenValBoo = namValStr.size() > 0 && namValStr.size() <= 50; // What: Length Valid Boolean. Why: A name has 1 to 50 characters. How: This checks its length, counted as JavaScript counts it.
+			let spaValBoo = spaMatFun( namValStr, chaClaStr );              // What: Spacing Valid Boolean. Why: Only allowed characters, with single spaces between them. How: This checks the pattern.
+
+			let namValBoo = lenValBoo && spaValBoo; // What: Name Valid Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return namValBoo; // What: Name Valid Return. Why: The group and its invite read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion namGroFun
+
+
+
+		// #region namPerFun
+
+		function namPerFun ( namValStr ) { // What: Name Person Function. Why: A person's name is the one an approver has to recognize, so it keeps to letters (Section 11.10). How: This is true for 1 to 40 characters of letters in any script, apostrophes, hyphens, and periods, separated by single spaces.
+
+
+			let chaClaStr = "[\\p{L}\\p{M}'’\\-.]"; // What: Character Class String. Why: A name is letters with their accents and a few joining marks, with no numbers, symbols, or emoji. How: This lists them.
+
+			let lenValBoo = namValStr.size() > 0 && namValStr.size() <= 40; // What: Length Valid Boolean. Why: A name has 1 to 40 characters. How: This checks its length.
+			let spaValBoo = spaMatFun( namValStr, chaClaStr );              // What: Spacing Valid Boolean. Why: Only allowed characters, with single spaces between them. How: This checks the pattern.
+
+			let namValBoo = lenValBoo && spaValBoo; // What: Name Valid Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return namValBoo; // What: Name Valid Return. Why: The join request reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion namPerFun
+
+
+
+		// #region notJoiFun
+
+		function notJoiFun ( notValStr ) { // What: Note Join Function. Why: A join note is plaintext members read before approving, so it keeps to readable characters (Section 11.10). How: This is true for an empty note, or up to 150 characters of letters, numbers, and basic punctuation, separated by single spaces.
+
+
+			let chaClaStr = "[\\p{L}\\p{M}\\p{N}.,'’\\-&!?():#/+]"; // What: Character Class String. Why: A note is letters and numbers in any script with basic punctuation, and no emoji. How: This lists them.
+
+			let lenValBoo = notValStr.size() <= 150;                                    // What: Length Valid Boolean. Why: A note has at most 150 characters. How: This checks its length.
+			let spaValBoo = notValStr.size() == 0 || spaMatFun( notValStr, chaClaStr ); // What: Spacing Valid Boolean. Why: An empty note is allowed, and any other keeps to the pattern. How: This allows empty text, or checks the pattern.
+
+			let notValBoo = lenValBoo && spaValBoo; // What: Note Valid Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return notValBoo; // What: Note Valid Return. Why: The join request reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion notJoiFun
+
+		// #endregion Text Checks
 
 
 
@@ -312,29 +419,6 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 		// #region Group Rules
-
-		// #region namGroFun
-
-		function namGroFun ( namValStr ) { // What: Name Group Function. Why: A group's name is plaintext a stranger sees on the invite screen, so it keeps to readable characters (Section 11.10). How: This is true for 1 to 50 characters of letters, numbers, basic punctuation, and emoji, separated by single spaces.
-
-
-			let chaClaStr = "[\\p{L}\\p{M}\\p{N}\\p{So}\\x{1F3FB}-\\x{1F3FF}\\x{200D}\\x{E0020}-\\x{E007F}.,'’\\-&!?():#/+]"; // What: Character Class String. Why: Letters, marks, and numbers in any script, basic punctuation, and emoji are allowed, while control, invisible, and direction-changing characters aren't. How: This lists the allowed classes, with the emoji skin tones, joiner, and flag tags emoji sequences use.
-
-			let lenValBoo = namValStr.size() > 0 && namValStr.size() <= 50;                    // What: Length Valid Boolean. Why: A name has 1 to 50 characters. How: This checks its length, counted as JavaScript counts it.
-			let spaValBoo = namValStr.matches( '^' + chaClaStr + '+( ' + chaClaStr + '+)*$' ); // What: Spacing Valid Boolean. Why: Only allowed characters, with no leading, trailing, or doubled spaces. How: This matches runs of allowed characters joined by single spaces.
-
-			let namValBoo = lenValBoo && spaValBoo; // What: Name Valid Boolean. Why: Both checks have to pass. How: This combines them.
-
-
-
-			return namValBoo; // What: Name Valid Return. Why: The group and its invite read the combined answer. How: This returns it.
-
-
-		}
-
-		// #endregion namGroFun
-
-
 
 		// #region valGroFun
 
@@ -492,6 +576,82 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Join Request Rules
+
+		// #region valReqFun
+
+		function valReqFun () { // What: Valid Request Function. Why: A join request holds the joiner's name, an optional note, the token used, and real times (Section 17). How: This checks the incoming request's fields, text limits, and times.
+
+
+			let reqDatObj = request.resource.data; // What: Request Data Object. Why: Every check reads the incoming request. How: This names it once.
+
+			let expTimBoo = reqDatObj.expireAt > request.time + duration.value( 6, 'd' ) && reqDatObj.expireAt < request.time + duration.value( 8, 'd' ); // What: Expiry Time Boolean. Why: A request clears itself after 7 days, and the client sets the time from its own clock, which may be off. How: This allows any expiry between 6 and 8 days from the server's time.
+			let fieValBoo = reqDatObj.keys().hasAll( [ 'expireAt', 'inviteToken', 'nameText', 'requestedAt' ] ) && reqDatObj.keys().hasOnly( [ 'expireAt', 'inviteToken', 'nameText', 'noteText', 'requestedAt' ] ); // What: Fields Valid Boolean. Why: Four fields are required, the note is optional, and nothing else belongs. How: This checks both lists.
+			let namValBoo = namPerFun( reqDatObj.nameText );                                                                                              // What: Name Valid Boolean. Why: The name keeps to the person name limits. How: This checks it.
+			let notValBoo = !( 'noteText' in reqDatObj ) || notJoiFun( reqDatObj.noteText );                                                              // What: Note Valid Boolean. Why: A note is optional, and one that's there keeps to its limits. How: This allows it absent, or checks it.
+			let reqTimBoo = reqDatObj.requestedAt == request.time;                                                                                        // What: Request Time Boolean. Why: A client could otherwise backdate the request. How: This requires the server's own time.
+
+			let valReqBoo = expTimBoo && fieValBoo && namValBoo && notValBoo && reqTimBoo; // What: Valid Request Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valReqBoo; // What: Valid Request Return. Why: The request's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valReqFun
+
+
+
+		// #region canJoiFun
+
+		function canJoiFun ( groIdeStr, uidValStr, tokValStr ) { // What: Can Join Function. Why: Only someone holding the group's working invite, who isn't blocked, already in, or over their cap, may ask to join (Section 17). How: This is true when every one of those holds.
+
+
+			let belCapBoo = get( accPatFun( uidValStr ) ).data.groups.size() < belCapFun( uidValStr ); // What: Belong Cap Boolean. Why: Joining would add a group, so the joiner needs a free slot; the approval checks again. How: This requires their count to be under the cap.
+			let invGroBoo = get( invPatFun( tokValStr ) ).data.groupId == groIdeStr;                   // What: Invite Group Boolean. Why: The request has to come through this group's working invite, and a rotated one is deleted. How: This requires the token's invite to exist and point at this group.
+			let memAbsBoo = !exists( memPatFun( groIdeStr, uidValStr ) );                              // What: Member Absent Boolean. Why: A member has nothing to ask for. How: This requires no membership.
+			let remAbsBoo = !( uidValStr in get( groPatFun( groIdeStr ) ).data.removedUids );          // What: Removed Absent Boolean. Why: A blocked identity can't redeem any link for the group (Section 9). How: This requires the UID to be off the blocklist.
+			let useKeyBoo = exists( usePatFun( uidValStr ) );                                          // What: User Key Boolean. Why: The approver needs the joiner's public key to wrap the group key. How: This requires the joiner's user document.
+
+			let canJoiBoo = belCapBoo && invGroBoo && memAbsBoo && remAbsBoo && useKeyBoo; // What: Can Join Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return canJoiBoo; // What: Can Join Return. Why: The request's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion canJoiFun
+
+
+
+		// #region creReqFun
+
+		function creReqFun ( groIdeStr, uidValStr ) { // What: Create Request Function. Why: A joiner asks to join for themselves, through a working invite, with a valid request. How: This is true for the requester's own request when the request and the joiner both qualify.
+
+
+			let canJoiBoo = canJoiFun( groIdeStr, uidValStr, request.resource.data.inviteToken ); // What: Can Join Boolean. Why: The joiner has to qualify. How: This checks it.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                               // What: Is-An Owner Boolean. Why: Nobody asks to join in someone else's name. How: This requires the requester to be the joiner.
+			let valReqBoo = valReqFun();                                                          // What: Valid Request Boolean. Why: The request keeps its shape. How: This checks it.
+
+			let creAllBoo = canJoiBoo && isaOwnBoo && valReqBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creReqFun
+
+		// #endregion Join Request Rules
+
+
+
 		// #region creInvFun
 
 		function creInvFun ( tokValStr ) { // What: Create Invite Function. Why: An invite is written by its group's owner, under the token the group names, carrying the group's real name. How: This is true when the token has its form and the group, once the batch is applied, matches the invite.
@@ -617,6 +777,18 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 				allow read   : if isaMemFun( groIdeStr );            // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
 				allow create : if creMemFun( groIdeStr, uidValStr ); // What: Member Create Rule. Why: The owner becomes the first member as the group is created. How: This allows it when creMemFun passes.
+
+
+			}
+
+
+
+			match /joinRequests/{uidValStr} { // What: Join Request Match. Why: Each pending request is keyed by its joiner's UID, so one identity has one request per group. How: This matches one request by UID.
+
+
+				allow read   : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Read Rule. Why: Members review the requests, and a joiner checks on their own. How: This lets members fetch and list them, and the joiner fetch theirs.
+				allow create : if creReqFun( groIdeStr, uidValStr );                // What: Request Create Rule. Why: A joiner asks to join through the invite. How: This allows it when creReqFun passes.
+				allow delete : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Delete Rule. Why: Any member may decline a request, and the joiner may withdraw it. How: This lets either delete it.
 
 
 			}
