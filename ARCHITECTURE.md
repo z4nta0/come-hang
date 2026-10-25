@@ -11,10 +11,10 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-25 (the emulator harness for the security rules
-noted in Section 14; routing decided in Section 14 the same day; data model
-approved and the Firebase plan changed to Blaze, see Section 15, on
-2026-10-24).
+Last updated: 2026-10-25 (the private `/accounts/{uid}` doc, the group's
+`memberCount`, and the paywall's switch decided for the caps' enforcement,
+Sections 4, 9, 11.1, 11.2, 17, and 18; the emulator harness for the
+security rules noted in Section 14; routing decided in Section 14).
 
 ---
 
@@ -187,7 +187,9 @@ from Spark's 100 to 200,000.
 | Data | Service | Shape |
 |---|---|---|
 | Group metadata (creator, name, etc.) | Firestore | `/groups/{groupId}` |
-| Group membership | Firestore | Map or subcollection under `/groups/{groupId}` |
+| User identity (public key) | Firestore | `/users/{uid}`, fetchable by UID by anyone signed in |
+| User account (memberships, paid flag) | Firestore | `/accounts/{uid}`, readable only by its owner |
+| Group membership | Firestore | Subcollection `/groups/{groupId}/members/{uid}` |
 | Removed-member blocklist | Firestore | `/groups/{groupId}.removedUids` (or subcollection) |
 | Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
 | Events | Firestore | Under the owning group |
@@ -516,9 +518,10 @@ in place of their name. The group can manually reassign it if needed.
   the case where the new link reaches them through some indirect route
   (e.g. someone else re-shares it into a channel the removed person still
   sees).
-- The full removal operation (remove from members, add to
-  `removedUids`, deactivate old invite doc, create new invite doc) is
-  bundled as a **single Firestore transaction**, so a partial failure
+- The full removal operation (remove from members, drop the group from
+  the removed member's `/accounts/{uid}` map, lower `memberCount` by one,
+  add to `removedUids`, deactivate old invite doc, create new invite doc)
+  is bundled as a **single Firestore transaction**, so a partial failure
   can't leave the group in an inconsistent state.
 - **Known, accepted limitation**: a removed user can bypass the
   `removedUids` block by clearing local app data (or opening the link in
@@ -625,14 +628,30 @@ A field with no `Enc` suffix is intentionally plaintext, either because
 it's routing/query metadata (Section 6's principle) or because it's
 inherently public (a public key).
 
-### 11.1 Firestore: `/users/{uid}`
+### 11.1 Firestore: `/users/{uid}` and `/accounts/{uid}`
 
-One doc per anonymous identity, created on first sign-in.
+Two docs per anonymous identity, both created on first sign-in. They're
+split by who may read them (decided 2026-10-25): an approving member has
+to fetch a joiner's public key, but nobody but its owner should see which
+groups a person belongs to or whether they've paid.
+
+`/users/{uid}`, the public half. Anyone signed in may fetch one doc by its
+UID (`get`), never list the collection, and only its owner may write it.
 
 | Field | Type | Notes |
 |---|---|---|
 | `publicKey` | plaintext | This user's ECDH public key, used by others to wrap a group key for them on join. Can't be encrypted: there is nothing to encrypt it with yet. |
 | `createdAt` | plaintext | Timestamp. |
+
+`/accounts/{uid}`, the private half, readable only by its owner. The rules
+read it to enforce Section 18's caps (a rule's own lookups ignore read
+permissions), and a client can update one entry of the map without
+reading the doc first, which is how an approver adds a joiner's group.
+
+| Field | Type | Notes |
+|---|---|---|
+| `groups` | plaintext map `{ groupId: 'owner' \| 'member' }` | Every group this user belongs to, and which they own. Changed in the same batch as every create, join, leave, removal, and transfer (Section 18). |
+| `paid` | plaintext boolean, absent until bought | Written only by the Polar webhook's Cloud Function, never by a client (Section 18). |
 
 Global `displayName` deliberately **not** included here. **Resolved**:
 display names are per-group, not global, encrypted per membership, see
@@ -649,6 +668,7 @@ different names.
 | `createdAt` | plaintext | Timestamp. |
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
 | `removedUids` | plaintext map `{ uid: true }` | Checked by security rules to block redemption by a specific identity; low write-frequency, so a map field (not a subcollection) is fine here. |
+| `memberCount` | plaintext number | How many member docs the group has, since rules can't count documents. Moves by exactly one in the same batch as each join, leave, and removal, and the rules check it against the member cap (Section 18). |
 | `chatTtlDays` | plaintext, creator-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic ack/TTL check (11.7) for this group's chat instead of a hardcoded constant. |
 
 **Exception to "encrypt all content"**: the group's own name is the one
@@ -1303,8 +1323,11 @@ history requests). Declining is open to any member too.
 The doc ID is the joiner's UID, so one identity can have only one request
 per group. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
-`/members/{uid}` with the group key wrapped for it, and delete the
-request. The joiner's listener sees the membership appear, unwraps the
+`/members/{uid}` with the group key wrapped for it, add the group to the
+joiner's `/accounts/{uid}` map, raise the group's `memberCount` by one,
+and delete the request. The rules let a member change another person's
+account only that way: adding this one group, alongside creating their
+member doc, within the joiner's and the group's caps (Section 18). The joiner's listener sees the membership appear, unwraps the
 key, and writes their encrypted display name. **Declining** deletes the
 request; declining and blocking adds the UID to `removedUids` as well.
 
@@ -1368,7 +1391,8 @@ paywall is switched on before launch.
   without a recoverable sign-in would be a support problem. ease-my-life
   reached the same conclusion for its paid accounts.
 - Polar takes the payment, as in ease-my-life. Its webhook, a Cloud
-  Function here, writes a permanent paid flag the rules read. A refund
+  Function here, writes a permanent `paid` flag on `/accounts/{uid}`
+  (Section 11.1), which the rules read and no client can write. A refund
   clears the flag, and the "over a limit" rule above applies.
 
 **Ownership transfer (decided 2026-10-22)**:
@@ -1387,12 +1411,20 @@ paywall is switched on before launch.
 - **An owner can't simply leave.** Leaving requires transferring
   ownership first or deleting the group, so no group is ever left without
   an owner by choice.
-- **Enforcement in the rules**: rules can't count documents, so each
-  user's own doc keeps a map of their memberships and which they own,
-  updated in the same batch as every join, leave, create, removal, and
-  transfer. The rules check the resulting map, plus the owner's paid flag
-  for member counts (kept as a member count on the group doc, updated the
-  same way), against the caps.
+- **Enforcement in the rules** (decided 2026-10-25): rules can't count
+  documents, so each user's private `/accounts/{uid}` keeps a map of their
+  groups and which they own, and each group keeps a `memberCount`, both
+  updated in the same batch as every create, join, leave, removal, and
+  transfer (Section 11.1 and 11.2). The rules check the resulting map and
+  count against the caps, reading the paid flag of the user (for groups
+  owned and belonged to) or of the group's owner (for members). Since a
+  join is approved by someone else, the approver's batch writes the
+  joiner's map entry, and the rules allow exactly that one change.
+- **The paywall's switch** (decided 2026-10-25): while it's unlocked, one
+  rules function reports every user as paid, so the paid caps apply to
+  everyone. The real checks are written and tested under both answers from
+  the start, and switching the paywall on before launch changes that one
+  function.
 
 **Decided (2026-10-22): an owner who disappears.** If the owner stops using the app
 without transferring (a lost phone with no linked sign-in, an
