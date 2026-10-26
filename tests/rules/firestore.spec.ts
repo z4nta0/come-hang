@@ -99,27 +99,25 @@ const locStoFun = ( uidValStr : string ) => locEnvObj.authenticatedContext( uidV
  * groMapFun = Group Map Function
  *
  * @summary
- * Builds an account's groups map with a given number of entries, all owned
- * or all member entries, for the cap tests to seed. Each key joins the
- * prefix to a two-digit count.
+ * Builds one of an account's group maps with a given number of entries, for
+ * the cap tests to seed. Each key joins the prefix to a two-digit count, and
+ * each value is true, as the rules require.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param preStr    - Prefix String: What each group ID starts with.
- * @param couNum    - Count Number: How many entries to build.
- * @param rolValStr - Role Value String: The role every entry gets, owner or
- *                    member.
+ * @param preStr - Prefix String: What each group ID starts with.
+ * @param couNum - Count Number: How many entries to build.
  *
- * @returns The groups map.
+ * @returns The group map.
  *
  * @example
  * ```ts
- * groMapFun('own', 2, 'owner') // => { own01 : 'owner', own02 : 'owner' }
+ * groMapFun('own', 2) // => { own01 : true, own02 : true }
  * ```
  *
 */
 
-const groMapFun = ( preStr : string, couNum : number, rolValStr : string ) => Object.fromEntries( Array.from( Array( couNum ).keys(), ( keyIndNum ) => [ `${ preStr }${ String( keyIndNum + 1 ).padStart( 2, '0' ) }`, rolValStr ] ) ); // What: Group Map Function. Why: The cap tests seed accounts with many groups. How: This builds the entries from the count.
+const groMapFun = ( preStr : string, couNum : number ) => Object.fromEntries( Array.from( Array( couNum ).keys(), ( keyIndNum ) => [ `${ preStr }${ String( keyIndNum + 1 ).padStart( 2, '0' ) }`, true ] ) ); // What: Group Map Function. Why: The cap tests seed accounts with many groups. How: This builds the entries from the count.
 
 // #endregion groMapFun
 
@@ -147,7 +145,7 @@ const groMapFun = ( preStr : string, couNum : number, rolValStr : string ) => Ob
  *
  * @example
  * ```ts
- * seeDocFun(tesEnvObj, 'accounts/alice', { groups : {} }) // => Promise<void>
+ * seeDocFun(tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} }) // => Promise<void>
  * ```
  *
 */
@@ -158,7 +156,7 @@ const seeDocFun = ( envTesObj : RulesTestEnvironment, patValStr : string, datVal
 
 
 
-type GbfOptTyp = { accObj? : Record< string, unknown >, accStr? : string | null, ideStr? : string, groObj? : Record< string, unknown > | null, invObj? : Record< string, unknown > | null, memObj? : Record< string, unknown > | null, tokStr? : string }; // What: GBF Options Type. Why: Each creation test changes or leaves out one part of the batch. How: This lists the overrides, where null leaves that part out and accObj adds fields to the account write.
+type GbfOptTyp = { accObj? : Record< string, unknown >, accStr? : string | null, ideStr? : string, groObj? : Record< string, unknown > | null, invObj? : Record< string, unknown > | null, memObj? : Record< string, unknown > | null, tokStr? : string }; // What: GBF Options Type. Why: Each creation test changes or leaves out one part of the batch. How: This lists the overrides, where null leaves that part out, accStr names the account map the entry goes in, and accObj adds fields to the account write.
 type StoConTyp = ReturnType< ReturnType< RulesTestEnvironment[ 'authenticatedContext' ] >[ 'firestore' ] >; // What: Store Connection Type. Why: A test context's connection has its own type, which the SDK's Firestore type doesn't match. How: This takes the type the context's firestore method returns.
 
 // #region groBatFun
@@ -230,7 +228,7 @@ const groBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : GbfOp
 
 
 
-	if ( optValObj.accStr !== null ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { [ `groups.${ groIdeStr }` ] : optValObj.accStr ?? 'owner', ...optValObj.accObj } ); // What: Account Write. Why: The group takes one of the creator's owned slots. How: This adds the entry, owner unless the test says otherwise, plus any extra fields the test adds, unless the test leaves it out.
+	if ( optValObj.accStr !== null ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { [ `${ optValObj.accStr ?? 'ownedGroups' }.${ groIdeStr }` ] : true, ...optValObj.accObj } ); // What: Account Write. Why: The group takes one of the creator's owned slots. How: This adds the entry to the owned map unless the test names another, plus any extra fields the test adds, unless the test leaves it out.
 
 
 
@@ -304,7 +302,7 @@ const reqSetFun = ( stoConObj : StoConTyp, uidValStr : string, ovrValObj : Recor
 const seeJoiFun = async ( uidValArr : string[] ) => { // What: Seed Join Function. Why: Every join test starts from a group and some would-be joiners. How: This creates the group and seeds each joiner.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Owner Seed Call. Why: The creation batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Owner Seed Call. Why: The creation batch adds to an existing account. How: This writes Alice's empty one.
 
 
 	await groBatFun( accStoFun( 'alice' ), 'alice' ); // What: Group Creation Call. Why: The requests need a group and its invite. How: This creates gro1 through the real rules.
@@ -314,7 +312,7 @@ const seeJoiFun = async ( uidValArr : string[] ) => { // What: Seed Join Functio
 	for ( const uidValStr of uidValArr ) { // What: Joiner Seed Loop. Why: Each joiner needs an account and a key. How: This seeds both for each UID.
 
 
-		await seeDocFun( tesEnvObj, `accounts/${ uidValStr }`, { groups : {} } );                                                        // What: Joiner Account Seed. Why: The belong cap reads the joiner's account. How: This writes an empty one.
+		await seeDocFun( tesEnvObj, `accounts/${ uidValStr }`, { memberGroups : {}, ownedGroups : {} } );                                // What: Joiner Account Seed. Why: The belong cap reads the joiner's account. How: This writes an empty one.
 		await seeDocFun( tesEnvObj, `users/${ uidValStr }`, { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Joiner Key Seed. Why: The approver will need the joiner's key. How: This writes it.
 
 
@@ -354,7 +352,7 @@ const seeJoiFun = async ( uidValArr : string[] ) => { // What: Seed Join Functio
 const seeReqFun = async ( envTesObj : RulesTestEnvironment, uidValStr : string ) => { // What: Seed Request Function. Why: Approval and block tests start from a pending request. How: This seeds the joiner's documents and their request.
 
 
-	await seeDocFun( envTesObj, `accounts/${ uidValStr }`, { groups : {} } );                                                        // What: Joiner Account Seed. Why: An approval adds to the joiner's account. How: This writes an empty one.
+	await seeDocFun( envTesObj, `accounts/${ uidValStr }`, { memberGroups : {}, ownedGroups : {} } );                                // What: Joiner Account Seed. Why: An approval adds to the joiner's account. How: This writes an empty one.
 	await seeDocFun( envTesObj, `users/${ uidValStr }`, { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Joiner Key Seed. Why: A joiner has published a key. How: This writes it.
 	await seeDocFun( envTesObj, `groups/gro1/joinRequests/${ uidValStr }`, { expireAt : Timestamp.fromMillis( Date.now() + 7 * DAY_MIL_NUM ), inviteToken : TOK_ONE_STR, nameText : 'Bob Jones', requestedAt : Timestamp.fromMillis( 1000 ) } ); // What: Request Seed. Why: The request is what an approval or block answers. How: This writes it.
 
@@ -397,9 +395,9 @@ const seeAppFun = async ( envTesObj : RulesTestEnvironment, memCouNum = 1, paiOw
 
 
 	await seeDocFun( envTesObj, 'groups/gro1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : memCouNum, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Group Seed. Why: The approval changes this group. How: This writes it at the chosen count.
-	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } ); // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
-	await seeDocFun( envTesObj, 'accounts/alice', paiOwnBoo ? { groups : { gro1 : 'owner' }, paid : true } : { groups : { gro1 : 'owner' } } );                                              // What: Owner Account Seed. Why: The member cap follows the owner's paid status. How: This writes Alice's account, paid when asked.
-	await seeDocFun( envTesObj, `invites/${ TOK_ONE_STR }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } );                                       // What: Invite Seed. Why: The group has its working invite. How: This writes it.
+	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } );                                                                                        // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
+	await seeDocFun( envTesObj, 'accounts/alice', paiOwnBoo ? { memberGroups : {}, ownedGroups : { gro1 : true }, paid : true } : { memberGroups : {}, ownedGroups : { gro1 : true } } );                                                                                           // What: Owner Account Seed. Why: The member cap follows the owner's paid status. How: This writes Alice's account, paid when asked.
+	await seeDocFun( envTesObj, `invites/${ TOK_ONE_STR }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } ); // What: Invite Seed. Why: The group has its working invite. How: This writes it.
 
 	await seeReqFun( envTesObj, 'bob' ); // What: Bob Request Seed. Why: Bob is the joiner being approved. How: This seeds his pending request.
 
@@ -410,7 +408,7 @@ const seeAppFun = async ( envTesObj : RulesTestEnvironment, memCouNum = 1, paiOw
 
 
 
-type AbfOptTyp = { accObj? : Record< string, unknown >, accStr? : string | null, couNum? : number, couStr? : string, groObj? : Record< string, unknown > | null, memObj? : Record< string, unknown > | null, reqBoo? : boolean }; // What: ABF Options Type. Why: Each approval test changes or leaves out one part of the batch. How: This lists the overrides, where null or a false reqBoo leaves that part out and accObj adds fields to the account write.
+type AbfOptTyp = { accObj? : Record< string, unknown >, accStr? : string | null, couNum? : number, couStr? : string, groObj? : Record< string, unknown > | null, memObj? : Record< string, unknown > | null, reqBoo? : boolean }; // What: ABF Options Type. Why: Each approval test changes or leaves out one part of the batch. How: This lists the overrides, where null or a false reqBoo leaves that part out, accStr names the account map the entry goes in, and accObj adds fields to the account write.
 
 // #region appBatFun
 
@@ -452,7 +450,7 @@ const appBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : AbfOp
 
 
 
-	if ( optValObj.accStr !== null ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { 'groups.gro1' : optValObj.accStr ?? 'member', ...optValObj.accObj } ); // What: Account Write. Why: The joiner takes a slot. How: This adds the entry, member unless the test says otherwise, plus any extra fields the test adds, unless the test leaves it out.
+	if ( optValObj.accStr !== null ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { [ `${ optValObj.accStr ?? 'memberGroups' }.gro1` ] : true, ...optValObj.accObj } ); // What: Account Write. Why: The joiner takes a slot. How: This adds the entry to the member map unless the test names another, plus any extra fields the test adds, unless the test leaves it out.
 
 
 
@@ -604,7 +602,7 @@ const lefBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : LbfOp
 
 
 
-	if ( optValObj.accBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { 'groups.gro1' : deleteField(), ...optValObj.accObj } ); // What: Account Write. Why: The member's slot frees. How: This drops the entry, with any changes the test adds, unless the test keeps it.
+	if ( optValObj.accBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { 'memberGroups.gro1' : deleteField(), ...optValObj.accObj } ); // What: Account Write. Why: The member's slot frees. How: This drops the entry, with any changes the test adds, unless the test keeps it.
 
 
 
@@ -668,7 +666,7 @@ const remBatFun = ( stoConObj : StoConTyp, optValObj : RbfOptTyp = {} ) => { // 
 
 
 
-	if ( uidRemStr !== null && optValObj.accBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidRemStr }` ), { 'groups.gro1' : deleteField() } ); // What: Account Write. Why: The removed member's slot frees. How: This drops the entry unless the test keeps it.
+	if ( uidRemStr !== null && optValObj.accBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidRemStr }` ), { 'memberGroups.gro1' : deleteField() } ); // What: Account Write. Why: The removed member's slot frees. How: This drops the entry unless the test keeps it.
 
 
 
@@ -755,10 +753,10 @@ test( 'an identity starts its own empty account, and only it can read the accoun
 	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is someone else. How: This acts as him.
 
 
-	await assertSucceeds( setDoc( doc( aliStoObj, 'accounts/alice' ), { groups : {} } ) ); // What: Own Account Start. Why: An identity starts its own account. How: This expects an empty one allowed.
-	await assertSucceeds( getDoc( doc( aliStoObj, 'accounts/alice' ) ) );                  // What: Own Account Read. Why: The owner reads their memberships. How: This expects it allowed.
-	await assertFails( getDoc( doc( bobStoObj, 'accounts/alice' ) ) );                     // What: Other Account Read. Why: Nobody else learns which groups Alice is in. How: This expects Bob refused.
-	await assertFails( setDoc( doc( aliStoObj, 'accounts/bob' ), { groups : {} } ) );      // What: Other Account Start. Why: Nobody starts another identity's account. How: This expects Alice refused.
+	await assertSucceeds( setDoc( doc( aliStoObj, 'accounts/alice' ), { memberGroups : {}, ownedGroups : {} } ) ); // What: Own Account Start. Why: An identity starts its own account. How: This expects an empty one allowed.
+	await assertSucceeds( getDoc( doc( aliStoObj, 'accounts/alice' ) ) );                                          // What: Own Account Read. Why: The owner reads their memberships. How: This expects it allowed.
+	await assertFails( getDoc( doc( bobStoObj, 'accounts/alice' ) ) );                                             // What: Other Account Read. Why: Nobody else learns which groups Alice is in. How: This expects Bob refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/bob' ), { memberGroups : {}, ownedGroups : {} } ) );      // What: Other Account Start. Why: Nobody starts another identity's account. How: This expects Alice refused.
 
 
 } );
@@ -771,11 +769,13 @@ test( "an account can't start paid, already in groups, or holding other fields, 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the account. How: This acts as her.
 
 
-	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { groups : {}, paid : true } ) );    // What: Paid Start. Why: Only the payment webhook sets the paid flag. How: This expects it refused.
-	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { groups : { gro1 : 'owner' } } ) ); // What: Grouped Start. Why: Groups join an account only through the batches that create or join one. How: This expects it refused.
-	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), {} ) );                              // What: Empty Start. Why: An account always holds its groups map. How: This expects one without it refused.
-	await assertSucceeds( setDoc( doc( aliStoObj, 'accounts/alice' ), { groups : {} } ) );              // What: Valid Start. Why: The forged starts above failed only for their forgery. How: This expects the plain start allowed.
-	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { paid : true } ) );              // What: Paid Update. Why: Only the payment webhook sets the paid flag. How: This expects the change refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { memberGroups : {}, ownedGroups : {}, paid : true } ) ); // What: Paid Start. Why: Only the payment webhook sets the paid flag. How: This expects it refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { memberGroups : {}, ownedGroups : { gro1 : true } } ) ); // What: Owned Start. Why: Groups join an account only through the batches that create or join one. How: This expects an owned entry refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { memberGroups : { gro1 : true }, ownedGroups : {} } ) ); // What: Member Start. Why: Groups join an account only through the batches that create or join one. How: This expects a member entry refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { ownedGroups : {} } ) );                                 // What: Half Start. Why: An account always holds both group maps. How: This expects one without its member map refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice' ), { memberGroups : {} } ) );                                // What: Other Half Start. Why: An account always holds both group maps. How: This expects one without its owned map refused.
+	await assertSucceeds( setDoc( doc( aliStoObj, 'accounts/alice' ), { memberGroups : {}, ownedGroups : {} } ) );           // What: Valid Start. Why: The forged starts above failed only for their forgery. How: This expects the plain start allowed.
+	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { paid : true } ) );                                   // What: Paid Update. Why: Only the payment webhook sets the paid flag. How: This expects the change refused.
 
 
 } );
@@ -846,7 +846,7 @@ test( 'an identity creates a group in one batch, which only its members can read
 	const nobStoObj = tesEnvObj.unauthenticatedContext().firestore(); // What: Nobody Store Object. Why: A signed-out request gets nothing. How: This acts as nobody.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
 	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) );                           // What: Group Creation. Why: A valid batch creates the group. How: This expects it allowed.
 	await assertSucceeds( getDoc( doc( aliStoObj, 'groups/gro1' ) ) );                 // What: Member Group Read. Why: Members see their group's settings. How: This expects Alice allowed.
@@ -868,14 +868,14 @@ test( 'a group missing any part of its creation batch is refused', async () => {
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
-	await assertFails( groBatFun( aliStoObj, 'alice', { invObj : null } ) );     // What: Missing Invite. Why: A group always has a working invite. How: This expects a batch without one refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : null } ) );     // What: Missing Member. Why: The owner is always a member. How: This expects a batch without the membership refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { accStr : null } ) );     // What: Missing Account Entry. Why: Every owned group takes a slot. How: This expects a batch that skips the account refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : null } ) );     // What: Missing Group. Why: The other parts belong to a group being created. How: This expects them refused on their own.
-	await assertFails( groBatFun( aliStoObj, 'alice', { accStr : 'member' } ) ); // What: Member Account Entry. Why: The creator owns the group, so the slot is an owned one. How: This expects a member entry refused.
-	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) );                     // What: Whole Batch. Why: The batches above failed only for their missing part. How: This expects the whole batch allowed.
+	await assertFails( groBatFun( aliStoObj, 'alice', { invObj : null } ) );           // What: Missing Invite. Why: A group always has a working invite. How: This expects a batch without one refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : null } ) );           // What: Missing Member. Why: The owner is always a member. How: This expects a batch without the membership refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { accStr : null } ) );           // What: Missing Account Entry. Why: Every owned group takes a slot. How: This expects a batch that skips the account refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : null } ) );           // What: Missing Group. Why: The other parts belong to a group being created. How: This expects them refused on their own.
+	await assertFails( groBatFun( aliStoObj, 'alice', { accStr : 'memberGroups' } ) ); // What: Member Account Entry. Why: The creator owns the group, so the slot is an owned one. How: This expects an entry in the member map refused.
+	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) );                           // What: Whole Batch. Why: The batches above failed only for their missing part. How: This expects the whole batch allowed.
 
 
 } );
@@ -888,7 +888,7 @@ test( 'a group starts with valid fields, one member, and nothing offered or bloc
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { memberCount : 2 } } ) );                          // What: Two Members. Why: The creator is the only member. How: This expects a count of 2 refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { pendingOwnerUid : 'bob' } } ) );                  // What: Offered Group. Why: Nobody has been offered a new group. How: This expects an offer refused.
@@ -943,7 +943,7 @@ test( 'group names allow letters, numbers, basic punctuation, and emoji, up to 5
 	];
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batches add to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batches add to an existing account. How: This writes Alice's empty one.
 
 
 	for ( const [ namIndNum, namValStr ] of namAllArr.entries() ) await assertSucceeds( groBatFun( aliStoObj, 'alice', { ideStr : `all${ namIndNum }`, groObj : { name : namValStr }, tokStr : 'A'.repeat( 21 ) + namIndNum } ) ); // What: Allowed Name Loop. Why: Every allowed kind has to pass. How: This creates one group per name, each with its own ID and token.
@@ -963,7 +963,7 @@ test( "an invite keeps its token's form, its own group, and the group's real nam
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
 	await assertFails( groBatFun( aliStoObj, 'alice', { tokStr : 'A'.repeat( 21 ) } ) );                             // What: Short Token. Why: A token is 22 characters. How: This expects 21 refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { tokStr : 'A'.repeat( 21 ) + '=' } ) );                       // What: Padded Token. Why: A token uses only base64url characters, with no padding. How: This expects an equals sign refused.
@@ -985,7 +985,7 @@ test( 'a member document holds a bounded wrapped key and an optional encrypted n
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
 	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : { wrappedGroupKey : bytFilFun( 257 ) } } ) );                         // What: Large Wrapped Key. Why: A wrapped key fits in 256 bytes. How: This expects 257 refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : { wrappedGroupKey : 'key' } } ) );                                    // What: Text Wrapped Key. Why: A wrapped key is bytes. How: This expects text refused.
@@ -1005,10 +1005,10 @@ test( 'a member document holds a bounded wrapped key and an optional encrypted n
 test( 'while the paywall is open, everyone owns up to 10 groups and belongs to up to 20', async () => { // What: Open Cap Test. Why: Until the paywall is switched on, the paid caps apply to everyone (Section 18). How: This seeds accounts just under and at each cap, then creates a group for each.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : groMapFun( 'own', 9, 'owner' ) } );   // What: Nine Owned Seed. Why: The tenth owned group is the last allowed. How: This gives Alice 9.
-	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : groMapFun( 'own', 10, 'owner' ) } );    // What: Ten Owned Seed. Why: An eleventh owned group is over the cap. How: This gives Bob 10.
-	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : groMapFun( 'mem', 19, 'member' ) } ); // What: Nineteen Member Seed. Why: The twentieth group belonged to is the last allowed. How: This gives Carol 19.
-	await seeDocFun( tesEnvObj, 'accounts/dave', { groups : groMapFun( 'mem', 20, 'member' ) } );  // What: Twenty Member Seed. Why: A twenty-first group is over the cap. How: This gives Dave 20.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : groMapFun( 'own', 9 ) } );                     // What: Nine Owned Seed. Why: The tenth owned group is the last allowed. How: This gives Alice 9.
+	await seeDocFun( tesEnvObj, 'accounts/bob', { memberGroups : {}, ownedGroups : groMapFun( 'own', 10 ) } );                      // What: Ten Owned Seed. Why: An eleventh owned group is over the cap. How: This gives Bob 10.
+	await seeDocFun( tesEnvObj, 'accounts/carol', { memberGroups : groMapFun( 'mem', 18 ), ownedGroups : groMapFun( 'own', 1 ) } ); // What: Nineteen Belonged Seed. Why: The twentieth group belonged to is the last allowed, counting owned and member groups together. How: This gives Carol 18 member groups and 1 owned.
+	await seeDocFun( tesEnvObj, 'accounts/dave', { memberGroups : groMapFun( 'mem', 19 ), ownedGroups : groMapFun( 'own', 1 ) } );  // What: Twenty Belonged Seed. Why: A twenty-first group is over the cap, counting owned and member groups together. How: This gives Dave 19 member groups and 1 owned.
 
 	await assertSucceeds( groBatFun( accStoFun( 'alice' ), 'alice', { ideStr : 'groA', tokStr : 'A'.repeat( 22 ) } ) ); // What: Tenth Owned. Why: 10 owned is the open cap. How: This expects Alice allowed.
 	await assertFails( groBatFun( accStoFun( 'bob' ), 'bob', { ideStr : 'groB', tokStr : 'B'.repeat( 22 ) } ) );        // What: Eleventh Owned. Why: 11 owned is over the cap. How: This expects Bob refused.
@@ -1023,11 +1023,11 @@ test( 'while the paywall is open, everyone owns up to 10 groups and belongs to u
 test( 'with the paywall locked, a free identity owns 1 group and belongs to 10, while a paid one gets the paid caps', async () => { // What: Locked Cap Test. Why: Once the paywall is on, the free caps apply until someone buys (Section 18). How: This seeds accounts in the locked project, then creates a group for each.
 
 
-	await seeDocFun( locEnvObj, 'accounts/alice', { groups : {} } );                                          // What: Empty Free Seed. Why: A free identity's first owned group is allowed. How: This gives Alice none.
-	await seeDocFun( locEnvObj, 'accounts/bob', { groups : groMapFun( 'own', 1, 'owner' ) } );                // What: One Owned Free Seed. Why: A second owned group is over the free cap. How: This gives Bob 1.
-	await seeDocFun( locEnvObj, 'accounts/carol', { groups : groMapFun( 'own', 1, 'owner' ), paid : true } ); // What: One Owned Paid Seed. Why: Paying lifts the owned cap. How: This gives Carol 1 and the paid flag.
-	await seeDocFun( locEnvObj, 'accounts/dave', { groups : groMapFun( 'mem', 9, 'member' ) } );              // What: Nine Member Free Seed. Why: The tenth group belonged to is the free cap. How: This gives Dave 9.
-	await seeDocFun( locEnvObj, 'accounts/erin', { groups : groMapFun( 'mem', 10, 'member' ) } );             // What: Ten Member Free Seed. Why: An eleventh group is over the free cap. How: This gives Erin 10.
+	await seeDocFun( locEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } );                                 // What: Empty Free Seed. Why: A free identity's first owned group is allowed. How: This gives Alice none.
+	await seeDocFun( locEnvObj, 'accounts/bob', { memberGroups : {}, ownedGroups : groMapFun( 'own', 1 ) } );                // What: One Owned Free Seed. Why: A second owned group is over the free cap. How: This gives Bob 1.
+	await seeDocFun( locEnvObj, 'accounts/carol', { memberGroups : {}, ownedGroups : groMapFun( 'own', 1 ), paid : true } ); // What: One Owned Paid Seed. Why: Paying lifts the owned cap. How: This gives Carol 1 and the paid flag.
+	await seeDocFun( locEnvObj, 'accounts/dave', { memberGroups : groMapFun( 'mem', 9 ), ownedGroups : {} } );               // What: Nine Member Free Seed. Why: The tenth group belonged to is the free cap. How: This gives Dave 9.
+	await seeDocFun( locEnvObj, 'accounts/erin', { memberGroups : groMapFun( 'mem', 10 ), ownedGroups : {} } );              // What: Ten Member Free Seed. Why: An eleventh group is over the free cap. How: This gives Erin 10.
 
 	await assertSucceeds( groBatFun( locStoFun( 'alice' ), 'alice', { ideStr : 'groA', tokStr : 'A'.repeat( 22 ) } ) ); // What: First Owned Free. Why: One owned group is free. How: This expects Alice allowed.
 	await assertFails( groBatFun( locStoFun( 'bob' ), 'bob', { ideStr : 'groB', tokStr : 'B'.repeat( 22 ) } ) );        // What: Second Owned Free. Why: A second owned group needs a purchase. How: This expects Bob refused.
@@ -1046,14 +1046,16 @@ test( "an account's groups change only by one owned entry, as that group is crea
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the account. How: This acts as her.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The changes need an account to change. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The changes need an account to change. How: This writes Alice's empty one.
 	await seeDocFun( tesEnvObj, 'groups/old1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : 1, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Old Group Seed Call. Why: A group that already exists can't be claimed as newly created. How: This writes one owned by Alice.
 
-	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'groups.ghost' : 'owner' } ) ); // What: Ghost Entry. Why: An entry is added only as its group is created. How: This expects an entry for a group that doesn't exist refused.
-	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'groups.old1' : 'owner' } ) );  // What: Old Group Entry. Why: Only a group created in the same batch joins the account this way. How: This expects an entry for an existing group refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { accObj : { paid : true } } ) );                 // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused inside a creation batch.
-	await assertFails( groBatFun( aliStoObj, 'alice', { accObj : { 'groups.zzz1' : 'member' } } ) );    // What: Extra Entry. Why: One batch creates one group, so one entry changes. How: This expects a second entry refused.
-	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) );                                            // What: Valid Change. Why: The changes above failed only for their forgery. How: This expects the plain batch allowed.
+	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'ownedGroups.ghost' : true } ) ); // What: Ghost Entry. Why: An entry is added only as its group is created. How: This expects an entry for a group that doesn't exist refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'ownedGroups.old1' : true } ) );  // What: Old Group Entry. Why: Only a group created in the same batch joins the account this way. How: This expects an entry for an existing group refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { accObj : { paid : true } } ) );                   // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused inside a creation batch.
+	await assertFails( groBatFun( aliStoObj, 'alice', { accObj : { 'ownedGroups.zzz1' : true } } ) );     // What: Extra Entry. Why: One batch creates one group, so one entry changes. How: This expects a second owned entry refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { accObj : { 'memberGroups.zzz1' : true } } ) );    // What: Other Map Entry. Why: A creation touches only the owned map. How: This expects a member entry beside it refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { accObj : { 'ownedGroups.gro1' : 'owner' } } ) );  // What: Entry Value. Why: Every entry holds true, so nothing rides along in it. How: This expects another value refused.
+	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) );                                              // What: Valid Change. Why: The changes above failed only for their forgery. How: This expects the plain batch allowed.
 
 
 } );
@@ -1067,7 +1069,7 @@ test( 'nobody joins an existing group, or adds a second invite, by writing the d
 	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob holds the link but hasn't been approved. How: This acts as him.
 
 
-	await seeDocFun( tesEnvObj, 'accounts/alice', { groups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
+	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
 	await assertSucceeds( groBatFun( aliStoObj, 'alice' ) ); // What: Group Creation. Why: The joins below need an existing group. How: This expects Alice's group allowed.
 	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ) } ) ); // What: Self Join. Why: A membership comes only from the creation batch, or later from an approval. How: This expects Bob's own membership refused.
@@ -1110,7 +1112,7 @@ test( "a join request is refused without a working invite, from a blocked, exist
 	await seeJoiFun( [ 'bob', 'alice', 'carol' ] ); // What: Join Seed Call. Why: The requests need a group and fully set-up joiners, so each refusal below has one cause. How: This sets them up, with Alice's and Carol's keys too.
 
 	await seeDocFun( tesEnvObj, `invites/${ 'B'.repeat( 22 ) }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro2', groupName : 'Other Club' } ); // What: Other Invite Seed. Why: Another group's invite mustn't open this one. How: This writes an invite for gro2.
-	await seeDocFun( tesEnvObj, 'accounts/dave', { groups : {} } );                                                                                          // What: Keyless Account Seed. Why: Dave has an account but never published a key. How: This writes his empty account alone.
+	await seeDocFun( tesEnvObj, 'accounts/dave', { memberGroups : {}, ownedGroups : {} } );                                                                  // What: Keyless Account Seed. Why: Dave has an account but never published a key. How: This writes his empty account alone.
 
 	await assertFails( reqSetFun( bobStoObj, 'bob', { inviteToken : 'C'.repeat( 22 ) } ) ); // What: Missing Invite. Why: A rotated or made-up token opens nothing. How: This expects a token with no invite refused.
 	await assertFails( reqSetFun( bobStoObj, 'bob', { inviteToken : 'B'.repeat( 22 ) } ) ); // What: Other Group Invite. Why: An invite opens only its own group. How: This expects gro2's token refused.
@@ -1118,11 +1120,11 @@ test( "a join request is refused without a working invite, from a blocked, exist
 	await assertFails( reqSetFun( aliStoObj, 'alice' ) );                                   // What: Member Request. Why: A member has nothing to ask for. How: This expects Alice refused.
 	await assertFails( reqSetFun( accStoFun( 'dave' ), 'dave' ) );                          // What: Keyless Request. Why: The approver needs the joiner's key. How: This expects Dave, with an account but no user document, refused.
 
-	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : groMapFun( 'mem', 20, 'member' ) } ); // What: Full Account Seed. Why: A joiner at the cap has no slot for another group. How: This gives Bob 20 groups.
+	await seeDocFun( tesEnvObj, 'accounts/bob', { memberGroups : groMapFun( 'mem', 20 ), ownedGroups : {} } ); // What: Full Account Seed. Why: A joiner at the cap has no slot for another group. How: This gives Bob 20 groups.
 
 	await assertFails( reqSetFun( bobStoObj, 'bob' ) ); // What: Capped Request. Why: Joining would put Bob over the cap. How: This expects him refused.
 
-	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : {} } );                                                                                            // What: Account Reset Seed. Why: The block check needs Bob otherwise eligible. How: This empties his account again.
+	await seeDocFun( tesEnvObj, 'accounts/bob', { memberGroups : {}, ownedGroups : {} } );                                                                    // What: Account Reset Seed. Why: The block check needs Bob otherwise eligible. How: This empties his account again.
 	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1' ), { removedUids : { bob : true } } ) ); // What: Block Seed. Why: A blocked identity can't redeem any link. How: This puts Bob on the group's blocklist.
 
 	await assertFails( reqSetFun( bobStoObj, 'bob' ) ); // What: Blocked Request. Why: Bob was removed and blocked. How: This expects him refused.
@@ -1279,9 +1281,10 @@ test( 'an approval missing or changing any part of its batch is refused', async 
 	await assertFails( appBatFun( aliStoObj, 'bob', { groObj : null } ) );                                        // What: Missing Count. Why: Every membership is counted. How: This expects a batch that skips the group refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { reqBoo : false } ) );                                       // What: Kept Request. Why: An approved request ends. How: This expects a batch that keeps it refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { accObj : { paid : true } } ) );                             // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused inside an approval.
-	await assertFails( appBatFun( aliStoObj, 'bob', { accObj : { 'groups.zzz1' : 'member' } } ) );                // What: Extra Entry. Why: One approval adds one group to the joiner's account. How: This expects a second entry refused.
-	await assertFails( updateDoc( doc( aliStoObj, 'accounts/bob' ), { 'groups.gro1' : 'member' } ) );             // What: Account Padding. Why: A member mustn't fill someone's slots without letting them in, which would lock them out of other groups. How: This expects an entry written without the membership refused.
-	await assertFails( appBatFun( aliStoObj, 'bob', { accStr : 'owner' } ) );                                     // What: Owner Entry. Why: A joiner is a member, not an owner. How: This expects an owner entry refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accObj : { 'memberGroups.zzz1' : true } } ) );              // What: Extra Entry. Why: One approval adds one group to the joiner's account. How: This expects a second entry refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accObj : { 'memberGroups.gro1' : 'owner' } } ) );           // What: Entry Value. Why: Every entry holds true, so nothing rides along in it. How: This expects another value refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'accounts/bob' ), { 'memberGroups.gro1' : true } ) );           // What: Account Padding. Why: A member mustn't fill someone's slots without letting them in, which would lock them out of other groups. How: This expects an entry written without the membership refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { accStr : 'ownedGroups' } ) );                               // What: Owner Entry. Why: A joiner is a member, not an owner. How: This expects an entry in the owned map refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { couNum : 2 } ) );                                           // What: Double Count. Why: One approval counts one member. How: This expects a rise of 2 refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { couStr : 'carol' } ) );                                     // What: Other Counted. Why: The count's change is for the joiner. How: This expects another UID refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { groObj : { name : 'New Name' } } ) );                       // What: Smuggled Rename. Why: An approval changes only the count. How: This expects a rename in the batch refused.
@@ -1301,19 +1304,19 @@ test( 'only a member approves, only a pending request, and never a blocked or ca
 
 	await seeAppFun( tesEnvObj );                                                                                          // What: Approval Seed Call. Why: The approvals need a group and a pending request. How: This seeds them.
 
-	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } );                                                       // What: Outsider Account Seed. Why: Carol is signed in but not a member. How: This writes her account.
-	await seeDocFun( tesEnvObj, 'accounts/dave', { groups : {} } );                                                        // What: Requestless Account Seed. Why: Dave never asked to join. How: This writes his account alone.
+	await seeDocFun( tesEnvObj, 'accounts/carol', { memberGroups : {}, ownedGroups : {} } );                               // What: Outsider Account Seed. Why: Carol is signed in but not a member. How: This writes her account.
+	await seeDocFun( tesEnvObj, 'accounts/dave', { memberGroups : {}, ownedGroups : {} } );                                // What: Requestless Account Seed. Why: Dave never asked to join. How: This writes his account alone.
 	await seeDocFun( tesEnvObj, 'users/dave', { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Requestless Key Seed. Why: Dave's only missing piece is a request. How: This writes his key.
 
 	await assertFails( appBatFun( accStoFun( 'carol' ), 'bob' ) );           // What: Outsider Approval. Why: Only a member lets someone in. How: This expects Carol refused.
 	await assertFails( appBatFun( accStoFun( 'bob' ), 'bob' ) );             // What: Self Approval. Why: Nobody lets themselves in. How: This expects Bob refused.
 	await assertFails( appBatFun( aliStoObj, 'dave', { reqBoo : false } ) ); // What: Requestless Approval. Why: Only someone who asked is let in. How: This expects Dave refused.
 
-	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : groMapFun( 'mem', 20, 'member' ) } ); // What: Full Account Seed. Why: A joiner at the cap has no slot. How: This gives Bob 20 groups.
+	await seeDocFun( tesEnvObj, 'accounts/bob', { memberGroups : groMapFun( 'mem', 20 ), ownedGroups : {} } ); // What: Full Account Seed. Why: A joiner at the cap has no slot. How: This gives Bob 20 groups.
 
 	await assertFails( appBatFun( aliStoObj, 'bob' ) ); // What: Capped Approval. Why: Joining would put Bob over his cap. How: This expects the approval refused.
 
-	await seeDocFun( tesEnvObj, 'accounts/bob', { groups : {} } );                                                                                            // What: Account Reset Seed. Why: The block check needs Bob otherwise eligible. How: This empties his account again.
+	await seeDocFun( tesEnvObj, 'accounts/bob', { memberGroups : {}, ownedGroups : {} } );                                                                    // What: Account Reset Seed. Why: The block check needs Bob otherwise eligible. How: This empties his account again.
 	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1' ), { removedUids : { bob : true } } ) ); // What: Block Seed. Why: A blocked identity stays out. How: This puts Bob on the blocklist.
 
 	await assertFails( appBatFun( aliStoObj, 'bob' ) ); // What: Blocked Approval. Why: Bob is blocked. How: This expects the approval refused.
@@ -1354,7 +1357,7 @@ test( 'a member may decline and block a pending requester, and change nothing el
 
 	await seeAppFun( tesEnvObj );                                    // What: Block Seed Call. Why: The block needs a group and a pending request. How: This seeds them.
 
-	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } ); // What: Outsider Account Seed. Why: Carol is signed in but not a member. How: This writes her account.
+	await seeDocFun( tesEnvObj, 'accounts/carol', { memberGroups : {}, ownedGroups : {} } ); // What: Outsider Account Seed. Why: Carol is signed in but not a member. How: This writes her account.
 
 	await assertFails( bloBatFun( accStoFun( 'carol' ), 'bob' ) );                                  // What: Outsider Block. Why: Only a member declines. How: This expects Carol refused.
 	await assertFails( bloBatFun( aliStoObj, 'bob', { delBoo : false } ) );                         // What: Kept Request Block. Why: A block answers the request, which ends. How: This expects a block that keeps it refused.
@@ -1437,7 +1440,7 @@ test( "a leave missing or changing any part is refused, and the owner can't leav
 
 	await seeTwoFun(); // What: Two Member Seed Call. Why: Leaving needs a second member. How: This approves Bob into the group.
 
-	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'accounts/bob' ), { 'groups.gro9' : 'member' } ) ); // What: Second Group Seed. Why: The double drop needs a second entry in Bob's account. How: This adds one.
+	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'accounts/bob' ), { 'memberGroups.gro9' : true } ) ); // What: Second Group Seed. Why: The double drop needs a second entry in Bob's account. How: This adds one.
 
 	await assertFails( lefBatFun( bobStoObj, 'bob', { memBoo : false } ) );                                                  // What: Kept Membership. Why: The other parts belong to an ending membership. How: This expects a batch that keeps it refused.
 	await assertFails( lefBatFun( bobStoObj, 'bob', { accBoo : false } ) );                                                  // What: Kept Account Entry. Why: The slot frees with the membership. How: This expects a batch that keeps the entry refused.
@@ -1445,8 +1448,8 @@ test( "a leave missing or changing any part is refused, and the owner can't leav
 	await assertFails( lefBatFun( bobStoObj, 'bob', { groObj : { memberCount : increment( -2 ) } } ) );                      // What: Double Uncount. Why: One leave uncounts one member. How: This expects a fall of 2 refused.
 	await assertFails( lefBatFun( bobStoObj, 'bob', { groObj : { name : 'New Name' } } ) );                                  // What: Smuggled Rename. Why: A leave changes only the count. How: This expects a rename in the batch refused.
 	await assertFails( lefBatFun( bobStoObj, 'bob', { accObj : { paid : true } } ) );                                        // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused inside a leave.
-	await assertFails( lefBatFun( bobStoObj, 'bob', { accObj : { 'groups.gro9' : deleteField() } } ) );                      // What: Double Drop. Why: One leave ends one membership. How: This expects a second dropped entry refused.
-	await assertFails( updateDoc( doc( bobStoObj, 'accounts/bob' ), { 'groups.gro1' : deleteField() } ) );                   // What: Slot Freed While Staying. Why: A slot frees only as its membership ends, or the caps could be dodged. How: This expects the entry dropped alone refused.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { accObj : { 'memberGroups.gro9' : deleteField() } } ) );                // What: Double Drop. Why: One leave ends one membership. How: This expects a second dropped entry refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'accounts/bob' ), { 'memberGroups.gro1' : deleteField() } ) );             // What: Slot Freed While Staying. Why: A slot frees only as its membership ends, or the caps could be dodged. How: This expects the entry dropped alone refused.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { countedUid : 'bob', memberCount : 1 } ) );              // What: Uncount While Staying. Why: The count falls only as a membership ends. How: This expects Bob lowering it alone refused.
 	await assertFails( updateDoc( doc( accStoFun( 'carol' ), 'groups/gro1' ), { countedUid : 'carol', memberCount : 1 } ) ); // What: Outsider Uncount. Why: Only a real membership can end, so nobody else can shrink the count. How: This expects Carol, never a member, refused.
 	await assertFails( lefBatFun( aliStoObj, 'alice' ) );                                                                    // What: Owner Leave. Why: An owner transfers the group before leaving. How: This expects Alice refused.
@@ -1467,7 +1470,7 @@ test( 'the owner removes a member in one transaction that blocks them and rotate
 
 	await seeTwoFun(); // What: Two Member Seed Call. Why: Removal needs a second member. How: This approves Bob into the group.
 
-	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } );                                                        // What: Carol Account Seed. Why: Carol may ask to join. How: This writes her empty account.
+	await seeDocFun( tesEnvObj, 'accounts/carol', { memberGroups : {}, ownedGroups : {} } );                                // What: Carol Account Seed. Why: Carol may ask to join. How: This writes her empty account.
 	await seeDocFun( tesEnvObj, 'users/carol', { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Carol Key Seed. Why: A joiner has published a key. How: This writes hers.
 
 	await assertSucceeds( remBatFun( accStoFun( 'alice' ) ) );                              // What: Bob Removed. Why: A valid removal goes through. How: This expects Alice's removal allowed.
@@ -1517,7 +1520,7 @@ test( 'the owner rotates the invite on its own, while nobody else rotates it or 
 
 	await seeTwoFun(); // What: Two Member Seed Call. Why: A member other than the owner tries to rotate. How: This approves Bob into the group.
 
-	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } );                                                                                        // What: Carol Account Seed. Why: Carol may ask to join. How: This writes her empty account.
+	await seeDocFun( tesEnvObj, 'accounts/carol', { memberGroups : {}, ownedGroups : {} } );                                                                // What: Carol Account Seed. Why: Carol may ask to join. How: This writes her empty account.
 	await seeDocFun( tesEnvObj, 'users/carol', { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } );                                 // What: Carol Key Seed. Why: A joiner has published a key. How: This writes hers.
 	await seeDocFun( tesEnvObj, `invites/${ 'S'.repeat( 22 ) }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } ); // What: Stale Invite Seed. Why: An invite the group no longer names can be retired. How: This writes one.
 

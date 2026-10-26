@@ -11,8 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-26 (leaving, removal, and rotation batches in Section
-9, and group deletion added to Section 14's open items; the group's
+Last updated: 2026-10-26 (the account's groups split into owned and member
+maps in Sections 11.1 and 18; leaving, removal, and rotation batches in
+Section 9, and group deletion added to Section 14's open items; the group's
 `countedUid` in Section 11.2; untrusted text and paths in Section 11.11;
 text limits in Section 11.10 and binary formats in Section 6; the private
 `/accounts/{uid}` doc, the group's `memberCount`, and the paywall's switch
@@ -522,7 +523,7 @@ in place of their name. The group can manually reassign it if needed.
   a security rule restricting this action to the group creator, but never
   themselves. Every other member can always remove themselves (leave), in
   one batch that deletes their membership, drops the group from their
-  `/accounts/{uid}` map, and lowers `memberCount` with `countedUid` set to
+  `/accounts/{uid}` member map, and lowers `memberCount` with `countedUid` set to
   them (decided 2026-10-26). The creator leaves only by transferring the
   group first (Section 18).
 - **Removal always rotates the invite link** (decided over the
@@ -539,7 +540,7 @@ in place of their name. The group can manually reassign it if needed.
   (e.g. someone else re-shares it into a channel the removed person still
   sees).
 - The full removal operation (remove from members, drop the group from
-  the removed member's `/accounts/{uid}` map, lower `memberCount` by one
+  the removed member's `/accounts/{uid}` member map, lower `memberCount` by one
   with `countedUid` set to the removed member,
   add to `removedUids`, deactivate old invite doc, create new invite doc)
   is bundled as a **single Firestore transaction**, so a partial failure
@@ -666,12 +667,17 @@ UID (`get`), never list the collection, and only its owner may write it.
 
 `/accounts/{uid}`, the private half, readable only by its owner. The rules
 read it to enforce Section 18's caps (a rule's own lookups ignore read
-permissions), and a client can update one entry of the map without
+permissions), and a client can update one entry of a map without
 reading the doc first, which is how an approver adds a joiner's group.
+The groups sit in two maps, owned and member, rather than one map of
+roles (decided 2026-10-26), so a change of role moves a key from one map
+to the other, which the rules can name and check, where a changed value
+in one map can't be traced to its group.
 
 | Field | Type | Notes |
 |---|---|---|
-| `groups` | plaintext map `{ groupId: 'owner' \| 'member' }` | Every group this user belongs to, and which they own. Changed in the same batch as every create, join, leave, removal, and transfer (Section 18). |
+| `ownedGroups` | plaintext map `{ groupId: true }` | Every group this user owns. Changed in the same batch as every create and transfer (Section 18). |
+| `memberGroups` | plaintext map `{ groupId: true }` | Every group this user belongs to without owning it, so a group sits in one map or the other, never both. Changed in the same batch as every join, leave, removal, and transfer (Section 18). |
 | `paid` | plaintext boolean, absent until bought | Written only by the Polar webhook's Cloud Function, never by a client (Section 18). |
 
 Global `displayName` deliberately **not** included here. **Resolved**:
@@ -1401,7 +1407,7 @@ edited once filed, and it ends when the joiner withdraws it or any member
 declines or approves it. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
 `/members/{uid}` with the group key wrapped for it, add the group to the
-joiner's `/accounts/{uid}` map, raise the group's `memberCount` by one and
+joiner's `/accounts/{uid}` member map, raise the group's `memberCount` by one and
 set its `countedUid` to the joiner, and delete the request. The rules let a member change another person's
 account only that way: adding this one group, alongside creating their
 member doc, within the joiner's and the group's caps (Section 18). The joiner's listener sees the membership appear, unwraps the
@@ -1489,14 +1495,15 @@ paywall is switched on before launch.
   ownership first or deleting the group, so no group is ever left without
   an owner by choice.
 - **Enforcement in the rules** (decided 2026-10-25): rules can't count
-  documents, so each user's private `/accounts/{uid}` keeps a map of their
-  groups and which they own, and each group keeps a `memberCount`, both
+  documents, so each user's private `/accounts/{uid}` keeps two maps of
+  their groups, the ones they own and the ones they only belong to, and
+  each group keeps a `memberCount`, both
   updated in the same batch as every create, join, leave, removal, and
-  transfer (Section 11.1 and 11.2). The rules check the resulting map and
+  transfer (Section 11.1 and 11.2). The rules check the resulting maps and
   count against the caps, reading the paid flag of the user (for groups
   owned and belonged to) or of the group's owner (for members). Since a
   join is approved by someone else, the approver's batch writes the
-  joiner's map entry, and the rules allow exactly that one change.
+  joiner's member map entry, and the rules allow exactly that one change.
 - **The paywall's switch** (decided 2026-10-25): while it's unlocked, one
   rules function reports every user as paid, so the paid caps apply to
   everyone. The real checks are written and tested under both answers from
