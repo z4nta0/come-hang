@@ -7,6 +7,7 @@ import { assertFails               } from '@firebase/rules-unit-testing'; // Wha
 import { assertSucceeds            } from '@firebase/rules-unit-testing'; // What: Assert Succeeds. Why: An allowed request must go through. How: This expects it to succeed.
 import { Bytes                     } from 'firebase/firestore';           // What: Bytes. Why: Keys, IVs, and ciphertext are stored as bytes. How: This builds byte values of a chosen size.
 import { collection                } from 'firebase/firestore';           // What: Collection. Why: Listing a collection is checked as its own request. How: This builds a collection reference.
+import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: A leave or removal drops one entry from an account's groups map. How: This removes a field in an update.
 import { deleteDoc                 } from 'firebase/firestore';           // What: Delete Doc. Why: Deletion rules are checked. How: This deletes a document.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every request names a document. How: This builds a reference.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Fetch rules are checked. How: This reads one document.
@@ -61,6 +62,7 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
 const DAY_MIL_NUM = 86400000;                                       // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
 const GRO_NAM_STR = 'Dinner Club';                                  // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
 const LOC_SWI_STR = 'return false; // What: Paywall Locked Return'; // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
+const NEW_TOK_STR = 'N'.repeat( 22 );                               // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
 const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                       // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
 
 // #endregion Constants
@@ -520,6 +522,174 @@ const bloBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : BbfOp
 };
 
 // #endregion bloBatFun
+
+
+
+// #region seeTwoFun
+
+/**
+ * seeTwoFun = Seed Two Function
+ *
+ * @summary
+ * Sets up the state leave, removal, and rotation tests start from: Alice's
+ * group gro1 with Bob approved into it through the real rules, so it holds
+ * two members, its working invite, and both accounts' entries.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that settles once the group holds both members, with no
+ *          value.
+ *
+ * @example
+ * ```ts
+ * seeTwoFun() // => Promise<void>
+ * ```
+ *
+*/
+
+const seeTwoFun = async () => { // What: Seed Two Function. Why: Leaving and removal need a second member. How: This seeds the group and approves Bob into it.
+
+
+	await seeAppFun( tesEnvObj ); // What: Approval Seed Call. Why: Bob needs a pending request to be approved. How: This seeds the group and his request.
+
+	await appBatFun( accStoFun( 'alice' ), 'bob' ); // What: Approval Call. Why: Bob becomes the second member. How: This approves him as Alice.
+
+
+};
+
+// #endregion seeTwoFun
+
+
+
+type LbfOptTyp = { accBoo? : boolean, accObj? : Record< string, unknown >, groObj? : Record< string, unknown > | null, memBoo? : boolean }; // What: LBF Options Type. Why: Each leave test changes or leaves out one part of the batch. How: This lists the overrides, where false or null leaves that part out and accObj adds fields to the account write.
+
+// #region lefBatFun
+
+/**
+ * lefBatFun = Leave Batch Function
+ *
+ * @summary
+ * Commits the three writes that end a membership in gro1 the way leaving
+ * does: the member document deleted, the group dropped from the member's
+ * account, and the group's count lowered by one for them. Each part can be
+ * left out, and the account and group writes' fields changed, by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The connection that writes the
+ *                    batch.
+ * @param uidValStr - UID Value String: The member whose membership ends.
+ * @param optValObj - Option Value Object: {@link LbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * lefBatFun(bobStoObj, 'bob', { accBoo : false }) // => Promise<void>
+ * ```
+ *
+*/
+
+const lefBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : LbfOptTyp = {} ) => { // What: Leave Batch Function. Why: Most leave tests commit the same three writes with one part changed. How: This builds and commits the batch.
+
+
+	const batWriObj = writeBatch( stoConObj ); // What: Batch Write Object. Why: The three writes have to land together. How: This starts the batch.
+
+
+	if ( optValObj.memBoo !== false ) batWriObj.delete( doc( stoConObj, `groups/gro1/members/${ uidValStr }` ) ); // What: Member Delete. Why: The membership ends. How: This deletes it unless the test keeps it.
+
+
+
+	if ( optValObj.accBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { 'groups.gro1' : deleteField(), ...optValObj.accObj } ); // What: Account Write. Why: The member's slot frees. How: This drops the entry, with any changes the test adds, unless the test keeps it.
+
+
+
+	if ( optValObj.groObj !== null ) batWriObj.update( doc( stoConObj, 'groups/gro1' ), { countedUid : uidValStr, memberCount : increment( -1 ), ...optValObj.groObj } ); // What: Group Write. Why: The count falls for the member. How: This lowers it and names them, with any changes the test adds, unless the test leaves it out.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion lefBatFun
+
+
+
+type RbfOptTyp = { accBoo? : boolean, groObj? : Record< string, unknown > | null, memBoo? : boolean, newBoo? : boolean, oldBoo? : boolean, uidStr? : string | null }; // What: RBF Options Type. Why: Each removal or rotation test changes or leaves out one part of the batch. How: This lists the overrides, where false or null leaves that part out, and a null uidStr makes the batch a bare rotation.
+
+// #region remBatFun
+
+/**
+ * remBatFun = Remove Batch Function
+ *
+ * @summary
+ * Commits a removal from gro1, as the app will: the member document
+ * deleted, the group dropped from their account, and the group's count
+ * lowered for them as their UID joins the blocklist, all with the invite
+ * rotated, the group naming a new token whose invite is created while the
+ * old one is deleted. With a null uidStr the batch is a bare rotation. Each
+ * part can be left out, and the group write's fields changed, by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The connection that writes the
+ *                    batch.
+ * @param optValObj - Option Value Object: {@link RbfOptTyp}, removing Bob by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * remBatFun(aliStoObj, { uidStr : null }) // => Promise<void>
+ * ```
+ *
+*/
+
+const remBatFun = ( stoConObj : StoConTyp, optValObj : RbfOptTyp = {} ) => { // What: Remove Batch Function. Why: The removal and rotation tests commit the same writes with one part changed. How: This builds and commits the batch.
+
+
+	const batWriObj = writeBatch( stoConObj );                                   // What: Batch Write Object. Why: The writes have to land together. How: This starts the batch.
+	const uidRemStr = optValObj.uidStr === undefined ? 'bob' : optValObj.uidStr; // What: UID Removed String. Why: Most tests remove Bob, and a rotation removes nobody. How: This takes the given UID, Bob by default, or null.
+
+	const groChaObj = uidRemStr === null                                                                                                     // What: Group Change Object. Why: A removal changes the count and blocklist, and every rotation changes the token. How: This picks the fields for a rotation or a removal.
+		? { currentInviteToken : NEW_TOK_STR }                                                                                                  // What: Rotation Fields. Why: A bare rotation changes the token alone. How: This names the new token.
+		: { countedUid : uidRemStr, currentInviteToken : NEW_TOK_STR, memberCount : increment( -1 ), [ `removedUids.${ uidRemStr }` ] : true }; // What: Removal Fields. Why: A removal also lowers the count and blocks the member. How: This adds those changes.
+
+
+	if ( uidRemStr !== null && optValObj.memBoo !== false ) batWriObj.delete( doc( stoConObj, `groups/gro1/members/${ uidRemStr }` ) ); // What: Member Delete. Why: The removed membership ends. How: This deletes it unless the test keeps it.
+
+
+
+	if ( uidRemStr !== null && optValObj.accBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidRemStr }` ), { 'groups.gro1' : deleteField() } ); // What: Account Write. Why: The removed member's slot frees. How: This drops the entry unless the test keeps it.
+
+
+
+	if ( optValObj.groObj !== null ) batWriObj.update( doc( stoConObj, 'groups/gro1' ), { ...groChaObj, ...optValObj.groObj } ); // What: Group Write. Why: The group records the change. How: This writes it, with any changes the test adds, unless the test leaves it out.
+
+
+
+	if ( optValObj.oldBoo !== false ) batWriObj.delete( doc( stoConObj, `invites/${ TOK_ONE_STR }` ) ); // What: Old Invite Delete. Why: The old link stops working. How: This deletes its invite unless the test keeps it.
+
+
+
+	if ( optValObj.newBoo !== false ) batWriObj.set( doc( stoConObj, `invites/${ NEW_TOK_STR }` ), { createdAt : serverTimestamp(), groupId : 'gro1', groupName : GRO_NAM_STR } ); // What: New Invite Write. Why: The group always has a working link. How: This creates the new invite unless the test leaves it out.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion remBatFun
 
 // #endregion Helpers
 
@@ -1233,6 +1403,133 @@ test( 'the member count moves only with a membership the same batch creates', as
 
 	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { countedUid : 'alice', memberCount : 2 } ) ); // What: Existing Member Count. Why: Alice's membership isn't new. How: This expects the rise refused.
 	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { countedUid : 'ghost', memberCount : 2 } ) ); // What: Nobody Count. Why: No membership is being created. How: This expects the rise refused.
+
+
+} );
+
+
+
+test( "a member leaves in one batch, after which they can't read the group", async () => { // What: Leave Test. Why: Every member but the owner can always leave (Section 9). How: This has Bob leave, then reads the group as Bob and Alice.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice stays. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob leaves. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Leaving needs a second member. How: This approves Bob into the group.
+
+	await assertSucceeds( lefBatFun( bobStoObj, 'bob' ) );              // What: Bob Leaves. Why: A valid leave batch goes through. How: This expects it allowed.
+	await assertFails( getDoc( doc( bobStoObj, 'groups/gro1' ) ) );     // What: Former Member Read. Why: Bob is no longer a member. How: This expects him refused.
+	await assertSucceeds( getDoc( doc( aliStoObj, 'groups/gro1' ) ) );  // What: Remaining Member Read. Why: Alice is still a member. How: This expects her allowed.
+	await assertSucceeds( getDoc( doc( bobStoObj, 'accounts/bob' ) ) ); // What: Own Account Read. Why: Bob's account no longer lists the group. How: This expects him allowed to read it.
+
+
+} );
+
+
+
+test( "a leave missing or changing any part is refused, and the owner can't leave or end someone else's membership that way", async () => { // What: Leave Parts Test. Why: A membership can't end without its account entry and count, nor leave the owner's group ownerless (Section 18). How: This changes or leaves out one part at a time, then commits the whole batch.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob leaves. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Leaving needs a second member. How: This approves Bob into the group.
+
+	await tesEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'accounts/bob' ), { 'groups.gro9' : 'member' } ) ); // What: Second Group Seed. Why: The double drop needs a second entry in Bob's account. How: This adds one.
+
+	await assertFails( lefBatFun( bobStoObj, 'bob', { memBoo : false } ) );                                                  // What: Kept Membership. Why: The other parts belong to an ending membership. How: This expects a batch that keeps it refused.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { accBoo : false } ) );                                                  // What: Kept Account Entry. Why: The slot frees with the membership. How: This expects a batch that keeps the entry refused.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { groObj : null } ) );                                                   // What: Kept Count. Why: Every membership is counted. How: This expects a batch that skips the group refused.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { groObj : { memberCount : increment( -2 ) } } ) );                      // What: Double Uncount. Why: One leave uncounts one member. How: This expects a fall of 2 refused.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { groObj : { name : 'New Name' } } ) );                                  // What: Smuggled Rename. Why: A leave changes only the count. How: This expects a rename in the batch refused.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { accObj : { paid : true } } ) );                                        // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused inside a leave.
+	await assertFails( lefBatFun( bobStoObj, 'bob', { accObj : { 'groups.gro9' : deleteField() } } ) );                      // What: Double Drop. Why: One leave ends one membership. How: This expects a second dropped entry refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'accounts/bob' ), { 'groups.gro1' : deleteField() } ) );                   // What: Slot Freed While Staying. Why: A slot frees only as its membership ends, or the caps could be dodged. How: This expects the entry dropped alone refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { countedUid : 'bob', memberCount : 1 } ) );              // What: Uncount While Staying. Why: The count falls only as a membership ends. How: This expects Bob lowering it alone refused.
+	await assertFails( updateDoc( doc( accStoFun( 'carol' ), 'groups/gro1' ), { countedUid : 'carol', memberCount : 1 } ) ); // What: Outsider Uncount. Why: Only a real membership can end, so nobody else can shrink the count. How: This expects Carol, never a member, refused.
+	await assertFails( lefBatFun( aliStoObj, 'alice' ) );                                                                    // What: Owner Leave. Why: An owner transfers the group before leaving. How: This expects Alice refused.
+	await assertFails( lefBatFun( aliStoObj, 'bob' ) );                                                                      // What: Leave For Another. Why: Ending someone else's membership is a removal, which blocks and rotates. How: This expects Alice leaving Bob out refused.
+	await assertSucceeds( lefBatFun( bobStoObj, 'bob' ) );                                                                   // What: Whole Leave. Why: The batches above failed only for their one part. How: This expects the whole batch allowed.
+
+
+} );
+
+
+
+test( 'the owner removes a member in one transaction that blocks them and rotates the invite', async () => { // What: Removal Test. Why: A removed member can't rejoin with the link they had or any later one (Section 9). How: This removes Bob as Alice, then tries the old and new links as Bob and Carol.
+
+
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is removed. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol holds the link and hasn't joined. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Removal needs a second member. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } );                                                        // What: Carol Account Seed. Why: Carol may ask to join. How: This writes her empty account.
+	await seeDocFun( tesEnvObj, 'users/carol', { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } ); // What: Carol Key Seed. Why: A joiner has published a key. How: This writes hers.
+
+	await assertSucceeds( remBatFun( accStoFun( 'alice' ) ) );                              // What: Bob Removed. Why: A valid removal goes through. How: This expects Alice's removal allowed.
+	await assertFails( getDoc( doc( bobStoObj, 'groups/gro1' ) ) );                         // What: Removed Member Read. Why: Bob is no longer a member. How: This expects him refused.
+	await assertFails( reqSetFun( bobStoObj, 'bob', { inviteToken : NEW_TOK_STR } ) );      // What: Blocked Rejoin. Why: Bob is on the blocklist, even with the new link. How: This expects his request refused.
+	await assertFails( reqSetFun( carStoObj, 'carol' ) );                                   // What: Old Link Request. Why: The old link stopped working. How: This expects Carol refused with it.
+	await assertSucceeds( reqSetFun( carStoObj, 'carol', { inviteToken : NEW_TOK_STR } ) ); // What: New Link Request. Why: The new link opens the group. How: This expects Carol allowed with it.
+
+
+} );
+
+
+
+test( 'a removal missing any part is refused, and only the owner removes, never themselves', async () => { // What: Removal Parts Test. Why: A removal always blocks, rotates, and frees the slot, and it's the owner's action alone. How: This changes or leaves out one part at a time, then commits the whole transaction.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Removal needs a second member. How: This approves Bob into the group.
+
+	await assertFails( remBatFun( aliStoObj, { memBoo : false } ) );                                                                // What: Kept Membership. Why: The removal ends the membership. How: This expects a batch that keeps it refused.
+	await assertFails( remBatFun( aliStoObj, { accBoo : false } ) );                                                                // What: Kept Account Entry. Why: The removed member's slot frees. How: This expects a batch that keeps it refused.
+	await assertFails( remBatFun( aliStoObj, { groObj : { 'removedUids.bob' : deleteField() } } ) );                                // What: Unblocked Removal. Why: A removal always blocks. How: This expects one that leaves Bob off the blocklist refused.
+	await assertFails( remBatFun( aliStoObj, { groObj : { currentInviteToken : TOK_ONE_STR }, newBoo : false, oldBoo : false } ) ); // What: Unrotated Removal. Why: A removal always rotates the link. How: This expects one that keeps the token refused.
+	await assertFails( remBatFun( aliStoObj, { oldBoo : false } ) );                                                                // What: Kept Old Invite. Why: The old link has to stop working. How: This expects a batch that keeps its invite refused.
+	await assertFails( remBatFun( aliStoObj, { newBoo : false } ) );                                                                // What: Missing New Invite. Why: The group always has a working link. How: This expects a batch without the new invite refused.
+	await assertFails( remBatFun( aliStoObj, { groObj : { chatTtlDays : 7 } } ) );                                                  // What: Smuggled Setting. Why: A removal changes only the count, blocklist, and token. How: This expects a retention change in the batch refused.
+	await assertFails( remBatFun( aliStoObj, { groObj : { 'removedUids.eve' : true } } ) );                                         // What: Double Block. Why: A removal blocks the removed member alone. How: This expects a second UID refused.
+	await assertFails( remBatFun( aliStoObj, { groObj : { 'removedUids.bob' : 'yes' } } ) );                                        // What: Wrong Block Value. Why: The blocklist maps each UID to true. How: This expects another value refused.
+	await assertFails( remBatFun( aliStoObj, { accBoo : false, memBoo : false } ) );                                                // What: Block Without Removal. Why: The count and blocklist move only as the membership ends. How: This expects a batch that keeps the membership and entry refused.
+	await assertFails( remBatFun( accStoFun( 'bob' ), { uidStr : 'alice' } ) );                                                     // What: Member Removing Owner. Why: Only the owner removes. How: This expects Bob refused.
+	await assertFails( remBatFun( aliStoObj, { uidStr : 'alice' } ) );                                                              // What: Owner Self-Removal. Why: An owner transfers the group before leaving. How: This expects Alice refused.
+	await assertSucceeds( remBatFun( aliStoObj ) );                                                                                 // What: Whole Removal. Why: The batches above failed only for their one part. How: This expects the whole removal allowed.
+
+
+} );
+
+
+
+test( 'the owner rotates the invite on its own, while nobody else rotates it or retires the current link', async () => { // What: Rotation Test. Why: The owner can revoke an over-shared link at any time, leaving exactly one working link (Section 9). How: This tries improper rotations and deletes, then rotates as Alice and tries both links as Carol.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol holds the link and hasn't joined. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: A member other than the owner tries to rotate. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'accounts/carol', { groups : {} } );                                                                                        // What: Carol Account Seed. Why: Carol may ask to join. How: This writes her empty account.
+	await seeDocFun( tesEnvObj, 'users/carol', { createdAt : Timestamp.fromMillis( 1000 ), publicKey : bytFilFun( 65 ) } );                                 // What: Carol Key Seed. Why: A joiner has published a key. How: This writes hers.
+	await seeDocFun( tesEnvObj, `invites/${ 'S'.repeat( 22 ) }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } ); // What: Stale Invite Seed. Why: An invite the group no longer names can be retired. How: This writes one.
+
+	await assertFails( remBatFun( accStoFun( 'bob' ), { uidStr : null } ) );                      // What: Member Rotation. Why: Only the owner rotates. How: This expects Bob refused.
+	await assertFails( remBatFun( aliStoObj, { oldBoo : false, uidStr : null } ) );               // What: Kept Old Invite. Why: The old link has to stop working. How: This expects a rotation that keeps it refused.
+	await assertFails( remBatFun( aliStoObj, { newBoo : false, uidStr : null } ) );               // What: Missing New Invite. Why: The group always has a working link. How: This expects a rotation without it refused.
+	await assertFails( deleteDoc( doc( accStoFun( 'bob' ), `invites/${ 'S'.repeat( 22 ) }` ) ) ); // What: Member Stale Delete. Why: Only the owner retires a link. How: This expects Bob refused.
+	await assertSucceeds( deleteDoc( doc( aliStoObj, `invites/${ 'S'.repeat( 22 ) }` ) ) );       // What: Owner Stale Delete. Why: The owner may retire a link the group no longer names. How: This expects Alice allowed.
+	await assertFails( deleteDoc( doc( aliStoObj, `invites/${ TOK_ONE_STR }` ) ) );               // What: Current Invite Delete. Why: The link the group names must keep working. How: This expects deleting it alone refused.
+	await assertSucceeds( remBatFun( aliStoObj, { uidStr : null } ) );                            // What: Link Rotated. Why: The rotations above failed only for their one part. How: This expects Alice's rotation allowed.
+	await assertFails( reqSetFun( carStoObj, 'carol' ) );                                         // What: Old Link Request. Why: The old link stopped working. How: This expects Carol refused with it.
+	await assertSucceeds( reqSetFun( carStoObj, 'carol', { inviteToken : NEW_TOK_STR } ) );       // What: New Link Request. Why: The new link opens the group. How: This expects Carol allowed with it.
 
 
 } );

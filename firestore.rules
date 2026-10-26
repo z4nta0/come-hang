@@ -48,6 +48,14 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * block adds the requester to the group's blocklist as it deletes their
  * request. A member then writes their own encrypted name and activity time.
  *
+ * A membership ends in one batch too, the count lowered and named for the
+ * member, their account entry dropped. Any member but the owner may leave,
+ * and only the owner removes someone, never themselves, in a transaction
+ * that also blocks them and rotates the invite: the group names a new token,
+ * the new invite is created, and the old one is deleted. The owner can
+ * rotate the invite on its own too, and only the owner deletes an invite,
+ * never the one the group still names.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -873,6 +881,257 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Leave And Removal Rules
+
+		// #region gonMemFun
+
+		function gonMemFun ( groIdeStr, uidValStr ) { // What: Gone Member Function. Why: A membership counts as ended only while the same batch deletes it. How: This is true when the member document exists before the batch and not after.
+
+
+			let memGonBoo = !existsAfter( memPatFun( groIdeStr, uidValStr ) ); // What: Member Gone Boolean. Why: The batch has to delete the membership. How: This requires no member document after.
+			let memOldBoo = exists( memPatFun( groIdeStr, uidValStr ) );       // What: Member Old Boolean. Why: Only a real membership can end. How: This requires the member document before.
+
+			let gonMemBoo = memGonBoo && memOldBoo; // What: Gone Member Boolean. Why: Both have to hold. How: This combines them.
+
+
+
+			return gonMemBoo; // What: Gone Member Return. Why: The leave and removal rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion gonMemFun
+
+
+
+		// #region droGroFun
+
+		function droGroFun ( uidValStr ) { // What: Drop Group Function. Why: A group leaves an account only as that membership ends, by the member leaving or the owner removing them. How: This is true for the member or the group's owner dropping one member entry whose membership the same batch deletes.
+
+
+			let oldGroObj = resource.data.groups;                                              // What: Old Groups Object. Why: The checks read the map as it was. How: This names it.
+			let droKeyArr = oldGroObj.keys().removeAll( request.resource.data.groups.keys() ); // What: Dropped Keys Array. Why: The one group being dropped has to be found. How: This lists the keys the old map has and the new one lacks.
+			let groIdeStr = droKeyArr[ 0 ];                                                    // What: Group Identifier String. Why: The checks look up the group being dropped. How: This takes the first dropped key, and a missing one fails the lookup, refusing the write.
+
+			let fieOnlBoo = request.resource.data.diff( resource.data ).affectedKeys().hasOnly( [ 'groups' ] ); // What: Fields Only Boolean. Why: Only the map may change, never the paid flag. How: This allows changes to groups alone.
+			let gonMemBoo = gonMemFun( groIdeStr, uidValStr );                                                  // What: Gone Member Boolean. Why: The entry goes with the membership itself. How: This requires the membership deleted in the batch.
+			let memValBoo = oldGroObj[ groIdeStr ] == 'member';                                                 // What: Member Value Boolean. Why: An owner can't leave or be removed without transferring the group first (Section 18). How: This requires the dropped entry to be a member entry.
+			let oneDroBoo = request.resource.data.groups.diff( oldGroObj ).affectedKeys().size() == 1;          // What: One Dropped Boolean. Why: One leave or removal ends one membership, and no other entry may change with it. How: This requires exactly one key to differ.
+			let whoValBoo = isaOwnFun( uidValStr ) || isaOwnFun( get( groPatFun( groIdeStr ) ).data.ownerUid ); // What: Who Valid Boolean. Why: Only the member themselves, leaving, or the group's owner, removing them, ends a membership. How: This allows either requester.
+
+			let droAllBoo = fieOnlBoo && gonMemBoo && memValBoo && oneDroBoo && whoValBoo; // What: Drop Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return droAllBoo; // What: Drop Allowed Return. Why: The account rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion droGroFun
+
+
+
+		// #region delMemFun
+
+		function delMemFun ( groIdeStr, uidValStr ) { // What: Delete Member Function. Why: A membership ends only by the member leaving or the owner removing them, never the owner's own, and always with its account entry and count (Section 9). How: This is true when the member or owner deletes a membership other than the owner's, with the account entry dropped and the count lowered for it in the same batch.
+
+
+			let groAftObj = getAfter( groPatFun( groIdeStr ) ).data; // What: Group After Object. Why: The count has to move with this membership. How: This reads the group as the batch leaves it.
+			let groOldObj = get( groPatFun( groIdeStr ) ).data;      // What: Group Old Object. Why: The owner and the old count come from before the batch. How: This reads the group as it was.
+
+			let accGonBoo = !( groIdeStr in getAfter( accPatFun( uidValStr ) ).data.groups ); // What: Account Gone Boolean. Why: The member's slot frees with the membership. How: This requires the account to drop the group once the batch is applied.
+			let couOneBoo = groAftObj.memberCount == groOldObj.memberCount - 1;               // What: Count One Boolean. Why: Each leave or removal uncounts one member. How: This requires the count to fall by exactly one.
+			let couUidBoo = groAftObj.countedUid == uidValStr;                                // What: Counted UID Boolean. Why: The count's change has to be for this member. How: This requires the group to name them.
+			let notOwnBoo = uidValStr != groOldObj.ownerUid;                                  // What: Not Owner Boolean. Why: An owner transfers the group before leaving, and can't remove themselves (Section 18). How: This refuses the owner's own membership.
+			let whoValBoo = isaOwnFun( uidValStr ) || isaOwnFun( groOldObj.ownerUid );        // What: Who Valid Boolean. Why: Only the member, leaving, or the owner, removing them, ends a membership. How: This allows either requester.
+
+			let delAllBoo = accGonBoo && couOneBoo && couUidBoo && notOwnBoo && whoValBoo; // What: Delete Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return delAllBoo; // What: Delete Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion delMemFun
+
+
+
+		// #region rotTokFun
+
+		function rotTokFun ( groIdeStr ) { // What: Rotate Token Function. Why: Rotating the invite has to leave exactly one working link, the new one (Section 9). How: This is true when the group names a new token whose invite the batch creates for this group, and the batch deletes the old token's invite.
+
+
+			let newInvBoo = getAfter( invPatFun( request.resource.data.currentInviteToken ) ).data.groupId == groIdeStr; // What: New Invite Boolean. Why: The new token has to open this group. How: This requires its invite after the batch.
+			let newTokBoo = request.resource.data.currentInviteToken != resource.data.currentInviteToken;                // What: New Token Boolean. Why: A rotation changes the token. How: This requires a different one.
+			let oldGonBoo = !existsAfter( invPatFun( resource.data.currentInviteToken ) );                               // What: Old Gone Boolean. Why: The old link has to stop working. How: This requires its invite deleted by the batch.
+
+			let rotTokBoo = newInvBoo && newTokBoo && oldGonBoo; // What: Rotate Token Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return rotTokBoo; // What: Rotate Token Return. Why: The rotation and removal rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion rotTokFun
+
+
+
+		// #region lefGroFun
+
+		function lefGroFun ( groIdeStr ) { // What: Leave Group Function. Why: A member leaving lowers the group's count for themselves, and nothing else of the group's changes. How: This is true for a member other than the owner lowering the count by one for their own membership, which the same batch deletes.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'countedUid', 'memberCount' ] ); // What: Fields Only Boolean. Why: A leave changes the count and nothing else of the group's. How: This allows changes to those two fields alone.
+			let gonMemBoo = gonMemFun( groIdeStr, groNewObj.countedUid );                                              // What: Gone Member Boolean. Why: The count only moves with a real membership ending. How: This requires the counted UID's membership deleted in the batch.
+			let isaCouBoo = isaOwnFun( groNewObj.countedUid );                                                         // What: Is-A Counted Boolean. Why: Leaving is the member's own act. How: This requires the requester to be the counted member.
+			let notOwnBoo = groNewObj.countedUid != resource.data.ownerUid;                                            // What: Not Owner Boolean. Why: An owner transfers the group before leaving (Section 18). How: This refuses the owner.
+			let oneDowBoo = groNewObj.memberCount == resource.data.memberCount - 1;                                    // What: One Down Boolean. Why: One leave uncounts one member. How: This requires the count to fall by exactly one.
+
+			let lefAllBoo = fieOnlBoo && gonMemBoo && isaCouBoo && notOwnBoo && oneDowBoo; // What: Leave Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return lefAllBoo; // What: Leave Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion lefGroFun
+
+
+
+		// #region remGroFun
+
+		function remGroFun ( groIdeStr ) { // What: Remove Group Function. Why: The owner's removal of a member blocks them and rotates the invite in the same transaction, so the link they had stops working (Section 9). How: This is true for the owner lowering the count by one for a membership the batch deletes, blocking that UID, and rotating the invite.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+
+			let bloUidBoo = groNewObj.removedUids.diff( resource.data.removedUids ).affectedKeys() == [ groNewObj.countedUid ].toSet();                     // What: Blocked UID Boolean. Why: A removal blocks exactly the removed member. How: This requires the blocklist to change for that UID alone.
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'countedUid', 'currentInviteToken', 'memberCount', 'removedUids' ] ); // What: Fields Only Boolean. Why: A removal changes the count, the blocklist, and the token, and nothing else of the group's. How: This allows changes to those fields alone.
+			let gonMemBoo = gonMemFun( groIdeStr, groNewObj.countedUid );                                                                                   // What: Gone Member Boolean. Why: The count only moves with a real membership ending. How: This requires the counted UID's membership deleted in the batch.
+			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                                                            // What: Is-An Owner Boolean. Why: Only the owner removes members (Section 9). How: This requires the requester to own the group.
+			let oneDowBoo = groNewObj.memberCount == resource.data.memberCount - 1;                                                                         // What: One Down Boolean. Why: One removal uncounts one member. How: This requires the count to fall by exactly one.
+			let rotTokBoo = rotTokFun( groIdeStr ); // What: Rotate Token Boolean. Why: A removal always rotates the link. How: This checks the rotation.
+			let truValBoo = groNewObj.removedUids[ groNewObj.countedUid ] == true;                                                                          // What: True Value Boolean. Why: The blocklist maps each UID to true. How: This requires it.
+
+			let remAllBoo = bloUidBoo && fieOnlBoo && gonMemBoo && isaOwnBoo && oneDowBoo && rotTokBoo && truValBoo; // What: Remove Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return remAllBoo; // What: Remove Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion remGroFun
+
+
+
+		// #region rotGroFun
+
+		function rotGroFun ( groIdeStr ) { // What: Rotate Group Function. Why: The owner can revoke the link at any time, such as after it's over-shared (Section 9). How: This is true for the owner changing only the group's token in a valid rotation.
+
+
+			let fieOnlBoo = request.resource.data.diff( resource.data ).affectedKeys().hasOnly( [ 'currentInviteToken' ] ); // What: Fields Only Boolean. Why: A rotation changes the token alone. How: This allows that field alone.
+			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                            // What: Is-An Owner Boolean. Why: Only the owner rotates the link. How: This requires the requester to own the group.
+			let rotTokBoo = rotTokFun( groIdeStr );                                                                         // What: Rotate Token Boolean. Why: The rotation leaves one working link. How: This checks it.
+
+			let rotAllBoo = fieOnlBoo && isaOwnBoo && rotTokBoo; // What: Rotate Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return rotAllBoo; // What: Rotate Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion rotGroFun
+
+
+
+		// #region delInvFun
+
+		function delInvFun ( tokValStr ) { // What: Delete Invite Function. Why: Only the owner retires an invite, and never the one the group still names, so a group always has a working link. How: This is true for the group's owner deleting an invite the group no longer names once the batch is applied.
+
+
+			let groIdeStr = resource.data.groupId; // What: Group Identifier String. Why: The checks look up the invite's group. How: This reads it from the invite.
+
+			let isaOwnBoo = isaOwnFun( get( groPatFun( groIdeStr ) ).data.ownerUid );                // What: Is-An Owner Boolean. Why: Only the owner retires a link. How: This requires the requester to own the group.
+			let notCurBoo = getAfter( groPatFun( groIdeStr ) ).data.currentInviteToken != tokValStr; // What: Not Current Boolean. Why: The group's named link must keep working. How: This refuses the token the group names after the batch.
+
+			let delAllBoo = isaOwnBoo && notCurBoo; // What: Delete Allowed Boolean. Why: Both have to hold. How: This combines them.
+
+
+
+			return delAllBoo; // What: Delete Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion delInvFun
+
+		// #endregion Leave And Removal Rules
+
+
+
+		// #region Update Dispatch
+
+		// #region updAccFun
+
+		function updAccFun ( uidValStr ) { // What: Update Account Function. Why: An account changes in three ways, each part of a larger batch. How: This is true when the change is a created group's owned entry, an approved joiner's member entry, or an ended membership's dropped entry.
+
+
+			let addMemBoo = addMemFun( uidValStr ); // What: Add Member Boolean. Why: An approval adds a member entry. How: This checks that shape.
+			let addOwnBoo = addOwnFun( uidValStr ); // What: Add Owned Boolean. Why: A creation adds an owned entry. How: This checks that shape.
+			let droGroBoo = droGroFun( uidValStr ); // What: Drop Group Boolean. Why: A leave or removal drops an entry. How: This checks that shape.
+
+			let updAllBoo = addMemBoo || addOwnBoo || droGroBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updAccFun
+
+
+
+		// #region updGroFun
+
+		function updGroFun ( groIdeStr ) { // What: Update Group Function. Why: A group changes in five ways, each part of a larger batch. How: This is true when the change is an approval, a block, a leave, a removal, or a rotation.
+
+
+			let bloValBoo = bloGroFun( groIdeStr ); // What: Block Valid Boolean. Why: A decline can block its sender. How: This checks that shape.
+			let joiValBoo = joiGroFun( groIdeStr ); // What: Join Valid Boolean. Why: An approval raises the count. How: This checks that shape.
+			let lefValBoo = lefGroFun( groIdeStr ); // What: Leave Valid Boolean. Why: A leave lowers the count. How: This checks that shape.
+			let remValBoo = remGroFun( groIdeStr ); // What: Remove Valid Boolean. Why: A removal lowers the count, blocks, and rotates. How: This checks that shape.
+			let rotValBoo = rotGroFun( groIdeStr ); // What: Rotate Valid Boolean. Why: The owner can revoke the link. How: This checks that shape.
+
+			let updAllBoo = bloValBoo || joiValBoo || lefValBoo || remValBoo || rotValBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updGroFun
+
+		// #endregion Update Dispatch
+
+
+
 		// #region creInvFun
 
 		function creInvFun ( tokValStr ) { // What: Create Invite Function. Why: An invite is written by its group's owner, under the token the group names, carrying the group's real name. How: This is true when the token has its form and the group, once the batch is applied, matches the invite.
@@ -976,9 +1235,9 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		match /accounts/{uidValStr} { // What: Account Match. Why: Each identity's memberships and paid flag live here. How: This matches one account document by UID.
 
 
-			allow get    : if isaOwnFun( uidValStr );                           // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
-			allow create : if creAccFun( uidValStr );                           // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
-			allow update : if addOwnFun( uidValStr ) || addMemFun( uidValStr ); // What: Account Update Rule. Why: A group joins its creator's account as it's created, and a joiner's account as they're approved. How: This allows it when addOwnFun or addMemFun passes.
+			allow get    : if isaOwnFun( uidValStr ); // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
+			allow create : if creAccFun( uidValStr ); // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
+			allow update : if updAccFun( uidValStr ); // What: Account Update Rule. Why: A group joins or leaves an account only as part of a creation, approval, leave, or removal. How: This allows it when updAccFun passes.
 
 
 		}
@@ -988,9 +1247,9 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		match /groups/{groIdeStr} { // What: Group Match. Why: Each group's own settings live here. How: This matches one group document by ID.
 
 
-			allow get    : if isaMemFun( groIdeStr );                           // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
-			allow create : if creGroFun( groIdeStr );                           // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
-			allow update : if joiGroFun( groIdeStr ) || bloGroFun( groIdeStr ); // What: Group Update Rule. Why: An approval raises the count, and a decline can block its sender. How: This allows it when joiGroFun or bloGroFun passes.
+			allow get    : if isaMemFun( groIdeStr ); // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
+			allow create : if creGroFun( groIdeStr ); // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
+			allow update : if updGroFun( groIdeStr ); // What: Group Update Rule. Why: A group changes only as part of an approval, block, leave, removal, or rotation. How: This allows it when updGroFun passes.
 
 
 
@@ -1000,6 +1259,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 				allow read   : if isaMemFun( groIdeStr );                                                 // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
 				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr ); // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
 				allow update : if updMemFun( groIdeStr, uidValStr );                                      // What: Member Update Rule. Why: A member writes their own name and activity time. How: This allows it when updMemFun passes.
+				allow delete : if delMemFun( groIdeStr, uidValStr );                                      // What: Member Delete Rule. Why: A member leaves, or the owner removes them. How: This allows it when delMemFun passes.
 
 
 			}
@@ -1026,6 +1286,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			allow get    : if isaSigFun();            // What: Invite Get Rule. Why: Whoever holds the link sees which group it opens. How: This lets anyone signed in fetch one invite by its token, while listing stays refused, so tokens can't be collected.
 			allow create : if creInvFun( tokValStr ); // What: Invite Create Rule. Why: The owner issues the group's invite. How: This allows it when creInvFun passes.
+			allow delete : if delInvFun( tokValStr ); // What: Invite Delete Rule. Why: The owner retires an old link as it rotates. How: This allows it when delInvFun passes.
 
 
 		}

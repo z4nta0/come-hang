@@ -11,12 +11,14 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-25 (the group's `countedUid` in Section 11.2;
-untrusted text and paths in Section 11.11; text limits in Section 11.10 and
-binary formats in Section 6; the private `/accounts/{uid}` doc, the group's
-`memberCount`, and the paywall's switch decided for the caps' enforcement,
-Sections 4, 9, 11.1, 11.2, 17, and 18; the emulator harness for the
-security rules noted in Section 14; routing decided in Section 14).
+Last updated: 2026-10-26 (leaving, removal, and rotation batches in Section
+9, and group deletion added to Section 14's open items; the group's
+`countedUid` in Section 11.2; untrusted text and paths in Section 11.11;
+text limits in Section 11.10 and binary formats in Section 6; the private
+`/accounts/{uid}` doc, the group's `memberCount`, and the paywall's switch
+decided for the caps' enforcement, Sections 4, 9, 11.1, 11.2, 17, and 18;
+the emulator harness for the security rules noted in Section 14; routing
+decided in Section 14).
 
 ---
 
@@ -508,13 +510,21 @@ in place of their name. The group can manually reassign it if needed.
 - The link is open-ended (multi-redeem, valid until revoked), not
   single-use.
 - The creator can revoke/regenerate the link at any time, independent of
-  any removal action, for cases like the link being over-shared.
+  any removal action, for cases like the link being over-shared. A
+  rotation is one batch (decided 2026-10-26): the group names a new token,
+  the new invite is created, and the old one is deleted. Only the creator
+  may delete an invite, and never the one the group currently names, so a
+  group always has exactly one working link.
 - **Throughout this doc, "creator" means the group's current owner**
   (`ownerUid`), which starts as the person who created it and can change
   through an ownership transfer (Section 18).
 - **The creator can remove any individual member at any time**, gated by
-  a security rule restricting this action to the group creator. Every
-  member can always remove themselves (leave).
+  a security rule restricting this action to the group creator, but never
+  themselves. Every other member can always remove themselves (leave), in
+  one batch that deletes their membership, drops the group from their
+  `/accounts/{uid}` map, and lowers `memberCount` with `countedUid` set to
+  them (decided 2026-10-26). The creator leaves only by transferring the
+  group first (Section 18).
 - **Removal always rotates the invite link** (decided over the
   simpler "only rotate if you want to" alternative, accepting the added
   friction deliberately): the creator is shown a warning before
@@ -1221,6 +1231,11 @@ the Blaze change.
   (2026-10-25): `firebase.json`, a `firestore.rules` that refuses
   everything, and a rules suite in `tests/rules/` run by `npm run
   test:rules`.
+- Deleting a whole group: its member docs, events, and other
+  subcollections, every member's `/accounts/{uid}` entry, and its invite.
+  A client can't do that in one batch for a large group, so it likely
+  runs as a Cloud Function; decided alongside ownership transfer and
+  claiming.
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM
