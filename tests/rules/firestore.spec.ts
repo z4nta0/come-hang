@@ -7,7 +7,7 @@ import { assertFails               } from '@firebase/rules-unit-testing'; // Wha
 import { assertSucceeds            } from '@firebase/rules-unit-testing'; // What: Assert Succeeds. Why: An allowed request must go through. How: This expects it to succeed.
 import { Bytes                     } from 'firebase/firestore';           // What: Bytes. Why: Keys, IVs, and ciphertext are stored as bytes. How: This builds byte values of a chosen size.
 import { collection                } from 'firebase/firestore';           // What: Collection. Why: Listing a collection is checked as its own request. How: This builds a collection reference.
-import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: A leave or removal drops one entry from an account's groups map. How: This removes a field in an update.
+import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: A leave, removal, or transfer drops an entry from one of an account's group maps. How: This removes a field in an update.
 import { deleteDoc                 } from 'firebase/firestore';           // What: Delete Doc. Why: Deletion rules are checked. How: This deletes a document.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every request names a document. How: This builds a reference.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Fetch rules are checked. How: This reads one document.
@@ -59,11 +59,12 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
 
 // #region Constants
 
-const DAY_MIL_NUM = 86400000;                                       // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
-const GRO_NAM_STR = 'Dinner Club';                                  // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
-const LOC_SWI_STR = 'return false; // What: Paywall Locked Return'; // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
-const NEW_TOK_STR = 'N'.repeat( 22 );                               // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
-const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                       // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
+const DAY_MIL_NUM = 86400000;                                            // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
+const GRO_NAM_STR = 'Dinner Club';                                       // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
+const LOC_SWI_STR = 'return false; // What: Paywall Locked Return';      // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
+const NEW_TOK_STR = 'N'.repeat( 22 );                                    // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
+const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null }; // What: Offer End Object. Why: A withdrawal and a decline both clear the offer. How: This is the change that does it.
+const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                            // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
 
 // #endregion Constants
 
@@ -131,7 +132,8 @@ const groMapFun = ( preStr : string, couNum : number ) => Object.fromEntries( Ar
  * @summary
  * Writes a document with the rules turned off, so a test can start from a
  * state no client could reach on its own, such as an account already at a
- * cap or a paid flag only the webhook could set.
+ * cap or a paid flag only the webhook could set. It replaces the whole
+ * document, or with updBoo set changes only the fields given.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -139,18 +141,20 @@ const groMapFun = ( preStr : string, couNum : number ) => Object.fromEntries( Ar
  *                    to.
  * @param patValStr - Path Value String: The document's path.
  * @param datValObj - Data Value Object: The document's fields.
+ * @param updBoo    - Update Boolean: Whether to change only the given fields
+ *                    of an existing document, false by default.
  *
  * @returns A promise that settles once the document is written, with no
  *          value.
  *
  * @example
  * ```ts
- * seeDocFun(tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} }) // => Promise<void>
+ * seeDocFun(tesEnvObj, 'accounts/bob', datValObj, true) // => Promise<void>
  * ```
  *
 */
 
-const seeDocFun = ( envTesObj : RulesTestEnvironment, patValStr : string, datValObj : Record< string, unknown > ) => envTesObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), patValStr ), datValObj ) ); // What: Seed Document Function. Why: Tests start from states only the server could write. How: This writes the document with the rules off.
+const seeDocFun = ( envTesObj : RulesTestEnvironment, patValStr : string, datValObj : Record< string, unknown >, updBoo = false ) => envTesObj.withSecurityRulesDisabled( ( cotAdmObj ) => updBoo ? updateDoc( doc( cotAdmObj.firestore(), patValStr ), datValObj ) : setDoc( doc( cotAdmObj.firestore(), patValStr ), datValObj ) ); // What: Seed Document Function. Why: Tests start from states only the server could write. How: This writes the document with the rules off, replacing it or, when asked, updating it.
 
 // #endregion seeDocFun
 
@@ -207,6 +211,7 @@ const groBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : GbfOp
 		memberCount        : 1,
 		name               : GRO_NAM_STR,
 		ownerUid           : uidValStr,
+		pendingOfferedAt   : null,
 		pendingOwnerUid    : null,
 		removedUids        : {},
 
@@ -394,10 +399,10 @@ const seeReqFun = async ( envTesObj : RulesTestEnvironment, uidValStr : string )
 const seeAppFun = async ( envTesObj : RulesTestEnvironment, memCouNum = 1, paiOwnBoo = false ) => { // What: Seed Approval Function. Why: Approval tests need a group at a chosen count without creating it member by member. How: This seeds the group and its people directly.
 
 
-	await seeDocFun( envTesObj, 'groups/gro1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : memCouNum, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Group Seed. Why: The approval changes this group. How: This writes it at the chosen count.
-	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } );                                                                                        // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
-	await seeDocFun( envTesObj, 'accounts/alice', paiOwnBoo ? { memberGroups : {}, ownedGroups : { gro1 : true }, paid : true } : { memberGroups : {}, ownedGroups : { gro1 : true } } );                                                                                           // What: Owner Account Seed. Why: The member cap follows the owner's paid status. How: This writes Alice's account, paid when asked.
-	await seeDocFun( envTesObj, `invites/${ TOK_ONE_STR }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } ); // What: Invite Seed. Why: The group has its working invite. How: This writes it.
+	await seeDocFun( envTesObj, 'groups/gro1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : memCouNum, name : GRO_NAM_STR, ownerUid : 'alice', pendingOfferedAt : null, pendingOwnerUid : null, removedUids : {} } ); // What: Group Seed. Why: The approval changes this group. How: This writes it at the chosen count.
+	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } ); // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
+	await seeDocFun( envTesObj, 'accounts/alice', paiOwnBoo ? { memberGroups : {}, ownedGroups : { gro1 : true }, paid : true } : { memberGroups : {}, ownedGroups : { gro1 : true } } );    // What: Owner Account Seed. Why: The member cap follows the owner's paid status. How: This writes Alice's account, paid when asked.
+	await seeDocFun( envTesObj, `invites/${ TOK_ONE_STR }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } );                                       // What: Invite Seed. Why: The group has its working invite. How: This writes it.
 
 	await seeReqFun( envTesObj, 'bob' ); // What: Bob Request Seed. Why: Bob is the joiner being approved. How: This seeds his pending request.
 
@@ -689,6 +694,99 @@ const remBatFun = ( stoConObj : StoConTyp, optValObj : RbfOptTyp = {} ) => { // 
 
 // #endregion remBatFun
 
+
+
+// #region offSetFun
+
+/**
+ * offSetFun = Offer Set Function
+ *
+ * @summary
+ * Writes an ownership offer on gro1 the way the app will: the group naming
+ * the member offered it, stamped with the server's time. Extra fields can
+ * replace or join the offer's own.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The connection that writes the
+ *                    offer.
+ * @param tarUidStr - Target UID String: The member offered the group.
+ * @param groChaObj - Group Change Object: Fields to write beside the offer,
+ *                    empty by default.
+ *
+ * @returns A promise that settles once the offer is written, with no value,
+ *          and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * offSetFun(aliStoObj, 'bob') // => Promise<void>
+ * ```
+ *
+*/
+
+const offSetFun = ( stoConObj : StoConTyp, tarUidStr : string, groChaObj : Record< string, unknown > = {} ) => updateDoc( doc( stoConObj, 'groups/gro1' ), { pendingOfferedAt : serverTimestamp(), pendingOwnerUid : tarUidStr, ...groChaObj } ); // What: Offer Set Function. Why: The transfer tests make offers, some with a field changed. How: This writes the offer, with any changes the test adds.
+
+// #endregion offSetFun
+
+
+
+type TbfOptTyp = { groObj? : Record< string, unknown > | null, newBoo? : boolean, newObj? : Record< string, unknown >, oldBoo? : boolean, oldObj? : Record< string, unknown > }; // What: TBF Options Type. Why: Each acceptance test changes or leaves out one part of the batch. How: This lists the overrides, where false or null leaves that part out, and newObj or oldObj adds fields to the new or old owner's account write.
+
+// #region takBatFun
+
+/**
+ * takBatFun = Take Batch Function
+ *
+ * @summary
+ * Commits the three writes that accept an offer of gro1 from Alice, as the
+ * app will: the group naming the accepting member as owner with its offer
+ * cleared, the group moved from their member map to their owned map, and
+ * moved the other way in Alice's account. Each part can be left out, and
+ * each write's fields changed, by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The accepting member's
+ *                    connection.
+ * @param uidValStr - UID Value String: The member taking the group over.
+ * @param optValObj - Option Value Object: {@link TbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * takBatFun(bobStoObj, 'bob', { oldBoo : false }) // => Promise<void>
+ * ```
+ *
+*/
+
+const takBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : TbfOptTyp = {} ) => { // What: Take Batch Function. Why: Most acceptance tests commit the same three writes with one part changed. How: This builds and commits the batch.
+
+
+	const batWriObj = writeBatch( stoConObj ); // What: Batch Write Object. Why: The three writes have to land together. How: This starts the batch.
+
+
+	if ( optValObj.groObj !== null ) batWriObj.update( doc( stoConObj, 'groups/gro1' ), { ownerUid : uidValStr, ...OFF_END_OBJ, ...optValObj.groObj } ); // What: Group Write. Why: The group changes hands and its offer is used up. How: This names the new owner and clears the offer, with any changes the test adds, unless the test leaves it out.
+
+
+
+	if ( optValObj.newBoo !== false ) batWriObj.update( doc( stoConObj, `accounts/${ uidValStr }` ), { 'memberGroups.gro1' : deleteField(), 'ownedGroups.gro1' : true, ...optValObj.newObj } ); // What: New Owner Account Write. Why: The new owner takes an owned slot. How: This moves the group to their owned map, with any changes the test adds, unless the test leaves it out.
+
+
+
+	if ( optValObj.oldBoo !== false ) batWriObj.update( doc( stoConObj, 'accounts/alice' ), { 'memberGroups.gro1' : true, 'ownedGroups.gro1' : deleteField(), ...optValObj.oldObj } ); // What: Old Owner Account Write. Why: Alice stays a member and frees her owned slot. How: This moves the group to her member map, with any changes the test adds, unless the test leaves it out.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion takBatFun
+
 // #endregion Helpers
 
 
@@ -890,17 +988,18 @@ test( 'a group starts with valid fields, one member, and nothing offered or bloc
 
 	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The batch adds to an existing account. How: This writes Alice's empty one.
 
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { memberCount : 2 } } ) );                          // What: Two Members. Why: The creator is the only member. How: This expects a count of 2 refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { pendingOwnerUid : 'bob' } } ) );                  // What: Offered Group. Why: Nobody has been offered a new group. How: This expects an offer refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { removedUids : { bob : true } } } ) );             // What: Blocked UID. Why: Nobody has been removed yet. How: This expects a blocked UID refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { createdAt : Timestamp.fromMillis( 1000 ) } } ) ); // What: Backdated Group. Why: The creation time has to be the server's. How: This expects a chosen time refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { countedUid : 'bob' } } ) );                       // What: Other Counted. Why: The count's one member is the creator. How: This expects another UID refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { ownerUid : 'bob' } } ) );                         // What: Other Owner. Why: Nobody creates a group in someone else's name. How: This expects Bob as owner refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 6 } } ) );                          // What: Short Retention. Why: Chat retention runs at least 7 days. How: This expects 6 refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 181 } } ) );                        // What: Long Retention. Why: Chat retention runs at most 180 days. How: This expects 181 refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : '30' } } ) );                       // What: Text Retention. Why: Retention is a whole number of days. How: This expects text refused.
-	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { extra : true } } ) );                             // What: Extra Field. Why: A group holds only its own fields. How: This expects another refused.
-	await assertSucceeds( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 7 } } ) );                       // What: Shortest Retention. Why: The batches above failed only for their one field, and 7 is in range. How: This expects the batch allowed.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { memberCount : 2 } } ) );                                               // What: Two Members. Why: The creator is the only member. How: This expects a count of 2 refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { pendingOfferedAt : serverTimestamp(), pendingOwnerUid : 'bob' } } ) ); // What: Offered Group. Why: Nobody has been offered a new group. How: This expects an offer refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { pendingOfferedAt : serverTimestamp() } } ) );                          // What: Timed Without Offer. Why: An offer's time comes only with an offer. How: This expects a time with nobody named refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { removedUids : { bob : true } } } ) );                                  // What: Blocked UID. Why: Nobody has been removed yet. How: This expects a blocked UID refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { createdAt : Timestamp.fromMillis( 1000 ) } } ) );                      // What: Backdated Group. Why: The creation time has to be the server's. How: This expects a chosen time refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { countedUid : 'bob' } } ) );                                            // What: Other Counted. Why: The count's one member is the creator. How: This expects another UID refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { ownerUid : 'bob' } } ) );                                              // What: Other Owner. Why: Nobody creates a group in someone else's name. How: This expects Bob as owner refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 6 } } ) );                                               // What: Short Retention. Why: Chat retention runs at least 7 days. How: This expects 6 refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 181 } } ) );                                             // What: Long Retention. Why: Chat retention runs at most 180 days. How: This expects 181 refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : '30' } } ) );                                            // What: Text Retention. Why: Retention is a whole number of days. How: This expects text refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { groObj : { extra : true } } ) );                                                  // What: Extra Field. Why: A group holds only its own fields. How: This expects another refused.
+	await assertSucceeds( groBatFun( aliStoObj, 'alice', { groObj : { chatTtlDays : 7 } } ) );                                            // What: Shortest Retention. Why: The batches above failed only for their one field, and 7 is in range. How: This expects the batch allowed.
 
 
 } );
@@ -1047,7 +1146,7 @@ test( "an account's groups change only by one owned entry, as that group is crea
 
 
 	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } ); // What: Account Seed Call. Why: The changes need an account to change. How: This writes Alice's empty one.
-	await seeDocFun( tesEnvObj, 'groups/old1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : 1, name : GRO_NAM_STR, ownerUid : 'alice', pendingOwnerUid : null, removedUids : {} } ); // What: Old Group Seed Call. Why: A group that already exists can't be claimed as newly created. How: This writes one owned by Alice.
+	await seeDocFun( tesEnvObj, 'groups/old1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : 1, name : GRO_NAM_STR, ownerUid : 'alice', pendingOfferedAt : null, pendingOwnerUid : null, removedUids : {} } ); // What: Old Group Seed Call. Why: A group that already exists can't be claimed as newly created. How: This writes one owned by Alice.
 
 	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'ownedGroups.ghost' : true } ) ); // What: Ghost Entry. Why: An entry is added only as its group is created. How: This expects an entry for a group that doesn't exist refused.
 	await assertFails( updateDoc( doc( aliStoObj, 'accounts/alice' ), { 'ownedGroups.old1' : true } ) );  // What: Old Group Entry. Why: Only a group created in the same batch joins the account this way. How: This expects an entry for an existing group refused.
@@ -1533,6 +1632,204 @@ test( 'the owner rotates the invite on its own, while nobody else rotates it or 
 	await assertSucceeds( remBatFun( aliStoObj, { uidStr : null } ) );                            // What: Link Rotated. Why: The rotations above failed only for their one part. How: This expects Alice's rotation allowed.
 	await assertFails( reqSetFun( carStoObj, 'carol' ) );                                         // What: Old Link Request. Why: The old link stopped working. How: This expects Carol refused with it.
 	await assertSucceeds( reqSetFun( carStoObj, 'carol', { inviteToken : NEW_TOK_STR } ) );       // What: New Link Request. Why: The new link opens the group. How: This expects Carol allowed with it.
+
+
+} );
+
+
+
+test( 'the owner offers the group to a member, who accepts it in one batch, becoming owner while the old owner stays a member', async () => { // What: Transfer Test. Why: Ownership moves only when a member agrees to take it (Section 18). How: This offers the group to Bob as Alice and accepts as Bob, then checks who may rotate the invite and that Alice can now leave.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group, then hands it over. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob takes the group over. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: A transfer needs a member to take the group. How: This approves Bob into the group.
+
+	await assertSucceeds( offSetFun( aliStoObj, 'bob' ) );             // What: Offer Made. Why: The owner may offer the group to a member with a free slot. How: This expects Alice's offer allowed.
+	await assertSucceeds( takBatFun( bobStoObj, 'bob' ) );             // What: Offer Accepted. Why: The member offered the group may take it. How: This expects Bob's acceptance allowed.
+	await assertFails( remBatFun( aliStoObj, { uidStr : null } ) );    // What: Old Owner Rotation. Why: Owner-only actions move with the group. How: This expects Alice's rotation refused.
+	await assertSucceeds( remBatFun( bobStoObj, { uidStr : null } ) ); // What: New Owner Rotation. Why: The new owner holds the owner-only actions. How: This expects Bob's rotation allowed.
+	await assertSucceeds( lefBatFun( aliStoObj, 'alice' ) );           // What: Old Owner Leave. Why: Once she's handed the group over, Alice is a member like any other. How: This expects her leave allowed.
+
+
+} );
+
+
+
+test( 'an offer comes only from the owner, to another member, stamped with the real time, and changes nothing else', async () => { // What: Offer Test. Why: An offer is the owner's to make, and its time decides when it lapses. How: This tries each improper offer, then makes a valid one.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is a member who isn't the owner. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'accounts/carol', { memberGroups : {}, ownedGroups : {} } ); // What: Outsider Account Seed. Why: Carol has a free slot but isn't a member. How: This writes her empty account.
+
+	await assertFails( offSetFun( bobStoObj, 'bob' ) );                                                            // What: Member Offer. Why: Only the owner offers the group. How: This expects Bob offering it to himself refused.
+	await assertFails( offSetFun( aliStoObj, 'carol' ) );                                                          // What: Outsider Offer. Why: Only a member can take the group over. How: This expects an offer to Carol refused.
+	await assertFails( offSetFun( aliStoObj, 'alice' ) );                                                          // What: Self Offer. Why: The owner already owns the group. How: This expects Alice offering it to herself refused.
+	await assertFails( offSetFun( aliStoObj, 'bob', { pendingOfferedAt : Timestamp.fromMillis( Date.now() ) } ) ); // What: Chosen Offer Time. Why: The offer's time decides when it lapses. How: This expects a time the client picked refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { pendingOwnerUid : 'bob' } ) );                // What: Untimed Offer. Why: Every offer carries its time. How: This expects an offer without one refused.
+	await assertFails( offSetFun( aliStoObj, 'bob', { name : 'New Name' } ) );                                     // What: Smuggled Rename. Why: An offer changes only the offer. How: This expects a rename beside it refused.
+	await assertSucceeds( offSetFun( aliStoObj, 'bob' ) );                                                         // What: Valid Offer. Why: The offers above failed only for their one fault. How: This expects Alice's offer to Bob allowed.
+
+
+} );
+
+
+
+test( 'an offer to a member with no free owned slot is refused the moment the owner makes it', async () => { // What: Full Slot Offer Test. Why: An offer that could never be accepted would leave the owner thinking the handover was done (Section 18). How: This fills Bob's owned slots, then tries the offer.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob', { ownedGroups : groMapFun( 'own', 10 ) }, true ); // What: Full Slot Seed. Why: Bob already owns as many groups as the open cap allows. How: This gives him 10.
+
+	await assertFails( offSetFun( accStoFun( 'alice' ), 'bob' ) ); // What: Full Slot Offer. Why: Bob couldn't accept, so Alice should know now. How: This expects her offer refused.
+
+
+} );
+
+
+
+test( 'the owner withdraws an offer and the member offered it declines it, while nobody else ends one', async () => { // What: Offer End Test. Why: Either side can call an offer off, but nobody else can cancel someone's handover. How: This tries improper ends, then declines as Bob and withdraws as Alice.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is offered the group. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins as a third member. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol is a member with no part in the offer. How: This approves her as Alice.
+
+	await offSetFun( aliStoObj, 'bob' ); // What: Offer Call. Why: The ends below need a standing offer. How: This offers the group to Bob.
+
+	await assertFails( updateDoc( doc( accStoFun( 'carol' ), 'groups/gro1' ), OFF_END_OBJ ) );                // What: Other Member Decline. Why: Only the owner or the member offered the group ends an offer. How: This expects Carol refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { ...OFF_END_OBJ, name : 'New Name' } ) ); // What: Smuggled Rename. Why: Ending an offer changes only the offer. How: This expects a rename beside it refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { pendingOwnerUid : null } ) );            // What: Half End. Why: An ended offer leaves no time behind. How: This expects clearing the name alone refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1' ), OFF_END_OBJ ) );                        // What: Offer Declined. Why: The member offered the group may turn it down. How: This expects Bob's decline allowed.
+	await assertSucceeds( offSetFun( aliStoObj, 'bob' ) );                                                    // What: Offer Made Again. Why: A declined offer can be made again. How: This expects Alice's new offer allowed.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1' ), OFF_END_OBJ ) );                        // What: Offer Withdrawn. Why: The owner may call an offer off. How: This expects Alice's withdrawal allowed.
+	await assertFails( takBatFun( bobStoObj, 'bob' ) );                                                       // What: Withdrawn Accept. Why: A withdrawn offer can't be accepted. How: This expects Bob's acceptance refused.
+
+
+} );
+
+
+
+test( 'an acceptance missing or changing any part is refused, as is one by anyone but the member offered', async () => { // What: Accept Parts Test. Why: The group, both accounts, and the offer have to move together, or slots and ownership would drift apart. How: This changes or leaves out one part at a time, then commits the whole batch.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is offered the group. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins as a third member. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol is a member the group wasn't offered to. How: This approves her as Alice.
+
+	await offSetFun( aliStoObj, 'bob' ); // What: Offer Call. Why: The acceptances below need a standing offer. How: This offers the group to Bob.
+
+	await seeDocFun( tesEnvObj, 'accounts/alice', { 'ownedGroups.gro9' : true }, true ); // What: Second Owned Seed. Why: The double drop needs Alice to own another group. How: This adds one to her owned map.
+
+	await assertFails( takBatFun( accStoFun( 'carol' ), 'carol' ) );                                         // What: Unoffered Accept. Why: Only the member offered the group takes it. How: This expects Carol refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { groObj : null } ) );                                   // What: Kept Owner. Why: The slots move only as the group changes hands. How: This expects a batch that skips the group refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { newBoo : false } ) );                                  // What: Kept New Account. Why: The new owner takes an owned slot. How: This expects a batch that skips Bob's account refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { oldBoo : false } ) );                                  // What: Kept Old Account. Why: The old owner's slot frees. How: This expects a batch that skips Alice's account refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { groObj : { name : 'New Name' } } ) );                  // What: Smuggled Rename. Why: An acceptance changes only the owner and the offer. How: This expects a rename in the batch refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { groObj : { pendingOwnerUid : 'bob' } } ) );            // What: Kept Offer. Why: An accepted offer is used up. How: This expects a batch that leaves it standing refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { newObj : { paid : true } } ) );                        // What: Smuggled Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused on Bob's account.
+	await assertFails( takBatFun( bobStoObj, 'bob', { oldObj : { paid : true } } ) );                        // What: Smuggled Old Paid Flag. Why: Only the payment webhook sets the paid flag. How: This expects it refused on Alice's account.
+	await assertFails( takBatFun( bobStoObj, 'bob', { newObj : { 'memberGroups.gro9' : true } } ) );         // What: Extra New Entry. Why: A transfer moves one group. How: This expects another entry on Bob's account refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { oldObj : { 'memberGroups.gro9' : true } } ) );         // What: Extra Old Entry. Why: A transfer moves one group. How: This expects another entry on Alice's account refused.
+	await assertFails( takBatFun( accStoFun( 'carol' ), 'bob' ) );                                           // What: Accept For Another. Why: Only the member offered the group agrees to take it. How: This expects Carol accepting on Bob's behalf refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { groObj : { ownerUid : 'carol' } } ) );                 // What: Hand To Another. Why: The group goes to the member who accepts it. How: This expects Bob making Carol owner refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { newObj : { 'ownedGroups.gro9' : true } } ) );          // What: Extra Owned Entry. Why: A transfer moves one group. How: This expects a second owned entry on Bob's account refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { oldObj : { 'ownedGroups.gro9' : deleteField() } } ) ); // What: Double Old Drop. Why: A transfer frees one of Alice's slots. How: This expects her second owned group dropped too refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { newObj : { 'ownedGroups.gro1' : 'owner' } } ) );       // What: New Entry Value. Why: Every entry holds true. How: This expects another value on Bob's account refused.
+	await assertFails( takBatFun( bobStoObj, 'bob', { oldObj : { 'memberGroups.gro1' : 'member' } } ) );     // What: Old Entry Value. Why: Every entry holds true. How: This expects another value on Alice's account refused.
+	await assertSucceeds( takBatFun( bobStoObj, 'bob' ) );                                                   // What: Whole Acceptance. Why: The batches above failed only for their one part. How: This expects the whole batch allowed.
+
+
+} );
+
+
+
+test( 'an offer is accepted within 7 days, by a member with a free owned slot who is still in the group', async () => { // What: Accept Window Test. Why: A forgotten offer mustn't be taken up long after the owner moved on, nor push anyone over a cap (Section 18). How: This tries an 8-day-old offer, a full slot, and a 6-day-old offer, then has Bob leave before accepting.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob is offered the group. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1', { pendingOfferedAt : Timestamp.fromMillis( Date.now() - 8 * DAY_MIL_NUM ), pendingOwnerUid : 'bob' }, true ); // What: Lapsed Offer Seed. Why: An offer lapses after 7 days. How: This dates Bob's offer 8 days back.
+
+	await assertFails( takBatFun( bobStoObj, 'bob' ) ); // What: Lapsed Accept. Why: The offer has lapsed. How: This expects Bob's acceptance refused.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1', { pendingOfferedAt : Timestamp.fromMillis( Date.now() - 6 * DAY_MIL_NUM ) }, true ); // What: Live Offer Seed. Why: An offer made 6 days ago still stands. How: This dates it 6 days back.
+	await seeDocFun( tesEnvObj, 'accounts/bob', { ownedGroups : groMapFun( 'own', 10 ) }, true );                                   // What: Full Slot Seed. Why: Bob may have filled his slots since the offer. How: This gives him 10 owned groups.
+
+	await assertFails( takBatFun( bobStoObj, 'bob' ) ); // What: Full Slot Accept. Why: Taking the group would put Bob over the own cap. How: This expects his acceptance refused.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob', { ownedGroups : {} }, true ); // What: Slot Freed Seed. Why: The live offer is accepted once Bob has room. How: This empties his owned map.
+
+	await assertSucceeds( takBatFun( bobStoObj, 'bob' ) ); // What: Live Accept. Why: A 6-day-old offer is within the window. How: This expects Bob's acceptance allowed.
+
+
+} );
+
+
+
+test( "a member who left since the offer can't accept it", async () => { // What: Left Accept Test. Why: Only a current member can take the group over. How: This offers the group to Bob, has him leave, then tries to accept.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob is offered the group, then leaves. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
+
+	await offSetFun( accStoFun( 'alice' ), 'bob' ); // What: Offer Call. Why: Bob holds an offer as he leaves. How: This offers him the group as Alice.
+
+	await lefBatFun( bobStoObj, 'bob' ); // What: Leave Call. Why: Bob leaves with the offer standing. How: This commits his leave.
+
+	await assertFails( takBatFun( bobStoObj, 'bob' ) ); // What: Left Accept. Why: Bob is no longer a member. How: This expects his acceptance refused.
+
+
+} );
+
+
+
+test( 'nobody deletes a group, and an account owner reads and dismisses only their own notices, which no client writes', async () => { // What: Deletion And Notice Test. Why: Deleting a group runs as a Cloud Function that clears its whole tree and leaves each member a notice, so clients can neither delete groups nor forge notices (Section 9). How: This tries a client delete, then reads, writes, and deletes a seeded notice as its owner and as someone else.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group and isn't the notice's owner. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob owns the notice. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: The delete needs a group, and Bob an account. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'accounts/bob/notices/not1', { createdAt : Timestamp.fromMillis( 1000 ), expireAt : Timestamp.fromMillis( Date.now() + 30 * DAY_MIL_NUM ), groupId : 'gro2', groupName : GRO_NAM_STR, kind : 'groupDeleted' } ); // What: Notice Seed. Why: A Cloud Function would have written it. How: This writes a deleted group's notice for Bob.
+
+	await assertFails( deleteDoc( doc( aliStoObj, 'groups/gro1' ) ) );                                       // What: Client Group Delete. Why: Only the Cloud Function deletes a group, whole. How: This expects even the owner refused.
+	await assertSucceeds( getDoc( doc( bobStoObj, 'accounts/bob/notices/not1' ) ) );                         // What: Own Notice Read. Why: Bob sees what happened while he was away. How: This expects his fetch allowed.
+	await assertSucceeds( getDocs( collection( bobStoObj, 'accounts/bob/notices' ) ) );                      // What: Own Notice List. Why: The app shows every waiting notice. How: This expects Bob's listing allowed.
+	await assertFails( getDoc( doc( aliStoObj, 'accounts/bob/notices/not1' ) ) );                            // What: Other Notice Read. Why: A notice is its owner's alone. How: This expects Alice refused.
+	await assertFails( getDocs( collection( aliStoObj, 'accounts/bob/notices' ) ) );                         // What: Other Notice List. Why: A notice is its owner's alone. How: This expects Alice's listing refused.
+	await assertFails( setDoc( doc( bobStoObj, 'accounts/bob/notices/not2' ), { kind : 'groupDeleted' } ) ); // What: Own Notice Write. Why: Only Cloud Functions write notices. How: This expects Bob writing one refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/bob/notices/not2' ), { kind : 'groupDeleted' } ) ); // What: Forged Notice. Why: A forged notice could tell Bob a group was deleted when it wasn't. How: This expects Alice writing one refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'accounts/bob/notices/not1' ), { kind : 'removed' } ) );   // What: Notice Change. Why: A notice says what really happened. How: This expects Bob changing one refused.
+	await assertFails( deleteDoc( doc( aliStoObj, 'accounts/bob/notices/not1' ) ) );                         // What: Other Notice Dismiss. Why: Only its owner dismisses a notice. How: This expects Alice refused.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'accounts/bob/notices/not1' ) ) );                      // What: Own Notice Dismiss. Why: Bob dismisses a notice once he's seen it. How: This expects his delete allowed.
 
 
 } );

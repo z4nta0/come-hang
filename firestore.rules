@@ -56,6 +56,15 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * rotate the invite on its own too, and only the owner deletes an invite,
  * never the one the group still names.
  *
+ * Ownership moves by offer and acceptance. The owner offers the group to a
+ * member with a free owned slot, so an offer that couldn't be accepted is
+ * refused at once, and the owner can withdraw it or the member decline it.
+ * The member accepts within 7 days in one batch that makes them owner,
+ * clears the offer, and moves the group between both owners' maps. Notices
+ * under an account, such as a group having been deleted, are written only by
+ * Cloud Functions, and the account's owner reads and dismisses them. No
+ * client deletes a group, which a Cloud Function does whole.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -473,16 +482,16 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 			let couUidBoo = groDatObj.countedUid is string;                                                             // What: Counted UID Boolean. Why: The member whose join or leave last changed the count is a UID. How: This requires a string.
-			let fieAllBoo = groDatObj.keys().toSet() == [ 'chatTtlDays', 'countedUid', 'createdAt', 'currentInviteToken', 'memberCount', 'name', 'ownerUid', 'pendingOwnerUid', 'removedUids' ].toSet(); // What: Fields All Boolean. Why: Every field is always present, and nothing else. How: This compares the document's fields with the full set.
+			let fieAllBoo = groDatObj.keys().toSet() == [ 'chatTtlDays', 'countedUid', 'createdAt', 'currentInviteToken', 'memberCount', 'name', 'ownerUid', 'pendingOfferedAt', 'pendingOwnerUid', 'removedUids' ].toSet(); // What: Fields All Boolean. Why: Every field is always present, and nothing else. How: This compares the document's fields with the full set.
 			let invTokBoo = groDatObj.currentInviteToken is string;                                                     // What: Invite Token Boolean. Why: The current token is text. How: This requires a string.
 			let memCouBoo = groDatObj.memberCount is int;                                                               // What: Member Count Boolean. Why: The count is a whole number. How: This requires an integer.
 			let namValBoo = namGroFun( groDatObj.name );                                                                // What: Name Valid Boolean. Why: The name keeps to its limits. How: This checks it.
 			let ownUidBoo = groDatObj.ownerUid is string;                                                               // What: Owner UID Boolean. Why: The owner is a UID. How: This requires a string.
-			let penOwnBoo = groDatObj.pendingOwnerUid == null || groDatObj.pendingOwnerUid is string;                   // What: Pending Owner Boolean. Why: An ownership offer names a UID, or there's none. How: This allows null or a string.
+			let offValBoo = groDatObj.pendingOwnerUid == null && groDatObj.pendingOfferedAt == null || groDatObj.pendingOwnerUid is string && groDatObj.pendingOfferedAt is timestamp; // What: Offer Valid Boolean. Why: An ownership offer names a UID and when it was made, or there's none, and the two fields never disagree. How: This allows both null or a string with a time, and its operands only pair up the two fields, so the chain stays inline.
 			let remUidBoo = groDatObj.removedUids is map;                                                               // What: Removed UIDs Boolean. Why: The blocklist is a map of UIDs. How: This requires a map.
 			let ttlDayBoo = groDatObj.chatTtlDays is int && groDatObj.chatTtlDays >= 7 && groDatObj.chatTtlDays <= 180; // What: TTL Days Boolean. Why: Chat retention runs 7 to 180 days (Section 11.2). How: This checks the type, then the range, which the type check guards, so the chain stays inline.
 
-			let valGroBoo = couUidBoo && fieAllBoo && invTokBoo && memCouBoo && namValBoo && ownUidBoo && penOwnBoo && remUidBoo && ttlDayBoo; // What: Valid Group Boolean. Why: Every check has to pass. How: This combines them.
+			let valGroBoo = couUidBoo && fieAllBoo && invTokBoo && memCouBoo && namValBoo && offValBoo && ownUidBoo && remUidBoo && ttlDayBoo; // What: Valid Group Boolean. Why: Every check has to pass. How: This combines them.
 
 
 
@@ -503,7 +512,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 			let couOwnBoo = groDatObj.countedUid == groDatObj.ownerUid; // What: Counted Owner Boolean. Why: The count's one member is the creator. How: This requires the counted UID to be the owner's.
 			let creTimBoo = groDatObj.createdAt == request.time;        // What: Creation Time Boolean. Why: A client could otherwise backdate the group. How: This requires the server's own time.
 			let memOneBoo = groDatObj.memberCount == 1;                 // What: Member One Boolean. Why: The creator is the only member. How: This requires a count of 1.
-			let penNulBoo = groDatObj.pendingOwnerUid == null;          // What: Pending Null Boolean. Why: Nobody has been offered the group yet. How: This requires no offer.
+			let penNulBoo = groDatObj.pendingOwnerUid == null;          // What: Pending Null Boolean. Why: Nobody has been offered the group yet. How: This requires no offer, and the offer's time follows it under valGroFun.
 			let remEmpBoo = groDatObj.removedUids == {};                // What: Removed Empty Boolean. Why: Nobody has been removed yet. How: This requires an empty map.
 
 			let newGroBoo = couOwnBoo && creTimBoo && memOneBoo && penNulBoo && remEmpBoo; // What: New Group Boolean. Why: Every check has to pass. How: This combines them.
@@ -1086,18 +1095,165 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Transfer Rules
+
+		// #region offGroFun
+
+		function offGroFun ( groIdeStr ) { // What: Offer Group Function. Why: The owner offers the group to a member, who has to have a free owned slot, so an offer that could never be accepted is refused the moment it's made (Section 18). How: This is true for the owner naming another member with a free slot, stamped with the server's time, changing nothing else.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the offer as it will be. How: This names it.
+
+			let tarUidStr = groNewObj.pendingOwnerUid; // What: Target UID String. Why: Several checks look up the member offered the group. How: This names their UID.
+
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'pendingOfferedAt', 'pendingOwnerUid' ] ); // What: Fields Only Boolean. Why: An offer changes the offer and nothing else of the group's. How: This allows changes to the two offer fields alone.
+			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                                 // What: Is-An Owner Boolean. Why: Only the owner offers the group. How: This requires the requester to own it.
+			let memTarBoo = exists( memPatFun( groIdeStr, tarUidStr ) );                                                         // What: Member Target Boolean. Why: Only a member can take the group over. How: This requires the target's membership, and a target that isn't a UID fails the lookup, refusing the write.
+			let notOwnBoo = tarUidStr != resource.data.ownerUid;                                                                 // What: Not Owner Boolean. Why: The owner already owns the group. How: This refuses an offer to themselves.
+			let offTimBoo = groNewObj.pendingOfferedAt == request.time;                                                          // What: Offer Time Boolean. Why: The offer lapses 7 days after it's made, so its time has to be real. How: This requires the server's own time.
+			let sloFreBoo = get( accPatFun( tarUidStr ) ).data.ownedGroups.size() < ownCapFun( tarUidStr );                      // What: Slot Free Boolean. Why: The target needs a free owned slot to accept, and the owner should learn now that they don't have one rather than wait on an offer that can't land. How: This requires the target to own fewer groups than their cap.
+
+			let offAllBoo = fieOnlBoo && isaOwnBoo && memTarBoo && notOwnBoo && offTimBoo && sloFreBoo; // What: Offer Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return offAllBoo; // What: Offer Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion offGroFun
+
+
+
+		// #region endOffFun
+
+		function endOffFun () { // What: End Offer Function. Why: The owner can withdraw an offer and the member offered it can decline it, either ending it at once. How: This is true for the owner or the offered member clearing a standing offer, changing nothing else.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'pendingOfferedAt', 'pendingOwnerUid' ] ); // What: Fields Only Boolean. Why: Ending an offer changes nothing else of the group's. How: This allows changes to the two offer fields alone.
+			let offNulBoo = groNewObj.pendingOwnerUid == null && groNewObj.pendingOfferedAt == null;                             // What: Offer Null Boolean. Why: An ended offer leaves no trace on the group. How: This requires both fields cleared.
+			let whoValBoo = isaOwnFun( resource.data.ownerUid ) || isaOwnFun( resource.data.pendingOwnerUid );                   // What: Who Valid Boolean. Why: Only the owner, withdrawing, or the member offered the group, declining, ends an offer. How: This allows either requester, and with no offer standing only the owner matches.
+
+			let endAllBoo = fieOnlBoo && offNulBoo && whoValBoo; // What: End Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return endAllBoo; // What: End Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion endOffFun
+
+
+
+		// #region accGroFun
+
+		function accGroFun ( groIdeStr ) { // What: Accept Group Function. Why: Ownership moves only when the member offered it accepts within 7 days, with both owners' accounts swapping the group in the same batch (Section 18). How: This is true for the offered member, still a member, making themselves owner of a live offer and clearing it, with the two account changes in the batch.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+			let groOldObj = resource.data;         // What: Group Old Object. Why: The offer and the old owner come from before the batch. How: This names the group as it was.
+
+			let accSwaBoo = getAfter( accPatFun( groOldObj.pendingOwnerUid ) ).data.ownedGroups.get( groIdeStr, false ) == true && getAfter( accPatFun( groOldObj.ownerUid ) ).data.memberGroups.get( groIdeStr, false ) == true; // What: Accounts Swapped Boolean. Why: The new owner takes an owned slot and the old owner becomes a member. How: This requires both accounts to list the group that way once the batch is applied, two lookups that only make sense together, so they stay inline.
+			let fieOnlBoo = groNewObj.diff( groOldObj ).affectedKeys().hasOnly( [ 'ownerUid', 'pendingOfferedAt', 'pendingOwnerUid' ] ); // What: Fields Only Boolean. Why: A transfer changes the owner and the offer, and nothing else of the group's. How: This allows changes to those three fields alone.
+			let isaPenBoo = isaOwnFun( groOldObj.pendingOwnerUid );                                                                      // What: Is-A Pending Boolean. Why: Only the member offered the group accepts it. How: This requires the requester to be the one named, and with no offer nobody matches.
+			let memNowBoo = exists( memPatFun( groIdeStr, groOldObj.pendingOwnerUid ) );                                                 // What: Member Now Boolean. Why: Someone who left since the offer can't take the group over. How: This requires their membership.
+			let newOwnBoo = groNewObj.ownerUid == groOldObj.pendingOwnerUid;                                                             // What: New Owner Boolean. Why: The group goes to the member offered it. How: This requires the owner to become them.
+			let offLivBoo = request.time < groOldObj.pendingOfferedAt + duration.value( 7, 'd' );                                        // What: Offer Live Boolean. Why: An offer lapses after 7 days, so a forgotten one can't be accepted long after the owner moved on. How: This requires the acceptance within 7 days of the offer.
+			let offNulBoo = groNewObj.pendingOwnerUid == null && groNewObj.pendingOfferedAt == null;                                     // What: Offer Null Boolean. Why: An accepted offer is used up. How: This requires both fields cleared.
+
+			let accAllBoo = accSwaBoo && fieOnlBoo && isaPenBoo && memNowBoo && newOwnBoo && offLivBoo && offNulBoo; // What: Accept Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return accAllBoo; // What: Accept Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion accGroFun
+
+
+
+		// #region takOwnFun
+
+		function takOwnFun ( uidValStr ) { // What: Take Owned Function. Why: A member accepting the group moves it from their member map to their owned map, within their caps. How: This is true for the account's owner moving one group between their maps as the same batch makes them its owner.
+
+
+			let accNewObj = request.resource.data; // What: Account New Object. Why: The checks read the maps as they will be. How: This names the incoming account.
+
+			let movKeyArr = accNewObj.ownedGroups.keys().removeAll( resource.data.ownedGroups.keys() ); // What: Moved Keys Array. Why: The one group taken over has to be found. How: This lists the keys the new owned map has and the old one lacks.
+			let groIdeStr = movKeyArr[ 0 ];                                                             // What: Group Identifier String. Why: The checks look up the group taken over. How: This takes the first added key, and a missing one fails the lookup, refusing the write.
+
+			let capValBoo = capAccFun( uidValStr ); // What: Cap Valid Boolean. Why: The new owner has to stay under the own cap. How: This checks both caps, and the belong count doesn't change.
+			let fieOnlBoo = accNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'memberGroups', 'ownedGroups' ] );                                                   // What: Fields Only Boolean. Why: Only the maps may change, never the paid flag. How: This allows changes to the two maps alone.
+			let groAftBoo = getAfter( groPatFun( groIdeStr ) ).data.ownerUid == uidValStr;                                                                                 // What: Group After Boolean. Why: The entry moves only as the group really changes hands, which the group's own rule ties to an accepted offer. How: This requires the group to name this identity as owner once the batch is applied.
+			let isaOwnBoo = isaOwnFun( uidValStr ); // What: Is-An Owner Boolean. Why: Only the identity itself accepts a group. How: This checks the requester owns the account.
+			let memDroBoo = accNewObj.memberGroups.diff( resource.data.memberGroups ).affectedKeys() == [ groIdeStr ].toSet() && !( groIdeStr in accNewObj.memberGroups ); // What: Member Dropped Boolean. Why: The group leaves the member map as it joins the owned one, and no other entry changes. How: This requires that one key to be the only change and to be gone, two halves of one check, so they stay inline.
+			let ownAddBoo = accNewObj.ownedGroups.diff( resource.data.ownedGroups ).affectedKeys().size() == 1 && accNewObj.ownedGroups[ groIdeStr ] == true;              // What: Owned Added Boolean. Why: One group joins the owned map, holding true like every entry. How: This requires one changed key and its value, two halves of one check, so they stay inline.
+
+			let takAllBoo = capValBoo && fieOnlBoo && groAftBoo && isaOwnBoo && memDroBoo && ownAddBoo; // What: Take Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return takAllBoo; // What: Take Allowed Return. Why: The account rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion takOwnFun
+
+
+
+		// #region givOwnFun
+
+		function givOwnFun ( uidValStr ) { // What: Give Owned Function. Why: When a member accepts the group, the old owner's account moves it from the owned map to the member map, written by the new owner, since the old owner may be away. How: This is true for the group's new owner moving one group between the old owner's maps as the same batch hands it over.
+
+
+			let accNewObj = request.resource.data; // What: Account New Object. Why: The checks read the maps as they will be. How: This names the incoming account.
+
+			let movKeyArr = resource.data.ownedGroups.keys().removeAll( accNewObj.ownedGroups.keys() ); // What: Moved Keys Array. Why: The one group given up has to be found. How: This lists the keys the old owned map has and the new one lacks.
+			let groIdeStr = movKeyArr[ 0 ];                                                             // What: Group Identifier String. Why: The checks look up the group given up. How: This takes the first dropped key, and a missing one fails the lookup, refusing the write.
+
+			let fieOnlBoo = accNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'memberGroups', 'ownedGroups' ] );                                                      // What: Fields Only Boolean. Why: Only the maps may change, never the paid flag. How: This allows changes to the two maps alone.
+			let groOldBoo = get( groPatFun( groIdeStr ) ).data.ownerUid == uidValStr;                                                                                         // What: Group Old Boolean. Why: Only the group's real owner gives it up. How: This requires the group to name this account's identity as owner before the batch.
+			let memAddBoo = accNewObj.memberGroups.diff( resource.data.memberGroups ).affectedKeys() == [ groIdeStr ].toSet() && accNewObj.memberGroups[ groIdeStr ] == true; // What: Member Added Boolean. Why: The old owner stays in the group as a member, and no other entry changes. How: This requires that one key to be the only change and to hold true, two halves of one check, so they stay inline.
+			let ownDroBoo = accNewObj.ownedGroups.diff( resource.data.ownedGroups ).affectedKeys().size() == 1;                                                               // What: Owned Dropped Boolean. Why: One group leaves the owned map, and no other entry changes. How: This requires exactly one key to differ.
+			let reqNewBoo = isaOwnFun( getAfter( groPatFun( groIdeStr ) ).data.ownerUid );                                                                                    // What: Requester New Boolean. Why: Only the member taking the group over writes the old owner's account, which the group's own rule ties to an accepted offer. How: This requires the requester to own the group once the batch is applied.
+
+			let givAllBoo = fieOnlBoo && groOldBoo && memAddBoo && ownDroBoo && reqNewBoo; // What: Give Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return givAllBoo; // What: Give Allowed Return. Why: The account rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion givOwnFun
+
+		// #endregion Transfer Rules
+
+
+
 		// #region Update Dispatch
 
 		// #region updAccFun
 
-		function updAccFun ( uidValStr ) { // What: Update Account Function. Why: An account changes in three ways, each part of a larger batch. How: This is true when the change is a created group's owned entry, an approved joiner's member entry, or an ended membership's dropped entry.
+		function updAccFun ( uidValStr ) { // What: Update Account Function. Why: An account changes in five ways, each part of a larger batch. How: This is true when the change is a created group's owned entry, an approved joiner's member entry, an ended membership's dropped entry, or either side of a transfer.
 
 
 			let addMemBoo = addMemFun( uidValStr ); // What: Add Member Boolean. Why: An approval adds a member entry. How: This checks that shape.
 			let addOwnBoo = addOwnFun( uidValStr ); // What: Add Owned Boolean. Why: A creation adds an owned entry. How: This checks that shape.
 			let droGroBoo = droGroFun( uidValStr ); // What: Drop Group Boolean. Why: A leave or removal drops an entry. How: This checks that shape.
+			let givOwnBoo = givOwnFun( uidValStr ); // What: Give Owned Boolean. Why: A transfer moves the old owner's entry to their member map. How: This checks that shape.
+			let takOwnBoo = takOwnFun( uidValStr ); // What: Take Owned Boolean. Why: A transfer moves the new owner's entry to their owned map. How: This checks that shape.
 
-			let updAllBoo = addMemBoo || addOwnBoo || droGroBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+			let updAllBoo = addMemBoo || addOwnBoo || droGroBoo || givOwnBoo || takOwnBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
 
 
 
@@ -1112,16 +1268,19 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region updGroFun
 
-		function updGroFun ( groIdeStr ) { // What: Update Group Function. Why: A group changes in five ways, each part of a larger batch. How: This is true when the change is an approval, a block, a leave, a removal, or a rotation.
+		function updGroFun ( groIdeStr ) { // What: Update Group Function. Why: A group changes in eight ways, most of them part of a larger batch. How: This is true when the change is an acceptance, an approval, a block, an ended offer, a leave, an offer, a removal, or a rotation.
 
 
+			let accValBoo = accGroFun( groIdeStr ); // What: Accept Valid Boolean. Why: An acceptance hands the group over. How: This checks that shape.
 			let bloValBoo = bloGroFun( groIdeStr ); // What: Block Valid Boolean. Why: A decline can block its sender. How: This checks that shape.
 			let joiValBoo = joiGroFun( groIdeStr ); // What: Join Valid Boolean. Why: An approval raises the count. How: This checks that shape.
+			let endValBoo = endOffFun();            // What: End Valid Boolean. Why: A withdrawal or decline ends an offer. How: This checks that shape.
 			let lefValBoo = lefGroFun( groIdeStr ); // What: Leave Valid Boolean. Why: A leave lowers the count. How: This checks that shape.
+			let offValBoo = offGroFun( groIdeStr ); // What: Offer Valid Boolean. Why: The owner offers the group. How: This checks that shape.
 			let remValBoo = remGroFun( groIdeStr ); // What: Remove Valid Boolean. Why: A removal lowers the count, blocks, and rotates. How: This checks that shape.
 			let rotValBoo = rotGroFun( groIdeStr ); // What: Rotate Valid Boolean. Why: The owner can revoke the link. How: This checks that shape.
 
-			let updAllBoo = bloValBoo || joiValBoo || lefValBoo || remValBoo || rotValBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+			let updAllBoo = accValBoo || bloValBoo || endValBoo || joiValBoo || lefValBoo || offValBoo || remValBoo || rotValBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
 
 
 
@@ -1241,7 +1400,17 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			allow get    : if isaOwnFun( uidValStr ); // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
 			allow create : if creAccFun( uidValStr ); // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
-			allow update : if updAccFun( uidValStr ); // What: Account Update Rule. Why: A group joins or leaves an account only as part of a creation, approval, leave, or removal. How: This allows it when updAccFun passes.
+			allow update : if updAccFun( uidValStr ); // What: Account Update Rule. Why: A group joins or leaves an account only as part of a creation, approval, leave, removal, or transfer. How: This allows it when updAccFun passes.
+
+
+
+			match /notices/{notIdeStr} { // What: Notice Match. Why: Things that happen to someone while they're away, such as a group being deleted, wait here to be shown when they return. How: This matches one notice in the account's subcollection.
+
+
+				allow read, delete : if isaOwnFun( uidValStr ); // What: Notice Read And Delete Rule. Why: A notice is for its account's owner alone, who dismisses it once seen, while only Cloud Functions write notices, so no client creates or changes one. How: This lets the owner fetch, list, and delete their own.
+
+
+			}
 
 
 		}
@@ -1253,7 +1422,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			allow get    : if isaMemFun( groIdeStr ); // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
 			allow create : if creGroFun( groIdeStr ); // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
-			allow update : if updGroFun( groIdeStr ); // What: Group Update Rule. Why: A group changes only as part of an approval, block, leave, removal, or rotation. How: This allows it when updGroFun passes.
+			allow update : if updGroFun( groIdeStr ); // What: Group Update Rule. Why: A group changes only as part of an approval, block, leave, removal, rotation, or transfer, and is never deleted by a client, since deleting one runs as a Cloud Function that clears its whole tree. How: This allows updates when updGroFun passes.
 
 
 

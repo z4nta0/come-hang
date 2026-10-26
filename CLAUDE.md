@@ -33,8 +33,8 @@ Scaffolded: the app shell answering at one address, a placeholder home page,
 the global stylesheet, the accessibility, interaction, and security suites,
 and the Firebase Emulator harness with a rules suite. `firestore.rules`
 covers the user and account documents, a group's creation, join requests,
-their approval and blocking, and leaving, removal, and invite rotation so
-far, and the rest are written one collection at a time, each walked through
+their approval and blocking, leaving, removal, invite rotation, ownership
+transfer, and account notices so far, and the rest are written one collection at a time, each walked through
 with the user. No Firebase code in the app yet. Next steps are in
 ARCHITECTURE.md's Section 14.
 

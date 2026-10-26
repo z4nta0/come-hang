@@ -11,10 +11,12 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-26 (the account's groups split into owned and member
-maps in Sections 11.1 and 18; leaving, removal, and rotation batches in
-Section 9, and group deletion added to Section 14's open items; the group's
-`countedUid` in Section 11.2; untrusted text and paths in Section 11.11;
+Last updated: 2026-10-26 (ownership offers, acceptance, lapsing, and claims
+in Section 18, notices in Sections 4 and 11.1, removal notices and group
+deletion in Section 9, the group's `pendingOfferedAt` in Section 11.2, and
+the functions they need in Section 14; the account's groups split into
+owned and member maps in Sections 11.1 and 18; leaving, removal, and
+rotation batches in Section 9; the group's `countedUid` in Section 11.2; untrusted text and paths in Section 11.11;
 text limits in Section 11.10 and binary formats in Section 6; the private
 `/accounts/{uid}` doc, the group's `memberCount`, and the paywall's switch
 decided for the caps' enforcement, Sections 4, 9, 11.1, 11.2, 17, and 18;
@@ -194,6 +196,7 @@ from Spark's 100 to 200,000.
 | Group metadata (creator, name, etc.) | Firestore | `/groups/{groupId}` |
 | User identity (public key) | Firestore | `/users/{uid}`, fetchable by UID by anyone signed in |
 | User account (memberships, paid flag) | Firestore | `/accounts/{uid}`, readable only by its owner |
+| Notices (what happened while away) | Firestore | `/accounts/{uid}/notices/{noticeId}`, readable and dismissable only by its owner, written only by Cloud Functions |
 | Group membership | Firestore | Subcollection `/groups/{groupId}/members/{uid}` |
 | Removed-member blocklist | Firestore | `/groups/{groupId}.removedUids` (or subcollection) |
 | Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
@@ -545,6 +548,21 @@ in place of their name. The group can manually reassign it if needed.
   add to `removedUids`, deactivate old invite doc, create new invite doc)
   is bundled as a **single Firestore transaction**, so a partial failure
   can't leave the group in an inconsistent state.
+- **The removed member is told** (decided 2026-10-26): a Cloud Function
+  watching group updates sees a UID join `removedUids` as the count falls
+  for that same UID, which only a removal does, and leaves the removed
+  member a notice (Section 11.1) plus a push, so the group doesn't just
+  vanish from their list. A member who leaves on their own gets neither.
+- **Deleting a group** (decided 2026-10-26): only the owner can, after a
+  confirmation naming the group, through a callable Cloud Function rather
+  than a client batch, since a big group's documents won't fit one batch.
+  The function deletes the group, its member docs, events, join requests,
+  chat, and invite, drops it from every member's `/accounts/{uid}` maps,
+  and leaves every other member a notice saying the owner deleted it, with
+  a push. No client rule allows deleting a group document. The function
+  works in batches and finishes the job if it's retried, so a failure
+  partway is completed rather than left half done, and the group stops
+  being readable to anyone as soon as its first batch lands.
 - **Known, accepted limitation**: a removed user can bypass the
   `removedUids` block by clearing local app data (or opening the link in
   a different browser), which mints a brand-new anonymous UID never on
@@ -680,6 +698,26 @@ in one map can't be traced to its group.
 | `memberGroups` | plaintext map `{ groupId: true }` | Every group this user belongs to without owning it, so a group sits in one map or the other, never both. Changed in the same batch as every join, leave, removal, and transfer (Section 18). |
 | `paid` | plaintext boolean, absent until bought | Written only by the Polar webhook's Cloud Function, never by a client (Section 18). |
 
+`/accounts/{uid}/notices/{noticeId}` (decided 2026-10-26) holds what
+happened to someone while they were away, so a group never just vanishes
+or changes hands silently: the app shows each waiting notice as a message
+when it next opens, alongside the push that went out when it happened,
+and the owner dismisses it by deleting it. Only Cloud Functions write
+notices, which the rules enforce by allowing clients no writes, so a
+member can't forge one telling someone a group was deleted. Kinds: a group
+deleted, a removal, an ownership offer accepted, declined, lapsed, or
+ended by the person offered leaving, and ownership claimed from an
+inactive owner.
+
+| Field | Type | Notes |
+|---|---|---|
+| `kind` | plaintext | Which of the kinds above this is, picking the message the app shows. |
+| `groupId` | plaintext | The group it's about, which may no longer exist. |
+| `groupName` | plaintext | The group's name when it happened, so a deleted group can still be named. |
+| `otherUid` | plaintext, absent when there's none | The other person involved, such as who declined an offer, named in the app from the group's member docs while they're still readable. |
+| `createdAt` | plaintext | Timestamp. |
+| `expireAt` | plaintext | Firestore TTL field, 30 days out, so a notice never seen doesn't linger. |
+
 Global `displayName` deliberately **not** included here. **Resolved**:
 display names are per-group, not global, encrypted per membership, see
 11.3, exactly because different groups may know the same person by
@@ -690,7 +728,8 @@ different names.
 | Field | Type | Notes |
 |---|---|---|
 | `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
-| `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept or the offer is withdrawn (Section 18). |
+| `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept, decline, or the offer is withdrawn or lapses (Section 18). |
+| `pendingOfferedAt` | plaintext, nullable | When the standing offer was made, stamped with the server's time, null with no offer. An offer lapses 7 days after it (Section 18). |
 | `name` | plaintext | The group's own name. Deliberately not encrypted, see below. At most 50 characters, emoji allowed (Section 11.10). |
 | `createdAt` | plaintext | Timestamp. |
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
@@ -1237,11 +1276,10 @@ the Blaze change.
   (2026-10-25): `firebase.json`, a `firestore.rules` that refuses
   everything, and a rules suite in `tests/rules/` run by `npm run
   test:rules`.
-- Deleting a whole group: its member docs, events, and other
-  subcollections, every member's `/accounts/{uid}` entry, and its invite.
-  A client can't do that in one batch for a large group, so it likely
-  runs as a Cloud Function; decided alongside ownership transfer and
-  claiming.
+- The Cloud Functions decided with the transfer rules (2026-10-26):
+  deleting a group (Section 9), the notices and pushes for removals,
+  deletions, and offers (Section 11.1), and the daily run that lapses
+  offers and offers an inactive owner's group to a member (Section 18).
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM
@@ -1480,12 +1518,34 @@ paywall is switched on before launch.
 
 **Ownership transfer (decided 2026-10-22)**:
 - **Offer, then accept.** The owner offers ownership to a current member
-  (`pendingOwnerUid`), and it moves only when that member accepts, so
-  nobody is handed a group, and a slot of theirs, without agreeing.
+  (`pendingOwnerUid`, with `pendingOfferedAt`), and it moves only when that
+  member accepts, so nobody is handed a group, and a slot of theirs,
+  without agreeing. The owner can withdraw the offer and the member can
+  decline it, and a new offer replaces a standing one.
 - **The new owner needs a free slot**: a free user who already owns a
   group, or a paid user who owns 10, can't accept until they delete or
-  hand off one of their own (or, for a free user, buy). The app explains
-  this rather than just refusing.
+  hand off one of their own (or, for a free user, buy).
+- **The owner learns at once whether an offer can land** (decided
+  2026-10-26): the rules refuse an offer to a member with no free owned
+  slot as it's made, so the owner's tap fails on the spot, and the app
+  explains that this member can't take a group right now and to pick
+  someone else, without revealing more of their account. An offer is never
+  left hanging where the owner might think the handover was done.
+- **Every offer ends in a notice to the owner** (decided 2026-10-26): if
+  the member accepts, declines, leaves the group, or lets 7 days pass, a
+  Cloud Function leaves the owner a notice (Section 11.1) and a push, and
+  the member offered the group gets a push when it's offered. Firestore's
+  triggers that carry who made a change tell a decline from a withdrawal.
+  The rules refuse an acceptance after 7 days, so a forgotten offer can't
+  be taken up long after the owner moved on, and the daily function clears
+  a lapsed one. The group's settings show a standing offer and when it
+  lapses, so the owner can always see where the handover stands.
+- **Accepting is one batch** (decided 2026-10-26): the member offered the
+  group makes themselves owner and clears the offer, moves the group from
+  their member map to their owned map within their caps, and moves it the
+  other way in the old owner's account, which the new owner writes since
+  the old owner may be away. The rules check each write against the
+  others. The old owner stays a member and can leave like anyone else.
 - **The member cap may drop**: transferring a 35-member group from a paid
   owner to a free one is allowed, since blocking it could strand a group
   whose owner needs to leave. All 35 stay; new approvals pause until the
@@ -1518,7 +1578,14 @@ settings again; chat, events, and approvals keep working, since any
 member can do those. So once the owner has been inactive for **30
 days**, the longest-standing member can claim ownership, and the old owner
 is notified if they ever return. The same slot and member-cap rules as a
-transfer apply to the claimant. 30 days is a starting point: events are
+transfer apply to the claimant. How it runs (decided 2026-10-26): a daily
+scheduled Cloud Function finds groups whose owner hasn't been active for
+30 days and offers each one, as an ordinary offer with its 7-day window,
+to the longest-standing member who has been active in that time and has a
+free owned slot. That member accepts through the same batch as any
+transfer, so the rules need nothing extra, and if they decline or let it
+lapse, the next run offers it to the next member in line. The old owner
+gets a notice that the group was claimed. 30 days is a starting point: events are
 mostly near term, so it may come down later. This adds a plaintext
 `lastActiveAt` timestamp to each membership doc (Section 11.3), updated at
 most once a day when the member opens the app, to keep writes low.
