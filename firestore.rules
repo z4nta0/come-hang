@@ -69,6 +69,14 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * updates the current invite's copy of the name in the same batch, so the
  * invite screen always shows the group's real name.
  *
+ * Any member plans an event, and only its creator or the owner edits or
+ * cancels it. An event's details are encrypted as one bundle the rules cap by
+ * size, and its times are bounded: it lasts up to 7 days, starts within a
+ * year, and expires 48 hours after it ends. Any member adds, claims,
+ * releases, reassigns, or removes an event's items, each assigned to nobody
+ * or a member, and each expires with its event, since Firestore's TTL leaves
+ * an event's subcollections behind.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -128,6 +136,20 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion accPatFun
+
+
+
+		// #region evePatFun
+
+		function evePatFun ( groIdeStr, eveIdeStr ) { // What: Event Path Function. Why: An item's rules look up its event. How: This returns the event document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/events/$(eveIdeStr); // What: Event Path Return. Why: A lookup needs the full path. How: This builds it from the group and event IDs.
+
+
+		}
+
+		// #endregion evePatFun
 
 
 
@@ -1299,6 +1321,192 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Event Rules
+
+		// #region valEveFun
+
+		function valEveFun () { // What: Valid Event Function. Why: An event holds its encrypted details, its times, and who made it, and is deleted 48 hours after it ends (Section 5). How: This checks the incoming event's fields, sizes, and times.
+
+
+			let eveDatObj = request.resource.data; // What: Event Data Object. Why: Every check reads the incoming event. How: This names it once.
+
+			let detValBoo = eveDatObj.detailsEnc is bytes && eveDatObj.detailsEnc.size() > 16 && eveDatObj.detailsEnc.size() <= 2148;   // What: Details Valid Boolean. Why: The title, description, and location text are encrypted together and fit in 2,148 bytes (Section 11.10), and the cap stops the field holding anything else. How: This checks the type, then the size, which the type check guards.
+			let durValBoo = eveDatObj.endAt > eveDatObj.startAt && eveDatObj.endAt <= eveDatObj.startAt + duration.value( 7, 'd' );     // What: Duration Valid Boolean. Why: An event ends after it starts and lasts at most 7 days. How: This compares the two times, two halves of one check, so they stay inline.
+			let endFutBoo = eveDatObj.endAt > request.time;                                                                             // What: End Future Boolean. Why: An event that's already over is only kept for review, not created or changed. How: This requires the end to be after the server's time.
+			let expValBoo = eveDatObj.expireAt == eveDatObj.endAt + duration.value( 48, 'h' );                                          // What: Expire Valid Boolean. Why: An event is deleted 48 hours after it ends (Section 5). How: This requires the TTL field to be exactly that.
+			let fieAllBoo = eveDatObj.keys().toSet() == [ 'createdByUid', 'detailsEnc', 'endAt', 'expireAt', 'iv', 'startAt' ].toSet(); // What: Fields All Boolean. Why: An event holds exactly its six fields. How: This compares them with the full set.
+			let ivaValBoo = eveDatObj.iv is bytes && eveDatObj.iv.size() == 12;                                                         // What: IV Valid Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let staNeaBoo = eveDatObj.startAt <= request.time + duration.value( 365, 'd' );                                             // What: Start Near Boolean. Why: An event starts at most a year ahead, so nothing is stored for years. How: This compares its start with the server's time.
+
+			let valEveBoo = detValBoo && durValBoo && endFutBoo && expValBoo && fieAllBoo && ivaValBoo && staNeaBoo; // What: Valid Event Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valEveBoo; // What: Valid Event Return. Why: The event rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valEveFun
+
+
+
+		// #region manEveFun
+
+		function manEveFun ( groIdeStr ) { // What: Manage Event Function. Why: An event is edited or deleted only by its creator or the group's owner, so the owner can clean up after a creator who left (Section 11.5). How: This is true for a member who created the event or owns the group.
+
+
+			let isaCreBoo = isaOwnFun( resource.data.createdByUid );                  // What: Is-A Creator Boolean. Why: The creator manages their event. How: This requires the requester to be the event's creator.
+			let isaMemBoo = isaMemFun( groIdeStr );                                   // What: Is-A Member Boolean. Why: A creator who left no longer manages the event. How: This requires the requester to be a member.
+			let isaOwnBoo = isaOwnFun( get( groPatFun( groIdeStr ) ).data.ownerUid ); // What: Is-An Owner Boolean. Why: The owner manages every event in the group. How: This requires the requester to own the group.
+
+			let manAllBoo = isaMemBoo && ( isaCreBoo || isaOwnBoo ); // What: Manage Allowed Boolean. Why: A member who's the creator or owner may manage it. How: This combines them.
+
+
+
+			return manAllBoo; // What: Manage Allowed Return. Why: The event's update and delete rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion manEveFun
+
+
+
+		// #region creEveFun
+
+		function creEveFun ( groIdeStr ) { // What: Create Event Function. Why: Any member plans an event, in their own name. How: This is true for a member writing a valid event that names them as its creator.
+
+
+			let isaCreBoo = isaOwnFun( request.resource.data.createdByUid ); // What: Is-A Creator Boolean. Why: Nobody creates an event in someone else's name. How: This requires the requester to be named as the creator.
+			let isaMemBoo = isaMemFun( groIdeStr );                          // What: Is-A Member Boolean. Why: Only members plan the group's events. How: This requires the requester to be a member.
+			let valEveBoo = valEveFun();                                     // What: Valid Event Boolean. Why: The event keeps its shape. How: This checks it.
+
+			let creAllBoo = isaCreBoo && isaMemBoo && valEveBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The event's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creEveFun
+
+
+
+		// #region updEveFun
+
+		function updEveFun ( groIdeStr ) { // What: Update Event Function. Why: The creator or owner changes an event's details or times, while who made it never changes. How: This is true for a manager writing a valid event that keeps its creator.
+
+
+			let creKeeBoo = request.resource.data.createdByUid == resource.data.createdByUid; // What: Creator Kept Boolean. Why: An event's creator is a fact, not a setting. How: This requires it unchanged.
+			let manEveBoo = manEveFun( groIdeStr );                                           // What: Manage Event Boolean. Why: Only the creator or owner edits an event. How: This checks it.
+			let valEveBoo = valEveFun();                                                      // What: Valid Event Boolean. Why: The event keeps its shape. How: This checks it.
+
+			let updAllBoo = creKeeBoo && manEveBoo && valEveBoo; // What: Update Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The event's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updEveFun
+
+
+
+		// #region valIteFun
+
+		function valIteFun ( groIdeStr, eveIdeStr ) { // What: Valid Item Function. Why: An item holds its encrypted label, who claimed it, and its event's deletion time, since deleting an event leaves its items behind for their own TTL (Section 11.5). How: This checks the incoming item's fields and sizes, and that it expires with its event as the batch leaves the event, while the create and update rules check who it's assigned to.
+
+
+			let iteDatObj = request.resource.data; // What: Item Data Object. Why: Every check reads the incoming item. How: This names it once.
+
+			let expEveBoo = iteDatObj.expireAt == getAfter( evePatFun( groIdeStr, eveIdeStr ) ).data.expireAt;                 // What: Expire Event Boolean. Why: An item goes with its event, and Firestore's TTL leaves an event's subcollections behind when it deletes the event. How: This requires the item's TTL field to match the event's once the batch is applied, which also requires the event to exist.
+			let fieAllBoo = iteDatObj.keys().toSet() == [ 'assignedUid', 'expireAt', 'iv', 'labelEnc' ].toSet();               // What: Fields All Boolean. Why: An item holds exactly its four fields. How: This compares them with the full set.
+			let ivaValBoo = iteDatObj.iv is bytes && iteDatObj.iv.size() == 12;                                                // What: IV Valid Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let labValBoo = iteDatObj.labelEnc is bytes && iteDatObj.labelEnc.size() > 16 && iteDatObj.labelEnc.size() <= 166; // What: Label Valid Boolean. Why: A label has at most 50 characters, 166 bytes once encrypted (Section 11.10), and the cap stops the field holding anything else. How: This checks the type, then the size, which the type check guards.
+
+			let valIteBoo = expEveBoo && fieAllBoo && ivaValBoo && labValBoo; // What: Valid Item Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valIteBoo; // What: Valid Item Return. Why: The item rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valIteFun
+
+
+
+		// #region asgMemFun
+
+		function asgMemFun ( groIdeStr ) { // What: Assigned Member Function. Why: An item is claimed for, or reassigned to, a current member. How: This is true when the incoming item is open or assigned to a UID with a membership.
+
+
+			let asgUidStr = request.resource.data.assignedUid; // What: Assigned UID String. Why: The check reads who the item is assigned to. How: This names it.
+
+
+
+			return asgUidStr == null || exists( memPatFun( groIdeStr, asgUidStr ) ); // What: Assigned Member Return. Why: An open item needs no member, and a claimed one names a real member. How: This allows null, or a UID whose membership exists.
+
+
+		}
+
+		// #endregion asgMemFun
+
+
+
+		// #region creIteFun
+
+		function creIteFun ( groIdeStr, eveIdeStr ) { // What: Create Item Function. Why: Any member adds an item to an event, open or already assigned to a member (Section 11.5). How: This is true for a member writing a valid item assigned to nobody or to a member.
+
+
+			let asgMemBoo = asgMemFun( groIdeStr );            // What: Assigned Member Boolean. Why: An item starts open or assigned to a member. How: This checks it.
+			let isaMemBoo = isaMemFun( groIdeStr );            // What: Is-A Member Boolean. Why: Only members add items. How: This requires the requester to be a member.
+			let valIteBoo = valIteFun( groIdeStr, eveIdeStr ); // What: Valid Item Boolean. Why: The item keeps its shape. How: This checks it.
+
+			let creAllBoo = asgMemBoo && isaMemBoo && valIteBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The item's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creIteFun
+
+
+
+		// #region updIteFun
+
+		function updIteFun ( groIdeStr, eveIdeStr ) { // What: Update Item Function. Why: Any member relabels an item, claims or releases it, or reassigns it, and a removed member's claim stays until someone changes it (Section 7). How: This is true for a member writing a valid item whose assignee is unchanged, nobody, or a member.
+
+
+			let asgKeeBoo = request.resource.data.assignedUid == resource.data.assignedUid; // What: Assigned Kept Boolean. Why: A claim stays as it was when an edit doesn't touch it, even a removed member's. How: This checks the assignee is unchanged.
+			let asgMemBoo = asgMemFun( groIdeStr );                                         // What: Assigned Member Boolean. Why: A changed claim goes to nobody or a member. How: This checks it.
+			let isaMemBoo = isaMemFun( groIdeStr );                                         // What: Is-A Member Boolean. Why: Only members change items. How: This requires the requester to be a member.
+			let valIteBoo = valIteFun( groIdeStr, eveIdeStr );                              // What: Valid Item Boolean. Why: The item keeps its shape. How: This checks it.
+
+			let updAllBoo = ( asgKeeBoo || asgMemBoo ) && isaMemBoo && valIteBoo; // What: Update Allowed Boolean. Why: Every check has to pass, with the assignee either kept or a member. How: This combines them.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The item's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updIteFun
+
+		// #endregion Event Rules
+
+
+
 		// #region Update Dispatch
 
 		// #region updAccFun
@@ -1566,6 +1774,32 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 				allow read   : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Read Rule. Why: Members review the requests, and a joiner checks on their own. How: This lets members fetch and list them, and the joiner fetch theirs.
 				allow create : if creReqFun( groIdeStr, uidValStr );                // What: Request Create Rule. Why: A joiner asks to join through the invite. How: This allows it when creReqFun passes.
 				allow delete : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Delete Rule. Why: Any member may decline a request, and the joiner may withdraw it. How: This lets either delete it.
+
+
+			}
+
+
+
+			match /events/{eveIdeStr} { // What: Event Match. Why: Each planned event is its own document. How: This matches one event by ID.
+
+
+				allow read   : if isaMemFun( groIdeStr ); // What: Event Read Rule. Why: Members see the group's events. How: This lets members fetch and list them.
+				allow create : if creEveFun( groIdeStr ); // What: Event Create Rule. Why: Any member plans an event. How: This allows it when creEveFun passes.
+				allow update : if updEveFun( groIdeStr ); // What: Event Update Rule. Why: The creator or owner changes an event. How: This allows it when updEveFun passes.
+				allow delete : if manEveFun( groIdeStr ); // What: Event Delete Rule. Why: The creator or owner cancels an event, and its items expire on their own TTL. How: This allows it when manEveFun passes.
+
+
+
+				match /assignments/{iteIdeStr} { // What: Item Match. Why: Each thing someone brings to an event is its own document, so a claim is one small transaction (Section 7). How: This matches one item by ID.
+
+
+					allow read   : if isaMemFun( groIdeStr );            // What: Item Read Rule. Why: Members see who's bringing what. How: This lets members fetch and list them.
+					allow create : if creIteFun( groIdeStr, eveIdeStr ); // What: Item Create Rule. Why: Any member adds an item. How: This allows it when creIteFun passes.
+					allow update : if updIteFun( groIdeStr, eveIdeStr ); // What: Item Update Rule. Why: Any member relabels, claims, releases, or reassigns an item. How: This allows it when updIteFun passes.
+					allow delete : if isaMemFun( groIdeStr );            // What: Item Delete Rule. Why: Any member removes an item (Section 11.5). How: This lets members delete one.
+
+
+				}
 
 
 			}

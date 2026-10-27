@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-27 (the owner renames the group with its invite in
+Last updated: 2026-10-27 (events as one encrypted bundle with time bounds,
+and items expiring on their own, in Section 11.5, with their text limits in
+Section 11.10; the owner renames the group with its invite in
 one batch, in Sections 11.2 and 11.6, and who edits events and their items
 in Section 11.5); 2026-10-26 (ownership offers, acceptance, lapsing, and claims
 in Section 18, notices in Sections 4 and 11.1, removal notices and group
@@ -809,21 +811,31 @@ everything else, now including location, is Firestore).
 
 | Field | Type | Notes |
 |---|---|---|
-| `titleEnc` / `descriptionEnc` / `locationTextEnc` (+ `iv`s) | ciphertext | Event details. |
-| `startAt`, `endAt` | plaintext | Must stay plaintext: the deletion-grace-period query (Section 5) needs to filter/sort on real timestamps, which isn't possible against an opaque ciphertext blob. Same routing-metadata tradeoff already accepted for chat's `sentAt`. |
+| `detailsEnc` / `iv` | ciphertext bytes | The title, description, and location text encrypted together as one bundle (decided 2026-10-27), so Firebase can't see which parts are filled in or how long each one is. The bundle is the three as JSON, `{"t":"…","d":"…","l":"…"}`, and the rules cap its ciphertext at 2,148 bytes: the 700 characters Section 11.10 allows at 3 bytes each, 32 for the JSON around them, and the 16-byte tag. The IV is 12 bytes. |
+| `startAt`, `endAt` | plaintext | Must stay plaintext: the deletion-grace-period query (Section 5) needs to filter/sort on real timestamps, which isn't possible against an opaque ciphertext blob. Same routing-metadata tradeoff already accepted for chat's `sentAt`. An event ends after it starts, lasts at most 7 days, starts at most a year ahead, and can only be created or edited while it hasn't ended yet (decided 2026-10-27), so nothing sits stored for years and a finished event stays as it was for its review window. |
 | `createdByUid` | plaintext | Permission checks: any member creates an event, and only its creator or the group's owner edits or deletes it (decided 2026-10-27), so the owner can clean up after a creator who left. |
-| `expireAt` | plaintext, TTL field | `endAt` + 48 hours (Section 5). Same native-TTL mechanism as location, no Cloud Function needed here either. |
+| `expireAt` | plaintext, TTL field | Exactly `endAt` + 48 hours (Section 5), which the rules check. Same native-TTL mechanism as location, no Cloud Function needed here either. |
+
+Firestore's TTL deletes only the expired document, never its subcollections
+(by Firestore's own TTL documentation), so an event's items carry the same
+`expireAt` and expire on their own. That also covers an event deleted
+without its items: they stay behind, read-only since their event is gone,
+until their own TTL removes them.
 
 #### `/groups/{groupId}/events/{eventId}/assignments/{assignmentId}` (subcollection)
 
 | Field | Type | Notes |
 |---|---|---|
-| `labelEnc` / `iv` | ciphertext | "Bring dessert," etc. |
+| `labelEnc` / `iv` | ciphertext bytes | "Bring dessert," etc. At most 50 characters (Section 11.10), so the rules cap the ciphertext at 166 bytes, and the IV is 12. |
 | `assignedUid` | plaintext, nullable | The compare-and-swap target for the claim transaction (Section 7). Left as-is (not cleared) if that member is later removed; the client resolves "removed user" by checking current membership (11.3), not by storing a name snapshot here. |
+
+| `expireAt` | plaintext, TTL field | The event's own `expireAt`, which the rules check against the event as each write leaves it. When an event's end moves, the same batch moves every item's `expireAt`, and any member can bring an item that fell out of step back in line. |
 
 Any member adds or removes an item, claims an open one, and reassigns or
 releases anyone's claim (decided 2026-10-27), which is how the group
-reassigns a removed member's claims (Section 7).
+reassigns a removed member's claims (Section 7). A new assignee has to be a
+current member, while an edit that leaves the claim alone keeps a removed
+member's claim in place.
 
 ### 11.6 Firestore: `/invites/{token}`
 
@@ -1096,14 +1108,20 @@ always agree. An emoji counts 2 or more.
 | Group name | 1 to 50 | Letters in any language with their accents, numbers, spaces, basic punctuation (`. , ' ’ - & ! ? ( ) : # / +`), and emoji, as Discord's display names allow by its own help center. |
 | Person name (the join request's name, then the per-group display name) | 1 to 40 | Letters in any language with their accents, spaces, apostrophes, hyphens, and periods. No numbers, symbols, or emoji: it's a real name the approver has to recognize (Section 17), and decoration only makes look-alike names easier. |
 | Join request note | 0 to 150 | Letters, numbers, spaces, and basic punctuation, no emoji. |
+| Event title | 1 to 50 | The group name's set: letters, numbers, basic punctuation, and emoji. |
+| Event description | 0 to 500 | The title's set, plus line breaks. |
+| Event location text | 0 to 150 | The title's set. |
+| Item label (who's bringing what) | 1 to 50 | The title's set. |
 
-All three refuse leading or trailing spaces and runs of two or more
-spaces, and the app trims, collapses spaces, and normalizes text (Unicode
-NFC) before saving, so what a person types usually passes. The rules check
-every plaintext field directly; for the encrypted display name the app
-checks it before encrypting, and the rules can only cap the ciphertext's
-size. Encrypted content (chat, events, notes) gets its limits as each
-feature is built.
+Every field refuses leading or trailing spaces and runs of two or more
+spaces (an event description's line breaks aside), and the app trims,
+collapses spaces, and normalizes text (Unicode NFC) before saving, so what a
+person types usually passes. The rules check every plaintext field
+directly. The display name, events, and items are encrypted, so the app
+checks them before encrypting and the rules can only cap each ciphertext's
+size, at 3 bytes per character plus the 16-byte tag (Sections 11.3 and
+11.5). The event and item rows were decided 2026-10-27. Chat gets its limits
+when it's built.
 
 ### 11.11 Untrusted Text And Paths
 

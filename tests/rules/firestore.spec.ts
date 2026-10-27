@@ -72,6 +72,7 @@ const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                            // What
 
 // #region Module State
 
+const EVE_END_NUM = Date.now() + 2 * DAY_MIL_NUM;              // What: Event End Number. Why: An event has to end in the future, and its items expire with it. How: This is two days after the suite loads, in milliseconds, shared by every event and item the tests write.
 const RUL_TEX_STR = readFileSync( 'firestore.rules', 'utf8' ); // What: Rules Text String. Why: Both emulator projects load the real rules. How: This reads the file once.
 
 
@@ -844,6 +845,127 @@ const setBatFun = ( stoConObj : StoConTyp, namValStr : string, optValObj : SbfOp
 };
 
 // #endregion setBatFun
+
+
+
+// #region eveTimFun
+
+/**
+ * eveTimFun = Event Times Function
+ *
+ * @summary
+ * Builds an event's three times from its start and end: the two timestamps,
+ * plus the TTL field 48 hours after the end, as the rules require.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param staMilNum - Start Milliseconds Number: When the event starts.
+ * @param endMilNum - End Milliseconds Number: When the event ends.
+ *
+ * @returns The event's time fields.
+ *
+ * @example
+ * ```ts
+ * eveTimFun(staMilNum, endMilNum) // => { endAt, expireAt, startAt }
+ * ```
+ *
+*/
+
+const eveTimFun = ( staMilNum : number, endMilNum : number ) => ({ // What: Event Times Function. Why: The time tests move an event's start and end, and its expiry has to follow. How: This returns the three time fields.
+
+
+	endAt    : Timestamp.fromMillis( endMilNum ),
+	expireAt : Timestamp.fromMillis( endMilNum + 2 * DAY_MIL_NUM ),
+	startAt  : Timestamp.fromMillis( staMilNum )
+
+
+});
+
+// #endregion eveTimFun
+
+
+
+// #region eveDatFun
+
+/**
+ * eveDatFun = Event Data Function
+ *
+ * @summary
+ * Builds a valid event for the rules to accept: encrypted details, a 12-byte
+ * IV, a day-long span ending at EVE_END_NUM, and the TTL field 48 hours
+ * after the end. Fields can be changed or added by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param creUidStr - Creator UID String: Who the event names as its creator.
+ * @param eveChaObj - Event Change Object: Fields to change or add, empty by
+ *                    default.
+ *
+ * @returns The event's fields.
+ *
+ * @example
+ * ```ts
+ * eveDatFun('bob', { iv : bytFilFun(11) }) // => { createdByUid : 'bob', ... }
+ * ```
+ *
+*/
+
+const eveDatFun = ( creUidStr : string, eveChaObj : Record< string, unknown > = {} ) => ({ // What: Event Data Function. Why: Every event test starts from a valid event. How: This returns its fields with the test's changes.
+
+
+	...eveTimFun( EVE_END_NUM - DAY_MIL_NUM, EVE_END_NUM ), // What: Event Times Spread. Why: The event spans the day before EVE_END_NUM. How: This adds its start, end, and expiry.
+
+	createdByUid : creUidStr,
+	detailsEnc   : bytFilFun( 300 ),
+	iv           : bytFilFun( 12 ),
+
+	...eveChaObj // What: Event Change Spread. Why: A test changes the fields it checks. How: This merges them over the defaults.
+
+
+});
+
+// #endregion eveDatFun
+
+
+
+// #region iteDatFun
+
+/**
+ * iteDatFun = Item Data Function
+ *
+ * @summary
+ * Builds a valid open item for an event built by eveDatFun: an encrypted
+ * label, a 12-byte IV, no assignee, and the event's TTL time. Fields can be
+ * changed or added by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param iteChaObj - Item Change Object: Fields to change or add, empty by
+ *                    default.
+ *
+ * @returns The item's fields.
+ *
+ * @example
+ * ```ts
+ * iteDatFun({ assignedUid : 'carol' }) // => { assignedUid : 'carol', ... }
+ * ```
+ *
+*/
+
+const iteDatFun = ( iteChaObj : Record< string, unknown > = {} ) => ({ // What: Item Data Function. Why: Every item test starts from a valid item. How: This returns its fields with the test's changes.
+
+
+	assignedUid : null,
+	expireAt    : Timestamp.fromMillis( EVE_END_NUM + 2 * DAY_MIL_NUM ),
+	iv          : bytFilFun( 12 ),
+	labelEnc    : bytFilFun( 60 ),
+
+	...iteChaObj // What: Item Change Spread. Why: A test changes the fields it checks. How: This merges them over the defaults.
+
+
+});
+
+// #endregion iteDatFun
 
 // #endregion Helpers
 
@@ -1944,14 +2066,167 @@ test( 'only the owner changes the settings, to a valid name with the invite matc
 
 
 
-test( 'a document no rule covers is refused', async () => { // What: Uncovered Document Test. Why: Firestore must refuse anything no rule allows. How: This reads and writes an event document, which has no rules yet, as a signed-in identity.
+test( 'any member plans an event, which only members read, and only its creator or the owner edits or cancels it', async () => { // What: Event Test. Why: Events are the group's, and managing one is its creator's or the owner's (Section 11.5). How: This plans events as Bob, then tries reads, edits, and deletes as each person.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob plans the events. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol is a member who didn't plan them. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob plans as a member who isn't the owner. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins as a third member. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol is a member with no part in the events. How: This approves her as Alice.
+
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob' ) ) );                   // What: Event Planned. Why: Any member plans an event. How: This expects Bob's event allowed.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve2' ), eveDatFun( 'bob' ) ) );                   // What: Second Event Planned. Why: The owner's delete needs an event of its own. How: This expects Bob's second event allowed.
+	await assertSucceeds( getDoc( doc( carStoObj, 'groups/gro1/events/eve1' ) ) );                                       // What: Member Event Read. Why: Members see the group's events. How: This expects Carol's fetch allowed.
+	await assertSucceeds( getDocs( collection( carStoObj, 'groups/gro1/events' ) ) );                                    // What: Member Event List. Why: The app lists the group's events. How: This expects Carol's listing allowed.
+	await assertFails( getDoc( doc( accStoFun( 'dave' ), 'groups/gro1/events/eve1' ) ) );                                // What: Outsider Event Read. Why: Events are for members only. How: This expects Dave refused.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/events/eve1' ), { detailsEnc : bytFilFun( 400 ) } ) );    // What: Member Event Edit. Why: Only the creator or owner edits an event. How: This expects Carol refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { detailsEnc : bytFilFun( 400 ) } ) ); // What: Creator Event Edit. Why: The creator edits their event. How: This expects Bob allowed.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1/events/eve1' ), { detailsEnc : bytFilFun( 500 ) } ) ); // What: Owner Event Edit. Why: The owner edits any event. How: This expects Alice allowed.
+	await assertFails( deleteDoc( doc( carStoObj, 'groups/gro1/events/eve1' ) ) );                                       // What: Member Event Delete. Why: Only the creator or owner cancels an event. How: This expects Carol refused.
+	await assertSucceeds( deleteDoc( doc( aliStoObj, 'groups/gro1/events/eve2' ) ) );                                    // What: Owner Event Delete. Why: The owner cancels any event. How: This expects Alice allowed.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ) ) );                                    // What: Creator Event Delete. Why: The creator cancels their event. How: This expects Bob allowed.
+
+
+} );
+
+
+
+test( 'an event keeps its fields, sizes, real times, and creator', async () => { // What: Event Shape Test. Why: Encrypted details can only be checked by size, and the times decide when the event is deleted (Sections 5 and 11.10). How: This plans an event with one fault at a time, then valid ones at the limits, and edits one into a bad shape.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob plans the events. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob plans as a member. How: This approves Bob into the group.
+
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'alice' ) ) );                                                                            // What: Other Creator. Why: Nobody plans an event in someone else's name. How: This expects Alice named as creator refused.
+	await assertFails( setDoc( doc( accStoFun( 'dave' ), 'groups/gro1/events/eve1' ), eveDatFun( 'dave' ) ) );                                                                   // What: Outsider Event. Why: Only members plan events. How: This expects Dave refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { detailsEnc : bytFilFun( 2149 ) } ) ) );                                          // What: Long Details. Why: The details fit in 2,148 bytes. How: This expects 2,149 refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { detailsEnc : bytFilFun( 16 ) } ) ) );                                            // What: Empty Details. Why: The details hold at least a title past the 16-byte tag. How: This expects 16 bytes refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { detailsEnc : 'Dinner' } ) ) );                                                   // What: Plaintext Details. Why: The details are encrypted bytes. How: This expects text refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { iv : bytFilFun( 11 ) } ) ) );                                                    // What: Short IV. Why: An IV is 12 bytes. How: This expects 11 refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { extra : true } ) ) );                                                            // What: Extra Field. Why: An event holds exactly its six fields. How: This expects a seventh refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { startAt : Timestamp.fromMillis( EVE_END_NUM ) } ) ) );                           // What: Zero Length. Why: An event ends after it starts. How: This expects a start at its end refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { startAt : Timestamp.fromMillis( EVE_END_NUM - 7 * DAY_MIL_NUM - 1 ) } ) ) );     // What: Long Event. Why: An event lasts at most 7 days. How: This expects 7 days and a millisecond refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', eveTimFun( Date.now() - 2000, Date.now() - 1000 ) ) ) );                           // What: Ended Event. Why: An event that's over is kept only for review. How: This expects one that ended a second ago refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', eveTimFun( Date.now() + 366 * DAY_MIL_NUM, Date.now() + 367 * DAY_MIL_NUM ) ) ) ); // What: Distant Event. Why: An event starts at most a year ahead. How: This expects one 366 days out refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { expireAt : Timestamp.fromMillis( EVE_END_NUM + 2 * DAY_MIL_NUM + 1 ) } ) ) );    // What: Late Expiry. Why: An event is deleted exactly 48 hours after it ends. How: This expects a millisecond later refused.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { detailsEnc : bytFilFun( 2148 ) } ) ) );                                       // What: Longest Details. Why: The details may fill 2,148 bytes. How: This expects an event at that size allowed.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve2' ), eveDatFun( 'bob', eveTimFun( EVE_END_NUM - 7 * DAY_MIL_NUM, EVE_END_NUM ) ) ) );                  // What: Longest Event. Why: An event may last 7 days. How: This expects a week-long event allowed.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { createdByUid : 'alice' } ) );                                                                   // What: Creator Changed. Why: An event's creator never changes. How: This expects handing it to Alice refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { detailsEnc : bytFilFun( 2149 ) } ) );                                                           // What: Long Details Edit. Why: An edit keeps the details within 2,148 bytes. How: This expects 2,149 refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { endAt : Timestamp.fromMillis( EVE_END_NUM - DAY_MIL_NUM / 2 ) } ) );                            // What: Unmatched Expiry Edit. Why: A moved end moves the expiry with it. How: This expects an end moved alone refused.
+
+
+} );
+
+
+
+test( 'a creator who left no longer manages their event, while the owner still can', async () => { // What: Left Creator Test. Why: The owner cleans up after a creator who's gone (Section 11.5). How: This has Bob plan an event and leave, then tries edits as Bob and Alice.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob plans the event and leaves. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob plans as a member, then leaves. How: This approves Bob into the group.
+
+	await setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob' ) ); // What: Event Call. Why: Bob's event outlives his membership. How: This plans it as Bob.
+
+	await lefBatFun( bobStoObj, 'bob' ); // What: Leave Call. Why: Bob leaves the group. How: This commits his leave.
+
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { detailsEnc : bytFilFun( 400 ) } ) ); // What: Left Creator Edit. Why: Bob is no longer a member. How: This expects his edit refused.
+	await assertFails( deleteDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ) ) );                                    // What: Left Creator Delete. Why: Bob is no longer a member. How: This expects his delete refused.
+	await assertSucceeds( deleteDoc( doc( aliStoObj, 'groups/gro1/events/eve1' ) ) );                                 // What: Owner Cleanup. Why: The owner cancels a left member's event. How: This expects Alice allowed.
+
+
+} );
+
+
+
+test( 'any member adds, claims, releases, reassigns, and removes items, each a valid item that expires with its event', async () => { // What: Item Test. Why: Who's bringing what is the whole group's to sort out, while an item keeps its shape and goes with its event (Sections 7 and 11.5). How: This works through an item's life as each member, then tries each improper item.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is a member. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol is a member. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Items move between members. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins as a third member. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol adds and claims items. How: This approves her as Alice.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'bob' ) ); // What: Event Seed. Why: Items belong to an event. How: This writes Bob's event.
+
+	await assertSucceeds( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), iteDatFun() ) );                                                  // What: Item Added. Why: Any member adds an item. How: This expects Carol's open item allowed.
+	await assertSucceeds( updateDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { assignedUid : 'carol' } ) );                                 // What: Item Claimed. Why: Any member claims an item. How: This expects Carol claiming it allowed.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { assignedUid : 'bob' } ) );                                   // What: Item Reassigned. Why: Any member reassigns an item. How: This expects Alice handing it to Bob allowed.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { assignedUid : null } ) );                                    // What: Item Released. Why: A claim can be let go. How: This expects Bob releasing it allowed.
+	await assertSucceeds( getDocs( collection( bobStoObj, 'groups/gro1/events/eve1/assignments' ) ) );                                                            // What: Member Item List. Why: Members see who's bringing what. How: This expects Bob's listing allowed.
+	await assertFails( getDocs( collection( accStoFun( 'dave' ), 'groups/gro1/events/eve1/assignments' ) ) );                                                     // What: Outsider Item List. Why: Items are for members only. How: This expects Dave refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { assignedUid : 'dave' } ) );                                     // What: Outsider Assigned. Why: Items go to members. How: This expects one assigned to Dave refused.
+	await assertFails( setDoc( doc( accStoFun( 'dave' ), 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun() ) );                                           // What: Outsider Item. Why: Only members add items. How: This expects Dave refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { assignedUid : 'dave' } ) ) );                           // What: Outsider Assigned At Creation. Why: An item starts open or with a member. How: This expects a new item assigned to Dave refused.
+	await assertFails( updateDoc( doc( accStoFun( 'dave' ), 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 70 ) } ) );                     // What: Outsider Item Edit. Why: Only members change items. How: This expects Dave's relabel refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve9/assignments/ite2' ), iteDatFun() ) );                                                     // What: Eventless Item. Why: An item belongs to a real event. How: This expects one under a missing event refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { labelEnc : bytFilFun( 167 ) } ) ) );                    // What: Long Label. Why: A label fits in 166 bytes. How: This expects 167 refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { labelEnc : bytFilFun( 16 ) } ) ) );                     // What: Empty Label. Why: A label holds text past the 16-byte tag. How: This expects 16 bytes refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { iv : bytFilFun( 13 ) } ) ) );                           // What: Long IV. Why: An IV is 12 bytes. How: This expects 13 refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { expireAt : Timestamp.fromMillis( EVE_END_NUM ) } ) ) ); // What: Early Item Expiry. Why: An item expires with its event. How: This expects a different time refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { extra : true } ) ) );                                   // What: Extra Item Field. Why: An item holds exactly its four fields. How: This expects a fifth refused.
+	await assertFails( setDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite2' ), iteDatFun( { assignedUid : 7 } ) ) );                                // What: Numeric Assignee. Why: An assignee is a UID. How: This expects a number refused.
+	await assertSucceeds( deleteDoc( doc( carStoObj, 'groups/gro1/events/eve1/assignments/ite1' ) ) );                                                            // What: Item Removed. Why: Any member removes an item. How: This expects Carol's delete allowed.
+	await assertFails( deleteDoc( doc( accStoFun( 'dave' ), 'groups/gro1/events/eve1/assignments/ite3' ) ) );                                                     // What: Outsider Item Delete. Why: Only members remove items. How: This expects Dave refused.
+
+
+} );
+
+
+
+test( "a removed member's claim stays until someone changes it, and an event that moves takes its items' expiry with it", async () => { // What: Item Lifetime Test. Why: A claim isn't silently cleared (Section 7), and items have to keep expiring with their event when it's rescheduled. How: This removes Carol with a claim standing, then moves the event with and without its item.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group and removes Carol. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob planned the event. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob stays a member through the removal. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins, claims an item, and is removed. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol holds a claim as she's removed. How: This approves her as Alice.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'bob' ) );                                      // What: Event Seed. Why: The item belongs to an event. How: This writes Bob's event.
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1/assignments/ite1', iteDatFun( { assignedUid : 'carol' } ) ); // What: Claimed Item Seed. Why: Carol's claim outlives her membership. How: This writes an item she claimed.
+
+	await remBatFun( aliStoObj, { uidStr : 'carol' } ); // What: Removal Call. Why: Carol is removed with her claim standing. How: This removes her as Alice.
+
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 70 ) } ) );                                       // What: Removed Claim Kept. Why: An edit that leaves the claim alone keeps a removed member's claim. How: This expects Bob relabelling it allowed.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveTimFun( EVE_END_NUM, EVE_END_NUM + DAY_MIL_NUM ) ) );                                   // What: Event Moved. Why: The creator reschedules the event a day later. How: This expects the move allowed, its expiry following its end.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 80 ) } ) );                                          // What: Stale Item Expiry. Why: An item still carrying the old expiry is out of step with its event. How: This expects an edit keeping it refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { expireAt : Timestamp.fromMillis( EVE_END_NUM + 3 * DAY_MIL_NUM ) } ) ); // What: Item Expiry Synced. Why: Any member brings an item back in step with its event. How: This expects the item moved to the event's new expiry allowed.
+
+
+} );
+
+
+
+test( 'a document no rule covers is refused', async () => { // What: Uncovered Document Test. Why: Firestore must refuse anything no rule allows. How: This reads and writes a document in a collection no rule names, as a signed-in identity.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is an ordinary signed-in identity. How: This acts as her.
 
 
-	await assertFails( getDoc( doc( aliStoObj, 'groups/gro1/events/eve1' ) ) );                     // What: Uncovered Read. Why: No rule allows it. How: This expects the read refused.
-	await assertFails( setDoc( doc( aliStoObj, 'groups/gro1/events/eve1' ), { startAt : 1000 } ) ); // What: Uncovered Write. Why: No rule allows it. How: This expects the write refused.
+	await assertFails( getDoc( doc( aliStoObj, 'misc/doc1' ) ) );                     // What: Uncovered Read. Why: No rule allows it. How: This expects the read refused.
+	await assertFails( setDoc( doc( aliStoObj, 'misc/doc1' ), { startAt : 1000 } ) ); // What: Uncovered Write. Why: No rule allows it. How: This expects the write refused.
 
 
 } );
