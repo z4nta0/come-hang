@@ -65,6 +65,10 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * Cloud Functions, and the account's owner reads and dismisses them. No
  * client deletes a group, which a Cloud Function does whole.
  *
+ * The owner renames the group and sets how long its chat is kept. A rename
+ * updates the current invite's copy of the name in the same batch, so the
+ * invite screen always shows the group's real name.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -1240,6 +1244,61 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Settings Rules
+
+		// #region setGroFun
+
+		function setGroFun () { // What: Set Group Function. Why: The owner renames the group and sets how long its chat is kept, and a new name reaches the invite screen in the same batch (Section 11.6). How: This is true for the owner changing only the name and retention, to a valid name and a retention of 7 to 180 days, with the current invite carrying the same name once the batch is applied.
+
+
+			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
+
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'chatTtlDays', 'name' ] );        // What: Fields Only Boolean. Why: Only the settings change here, never the count, owner, or link. How: This allows changes to the name and retention alone.
+			let invNamBoo = getAfter( invPatFun( groNewObj.currentInviteToken ) ).data.groupName == groNewObj.name;     // What: Invite Name Boolean. Why: The invite screen has to show the group's real name. How: This requires the current invite to carry the name once the batch is applied, which holds without an invite write when the name stays the same.
+			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                        // What: Is-An Owner Boolean. Why: The group's settings are the owner's to change. How: This requires the requester to own the group.
+			let namValBoo = namGroFun( groNewObj.name );                                                                // What: Name Valid Boolean. Why: The name keeps to its limits (Section 11.10). How: This checks it.
+			let ttlValBoo = groNewObj.chatTtlDays is int && groNewObj.chatTtlDays >= 7 && groNewObj.chatTtlDays <= 180; // What: TTL Valid Boolean. Why: Chat retention runs 7 to 180 days (Section 11.2). How: This checks the type, then the range, which the type check guards, so the chain stays inline.
+
+			let setAllBoo = fieOnlBoo && invNamBoo && isaOwnBoo && namValBoo && ttlValBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return setAllBoo; // What: Set Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion setGroFun
+
+
+
+		// #region updInvFun
+
+		function updInvFun ( tokValStr ) { // What: Update Invite Function. Why: The invite's copy of the group name follows a rename, and nothing else about an invite ever changes. How: This is true for the group's owner changing only the name on the invite the group names, to the group's name once the batch is applied.
+
+
+			let groAftObj = getAfter( groPatFun( resource.data.groupId ) ).data; // What: Group After Object. Why: The invite has to match its group as the batch leaves it. How: This reads the group after the batch.
+
+			let curTokBoo = groAftObj.currentInviteToken == tokValStr;                                             // What: Current Token Boolean. Why: Only the working invite is kept up to date, and a retired one is deleted instead. How: This requires the group to name this token.
+			let fieOnlBoo = request.resource.data.diff( resource.data ).affectedKeys().hasOnly( [ 'groupName' ] ); // What: Fields Only Boolean. Why: An invite's token, group, and time never change. How: This allows changes to the name alone.
+			let groNamBoo = request.resource.data.groupName == groAftObj.name;                                     // What: Group Name Boolean. Why: The copy can only say what the group's name really is, which the group's own rule keeps valid. How: This requires them to match.
+			let isaOwnBoo = isaOwnFun( groAftObj.ownerUid );                                                       // What: Is-An Owner Boolean. Why: Only the owner renames the group. How: This requires the requester to own it.
+
+			let updAllBoo = curTokBoo && fieOnlBoo && groNamBoo && isaOwnBoo; // What: Update Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return updAllBoo; // What: Update Allowed Return. Why: The invite's update rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion updInvFun
+
+		// #endregion Settings Rules
+
+
+
 		// #region Update Dispatch
 
 		// #region updAccFun
@@ -1266,21 +1325,83 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
-		// #region updGroFun
+		// #region couGroFun
 
-		function updGroFun ( groIdeStr ) { // What: Update Group Function. Why: A group changes in eight ways, most of them part of a larger batch. How: This is true when the change is an acceptance, an approval, a block, an ended offer, a leave, an offer, a removal, or a rotation.
+		function couGroFun ( groIdeStr ) { // What: Count Group Function. Why: A group's count changes in three ways, each part of a larger batch. How: This is true when the change is an approval, a leave, or a removal.
+
+
+			let joiValBoo = joiGroFun( groIdeStr ); // What: Join Valid Boolean. Why: An approval raises the count. How: This checks that shape.
+			let lefValBoo = lefGroFun( groIdeStr ); // What: Leave Valid Boolean. Why: A leave lowers the count. How: This checks that shape.
+			let remValBoo = remGroFun( groIdeStr ); // What: Remove Valid Boolean. Why: A removal lowers the count, blocks, and rotates. How: This checks that shape.
+
+			let couAllBoo = joiValBoo || lefValBoo || remValBoo; // What: Count Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+
+
+
+			return couAllBoo; // What: Count Allowed Return. Why: The group's dispatch reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion couGroFun
+
+
+
+		// #region ownGroFun
+
+		function ownGroFun ( groIdeStr ) { // What: Ownership Group Function. Why: A group's ownership offer changes in three ways. How: This is true when the change is an offer, an acceptance, or an ended offer.
 
 
 			let accValBoo = accGroFun( groIdeStr ); // What: Accept Valid Boolean. Why: An acceptance hands the group over. How: This checks that shape.
-			let bloValBoo = bloGroFun( groIdeStr ); // What: Block Valid Boolean. Why: A decline can block its sender. How: This checks that shape.
-			let joiValBoo = joiGroFun( groIdeStr ); // What: Join Valid Boolean. Why: An approval raises the count. How: This checks that shape.
 			let endValBoo = endOffFun();            // What: End Valid Boolean. Why: A withdrawal or decline ends an offer. How: This checks that shape.
-			let lefValBoo = lefGroFun( groIdeStr ); // What: Leave Valid Boolean. Why: A leave lowers the count. How: This checks that shape.
 			let offValBoo = offGroFun( groIdeStr ); // What: Offer Valid Boolean. Why: The owner offers the group. How: This checks that shape.
-			let remValBoo = remGroFun( groIdeStr ); // What: Remove Valid Boolean. Why: A removal lowers the count, blocks, and rotates. How: This checks that shape.
-			let rotValBoo = rotGroFun( groIdeStr ); // What: Rotate Valid Boolean. Why: The owner can revoke the link. How: This checks that shape.
 
-			let updAllBoo = accValBoo || bloValBoo || endValBoo || joiValBoo || lefValBoo || offValBoo || remValBoo || rotValBoo; // What: Update Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+			let ownAllBoo = accValBoo || endValBoo || offValBoo; // What: Ownership Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+
+
+
+			return ownAllBoo; // What: Ownership Allowed Return. Why: The group's dispatch reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion ownGroFun
+
+
+
+		// #region resGroFun
+
+		function resGroFun ( groIdeStr ) { // What: Rest Group Function. Why: The rest of a group's changes touch neither its count nor its offer. How: This is true when the change is a block, a rotation, or a change of settings.
+
+
+			let bloValBoo = bloGroFun( groIdeStr ); // What: Block Valid Boolean. Why: A decline can block its sender. How: This checks that shape.
+			let rotValBoo = rotGroFun( groIdeStr ); // What: Rotate Valid Boolean. Why: The owner can revoke the link. How: This checks that shape.
+			let setValBoo = setGroFun();            // What: Set Valid Boolean. Why: The owner renames the group and sets its retention. How: This checks that shape.
+
+			let resAllBoo = bloValBoo || rotValBoo || setValBoo; // What: Rest Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+
+
+
+			return resAllBoo; // What: Rest Allowed Return. Why: The group's dispatch reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion resGroFun
+
+
+
+		// #region updGroFun
+
+		function updGroFun ( groIdeStr ) { // What: Update Group Function. Why: A group changes in nine ways, and checking a write against all of them at once passes Firestore's limit of 1,000 evaluated expressions per request. How: This routes the change by the fields it touches, to the count shapes when the count moves, the ownership shapes when the offer moves, and the rest otherwise.
+
+
+			let chaKeySet = request.resource.data.diff( resource.data ).affectedKeys(); // What: Changed Keys Set. Why: The fields a write touches say which shapes it could be. How: This lists them.
+
+			let couMovBoo = chaKeySet.hasAny( [ 'memberCount' ] );                         // What: Count Moved Boolean. Why: Every approval, leave, and removal moves the count. How: This checks whether the write touches it.
+			let offMovBoo = chaKeySet.hasAny( [ 'pendingOfferedAt', 'pendingOwnerUid' ] ); // What: Offer Moved Boolean. Why: Every offer, acceptance, and ended offer moves the offer. How: This checks whether the write touches it.
+
+			let updAllBoo = couMovBoo ? couGroFun( groIdeStr ) : offMovBoo ? ownGroFun( groIdeStr ) : resGroFun( groIdeStr ); // What: Update Allowed Boolean. Why: Each write is checked only against the shapes it could be. How: This picks the count, ownership, or rest shapes, and each of those still checks every field itself.
 
 
 
@@ -1422,7 +1543,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			allow get    : if isaMemFun( groIdeStr ); // What: Group Get Rule. Why: A group's settings are for its members. How: This lets members fetch it.
 			allow create : if creGroFun( groIdeStr ); // What: Group Create Rule. Why: A group is created whole. How: This allows it when creGroFun passes.
-			allow update : if updGroFun( groIdeStr ); // What: Group Update Rule. Why: A group changes only as part of an approval, block, leave, removal, rotation, or transfer, and is never deleted by a client, since deleting one runs as a Cloud Function that clears its whole tree. How: This allows updates when updGroFun passes.
+			allow update : if updGroFun( groIdeStr ); // What: Group Update Rule. Why: A group changes only as part of an approval, block, leave, removal, rotation, transfer, or change of settings, and is never deleted by a client, since deleting one runs as a Cloud Function that clears its whole tree. How: This allows updates when updGroFun passes.
 
 
 
@@ -1459,6 +1580,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			allow get    : if isaSigFun();            // What: Invite Get Rule. Why: Whoever holds the link sees which group it opens. How: This lets anyone signed in fetch one invite by its token, while listing stays refused, so tokens can't be collected.
 			allow create : if creInvFun( tokValStr ); // What: Invite Create Rule. Why: The owner issues the group's invite. How: This allows it when creInvFun passes.
+			allow update : if updInvFun( tokValStr ); // What: Invite Update Rule. Why: The invite's copy of the group name follows a rename. How: This allows it when updInvFun passes.
 			allow delete : if delInvFun( tokValStr ); // What: Invite Delete Rule. Why: The owner retires an old link as it rotates. How: This allows it when delInvFun passes.
 
 

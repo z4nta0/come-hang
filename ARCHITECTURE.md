@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-26 (ownership offers, acceptance, lapsing, and claims
+Last updated: 2026-10-27 (the owner renames the group with its invite in
+one batch, in Sections 11.2 and 11.6, and who edits events and their items
+in Section 11.5); 2026-10-26 (ownership offers, acceptance, lapsing, and claims
 in Section 18, notices in Sections 4 and 11.1, removal notices and group
 deletion in Section 9, the group's `pendingOfferedAt` in Section 11.2, and
 the functions they need in Section 14; the account's groups split into
@@ -404,7 +406,7 @@ decision should be revisited.
 **Removed-member handling for existing claims**: if a member who claimed
 something is later removed from the group, their claim is **left in
 place**, not auto-cleared, attributed to something like "removed user"
-in place of their name. The group can manually reassign it if needed.
+in place of their name. Any member can reassign or release it (Section 11.5).
 
 **Pros**
 - Prevents real, silent data loss (two people stomping the same claim)
@@ -727,10 +729,10 @@ different names.
 
 | Field | Type | Notes |
 |---|---|---|
-| `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
+| `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, rename, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
 | `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept, decline, or the offer is withdrawn or lapses (Section 18). |
 | `pendingOfferedAt` | plaintext, nullable | When the standing offer was made, stamped with the server's time, null with no offer. An offer lapses 7 days after it (Section 18). |
-| `name` | plaintext | The group's own name. Deliberately not encrypted, see below. At most 50 characters, emoji allowed (Section 11.10). |
+| `name` | plaintext | The group's own name. Deliberately not encrypted, see below. At most 50 characters, emoji allowed (Section 11.10). Only the owner renames it (decided 2026-10-27), since it's what invitees see on the invite screen, in one batch that also updates the current invite's copy. |
 | `createdAt` | plaintext | Timestamp. |
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
 | `removedUids` | plaintext map `{ uid: true }` | Checked by security rules to block redemption by a specific identity; low write-frequency, so a map field (not a subcollection) is fine here. |
@@ -809,7 +811,7 @@ everything else, now including location, is Firestore).
 |---|---|---|
 | `titleEnc` / `descriptionEnc` / `locationTextEnc` (+ `iv`s) | ciphertext | Event details. |
 | `startAt`, `endAt` | plaintext | Must stay plaintext: the deletion-grace-period query (Section 5) needs to filter/sort on real timestamps, which isn't possible against an opaque ciphertext blob. Same routing-metadata tradeoff already accepted for chat's `sentAt`. |
-| `createdByUid` | plaintext | Permission checks. |
+| `createdByUid` | plaintext | Permission checks: any member creates an event, and only its creator or the group's owner edits or deletes it (decided 2026-10-27), so the owner can clean up after a creator who left. |
 | `expireAt` | plaintext, TTL field | `endAt` + 48 hours (Section 5). Same native-TTL mechanism as location, no Cloud Function needed here either. |
 
 #### `/groups/{groupId}/events/{eventId}/assignments/{assignmentId}` (subcollection)
@@ -818,6 +820,10 @@ everything else, now including location, is Firestore).
 |---|---|---|
 | `labelEnc` / `iv` | ciphertext | "Bring dessert," etc. |
 | `assignedUid` | plaintext, nullable | The compare-and-swap target for the claim transaction (Section 7). Left as-is (not cleared) if that member is later removed; the client resolves "removed user" by checking current membership (11.3), not by storing a name snapshot here. |
+
+Any member adds or removes an item, claims an open one, and reassigns or
+releases anyone's claim (decided 2026-10-27), which is how the group
+reassigns a removed member's claims (Section 7).
 
 ### 11.6 Firestore: `/invites/{token}`
 
@@ -845,8 +851,10 @@ one doc whose token you already hold) and never `list` or queries, so
 the collection can't be enumerated. Rules can't see a token unless it's
 in the path, so the invite screen can't be allowed to read
 `/groups/{groupId}` by token. Instead the invite doc carries its own
-plaintext copy of the group name, updated whenever the name changes, and
-`/groups/{groupId}` stays readable by members only.
+plaintext copy of the group name, updated in the same batch as every
+rename, and `/groups/{groupId}` stays readable by members only. The rules
+let only the owner change that copy, only on the invite the group names,
+and only to the group's name as the batch leaves it.
 
 | Field | Type | Notes |
 |---|---|---|

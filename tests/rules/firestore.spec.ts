@@ -787,6 +787,64 @@ const takBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : TbfOp
 
 // #endregion takBatFun
 
+
+
+type SbfOptTyp = { groObj? : Record< string, unknown >, invObj? : Record< string, unknown > | null, othStr? : string, tokStr? : string }; // What: SBF Options Type. Why: Each rename test changes or leaves out one part of the batch. How: This lists the overrides, where a null invObj leaves the invite out, groObj or invObj adds fields to its write, tokStr picks the invite written, and othStr names a second invite the batch renames too.
+
+// #region setBatFun
+
+/**
+ * setBatFun = Settings Batch Function
+ *
+ * @summary
+ * Commits a rename of gro1 the way the app will: the group's new name and
+ * the current invite's copy of it, in one batch. The invite write can be
+ * left out, pointed at another token, or joined by a second invite write,
+ * and either write's fields changed, by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The connection that writes the
+ *                    batch.
+ * @param namValStr - Name Value String: The group's new name.
+ * @param optValObj - Option Value Object: {@link SbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * setBatFun(aliStoObj, 'Supper Club', { invObj : null }) // => Promise<void>
+ * ```
+ *
+*/
+
+const setBatFun = ( stoConObj : StoConTyp, namValStr : string, optValObj : SbfOptTyp = {} ) => { // What: Settings Batch Function. Why: The rename tests commit the same two writes with one part changed. How: This builds and commits the batch.
+
+
+	const batWriObj = writeBatch( stoConObj ); // What: Batch Write Object. Why: The two writes have to land together. How: This starts the batch.
+
+
+	batWriObj.update( doc( stoConObj, 'groups/gro1' ), { name : namValStr, ...optValObj.groObj } ); // What: Group Write. Why: The group takes its new name. How: This renames it, with any changes the test adds.
+
+
+
+	if ( optValObj.invObj !== null ) batWriObj.update( doc( stoConObj, `invites/${ optValObj.tokStr ?? TOK_ONE_STR }` ), { groupName : namValStr, ...optValObj.invObj } ); // What: Invite Write. Why: The invite screen shows the group's real name. How: This copies the new name onto the invite, with any changes the test adds, unless the test leaves it out.
+
+
+
+	if ( optValObj.othStr !== undefined ) batWriObj.update( doc( stoConObj, `invites/${ optValObj.othStr }` ), { groupName : namValStr } ); // What: Other Invite Write. Why: Some tests try renaming a second invite in the batch. How: This copies the new name onto it when the test names one.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion setBatFun
+
 // #endregion Helpers
 
 
@@ -1830,6 +1888,56 @@ test( 'nobody deletes a group, and an account owner reads and dismisses only the
 	await assertFails( updateDoc( doc( bobStoObj, 'accounts/bob/notices/not1' ), { kind : 'removed' } ) );   // What: Notice Change. Why: A notice says what really happened. How: This expects Bob changing one refused.
 	await assertFails( deleteDoc( doc( aliStoObj, 'accounts/bob/notices/not1' ) ) );                         // What: Other Notice Dismiss. Why: Only its owner dismisses a notice. How: This expects Alice refused.
 	await assertSucceeds( deleteDoc( doc( bobStoObj, 'accounts/bob/notices/not1' ) ) );                      // What: Own Notice Dismiss. Why: Bob dismisses a notice once he's seen it. How: This expects his delete allowed.
+
+
+} );
+
+
+
+test( "the owner renames the group with the invite's copy of the name in the same batch, and sets its chat retention", async () => { // What: Settings Test. Why: The group's settings are the owner's, and the invite screen has to keep showing the real name (Sections 11.2 and 11.6). How: This renames the group as Alice and sets its retention at both ends of its range.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: The settings belong to a group with members. How: This approves Bob into the group.
+
+	await assertSucceeds( setBatFun( aliStoObj, 'Supper Club' ) );                               // What: Rename. Why: The owner may rename the group. How: This expects the group and invite renamed together.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1' ), { chatTtlDays : 7 } ) );   // What: Shortest Retention. Why: Chat is kept at least 7 days. How: This expects 7 allowed without touching the invite.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1' ), { chatTtlDays : 180 } ) ); // What: Longest Retention. Why: Chat is kept at most 180 days. How: This expects 180 allowed.
+	await assertSucceeds( getDoc( doc( accStoFun( 'carol' ), `invites/${ TOK_ONE_STR }` ) ) );   // What: Renamed Invite Read. Why: Someone holding the link still opens the invite after a rename. How: This expects Carol's fetch allowed.
+
+
+} );
+
+
+
+test( 'only the owner changes the settings, to a valid name with the invite matching and a retention of 7 to 180 days, changing nothing else', async () => { // What: Settings Parts Test. Why: A forged name could mislead invitees, and the settings mustn't carry other changes along. How: This tries each improper change, then a valid rename.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is a member who isn't the owner. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: A member other than the owner tries to change the settings. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, `invites/${ 'S'.repeat( 22 ) }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } ); // What: Stale Invite Seed. Why: A retired invite mustn't take the new name. How: This writes one the group no longer names.
+
+	await assertFails( setBatFun( bobStoObj, 'Supper Club' ) );                                                    // What: Member Rename. Why: Only the owner renames the group. How: This expects Bob refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { chatTtlDays : 90 } ) );                       // What: Member Retention. Why: Only the owner sets the retention. How: This expects Bob refused.
+	await assertFails( setBatFun( aliStoObj, 'Supper Club', { invObj : null } ) );                                 // What: Kept Invite Name. Why: The invite has to show the new name. How: This expects a rename that skips the invite refused.
+	await assertFails( setBatFun( aliStoObj, 'Supper Club', { invObj : { groupName : 'Other Club' } } ) );         // What: Mismatched Invite Name. Why: The invite can only show the group's real name. How: This expects a different name on it refused.
+	await assertFails( updateDoc( doc( aliStoObj, `invites/${ TOK_ONE_STR }` ), { groupName : 'Supper Club' } ) ); // What: Invite Rename Alone. Why: The invite's name follows the group's. How: This expects the invite renamed without the group refused.
+	await assertFails( setBatFun( aliStoObj, 'Supper Club', { othStr : 'S'.repeat( 22 ) } ) );                     // What: Stale Invite Beside. Why: A retired invite is deleted, not kept up to date. How: This expects a rename that also renames the retired one refused.
+	await assertFails( updateDoc( doc( bobStoObj, `invites/${ TOK_ONE_STR }` ), { groupName : GRO_NAM_STR } ) );   // What: Member Invite Write. Why: Only the owner writes an invite. How: This expects Bob rewriting its unchanged name refused.
+	await assertFails( setBatFun( aliStoObj, 'Supper Club', { tokStr : 'S'.repeat( 22 ) } ) );                     // What: Stale Invite Rename. Why: Only the working invite follows a rename. How: This expects the retired one renamed instead refused.
+	await assertFails( setBatFun( aliStoObj, 'x'.repeat( 51 ) ) );                                                 // What: Long Name. Why: A group name has at most 50 characters. How: This expects 51 refused.
+	await assertFails( setBatFun( aliStoObj, 'Supper Club', { groObj : { memberCount : 9 } } ) );                  // What: Smuggled Count. Why: A change of settings leaves the count alone. How: This expects a count change beside it refused.
+	await assertFails( setBatFun( aliStoObj, 'Supper Club', { invObj : { groupId : 'gro2' } } ) );                 // What: Smuggled Invite Group. Why: An invite's group never changes. How: This expects it moved to another group refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { chatTtlDays : 6 } ) );                        // What: Short Retention. Why: Chat is kept at least 7 days. How: This expects 6 refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { chatTtlDays : 181 } ) );                      // What: Long Retention. Why: Chat is kept at most 180 days. How: This expects 181 refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { chatTtlDays : 30.5 } ) );                     // What: Fractional Retention. Why: Retention counts whole days. How: This expects 30.5 refused.
+	await assertSucceeds( setBatFun( aliStoObj, 'Supper Club' ) );                                                 // What: Valid Rename. Why: The changes above failed only for their one fault. How: This expects the plain rename allowed.
 
 
 } );
