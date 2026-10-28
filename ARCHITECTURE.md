@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (joining a group in the app, with the approver
+Last updated: 2026-10-28 (members, leaving, removal, link rotation, and
+group settings in the app, in Section 14; joining a group in the app, with the approver
 encrypting the joiner's name, in Sections 11.3, 13, 14, and 17; group creation in the app and emoji listed by code
 point in the rules, in Sections 11.10 and 14; the group key wrapping scheme and extractable
 group keys, in Sections 6 and 14; the app's Firebase services and identity
@@ -1458,6 +1459,17 @@ the Blaze change.
   writes the membership, the account entry, the count, and the request's
   end together. Once in, the joiner loads the key from their own wrap the
   same way a lost key is recovered.
+- `src/state/members.ts` is the membership (Sections 9, 11.3, and 18): the
+  member list, oldest first, with each name decrypted, where a missing or
+  unreadable name shows as none rather than failing the list; a member
+  renaming themselves; the activity mark, which the app makes for each
+  group as it opens, writing only when the last mark is a day old or more;
+  leaving, one batch that ends the membership, its account entry, and its
+  count, then deletes the group's key from the device; and the owner's
+  removal, one transaction that also blocks the member and rotates the
+  invite, returning the new link to share. `src/state/groups.ts` adds the
+  owner's link rotation and settings (the name and chat retention), each one
+  transaction that keeps the working invite in step.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.

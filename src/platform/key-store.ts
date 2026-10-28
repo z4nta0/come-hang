@@ -10,7 +10,8 @@
  * itself, so a private key made non-extractable is stored without its bytes
  * ever being readable by script, which localStorage couldn't do. Each record
  * sits in one object store under a name of the caller's choosing, and each
- * read or write closes its connection once its transaction finishes.
+ * read, write, or delete closes its connection once its transaction
+ * finishes.
  *
  * Sections:
  *  - Constants
@@ -70,6 +71,58 @@ const datOpeFun = () : Promise< IDBDatabase > => new Promise( ( resValFun, rejVa
 } );
 
 // #endregion datOpeFun
+
+
+
+// #region keyDelFun
+
+/**
+ * keyDelFun = Key Delete Function
+ *
+ * @summary
+ * Deletes one record from the key store by name, doing nothing when there's
+ * none, and resolves once the delete is committed.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param keyNamStr - Key Name String: The record's name.
+ *
+ * @returns A promise that settles once the record is gone, with no value.
+ *
+ * @example
+ * ```ts
+ * keyDelFun('group:Xk3...') // => Promise<void>
+ * ```
+ *
+*/
+
+const keyDelFun = async ( keyNamStr : string ) : Promise< void > => { // What: Key Delete Function. Why: A key the device no longer needs, such as a left group's, shouldn't stay behind. How: This deletes one record in a read-write transaction.
+
+
+	const datValObj = await datOpeFun(); // What: Database Value Object. Why: The delete needs the open database. How: This opens it.
+
+
+
+	return new Promise( ( resValFun, rejValFun ) => { // What: Delete Promise. Why: A delete counts only once its transaction commits. How: This resolves on the transaction's completion or rejects with its error.
+
+
+		const traValObj = datValObj.transaction( KEY_STO_STR, 'readwrite' ); // What: Transaction Value Object. Why: The delete and its completion share one transaction. How: This opens a read-write one on the key store.
+
+
+		traValObj.objectStore( KEY_STO_STR ).delete( keyNamStr ); // What: Delete Call. Why: The record goes by name. How: This deletes it, which is no error when it's absent.
+
+		datValObj.close(); // What: Close Call. Why: An open connection would block the database being deleted or upgraded. How: This closes it once the delete's transaction finishes.
+
+		traValObj.oncomplete = () => resValFun();                  // What: Complete Handler. Why: The record is gone only once the transaction commits. How: This resolves then.
+		traValObj.onerror    = () => rejValFun( traValObj.error ); // What: Error Handler. Why: A failed delete has to reach the caller. How: This rejects with the error.
+
+
+	} );
+
+
+};
+
+// #endregion keyDelFun
 
 
 
@@ -181,7 +234,7 @@ const keyPutFun = async ( keyNamStr : string, recValAny : unknown ) : Promise< v
 
 // #region Exports
 
-export { keyGetFun, keyPutFun }; // What: Named Exports. Why: The identity reads and writes its keys here. How: This exports both helpers.
+export { keyDelFun, keyGetFun, keyPutFun }; // What: Named Exports. Why: The identity and the groups keep their keys here. How: This exports the helpers.
 
 // #endregion Exports
 

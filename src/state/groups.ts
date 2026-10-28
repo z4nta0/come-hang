@@ -16,6 +16,7 @@ import { ideEnsFun       } from './identity.ts';            // What: Identity En
 import { keyGetFun       } from '../platform/key-store.ts'; // What: Key Get Function. Why: A group key is kept on the device. How: This reads it.
 import { keyPutFun       } from '../platform/key-store.ts'; // What: Key Put Function. Why: A group key is kept on the device. How: This stores it.
 import { perNamFun       } from '../core/text-limits.ts';   // What: Person Name Function. Why: The encrypted display name is checked by the app alone. How: This applies the limits.
+import { runTransaction  } from 'firebase/firestore';       // What: Run Transaction. Why: A rotation and a settings change read the group they change. How: This runs the reads and writes together.
 import { serverTimestamp } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules require the server's time on every new document. How: This asks the server to fill it in.
 import { texNorFun       } from '../core/text-limits.ts';   // What: Text Normalize Function. Why: Typed names are tidied before they're checked. How: This normalizes them.
 import { tokCreFun       } from '../platform/crypto.ts';    // What: Token Create Function. Why: Each group starts with an invite link. How: This draws its token.
@@ -31,15 +32,17 @@ import { writeBatch      } from 'firebase/firestore';       // What: Write Batch
  * groups.ts = Groups
  *
  * @summary
- * Creating a group, and reading a group's key back on this device
- * (ARCHITECTURE.md Sections 6, 9, and 11). Creation tidies and checks both
- * names, makes sure the identity exists, makes the group's key and invite
- * token, and writes the whole group in one batch, as the rules require: the
- * group, the creator's membership with the key wrapped for them and their
+ * Creating a group, the owner's changes to it, and reading a group's key back
+ * on this device (ARCHITECTURE.md Sections 6, 9, and 11). Creation tidies and
+ * checks both names, makes sure the identity exists, makes the group's key and
+ * invite token, and writes the whole group in one batch, as the rules require:
+ * the group, the creator's membership with the key wrapped for them and their
  * display name encrypted, the group's first invite, and the group in the
  * creator's owned map. The key is then kept on the device under
  * group:{groupId}. A key missing from the device, such as after its storage
- * was cleared, is recovered from the member's own wrap and kept again.
+ * was cleared, is recovered from the member's own wrap and kept again. The
+ * owner rotates the invite link, and renames the group or changes its chat
+ * retention, each in one transaction that keeps the invite in step.
  *
  * Sections:
  *  - Helpers
@@ -124,7 +127,7 @@ const groCreFun = async ( groNamStr : string, perNamStr : string ) : Promise< st
 		removedUids        : {}
 
 
-	});
+	} );
 
 	batWriObj.set( doc( fstDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), { // What: Member Set Call. Why: The creator is the first member. How: This writes their membership with the wrapped key and encrypted name.
 
@@ -136,7 +139,7 @@ const groCreFun = async ( groNamStr : string, perNamStr : string ) : Promise< st
 		wrappedGroupKey : Bytes.fromUint8Array( wraKeyArr )
 
 
-	});
+	} );
 
 	batWriObj.set( doc( fstDatObj, `invites/${ tokValStr }` ), { createdAt : serverTimestamp(), groupId : groIdeStr, groupName : groNorStr } ); // What: Invite Set Call. Why: A group always has a working invite, showing its name. How: This writes the first one.
 
@@ -154,6 +157,147 @@ const groCreFun = async ( groNamStr : string, perNamStr : string ) : Promise< st
 };
 
 // #endregion groCreFun
+
+
+
+// #region groSetFun
+
+/**
+ * groSetFun = Group Settings Function
+ *
+ * @summary
+ * Saves a group's name and chat retention as its owner, in one transaction
+ * with the current invite's copy of the name, as the rules require. The
+ * name is tidied first, and a name outside its limits, or a retention that
+ * isn't a whole number of days from 7 to 180, rejects with a RangeError
+ * before anything is written.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param groNamStr - Group Name String: The group's name, as typed.
+ * @param ttlDayNum - TTL Day Number: How many days chat is kept.
+ *
+ * @returns A promise that settles once the settings are saved, with no
+ *          value.
+ *
+ * @example
+ * ```ts
+ * groSetFun('Xk3...', 'Beach Week', 60) // => Promise<void>
+ * ```
+ *
+*/
+
+const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : number ) : Promise< void > => { // What: Group Settings Function. Why: The owner renames the group and sets how long its chat is kept (Section 11.2). How: This checks both, then saves them with the invite's copy of the name.
+
+
+	const groNorStr = texNorFun( groNamStr ); // What: Group Normalized String. Why: The name is saved tidied. How: This normalizes it.
+
+
+	if ( !groNamFun( groNorStr ) ) throw new RangeError( 'The group name is outside its limits.' ); // What: Group Name Guard. Why: The rules would refuse it. How: This rejects first.
+
+
+
+	const ttlIntBoo = Number.isInteger( ttlDayNum ); // What: TTL Integer Boolean. Why: Retention is a whole number of days. How: This checks it.
+	const ttlLowBoo = ttlDayNum >= 7;                // What: TTL Low Boolean. Why: Chat is kept at least 7 days. How: This checks the lower bound.
+	const ttlTopBoo = ttlDayNum <= 180;              // What: TTL Top Boolean. Why: Chat is kept at most 180 days. How: This checks the upper bound.
+
+	const ttlValBoo = ttlIntBoo && ttlLowBoo && ttlTopBoo; // What: TTL Valid Boolean. Why: Every check has to pass. How: This combines them.
+
+
+	if ( !ttlValBoo ) throw new RangeError( 'The chat retention is outside its limits.' ); // What: Retention Guard. Why: The rules would refuse it. How: This rejects first.
+
+
+
+	const { fstDatObj } = firGetFun(); // What: Firestore Data Object. Why: The settings are saved to Firestore. How: This reads the service.
+
+	const groRefObj = doc( fstDatObj, `groups/${ groIdeStr }` ); // What: Group Reference Object. Why: The settings live on the group. How: This names it.
+
+
+	await runTransaction( fstDatObj, async ( traValObj ) => { // What: Settings Transaction. Why: The invite to update is the one the group names when the change lands. How: This reads the group's token, then writes both together, retrying on a conflict.
+
+
+		const tokCurStr = ( await traValObj.get( groRefObj ) ).get( 'currentInviteToken' ) as string; // What: Token Current String. Why: The working invite carries a copy of the name. How: This reads its token. // What: Type Assertion Note. Why: The rules store the token as a string. How: The as reads it as one.
+
+
+		traValObj.update( groRefObj, { chatTtlDays : ttlDayNum, name : groNorStr } ); // What: Group Update Call. Why: The group's settings change. How: This writes the name and retention.
+
+		traValObj.update( doc( fstDatObj, `invites/${ tokCurStr }` ), { groupName : groNorStr } ); // What: Invite Update Call. Why: The invite screen has to show the group's real name (Section 11.6). How: This copies the name to the working invite.
+
+
+	} );
+
+
+};
+
+// #endregion groSetFun
+
+
+
+// #region invRotFun
+
+/**
+ * invRotFun = Invite Rotate Function
+ *
+ * @summary
+ * Replaces a group's invite link as its owner, in one transaction, as the
+ * rules require: the group names a fresh token, its invite is created with
+ * the group's name, and the old invite is deleted, so the old link stops
+ * working and the group still has exactly one. Resolves with the new token.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ *
+ * @returns A promise that resolves with the new invite token.
+ *
+ * @example
+ * ```ts
+ * invRotFun('Xk3...') // => 'q1W...'
+ * ```
+ *
+*/
+
+const invRotFun = async ( groIdeStr : string ) : Promise< string > => { // What: Invite Rotate Function. Why: The owner can revoke the link at any time, such as after it's over-shared (Section 9). How: This swaps the group's invite for a new one in one transaction.
+
+
+	const { fstDatObj } = firGetFun(); // What: Firestore Data Object. Why: The rotation reads and writes Firestore. How: This reads the service.
+
+	const groRefObj = doc( fstDatObj, `groups/${ groIdeStr }` ); // What: Group Reference Object. Why: The group names its token. How: This names the group.
+	const tokNewStr = tokCreFun();                               // What: Token New String. Why: The new link needs its own random token. How: This draws it.
+
+
+	await runTransaction( fstDatObj, async ( traValObj ) => { // What: Rotation Transaction. Why: The old token and the name have to be read as they stand when the rotation lands. How: This reads the group, then writes every change together, retrying on a conflict.
+
+
+		const groSnaObj = await traValObj.get( groRefObj ); // What: Group Snapshot Object. Why: The old token and the name come from the group. How: This reads it.
+
+
+		traValObj.update( groRefObj, { currentInviteToken : tokNewStr } ); // What: Group Update Call. Why: The group names its one working link. How: This points it at the new token.
+
+		traValObj.set( doc( fstDatObj, `invites/${ tokNewStr }` ), { // What: Invite Set Call. Why: The new link has to open the group. How: This creates its invite.
+
+
+			createdAt : serverTimestamp(),                // What: Created At. Why: The rules require the server's time. How: This asks the server to fill it in.
+			groupId   : groIdeStr,                        // What: Group ID. Why: The link opens this group. How: This names it.
+			groupName : groSnaObj.get( 'name' ) as string // What: Group Name. Why: The invite screen shows the group's name. How: This copies it. // What: Type Assertion Note. Why: The rules store the name as a string. How: The as reads it as one.
+
+
+		} );
+
+		traValObj.delete( doc( fstDatObj, `invites/${ groSnaObj.get( 'currentInviteToken' ) as string }` ) ); // What: Invite Delete Call. Why: The old link has to stop working. How: This deletes its invite. // What: Type Assertion Note. Why: The rules store the token as a string. How: The as reads it as one.
+
+
+	} );
+
+
+
+	return tokNewStr; // What: Token Return. Why: The owner shares the new link. How: This returns the new token.
+
+
+};
+
+// #endregion invRotFun
 
 
 
@@ -214,7 +358,7 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 
 // #region Exports
 
-export { groCreFun, keyLoaFun }; // What: Named Exports. Why: The group screens create groups and read their keys. How: This exports both.
+export { groCreFun, groSetFun, invRotFun, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, change their settings and link, and read their keys. How: This exports the functions.
 
 // #endregion Exports
 
