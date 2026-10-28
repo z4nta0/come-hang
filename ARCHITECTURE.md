@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-27 (events as one encrypted bundle with time bounds,
+Last updated: 2026-10-28 (location sharing's window, expiry, encrypted
+arrived flag, and rules in Sections 5, 10, and 11.4); 2026-10-27 (events as one encrypted bundle with time bounds,
 and items expiring on their own, in Section 11.5, with their text limits in
 Section 11.10; the owner renames the group with its invite in
 one batch, in Sections 11.2 and 11.6, and who edits events and their items
@@ -240,8 +241,12 @@ from Spark's 100 to 200,000.
 
 ### Location
 - Not an append-only log: each update **overwrites** the previous value.
-- Deleted on an inactivity timer.
+- Deleted on an inactivity timer: an hour after its last update (decided
+  2026-10-28), which covers a drive with the phone locked and a fresh
+  update on arrival.
 - Always deleted at event-end, regardless of timer state.
+- Sharing opens 3 hours before an event starts (decided 2026-10-28), for
+  getting ready and the trip there, and never earlier.
 - Throttled client-side by time-since-last-update **and** distance moved
   (whichever threshold is hit first), not a fixed-interval ping, to keep
   bandwidth/battery cost down.
@@ -629,7 +634,8 @@ in place of their name. Any member can reassign or release it (Section 11.5).
     the app periodically updates location with no extra action needed.
   - An explicit "I've arrived" action: a one-shot location fix plus a
     distinct status flag (e.g. an "Arrived" badge), separate from the
-    ambient live-location display.
+    ambient live-location display. The flag is encrypted with the position
+    (decided 2026-10-28), so Firebase can't tell who has arrived.
   - Every displayed location shows a staleness timestamp ("updated 6 min
     ago") so an old ping is never presented as if it were live.
   - Users are told plainly, at the point they enable sharing, that
@@ -794,10 +800,17 @@ alongside chat): moved to Firestore. Reasoning:
 
 | Field | Type | Notes |
 |---|---|---|
-| `ciphertext` / `iv` | ciphertext | The actual lat/lng. Safe to encrypt since nothing server-side ever queries into it, all distance/proximity math happens client-side after each member decrypts everyone's current location. |
-| `updatedAt` | plaintext | Timestamp, for staleness display in the UI. |
-| `expireAt` | plaintext, TTL field | Refreshed to `now + inactivityWindow` on every update; set to the event's end time if that's sooner. Firestore's TTL policy targets this field. A manual "stop sharing" action deletes the doc directly rather than waiting on TTL. |
-| `eventId` | plaintext | Which event this share-session belongs to. |
+| `locationEnc` / `iv` | ciphertext bytes | The lat/lng, its accuracy, and the "I've arrived" flag, encrypted together. Safe to encrypt since nothing server-side ever queries into it, all distance/proximity math happens client-side after each member decrypts everyone's current location. The rules cap the ciphertext at 128 bytes, and the IV is 12. |
+| `updatedAt` | plaintext | Timestamp, for staleness display in the UI, always the server's own time. |
+| `expireAt` | plaintext, TTL field | Refreshed to an hour after each update, or the event's end time if that's sooner. Firestore's TTL policy targets this field. The phone sets it by its own clock, which can't match the server's exactly, so the rules accept any expiry after the server's time, no later than the event's end, and no more than 65 minutes out, an hour plus 5 minutes of allowance for a clock running ahead. A manual "stop sharing" action deletes the doc directly rather than waiting on TTL. |
+| `eventId` | plaintext | Which event this share-session belongs to. The rules allow a share only from 3 hours before that event starts until it ends. |
+
+Rules (decided 2026-10-28): a member writes only their own document, keyed
+by their UID, so each update overwrites the last and no history builds up.
+Members read every shared location. Only the sharer deletes theirs, even
+after leaving the group, while a member who has left can no longer update
+it. A removed or departed member's last share stays readable to the group
+until its own expiry, at most an hour.
 
 **Pros**: automatic, free, zero-infrastructure expiry; real-time reads
 work the same as RTDB via `onSnapshot`; no loss of functionality versus

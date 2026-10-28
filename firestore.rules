@@ -77,6 +77,12 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * or a member, and each expires with its event, since Firestore's TTL leaves
  * an event's subcollections behind.
  *
+ * A member shares their own location for one event, from 3 hours before it
+ * starts until it ends. Each update overwrites the last, stamped with the
+ * server's time, and expires an hour later or at the event's end, whichever
+ * comes first. Members read the shared locations, and only the sharer
+ * deletes theirs.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -1507,6 +1513,85 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Location Rules
+
+		// #region valLocFun
+
+		function valLocFun () { // What: Valid Location Function. Why: A shared location holds only its encrypted position, the event it's for, and its times (Section 11.4). How: This checks the incoming document's fields, sizes, and update time.
+
+
+			let locDatObj = request.resource.data; // What: Location Data Object. Why: Every check reads the incoming document. How: This names it once.
+
+			let fieAllBoo = locDatObj.keys().toSet() == [ 'eventId', 'expireAt', 'iv', 'locationEnc', 'updatedAt' ].toSet();            // What: Fields All Boolean. Why: A shared location holds exactly its five fields. How: This compares them with the full set.
+			let ivaValBoo = locDatObj.iv is bytes && locDatObj.iv.size() == 12;                                                         // What: IV Valid Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let locValBoo = locDatObj.locationEnc is bytes && locDatObj.locationEnc.size() > 16 && locDatObj.locationEnc.size() <= 128; // What: Location Valid Boolean. Why: The coordinates, their accuracy, and the arrived flag fit in 128 bytes once encrypted, and the cap stops the field holding anything else. How: This checks the type, then the size, which the type check guards.
+			let updTimBoo = locDatObj.updatedAt == request.time;                                                                        // What: Updated Time Boolean. Why: The staleness label members see has to be real. How: This requires the server's own time.
+
+			let valLocBoo = fieAllBoo && ivaValBoo && locValBoo && updTimBoo; // What: Valid Location Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valLocBoo; // What: Valid Location Return. Why: The location's write rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valLocFun
+
+
+
+		// #region winLocFun
+
+		function winLocFun ( groIdeStr ) { // What: Window Location Function. Why: A location is shared for one event, from 3 hours before it starts until it ends, and expires an hour after its last update or at the event's end, whichever is sooner (Section 5). How: This is true when the event exists, the server's time is past the window's opening, and the expiry falls after now and within those bounds.
+
+
+			let locNewObj = request.resource.data; // What: Location New Object. Why: The checks read the incoming document. How: This names it.
+
+			let eveDatObj = get( evePatFun( groIdeStr, locNewObj.eventId ) ).data; // What: Event Data Object. Why: The window and expiry follow the event's times. How: This reads the event, and a missing one fails the lookup, refusing the write.
+
+			let expAftBoo = locNewObj.expireAt > request.time;                              // What: Expire After Boolean. Why: A location that's already expired has no reason to be written. How: This requires the expiry after the server's time.
+			let expEndBoo = locNewObj.expireAt <= eveDatObj.endAt;                          // What: Expire End Boolean. Why: A location is deleted at the event's end, however recently it was updated, and sharing ends with the event. How: This caps the expiry at the event's end, which, with the expiry after the server's time, also refuses any write once the event is over.
+			let expHouBoo = locNewObj.expireAt <= request.time + duration.value( 65, 'm' ); // What: Expire Hour Boolean. Why: A location expires an hour after its last update, and the phone sets the time by its own clock, which can run a little ahead of the server's. How: This caps the expiry at 65 minutes past the server's time, an hour plus 5 minutes of allowance.
+			let staWinBoo = request.time >= eveDatObj.startAt - duration.value( 3, 'h' );   // What: Start Window Boolean. Why: Sharing opens 3 hours before an event, for getting ready and the trip there. How: This requires the server's time to be past that point.
+
+			let winAllBoo = expAftBoo && expEndBoo && expHouBoo && staWinBoo; // What: Window Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return winAllBoo; // What: Window Allowed Return. Why: The location's write rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion winLocFun
+
+
+
+		// #region setLocFun
+
+		function setLocFun ( groIdeStr, uidValStr ) { // What: Set Location Function. Why: A member shares only their own location, for one of the group's events, while it's open for sharing. How: This is true for a member writing their own valid location inside its event's window.
+
+
+			let isaMemBoo = isaMemFun( groIdeStr ); // What: Is-A Member Boolean. Why: Only members share with the group, and a member who leaves stops being able to. How: This requires the requester to be a member.
+			let isaOwnBoo = isaOwnFun( uidValStr ); // What: Is-An Owner Boolean. Why: Nobody shares a location in someone else's name. How: This requires the document to be the requester's own.
+			let valLocBoo = valLocFun();            // What: Valid Location Boolean. Why: The location keeps its shape. How: This checks it.
+			let winLocBoo = winLocFun( groIdeStr ); // What: Window Location Boolean. Why: Sharing follows its event's window. How: This checks it.
+
+			let setAllBoo = isaMemBoo && isaOwnBoo && valLocBoo && winLocBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return setAllBoo; // What: Set Allowed Return. Why: The location's create and update rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion setLocFun
+
+		// #endregion Location Rules
+
+
+
 		// #region Update Dispatch
 
 		// #region updAccFun
@@ -1774,6 +1859,19 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 				allow read   : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Read Rule. Why: Members review the requests, and a joiner checks on their own. How: This lets members fetch and list them, and the joiner fetch theirs.
 				allow create : if creReqFun( groIdeStr, uidValStr );                // What: Request Create Rule. Why: A joiner asks to join through the invite. How: This allows it when creReqFun passes.
 				allow delete : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Delete Rule. Why: Any member may decline a request, and the joiner may withdraw it. How: This lets either delete it.
+
+
+			}
+
+
+
+			match /liveLocations/{uidValStr} { // What: Live Location Match. Why: Each member's shared location is one document they overwrite, keyed by their UID, so no history builds up (Section 5). How: This matches one shared location by UID.
+
+
+				allow read   : if isaMemFun( groIdeStr );            // What: Location Read Rule. Why: Members see where everyone sharing is. How: This lets members fetch and list the shared locations.
+				allow create : if setLocFun( groIdeStr, uidValStr ); // What: Location Create Rule. Why: A member starts sharing. How: This allows it when setLocFun passes.
+				allow update : if setLocFun( groIdeStr, uidValStr ); // What: Location Update Rule. Why: Each update overwrites the last position. How: This allows it when setLocFun passes.
+				allow delete : if isaOwnFun( uidValStr );            // What: Location Delete Rule. Why: Stopping sharing deletes the location at once, even for someone who has since left the group. How: This lets only its owner delete it.
 
 
 			}

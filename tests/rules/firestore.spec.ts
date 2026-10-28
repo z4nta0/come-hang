@@ -61,6 +61,7 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
 
 const DAY_MIL_NUM = 86400000;                                            // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
 const GRO_NAM_STR = 'Dinner Club';                                       // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
+const HOU_MIL_NUM = 3600000;                                             // What: Hour Milliseconds Number. Why: A shared location expires an hour after its last update. How: This is one hour in milliseconds.
 const LOC_SWI_STR = 'return false; // What: Paywall Locked Return';      // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
 const NEW_TOK_STR = 'N'.repeat( 22 );                                    // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
 const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null }; // What: Offer End Object. Why: A withdrawal and a decline both clear the offer. How: This is the change that does it.
@@ -966,6 +967,50 @@ const iteDatFun = ( iteChaObj : Record< string, unknown > = {} ) => ({ // What: 
 });
 
 // #endregion iteDatFun
+
+
+
+// #region locDatFun
+
+/**
+ * locDatFun = Location Data Function
+ *
+ * @summary
+ * Builds a valid shared location for an event: an encrypted position, a
+ * 12-byte IV, the server's time as its update time, and an expiry an hour
+ * after the phone's own clock. Fields can be changed or added by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param eveIdeStr - Event Identifier String: The event the location is
+ *                    shared for.
+ * @param locChaObj - Location Change Object: Fields to change or add, empty
+ *                    by default.
+ *
+ * @returns The location's fields.
+ *
+ * @example
+ * ```ts
+ * locDatFun('eve1', { iv : bytFilFun(11) }) // => { eventId : 'eve1', ... }
+ * ```
+ *
+*/
+
+const locDatFun = ( eveIdeStr : string, locChaObj : Record< string, unknown > = {} ) => ({ // What: Location Data Function. Why: Every location test starts from a valid share. How: This returns its fields with the test's changes.
+
+
+	eventId     : eveIdeStr,
+	expireAt    : Timestamp.fromMillis( Date.now() + HOU_MIL_NUM ),
+	iv          : bytFilFun( 12 ),
+	locationEnc : bytFilFun( 60 ),
+	updatedAt   : serverTimestamp(),
+
+	...locChaObj // What: Location Change Spread. Why: A test changes the fields it checks. How: This merges them over the defaults.
+
+
+});
+
+// #endregion locDatFun
 
 // #endregion Helpers
 
@@ -2213,6 +2258,86 @@ test( "a removed member's claim stays until someone changes it, and an event tha
 	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveTimFun( EVE_END_NUM, EVE_END_NUM + DAY_MIL_NUM ) ) );                                   // What: Event Moved. Why: The creator reschedules the event a day later. How: This expects the move allowed, its expiry following its end.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 80 ) } ) );                                          // What: Stale Item Expiry. Why: An item still carrying the old expiry is out of step with its event. How: This expects an edit keeping it refused.
 	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { expireAt : Timestamp.fromMillis( EVE_END_NUM + 3 * DAY_MIL_NUM ) } ) ); // What: Item Expiry Synced. Why: Any member brings an item back in step with its event. How: This expects the item moved to the event's new expiry allowed.
+
+
+} );
+
+
+
+test( 'a member shares their own location for an event, which only members read, and stops sharing by deleting it', async () => { // What: Location Test. Why: Location is shared with the group for one event at a time, and stopping has to take effect at once (Sections 5 and 10). How: This shares and updates Bob's location, tries reads and writes as each person, then deletes it.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member reading Bob's location. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob shares his location. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob shares with a group that has another member. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( Date.now() + 2 * HOU_MIL_NUM, Date.now() + 5 * HOU_MIL_NUM ) ) ); // What: Event Seed. Why: Sharing opens 3 hours before an event, so one starting in 2 hours is open. How: This writes Alice's event.
+
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1' ) ) );                                    // What: Sharing Started. Why: A member shares their own location in the event's window. How: This expects Bob's first share allowed.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { locationEnc : bytFilFun( 70 ) } ) ) ); // What: Location Updated. Why: Each update overwrites the last position. How: This expects Bob's update allowed.
+	await assertSucceeds( getDoc( doc( aliStoObj, 'groups/gro1/liveLocations/bob' ) ) );                                                         // What: Member Location Read. Why: Members see where everyone sharing is. How: This expects Alice's fetch allowed.
+	await assertSucceeds( getDocs( collection( aliStoObj, 'groups/gro1/liveLocations' ) ) );                                                     // What: Member Location List. Why: The map shows everyone sharing. How: This expects Alice's listing allowed.
+	await assertFails( getDoc( doc( accStoFun( 'dave' ), 'groups/gro1/liveLocations/bob' ) ) );                                                  // What: Outsider Location Read. Why: Locations are for the group only. How: This expects Dave refused.
+	await assertFails( setDoc( doc( aliStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1' ) ) );                                       // What: Other Member's Location. Why: Nobody shares a location in someone else's name. How: This expects Alice writing Bob's refused.
+	await assertFails( deleteDoc( doc( aliStoObj, 'groups/gro1/liveLocations/bob' ) ) );                                                         // What: Other Member's Stop. Why: Only the sharer stops sharing. How: This expects Alice deleting Bob's refused.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ) ) );                                                      // What: Sharing Stopped. Why: Stopping deletes the location at once. How: This expects Bob's delete allowed.
+
+
+} );
+
+
+
+test( 'a shared location keeps its fields and sizes, a real update time, its event window, and an expiry within an hour and before the event ends', async () => { // What: Location Shape Test. Why: An encrypted position can only be checked by size, and its times decide how long anyone sees it (Section 5). How: This shares with one fault at a time across events open, not yet open, ended, and about to end, then valid shares at the limits.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob shares his location. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob shares as a member. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( Date.now() + 2 * HOU_MIL_NUM, Date.now() + 5 * HOU_MIL_NUM ) ) ); // What: Open Event Seed. Why: An event starting in 2 hours is open for sharing. How: This writes it.
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve2', eveDatFun( 'alice', eveTimFun( Date.now() + 4 * HOU_MIL_NUM, Date.now() + 6 * HOU_MIL_NUM ) ) ); // What: Early Event Seed. Why: An event starting in 4 hours isn't open yet. How: This writes it.
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve3', eveDatFun( 'alice', eveTimFun( Date.now() - 3 * HOU_MIL_NUM, Date.now() - HOU_MIL_NUM ) ) );     // What: Ended Event Seed. Why: Sharing ends with the event. How: This writes one that ended an hour ago.
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve4', eveDatFun( 'alice', eveTimFun( Date.now() - HOU_MIL_NUM, Date.now() + HOU_MIL_NUM / 2 ) ) );     // What: Ending Event Seed. Why: A share expires at the event's end when that's sooner than an hour. How: This writes one ending in half an hour.
+
+	await assertFails( setDoc( doc( accStoFun( 'dave' ), 'groups/gro1/liveLocations/dave' ), locDatFun( 'eve1' ) ) );                                                                      // What: Outsider Share. Why: Only members share with the group. How: This expects Dave refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve9' ) ) );                                                                                 // What: Eventless Share. Why: A share is for a real event. How: This expects one naming a missing event refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve2' ) ) );                                                                                 // What: Early Share. Why: Sharing opens 3 hours before an event. How: This expects a share 4 hours ahead refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve3' ) ) );                                                                                 // What: Late Share. Why: Sharing ends with the event. How: This expects a share after the end refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve4' ) ) );                                                                                 // What: Expiry Past End. Why: A share expires by the event's end. How: This expects an hour's expiry on an event ending sooner refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { expireAt : Timestamp.fromMillis( Date.now() + 70 * 60000 ) } ) ) );                 // What: Long Expiry. Why: A share expires within an hour of its update, plus the clock allowance. How: This expects 70 minutes refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { expireAt : Timestamp.fromMillis( Date.now() - 60000 ) } ) ) );                      // What: Expired Share. Why: A share already past its expiry isn't written. How: This expects an expiry a minute ago refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { updatedAt : Timestamp.fromMillis( Date.now() ) } ) ) );                             // What: Chosen Update Time. Why: The staleness label has to be real. How: This expects a time the phone picked refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { locationEnc : bytFilFun( 129 ) } ) ) );                                             // What: Long Location. Why: A position fits in 128 bytes. How: This expects 129 refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { locationEnc : bytFilFun( 16 ) } ) ) );                                              // What: Empty Location. Why: A position holds data past the 16-byte tag. How: This expects 16 bytes refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { iv : bytFilFun( 11 ) } ) ) );                                                       // What: Short IV. Why: An IV is 12 bytes. How: This expects 11 refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { extra : true } ) ) );                                                               // What: Extra Field. Why: A shared location holds exactly its five fields. How: This expects a sixth refused.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve4', { expireAt : Timestamp.fromMillis( Date.now() + HOU_MIL_NUM / 2 - 60000 ) } ) ) ); // What: Expiry Before End. Why: A share on an event ending soon expires by its end. How: This expects an expiry just before the end allowed.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1', { locationEnc : bytFilFun( 128 ) } ) ) );                                          // What: Longest Location. Why: A position may fill 128 bytes. How: This expects 128 allowed.
+
+
+} );
+
+
+
+test( "a member who left can't keep sharing but can still delete their location", async () => { // What: Left Sharer Test. Why: Leaving the group ends sharing, and a person can always take their own location down. How: This has Bob share, leave, then try an update and a delete.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob shares, then leaves. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob shares as a member, then leaves. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( Date.now() + 2 * HOU_MIL_NUM, Date.now() + 5 * HOU_MIL_NUM ) ) ); // What: Event Seed. Why: Bob shares for an open event. How: This writes Alice's event.
+
+	await setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1' ) ); // What: Share Call. Why: Bob's location outlives his membership. How: This shares it as Bob.
+
+	await lefBatFun( bobStoObj, 'bob' ); // What: Leave Call. Why: Bob leaves the group. How: This commits his leave.
+
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1' ) ) ); // What: Left Sharer Update. Why: Bob is no longer a member. How: This expects his update refused.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ) ) );                // What: Left Sharer Delete. Why: A person can always take their own location down. How: This expects his delete allowed.
 
 
 } );
