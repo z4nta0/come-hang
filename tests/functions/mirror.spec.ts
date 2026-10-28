@@ -52,7 +52,7 @@ let funEnvObj : RulesTestEnvironment; // What: Functions Environment Object. Why
 
 // #region Helpers
 
-const remDocFun = ( patValStr : string ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => deleteDoc( doc( cotAdmObj.firestore(), patValStr ) ) );                                  // What: Remove Document Function. Why: Tests end memberships and groups as the server would. How: This deletes the document with the rules off.
+const remDocFun = ( patValStr : string ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => deleteDoc( doc( cotAdmObj.firestore(), patValStr ) ) );                                                // What: Remove Document Function. Why: Tests end memberships and groups as the server would. How: This deletes the document with the rules off.
 const seeDocFun = ( patValStr : string, datValObj : Record< string, unknown > ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), patValStr ), datValObj ) ); // What: Seed Document Function. Why: Tests write documents as the server would. How: This writes the document with the rules off.
 
 
