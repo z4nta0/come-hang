@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (the group key wrapping scheme and extractable
+Last updated: 2026-10-28 (group creation in the app and emoji listed by code
+point in the rules, in Sections 11.10 and 14; the group key wrapping scheme and extractable
 group keys, in Sections 6 and 14; the app's Firebase services and identity
 bootstrap, in Sections 8 and 14; push tokens, their rules, and the pushes for
 notices and offers, in Sections 4, 9, 11.1, and 14; the daily run, its server-only claim record, and
@@ -1246,6 +1247,13 @@ always agree. An emoji counts 2 or more.
 | Event location text | 0 to 150 | The title's set. |
 | Item label (who's bringing what) | 1 to 50 | The title's set. |
 
+**The rules' Unicode is old** (measured 2026-10-28): the rules' `\p{...}`
+classes follow Unicode 6.0, so `\p{So}` misses every emoji added since,
+even 😀. Emoji are therefore allowed by code point, their blocks listed in
+the rules' pattern and the app's alike, and the rules suite proves recent
+ones pass. A letter added to Unicode after 6.0 still fails the rules'
+`\p{L}`, a rare enough case to accept.
+
 Every field refuses leading or trailing spaces and runs of two or more
 spaces (an event description's line breaks aside), and the app trims,
 collapses spaces, and normalizes text (Unicode NFC) before saving, so what a
@@ -1423,6 +1431,15 @@ the Blaze change.
   `/users/{uid}`, and an empty `/accounts/{uid}`. Each step writes only
   what's missing, and a key pair lost while the sign-in survives is
   replaced and republished.
+- `src/state/groups.ts` creates a group (Sections 9 and 11) once both
+  names are tidied and checked (`src/core/text-limits.ts`): the identity
+  bootstrap, a new group key and invite token, then one batch with the
+  group, the creator's membership holding the key wrapped for them and
+  their encrypted display name, the first invite, and the owned slot. The
+  key is kept on the device as `group:{groupId}`, and a key missing there
+  is recovered from the member's own wrap. Screens come after the design
+  pass (decided 2026-10-28), so each feature is built and tested as app
+  code first.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.

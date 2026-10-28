@@ -1330,6 +1330,9 @@ test( 'group names allow letters, numbers, basic punctuation, and emoji, up to 5
 		'Tuesday Book Club 📚',  // What: Emoji Name. Why: Emoji are allowed. How: This ends with one.
 		'Café du Monde',        // What: Accented Name. Why: Letters with accents are allowed. How: This holds one.
 		'Familia 👨‍👩‍👧',        // What: Joined Emoji Name. Why: Emoji built with joiners are allowed. How: This holds a family emoji.
+		'Beach Day 🏖️',         // What: Newer Emoji Name. Why: Emoji added after Unicode 6.0, which the rules' classes miss, are allowed by code point. How: This holds a Unicode 7.0 emoji with its variation selector.
+		'Party 🥳 🫠',            // What: Recent Emoji Name. Why: Recent emoji are allowed too. How: This holds Unicode 11.0 and 14.0 emoji.
+		'Tokyo 🇯🇵 ☕',           // What: Flag And Symbol Name. Why: Flags and older symbols are allowed. How: This holds a flag and a hot drink.
 		'東京の友達',                // What: Japanese Name. Why: Letters in any script are allowed. How: This is written in Japanese.
 		"Dana's B-Day (2026)!", // What: Punctuated Name. Why: Basic punctuation and numbers are allowed. How: This holds both.
 		'A'.repeat( 50 )        // What: Longest Name. Why: 50 characters is the limit. How: This is exactly 50.

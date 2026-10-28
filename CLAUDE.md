@@ -38,9 +38,10 @@ ARCHITECTURE.md's data model, `database.rules.json` covers chat and
 presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
 notices, the offer decline, the daily run, and the pushes, with the push
-token rules. The app has its Firebase services, created on first use, and
-the identity bootstrap, with no screens using them yet. Next steps are in
-ARCHITECTURE.md's Section 14.
+token rules. The app has its Firebase services, created on first use, the
+identity bootstrap, the group key encryption, and group creation, with no
+screens using them yet, since screens wait for the design pass. Next steps
+are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
