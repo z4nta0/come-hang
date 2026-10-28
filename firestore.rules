@@ -58,12 +58,13 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  *
  * Ownership moves by offer and acceptance. The owner offers the group to a
  * member with a free owned slot, so an offer that couldn't be accepted is
- * refused at once, and the owner can withdraw it or the member decline it.
- * The member accepts within 7 days in one batch that makes them owner,
- * clears the offer, and moves the group between both owners' maps. Notices
- * under an account, such as a group having been deleted, are written only by
- * Cloud Functions, and the account's owner reads and dismisses them. No
- * client deletes a group, which a Cloud Function does whole.
+ * refused at once, and the owner can withdraw it, while the member declines it
+ * through a Cloud Function that tells the owner. The member accepts within 7
+ * days in one batch that makes them owner, clears the offer, and moves the
+ * group between both owners' maps. Notices under an account, such as a group
+ * having been deleted, are written only by Cloud Functions, and the account's
+ * owner reads and dismisses them. No client deletes a group, which a Cloud
+ * Function does whole.
  *
  * The owner renames the group and sets how long its chat is kept. A rename
  * updates the current invite's copy of the name in the same batch, so the
@@ -1164,27 +1165,27 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
-		// #region endOffFun
+		// #region witOffFun
 
-		function endOffFun () { // What: End Offer Function. Why: The owner can withdraw an offer and the member offered it can decline it, either ending it at once. How: This is true for the owner or the offered member clearing a standing offer, changing nothing else.
+		function witOffFun () { // What: Withdraw Offer Function. Why: The owner can call an offer off at once, while the member offered it declines through a Cloud Function that tells the owner (Section 18). How: This is true for the owner clearing a standing offer, changing nothing else.
 
 
 			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
 
 			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'pendingOfferedAt', 'pendingOwnerUid' ] ); // What: Fields Only Boolean. Why: Ending an offer changes nothing else of the group's. How: This allows changes to the two offer fields alone.
+			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                                 // What: Is-An Owner Boolean. Why: Only the owner withdraws an offer from the app. How: This requires the requester to own the group.
 			let offNulBoo = groNewObj.pendingOwnerUid == null && groNewObj.pendingOfferedAt == null;                             // What: Offer Null Boolean. Why: An ended offer leaves no trace on the group. How: This requires both fields cleared.
-			let whoValBoo = isaOwnFun( resource.data.ownerUid ) || isaOwnFun( resource.data.pendingOwnerUid );                   // What: Who Valid Boolean. Why: Only the owner, withdrawing, or the member offered the group, declining, ends an offer. How: This allows either requester, and with no offer standing only the owner matches.
 
-			let endAllBoo = fieOnlBoo && offNulBoo && whoValBoo; // What: End Allowed Boolean. Why: Every check has to pass. How: This combines them.
-
+			let witAllBoo = fieOnlBoo && isaOwnBoo && offNulBoo; // What: Withdraw Allowed Boolean. Why: Every check has to pass. How: This combines them.
 
 
-			return endAllBoo; // What: End Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
+
+			return witAllBoo; // What: Withdraw Allowed Return. Why: The group's update rule reads the combined answer. How: This returns it.
 
 
 		}
 
-		// #endregion endOffFun
+		// #endregion witOffFun
 
 
 
@@ -1827,14 +1828,14 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region ownGroFun
 
-		function ownGroFun ( groIdeStr ) { // What: Ownership Group Function. Why: A group's ownership offer changes in three ways. How: This is true when the change is an offer, an acceptance, or an ended offer.
+		function ownGroFun ( groIdeStr ) { // What: Ownership Group Function. Why: A group's ownership offer changes in three ways. How: This is true when the change is an offer, an acceptance, or a withdrawal.
 
 
 			let accValBoo = accGroFun( groIdeStr ); // What: Accept Valid Boolean. Why: An acceptance hands the group over. How: This checks that shape.
-			let endValBoo = endOffFun();            // What: End Valid Boolean. Why: A withdrawal or decline ends an offer. How: This checks that shape.
 			let offValBoo = offGroFun( groIdeStr ); // What: Offer Valid Boolean. Why: The owner offers the group. How: This checks that shape.
+			let witValBoo = witOffFun();            // What: Withdraw Valid Boolean. Why: The owner's withdrawal ends an offer. How: This checks that shape.
 
-			let ownAllBoo = accValBoo || endValBoo || offValBoo; // What: Ownership Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
+			let ownAllBoo = accValBoo || offValBoo || witValBoo; // What: Ownership Allowed Boolean. Why: Any one shape is enough. How: This allows the change when one holds.
 
 
 

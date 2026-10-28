@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (group deletion built as a callable and notice IDs,
+Last updated: 2026-10-28 (declines through a callable and the removal and
+offer notices built, in Sections 9, 11.1, 14, and 18; group deletion built as
+a callable and notice IDs,
 in Sections 9, 11.1, and 14; every service in us-central1, the Cloud
 Functions' layout, and the membership mirror's functions, in Sections 11.7
 and 14; the Storage rules for history transfers, their
@@ -572,6 +574,9 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   for that same UID, which only a removal does, and leaves the removed
   member a notice (Section 11.1) plus a push, so the group doesn't just
   vanish from their list. A member who leaves on their own gets neither.
+  Built 2026-10-28 as `groChaFun` in `functions/src/group-changes.ts`, a
+  trigger on every group update that also handles the end of an ownership
+  offer (Section 18); the push waits for push tokens (Section 14).
 - **Deleting a group** (decided 2026-10-26): only the owner can, after a
   confirmation naming the group, through a callable Cloud Function rather
   than a client batch, since a big group's documents won't fit one batch.
@@ -734,9 +739,10 @@ when it next opens, alongside the push that went out when it happened,
 and the owner dismisses it by deleting it. Only Cloud Functions write
 notices, which the rules enforce by allowing clients no writes, so a
 member can't forge one telling someone a group was deleted. Kinds: a group
-deleted, a removal, an ownership offer accepted, declined, lapsed, or
-ended by the person offered leaving, and ownership claimed from an
-inactive owner. A notice's ID is its kind and group, `<kind>-<groupId>`
+deleted (`groupDeleted`), a removal (`removed`), an ownership offer
+accepted (`offerAccepted`), declined (`offerDeclined`), lapsed, or ended by
+the person offered leaving (`offerLeft`), and ownership claimed from an
+inactive owner, the last two named when the daily run is built. A notice's ID is its kind and group, `<kind>-<groupId>`
 (decided 2026-10-28), so a retried function writes it once, and a later
 notice of the same kind about the same group replaces the earlier one.
 
@@ -1405,12 +1411,11 @@ the Blaze change.
   fail a test when dropped, except the chat read rule's ordering check,
   which the emulator can't exercise, since it refuses an unindexed query
   that the live database would answer.
-- The membership mirror's functions and group deletion are built
-  (2026-10-28, Sections 11.7 and 9). Still to build, the rest of the Cloud
-  Functions decided with the transfer rules (2026-10-26):
-  deleting a group (Section 9), the notices and pushes for removals,
-  deletions, and offers (Section 11.1), and the daily run that lapses
-  offers and offers an inactive owner's group to a member (Section 18).
+- Built 2026-10-28: the membership mirror's functions (Section 11.7), group
+  deletion (Section 9), the group change trigger's removal and offer
+  notices, and the offer decline callable (Section 18). Still to build: the
+  daily run that lapses offers and offers an inactive owner's group to a
+  member (Section 18), and the pushes for removals, deletions, and offers.
 - Where each device's push token (from FCM's `getToken()`) is stored, and
   how a stale one is dropped, needed before any function sends a push: the
   removal, deletion, and offer pushes, and the history request alerts in
@@ -1672,8 +1677,17 @@ paywall is switched on before launch.
 - **Every offer ends in a notice to the owner** (decided 2026-10-26): if
   the member accepts, declines, leaves the group, or lets 7 days pass, a
   Cloud Function leaves the owner a notice (Section 11.1) and a push, and
-  the member offered the group gets a push when it's offered. Firestore's
-  triggers that carry who made a change tell a decline from a withdrawal.
+  the member offered the group gets a push when it's offered. A decline
+  goes through a callable Cloud Function, `decOffFun` in
+  `functions/src/offer-decline.ts` (decided 2026-10-28), which knows its
+  caller, clears the offer in a transaction, and leaves the owner the
+  notice, while the rules let only the owner end an offer from the app, so
+  a decline can't skip the notice. The plan before was a trigger telling a
+  decline from a withdrawal by who wrote it, but a trigger learns its
+  writer only in production, never in the emulator, so that could never be
+  tested. If the member offered the group leaves or is removed, the group
+  change trigger clears the offer, which nobody could accept any more, and
+  tells the owner of a leave, since the owner made a removal themselves.
   The rules refuse an acceptance after 7 days, so a forgotten offer can't
   be taken up long after the owner moved on, and the daily function clears
   a lapsed one. The group's settings show a standing offer and when it

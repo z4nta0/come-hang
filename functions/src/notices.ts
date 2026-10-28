@@ -64,17 +64,19 @@ const NOT_LIF_NUM = 30 * 24 * 60 * 60 * 1000; // What: Notice Lifetime Number. W
  *                    the message the app shows.
  * @param groIdeStr - Group Identifier String: The group it's about.
  * @param groNamStr - Group Name String: The group's name when it happened.
+ * @param othUidStr - Other UID String: The other person involved, such as
+ *                    who declined an offer, left out when there's none.
  *
  * @returns This function does not return anything.
  *
  * @example
  * ```ts
- * notBatFun(batWriObj, 'bob', 'groupDeleted', 'gro1', 'Picnic') // => void
+ * notBatFun(batWriObj, 'bob', 'removed', 'gro1', 'Picnic') // => void
  * ```
  *
 */
 
-const notBatFun = ( batWriObj : WriteBatch, uidValStr : string, kinValStr : string, groIdeStr : string, groNamStr : string ) : void => { // What: Notice Batch Function. Why: Every notice has the same shape and lifetime. How: This sets one notice document in the batch.
+const notBatFun = ( batWriObj : WriteBatch, uidValStr : string, kinValStr : string, groIdeStr : string, groNamStr : string, othUidStr? : string ) : void => { // What: Notice Batch Function. Why: Every notice has the same shape and lifetime. How: This sets one notice document in the batch.
 
 
 	batWriObj.set( FIR_DAT_OBJ.doc( `accounts/${ uidValStr }/notices/${ kinValStr }-${ groIdeStr }` ), { // What: Notice Set Call. Why: The notice reaches its owner with the change it reports. How: This writes it under their account, named by its kind and group.
@@ -84,7 +86,9 @@ const notBatFun = ( batWriObj : WriteBatch, uidValStr : string, kinValStr : stri
 		expireAt  : Timestamp.fromMillis( Date.now() + NOT_LIF_NUM ), // What: Expire At. Why: Firestore's TTL deletes a notice nobody saw. How: This sets it 30 days out.
 		groupId   : groIdeStr,                                        // What: Group ID. Why: The notice names its group, which may be gone. How: This stores its ID.
 		groupName : groNamStr,                                        // What: Group Name. Why: A deleted group can still be named. How: This stores its name at the time.
-		kind      : kinValStr                                         // What: Kind. Why: The app picks its message by kind. How: This stores it.
+		kind      : kinValStr,                                        // What: Kind. Why: The app picks its message by kind. How: This stores it.
+
+		...( othUidStr ? { otherUid : othUidStr } : {} ) // What: Other UID Spread. Why: Some notices name the other person involved (Section 11.1). How: This adds otherUid when one was given.
 
 
 	});

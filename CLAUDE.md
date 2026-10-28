@@ -36,8 +36,9 @@ functions suite. The security rules are complete, each walked through with
 the user: `firestore.rules` covers every Firestore collection in
 ARCHITECTURE.md's data model, `database.rules.json` covers chat and
 presence, and `storage.rules` covers history transfers. The Cloud Functions
-so far are the membership mirror and group deletion. No Firebase code in
-the app yet. Next steps are in ARCHITECTURE.md's Section 14.
+so far are the membership mirror, group deletion, the removal and offer
+notices, and the offer decline. No Firebase code in the app yet. Next steps
+are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the

@@ -65,7 +65,7 @@ const HIS_REL_OBJ = { claimedAt : null, claimedByUid : null, status : 'pending' 
 const HOU_MIL_NUM = 3600000;                                                       // What: Hour Milliseconds Number. Why: A shared location expires an hour after its last update. How: This is one hour in milliseconds.
 const LOC_SWI_STR = 'return false; // What: Paywall Locked Return';                // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
 const NEW_TOK_STR = 'N'.repeat( 22 );                                              // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
-const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null };           // What: Offer End Object. Why: A withdrawal and a decline both clear the offer. How: This is the change that does it.
+const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null };           // What: Offer End Object. Why: A withdrawal clears the offer, as the decline function does. How: This is the change that does it.
 const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                                      // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
 
 const HIS_CLA_OBJ = { // What: History Claim Object. Why: Every claim sets the same status and server time. How: This is the change a claim makes, beside the claimant's UID.
@@ -1980,7 +1980,7 @@ test( 'an offer to a member with no free owned slot is refused the moment the ow
 
 
 
-test( 'the owner withdraws an offer and the member offered it declines it, while nobody else ends one', async () => { // What: Offer End Test. Why: Either side can call an offer off, but nobody else can cancel someone's handover. How: This tries improper ends, then declines as Bob and withdraws as Alice.
+test( 'only the owner withdraws an offer from the app, since the member offered it declines through a function', async () => { // What: Offer End Test. Why: The owner can call an offer off, and a decline goes through a Cloud Function so the owner is told (Section 18). How: This tries improper ends and a decline written from the app, then a proper withdrawal, and checks it can't be accepted after.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -1995,11 +1995,10 @@ test( 'the owner withdraws an offer and the member offered it declines it, while
 
 	await offSetFun( aliStoObj, 'bob' ); // What: Offer Call. Why: The ends below need a standing offer. How: This offers the group to Bob.
 
-	await assertFails( updateDoc( doc( accStoFun( 'carol' ), 'groups/gro1' ), OFF_END_OBJ ) );                // What: Other Member Decline. Why: Only the owner or the member offered the group ends an offer. How: This expects Carol refused.
-	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { ...OFF_END_OBJ, name : 'New Name' } ) ); // What: Smuggled Rename. Why: Ending an offer changes only the offer. How: This expects a rename beside it refused.
-	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { pendingOwnerUid : null } ) );            // What: Half End. Why: An ended offer leaves no time behind. How: This expects clearing the name alone refused.
-	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1' ), OFF_END_OBJ ) );                        // What: Offer Declined. Why: The member offered the group may turn it down. How: This expects Bob's decline allowed.
-	await assertSucceeds( offSetFun( aliStoObj, 'bob' ) );                                                    // What: Offer Made Again. Why: A declined offer can be made again. How: This expects Alice's new offer allowed.
+	await assertFails( updateDoc( doc( accStoFun( 'carol' ), 'groups/gro1' ), OFF_END_OBJ ) );                // What: Other Member End. Why: Only the owner ends an offer from the app. How: This expects Carol refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), OFF_END_OBJ ) );                           // What: App Decline. Why: A decline goes through the decline function, which tells the owner. How: This expects Bob clearing the offer himself refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { ...OFF_END_OBJ, name : 'New Name' } ) ); // What: Smuggled Rename. Why: Withdrawing an offer changes only the offer. How: This expects a rename beside it refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { pendingOwnerUid : null } ) );            // What: Half End. Why: A withdrawn offer leaves no time behind. How: This expects clearing the name alone refused.
 	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1' ), OFF_END_OBJ ) );                        // What: Offer Withdrawn. Why: The owner may call an offer off. How: This expects Alice's withdrawal allowed.
 	await assertFails( takBatFun( bobStoObj, 'bob' ) );                                                       // What: Withdrawn Accept. Why: A withdrawn offer can't be accepted. How: This expects Bob's acceptance refused.
 

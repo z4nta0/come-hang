@@ -3,31 +3,24 @@
 
 // #region Imports
 
-import { connectAuthEmulator       } from 'firebase/auth';                // What: Connect Auth Emulator. Why: Callers sign in against the local emulator. How: This points an Auth instance at it.
-import { connectFunctionsEmulator  } from 'firebase/functions';           // What: Connect Functions Emulator. Why: The callable runs in the local emulator. How: This points a Functions instance at it.
+import { calCreFun                 } from '../support/callers.ts';        // What: Caller Create Function. Why: The tests call as signed-in and signed-out callers. How: This builds each one.
 import { deleteApp                 } from 'firebase/app';                 // What: Delete App. Why: Each caller's app closes with the suite. How: This shuts one down.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the group is gone, or untouched, as it should be. How: This asserts on what each read returns.
 import { get                       } from 'firebase/database';            // What: Get. Why: The group's Realtime Database data is read back. How: This reads a location once.
-import { getAuth                   } from 'firebase/auth';                // What: Get Auth. Why: Each caller has an identity. How: This returns an app's Auth instance.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Documents are read back after the call. How: This reads one document.
-import { getFunctions              } from 'firebase/functions';           // What: Get Functions. Why: Each caller calls the function. How: This returns an app's Functions instance in the function's region.
-import { httpsCallable             } from 'firebase/functions';           // What: HTTPS Callable. Why: The app deletes a group through a callable. How: This builds the call.
-import { initializeApp             } from 'firebase/app';                 // What: Initialize App. Why: Each caller is its own client app. How: This creates one under a name.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests seed and read the emulators past their rules, as the server would. How: This connects to them.
 import { listAll                   } from 'firebase/storage';             // What: List All. Why: The group's history transfers are checked for. How: This lists a folder's files.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Every Realtime Database read and write names a location. How: This builds a reference.
 import { set                       } from 'firebase/database';            // What: Set. Why: The tests seed the group's chat, presence, and mirror. How: This writes a location.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed the group's documents. How: This writes a document.
-import { signInAnonymously         } from 'firebase/auth';                // What: Sign In Anonymously. Why: The app's identities are anonymous until linked. How: This signs a caller in.
-import { ref as stoRefFun         } from 'firebase/storage';              // What: Storage Ref Function. Why: Storage's ref shares its name with the Realtime Database's. How: This imports it under its own name to build a file reference.
+import { ref as stoRefFun          } from 'firebase/storage';             // What: Storage Ref Function. Why: Storage's ref shares its name with the Realtime Database's. How: This imports it under its own name to build a file reference.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the deletion is its own test. How: This declares them.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
 import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed a history transfer. How: This uploads a file.
 
 
-import type { FirebaseApp          } from 'firebase/app';                 // What: Firebase App. Why: The suite keeps its callers' apps to close them. How: This types them.
-import type { HttpsCallable        } from 'firebase/functions';           // What: HTTPS Callable. Why: Each caller holds the deletion call. How: This types it.
+import type { CalRecTyp            } from '../support/callers.ts';        // What: Caller Record Type. Why: The suite keeps its three callers. How: This types them.
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every seed and read goes through one. How: This types it.
 
 // #endregion Imports
@@ -46,7 +39,6 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * the Realtime Database, and its history transfers in Storage.
  *
  * Sections:
- *  - Types
  *  - Constants
  *  - Module State
  *  - Helpers
@@ -58,17 +50,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
 
 
 
-// #region Types
-
-type CalRecTyp = { appValObj : FirebaseApp, delCalFun : HttpsCallable, uidValStr : string }; // What: Caller Record Type. Why: A caller's app, call, and UID travel together. How: This types the record calCreFun returns.
-
-// #endregion Types
-
-
-
 // #region Constants
 
-const APP_OPT_OBJ = { apiKey : 'demo-key', projectId : 'demo-come-hang' }; // What: App Options Object. Why: A caller's app needs a project, and the emulators accept any key. How: This names the demo project test:functions starts.
 const BUC_URL_STR = 'gs://demo-come-hang.appspot.com';                     // What: Bucket URL String. Why: The function deletes from Storage's default bucket, which the emulator names after the project with .appspot.com. How: This names the same bucket for the test's seed and check.
 
 // #endregion Constants
@@ -87,59 +70,6 @@ let sigOutObj : CalRecTyp;            // What: Signed-Out Object. Why: Someone w
 
 
 // #region Helpers
-
-// #region calCreFun
-
-/**
- * calCreFun = Caller Create Function
- *
- * @summary
- * Creates a client app under its own name, connected to the Auth and
- * Functions emulators, signs it in anonymously unless told not to, and
- * returns its deletion call and UID.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param appNamStr - App Name String: The client app's name, unique to the
- *                    suite.
- * @param sigInnBoo - Sign In Boolean: Whether the caller signs in, true by
- *                    default.
- *
- * @returns A promise that resolves with the caller's app, call, and UID,
- *          which is empty for a caller who didn't sign in.
- *
- * @example
- * ```ts
- * calCreFun('alice') // => { appValObj, delCalFun, uidValStr }
- * ```
- *
-*/
-
-const calCreFun = async ( appNamStr : string, sigInnBoo = true ) : Promise< CalRecTyp > => { // What: Caller Create Function. Why: Each identity calls through its own app. How: This builds, connects, and signs in the app.
-
-
-	const appValObj = initializeApp( APP_OPT_OBJ, appNamStr );  // What: App Value Object. Why: Each caller is its own client. How: This creates its app.
-	const autValObj = getAuth( appValObj );                     // What: Auth Value Object. Why: The caller signs in. How: This is its Auth instance.
-	const funValObj = getFunctions( appValObj, 'us-central1' ); // What: Functions Value Object. Why: The callable runs in us-central1. How: This is the caller's Functions instance there.
-
-
-	connectAuthEmulator( autValObj, 'http://127.0.0.1:8240', { disableWarnings : true } ); // What: Auth Emulator Call. Why: Sign-in must stay local. How: This points Auth at the port firebase.json gives its emulator.
-
-	connectFunctionsEmulator( funValObj, '127.0.0.1', 8230 ); // What: Functions Emulator Call. Why: The call must stay local. How: This points Functions at the port firebase.json gives its emulator.
-
-
-	const uidValStr = sigInnBoo ? ( await signInAnonymously( autValObj ) ).user.uid : ''; // What: UID Value String. Why: The tests seed the caller's UID as owner or member. How: This signs in and reads it, or leaves it empty.
-
-
-
-	return { appValObj, delCalFun : httpsCallable( funValObj, 'delGroFun' ), uidValStr }; // What: Caller Return. Why: Each test calls as this caller. How: This returns the app, the call, and the UID.
-
-
-};
-
-// #endregion calCreFun
-
-
 
 const reaDbsFun = async ( patValStr : string ) : Promise< unknown > => { // What: Read Database Function. Why: Tests check what's left in the Realtime Database. How: This reads a location with the rules off and returns its value.
 
@@ -248,9 +178,9 @@ test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one conn
 
 	});
 
-	aliCalObj = await calCreFun( 'alice' );         // What: Alice Caller Assignment. Why: Alice owns the group. How: This signs her in.
-	bobCalObj = await calCreFun( 'bob' );           // What: Bob Caller Assignment. Why: Bob is a member. How: This signs him in.
-	sigOutObj = await calCreFun( 'nobody', false ); // What: Signed-Out Assignment. Why: A caller with no sign-in is refused. How: This creates one without signing in.
+	aliCalObj = await calCreFun( 'alice', 'delGroFun' );         // What: Alice Caller Assignment. Why: Alice owns the group. How: This signs her in.
+	bobCalObj = await calCreFun( 'bob', 'delGroFun' );           // What: Bob Caller Assignment. Why: Bob is a member. How: This signs him in.
+	sigOutObj = await calCreFun( 'nobody', 'delGroFun', false ); // What: Signed-Out Assignment. Why: A caller with no sign-in is refused. How: This creates one without signing in.
 
 
 } );
@@ -286,7 +216,7 @@ test( 'the owner deletes a group whole, freeing their slot and leaving each othe
 
 	await seeGroFun(); // What: Group Seed Call. Why: There has to be a full group to delete. How: This writes one.
 
-	await aliCalObj.delCalFun( { groupId : 'gro1' } ); // What: Delete Call. Why: The owner deletes the group. How: This calls the function as Alice.
+	await aliCalObj.calValFun( { groupId : 'gro1' } ); // What: Delete Call. Why: The owner deletes the group. How: This calls the function as Alice.
 
 	expect( await reaDocFun( 'groups/gro1' ) ).toBeUndefined();                                                    // What: Group Gone. Why: The group itself is deleted. How: This expects no document.
 	expect( await reaDocFun( `groups/gro1/members/${ bobCalObj.uidValStr }` ) ).toBeUndefined();                   // What: Membership Gone. Why: Nobody keeps access. How: This expects Bob's member document gone.
@@ -315,11 +245,11 @@ test( 'only the signed-in owner deletes a group, by a well-formed ID, and a grou
 
 	await seeGroFun(); // What: Group Seed Call. Why: The refused calls must leave a real group untouched. How: This writes one.
 
-	await expect( bobCalObj.delCalFun( { groupId : 'gro1' } ) ).rejects.toMatchObject( { code : 'functions/permission-denied' } );        // What: Member Refused. Why: Only the owner deletes. How: This expects Bob's call refused.
-	await expect( sigOutObj.delCalFun( { groupId : 'gro1' } ) ).rejects.toMatchObject( { code : 'functions/unauthenticated' } );          // What: Signed-Out Refused. Why: Only an identity can own a group. How: This expects the signed-out call refused.
-	await expect( aliCalObj.delCalFun( { groupId : 'gro1/members' } ) ).rejects.toMatchObject( { code : 'functions/invalid-argument' } ); // What: Path ID Refused. Why: A slash could reach another document. How: This expects an ID with one refused.
-	await expect( aliCalObj.delCalFun( {} ) ).rejects.toMatchObject( { code : 'functions/invalid-argument' } );                           // What: Missing ID Refused. Why: The call has to name a group. How: This expects a call without one refused.
-	await expect( aliCalObj.delCalFun( { groupId : 'gro9' } ) ).resolves.toBeDefined();                                                   // What: Missing Group Quiet. Why: A group already gone means an earlier call finished. How: This expects the call to succeed.
+	await expect( bobCalObj.calValFun( { groupId : 'gro1' } ) ).rejects.toMatchObject( { code : 'functions/permission-denied' } );        // What: Member Refused. Why: Only the owner deletes. How: This expects Bob's call refused.
+	await expect( sigOutObj.calValFun( { groupId : 'gro1' } ) ).rejects.toMatchObject( { code : 'functions/unauthenticated' } );          // What: Signed-Out Refused. Why: Only an identity can own a group. How: This expects the signed-out call refused.
+	await expect( aliCalObj.calValFun( { groupId : 'gro1/members' } ) ).rejects.toMatchObject( { code : 'functions/invalid-argument' } ); // What: Path ID Refused. Why: A slash could reach another document. How: This expects an ID with one refused.
+	await expect( aliCalObj.calValFun( {} ) ).rejects.toMatchObject( { code : 'functions/invalid-argument' } );                           // What: Missing ID Refused. Why: The call has to name a group. How: This expects a call without one refused.
+	await expect( aliCalObj.calValFun( { groupId : 'gro9' } ) ).resolves.toBeDefined();                                                   // What: Missing Group Quiet. Why: A group already gone means an earlier call finished. How: This expects the call to succeed.
 
 	expect( await reaDocFun( `groups/gro1/members/${ bobCalObj.uidValStr }` ) ).toBeDefined(); // What: Group Kept. Why: No refused call may have touched the group. How: This expects Bob's membership still there.
 
@@ -341,7 +271,7 @@ test( "the owner's retry finishes a deletion that stopped partway", async () => 
 
 	} );
 
-	await aliCalObj.delCalFun( { groupId : 'gro1' } ); // What: Retry Call. Why: The owner tries again. How: This calls the function as Alice.
+	await aliCalObj.calValFun( { groupId : 'gro1' } ); // What: Retry Call. Why: The owner tries again. How: This calls the function as Alice.
 
 	expect( await reaDocFun( 'groups/gro1/events/eve1' ) ).toBeUndefined(); // What: Event Gone. Why: The retry finishes the collections. How: This expects the event gone.
 	expect( await reaDocFun( 'groups/gro1' ) ).toBeUndefined();             // What: Group Gone. Why: The retry ends with the group document. How: This expects it gone.

@@ -6,6 +6,7 @@
 import { FieldPath   } from 'firebase-admin/firestore';    // What: Field Path. Why: A group's ID becomes a map key in each account. How: This names that key without reading it as a dotted path.
 import { FieldValue  } from 'firebase-admin/firestore';    // What: Field Value. Why: The group is dropped from each account's maps. How: This supplies the field delete.
 import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Database Object. Why: Most of a group lives in Firestore. How: This reads and deletes it.
+import { calGroFun   } from './calls.ts';                  // What: Call Group Function. Why: The deletion names a group and needs a signed-in caller. How: This checks both.
 import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: Every other member is told the group was deleted. How: This adds their notice to the first batch.
@@ -38,7 +39,6 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  * the job, and once the group document is gone a call does nothing.
  *
  * Sections:
- *  - Constants
  *  - Helpers
  *  - Module Init
  *  - Exports
@@ -46,14 +46,6 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
-
-
-
-// #region Constants
-
-const GRO_IDE_REG = /^[A-Za-z0-9_-]{1,128}$/; // What: Group Identifier Regular Expression. Why: The ID builds document and storage paths, so a slash could reach another one. How: This allows the characters Firestore's own IDs use, and nothing else.
-
-// #endregion Constants
 
 
 
@@ -139,9 +131,10 @@ const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > => { 
  *
  * @summary
  * The callable the app calls with { groupId } when the owner confirms a
- * deletion. It refuses a caller who isn't signed in, a malformed ID, and
- * anyone but the owner, each with its own error code, and succeeds quietly
- * when the group is already gone, which is also how a finished retry ends.
+ * deletion. It refuses a caller who isn't signed in and a malformed ID,
+ * through calGroFun, and anyone but the owner, each with its own error code,
+ * and succeeds quietly when the group is already gone, which is also how a
+ * finished retry ends.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -160,19 +153,9 @@ const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > => { 
 const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Delete Group Function. Why: Only the owner deletes a group, and only a server can delete all of it. How: This checks the caller, then deletes the group in stages.
 
 
-	const groIdeAny = ( reqValObj.data as { groupId? : unknown } | null )?.groupId; // What: Group Identifier Any. Why: The app names the group to delete. How: This reads it from the call. // What: Type Assertion Note. Why: A call's data is whatever the client sent. How: The as reads it as an object that may hold a groupId of any type, which the guard below checks.
+	const { groIdeStr, uidValStr } = calGroFun( reqValObj ); // What: Call Values. Why: The deletion names a group and its caller. How: This checks and reads both.
 
-
-
-	if ( !reqValObj.auth ) throw new HttpsError( 'unauthenticated', 'Sign in to delete a group.' ); // What: Sign-In Guard. Why: Only an identity can own a group. How: This refuses a caller with no sign-in.
-
-
-
-	if ( typeof groIdeAny !== 'string' || !GRO_IDE_REG.test( groIdeAny ) ) throw new HttpsError( 'invalid-argument', 'A valid group ID is required.' ); // What: Group Identifier Guard. Why: The ID builds paths, so it has to be one. How: This refuses anything but a well-formed ID.
-
-
-
-	const groRefObj = FIR_DAT_OBJ.doc( `groups/${ groIdeAny }` ); // What: Group Reference Object. Why: Every stage starts from the group. How: This names its document.
+	const groRefObj = FIR_DAT_OBJ.doc( `groups/${ groIdeStr }` ); // What: Group Reference Object. Why: Every stage starts from the group. How: This names its document.
 	const groSnaObj = await groRefObj.get();                      // What: Group Snapshot Object. Why: The owner check reads the group. How: This reads it.
 
 
@@ -180,7 +163,7 @@ const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 
 
-	if ( groSnaObj.get( 'ownerUid' ) !== reqValObj.auth.uid ) throw new HttpsError( 'permission-denied', "Only the group's owner can delete it." ); // What: Owner Guard. Why: Deleting a group is the owner's call alone (Section 9). How: This refuses anyone else.
+	if ( groSnaObj.get( 'ownerUid' ) !== uidValStr ) throw new HttpsError( 'permission-denied', "Only the group's owner can delete it." ); // What: Owner Guard. Why: Deleting a group is the owner's call alone (Section 9). How: This refuses anyone else.
 
 
 
@@ -194,14 +177,14 @@ const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 	await REA_DAT_OBJ.ref().update({ // What: Realtime Delete Call. Why: The group's chat, presence, and mirror go with it. How: This removes all three in one update.
 
 
-		[ `chats/${ groIdeAny }` ]    : null, // What: Chat Path. Why: The group's chat uses its ID as the conversation ID. How: This removes the chat.
-		[ `mirrors/${ groIdeAny }` ]  : null, // What: Mirror Path. Why: The rules' copy of the membership goes too. How: This removes the mirror.
-		[ `presence/${ groIdeAny }` ] : null  // What: Presence Path. Why: Nobody is online in a deleted group. How: This removes its presence.
+		[ `chats/${ groIdeStr }` ]    : null, // What: Chat Path. Why: The group's chat uses its ID as the conversation ID. How: This removes the chat.
+		[ `mirrors/${ groIdeStr }` ]  : null, // What: Mirror Path. Why: The rules' copy of the membership goes too. How: This removes the mirror.
+		[ `presence/${ groIdeStr }` ] : null  // What: Presence Path. Why: Nobody is online in a deleted group. How: This removes its presence.
 
 
 	});
 
-	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groIdeAny }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
+	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groIdeStr }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
 
 	await groRefObj.delete(); // What: Group Delete Call. Why: The group document goes last, so a retry can still check the owner. How: This deletes it.
 
