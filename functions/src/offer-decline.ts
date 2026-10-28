@@ -4,6 +4,8 @@
 // #region Imports
 
 import { calGroFun   } from './calls.ts';                  // What: Call Group Function. Why: The decline names a group and needs a signed-in caller. How: This checks both.
+import { claRefFun   } from './claims.ts';                 // What: Claim Reference Function. Why: Declining a claim offer is recorded as a pass. How: This names the claim record.
+import { FieldPath   } from 'firebase-admin/firestore';    // What: Field Path. Why: A UID becomes a key in the claim record's passed map. How: This names that key without reading it as a dotted path.
 import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Database Object. Why: The offer and the notice live in Firestore. How: This reaches it past the rules.
 import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
@@ -24,7 +26,9 @@ import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why
  * never in the emulator, so a decline told apart that way could never be
  * tested. So the rules let only the owner end an offer from the app, and a
  * decline comes here, where the server knows the caller: it clears the offer
- * in a transaction, then leaves the owner a notice naming who declined.
+ * in a transaction, then leaves the owner a notice naming who declined. A
+ * claim offer, made by the daily run for an absent owner, is recorded in its
+ * claim record as passed instead, and tells nobody.
  *
  * Sections:
  *  - Module Init
@@ -72,10 +76,11 @@ const decOffFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 	const groRefObj = FIR_DAT_OBJ.doc( `groups/${ groIdeStr }` ); // What: Group Reference Object. Why: The offer lives on the group. How: This names its document.
 
 
-	const groSnaObj = await FIR_DAT_OBJ.runTransaction( async ( traValObj ) => { // What: Group Snapshot Object. Why: The offer may change while the decline runs, so it's checked and cleared together. How: This runs both in a transaction and keeps the group as read.
+	const notSnaObj = await FIR_DAT_OBJ.runTransaction( async ( traValObj ) => { // What: Notice Snapshot Object. Why: The offer may change while the decline runs, so it's checked and cleared together. How: This runs both in a transaction and returns the group when its owner needs telling, null otherwise.
 
 
-		const curSnaObj = await traValObj.get( groRefObj ); // What: Current Snapshot Object. Why: Only a standing offer to the caller can be declined. How: This reads the group inside the transaction.
+		const claSnaObj = await traValObj.get( claRefFun( groIdeStr ) ); // What: Claim Snapshot Object. Why: A claim offer is declined differently. How: This reads the group's claim record inside the transaction.
+		const curSnaObj = await traValObj.get( groRefObj );              // What: Current Snapshot Object. Why: Only a standing offer to the caller can be declined. How: This reads the group inside the transaction.
 
 
 		if ( curSnaObj.get( 'pendingOwnerUid' ) !== uidValStr ) throw new HttpsError( 'failed-precondition', 'No offer of this group stands to you.' ); // What: Offer Guard. Why: Nobody declines an offer made to someone else, or one already ended. How: This refuses unless the offer names the caller.
@@ -86,16 +91,28 @@ const decOffFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 
 
-		return curSnaObj; // What: Group Return. Why: The notice names the group and its owner. How: This returns the group as read.
+		if ( claSnaObj.get( 'offeredUid' ) !== uidValStr ) return curSnaObj; // What: Owner Offer Return. Why: The owner made this offer, so they're told it was declined. How: This returns the group for the notice.
+
+
+
+		traValObj.update( claSnaObj.ref, new FieldPath( 'passedUids', uidValStr ), true, 'offeredUid', null ); // What: Claim Pass Call. Why: Declining a claim offer passes on it, so the next run asks someone else (Section 18). How: This records the pass and clears the record's offer.
+
+
+
+		return null; // What: Claim Decline Return. Why: The absent owner is told nothing of a declined claim offer. How: This asks for no notice.
 
 
 	} );
 
 
+	if ( !notSnaObj ) return; // What: No Notice Guard. Why: A declined claim offer tells nobody. How: This ends the call.
+
+
+
 	const batWriObj = FIR_DAT_OBJ.batch(); // What: Batch Write Object. Why: The notice is written once the decline has landed. How: This starts a batch.
 
 
-	notBatFun( batWriObj, groSnaObj.get( 'ownerUid' ), 'offerDeclined', groIdeStr, groSnaObj.get( 'name' ), uidValStr ); // What: Declined Notice Call. Why: The owner learns to pick someone else (Section 18). How: This leaves them a notice naming who declined.
+	notBatFun( batWriObj, notSnaObj.get( 'ownerUid' ), 'offerDeclined', groIdeStr, notSnaObj.get( 'name' ), uidValStr ); // What: Declined Notice Call. Why: The owner learns to pick someone else (Section 18). How: This leaves them a notice naming who declined.
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The notice has to land. How: This commits it.
 

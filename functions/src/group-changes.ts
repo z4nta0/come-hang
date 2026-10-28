@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { claRefFun         } from './claims.ts';                     // What: Claim Reference Function. Why: An accepted or abandoned claim offer is told apart by the claim record. How: This names it.
 import { FIR_DAT_OBJ       } from './setup.ts';                      // What: Firestore Database Object. Why: The trigger writes notices and clears stale offers. How: This reaches Firestore past its rules.
 import { FUN_OPT_OBJ       } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: The trigger spreads them in.
 import { notBatFun         } from './notices.ts';                    // What: Notice Batch Function. Why: Each change the trigger spots leaves someone a notice. How: This adds one to the batch.
@@ -27,7 +28,10 @@ import type { DocumentReference } from 'firebase-admin/firestore'; // What: Docu
  *  - The member offered the group leaving or being removed makes the offer
  *    one nobody can accept, so the trigger clears it, and a leave, which the
  *    owner didn't cause, leaves the owner a notice.
- *  - An acceptance, the only change of owner, leaves the old owner a notice.
+ *  - An acceptance, the only change of owner, leaves the old owner a notice,
+ *    of the claim kind when the claim record had offered the new owner the
+ *    group, and ends any claim. A claim candidate leaving tells the absent
+ *    owner nothing.
  * A decline comes through offer-decline.ts instead, which tells the owner
  * itself, and the owner's own withdrawal leaves no notice.
  * A retried trigger writes the same notices again, which notices.ts makes
@@ -137,13 +141,24 @@ const groChaFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 	const offLefBoo = couDowBoo && aftDatObj.pendingOwnerUid === couUidStr;       // What: Offer Left Boolean. Why: The member offered the group can leave or be removed while the offer stands. How: This checks the count fell for that member.
 	const remNewBoo = couDowBoo && aftDatObj.removedUids?.[ couUidStr ] === true; // What: Removed New Boolean. Why: Only a removal lowers the count for a UID it blocks, since a blocked joiner was never counted. How: This checks the count fell for a UID now on the blocklist.
 
+	const claSnaObj = offAccBoo || offLefBoo ? await claRefFun( groIdeStr ).get() : null; // What: Claim Snapshot Object. Why: Only an acceptance or a leave by the member offered the group depends on whether the offer was a claim. How: This reads the claim record for those alone.
+	const claOffStr = claSnaObj?.get( 'offeredUid' ) as string | null | undefined;        // What: Claim Offered String. Why: The claim record names who a claim offer went to. How: This reads it, missing when there's no record. // What: Type Assertion Note. Why: Only the daily run writes the record's offeredUid, as a UID or null. How: The as reads it as either, or missing.
 
 
-	if ( offAccBoo ) notBatFun( batWriObj, befDatObj.ownerUid, 'offerAccepted', groIdeStr, groNamStr, aftDatObj.ownerUid ); // What: Accepted Notice Call. Why: The old owner learns the handover finished. How: This leaves them a notice naming the new owner.
+
+	if ( offAccBoo ) { // What: Acceptance Block. Why: A new owner ends any claim, and a claimed group is reported as a claim. How: This leaves the old owner the right notice and deletes the claim record.
+
+
+		notBatFun( batWriObj, befDatObj.ownerUid, claOffStr === aftDatObj.ownerUid ? 'ownershipClaimed' : 'offerAccepted', groIdeStr, groNamStr, aftDatObj.ownerUid ); // What: Accepted Notice Call. Why: The old owner learns the handover finished, or that their group was claimed while they were away (Section 18). How: This leaves them a notice naming the new owner, of the claim kind when the claim record offered them the group.
+
+		batWriObj.delete( claRefFun( groIdeStr ) ); // What: Claim Delete Call. Why: The group has an owner again, so any claim is over. How: This deletes the record, which does nothing when there's none.
+
+
+	}
 
 
 
-	if ( offLefBoo && !remNewBoo ) notBatFun( batWriObj, aftDatObj.ownerUid, 'offerLeft', groIdeStr, groNamStr, couUidStr ); // What: Offer Left Notice Call. Why: The owner didn't cause a leave, so they learn their offer ended. How: This leaves the owner a notice naming who left.
+	if ( offLefBoo && !remNewBoo && claOffStr !== couUidStr ) notBatFun( batWriObj, aftDatObj.ownerUid, 'offerLeft', groIdeStr, groNamStr, couUidStr ); // What: Offer Left Notice Call. Why: The owner didn't cause a leave, so they learn their offer ended, unless it was a claim offer they never made. How: This leaves the owner a notice naming who left.
 
 
 

@@ -172,6 +172,22 @@ test( 'only the member offered the group declines it, while a standing offer las
 
 } );
 
+test( 'declining a claim offer records a pass and tells nobody', async () => { // What: Claim Decline Test. Why: The absent owner has nothing to act on, and the next run has to ask someone else (Section 18). How: This declines a claim offer as Bob, then reads the record, the group, and Alice's notices.
+
+
+	await seeGroFun(); // What: Group Seed Call. Why: Bob needs a standing offer to decline. How: This writes the group.
+
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), 'groups/gro1/ownerClaim/current' ), { exhaustedAt : null, offeredUid : bobCalObj.uidValStr, passedUids : {} } ) ); // What: Claim Record Seed. Why: The offer to Bob is a claim the daily run made. How: This writes the record naming Bob with the rules off.
+
+	await bobCalObj.calValFun( { groupId : 'gro1' } ); // What: Decline Call. Why: Bob turns the claim down. How: This calls the function as Bob.
+
+	expect( await reaDocFun( 'groups/gro1/ownerClaim/current' ) ).toMatchObject( { offeredUid : null, passedUids : { [ bobCalObj.uidValStr ] : true } } ); // What: Pass Recorded. Why: Bob isn't asked again for this claim. How: This expects him passed and the record's offer cleared.
+	expect( ( await reaDocFun( 'groups/gro1' ) )?.pendingOwnerUid ).toBeNull();                                                                            // What: Offer Cleared. Why: A declined claim offer is used up. How: This expects the group's offer gone.
+	expect( await reaDocFun( `accounts/${ aliCalObj.uidValStr }/notices/offerDeclined-gro1` ) ).toBeUndefined();                                           // What: No Owner Notice. Why: The absent owner never made the offer. How: This expects Alice has none.
+
+
+} );
+
 // #endregion Module Init
 
 

@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (declines through a callable and the removal and
+Last updated: 2026-10-28 (the daily run, its server-only claim record, and
+the lapse and claim notices, in Sections 4, 11.1, 14, and 18; declines through a callable and the removal and
 offer notices built, in Sections 9, 11.1, 14, and 18; group deletion built as
 a callable and notice IDs,
 in Sections 9, 11.1, and 14; every service in us-central1, the Cloud
@@ -221,6 +222,7 @@ from Spark's 100 to 200,000.
 | Membership mirror | RTDB | `/mirrors/{conversationId}`, written only by a Cloud Function, so the RTDB rules can check membership; see Section 11.7 |
 | Live location | Firestore | One doc per user per group, TTL-expired; see Section 11.4 for why this moved off RTDB |
 | Presence | RTDB | Standard `onDisconnect()` pattern |
+| Ownership claim record | Firestore | `/groups/{groupId}/ownerClaim/current`, read and written only by Cloud Functions; see Section 18 |
 
 **Full field-level schema is in Section 11.**
 
@@ -740,11 +742,12 @@ and the owner dismisses it by deleting it. Only Cloud Functions write
 notices, which the rules enforce by allowing clients no writes, so a
 member can't forge one telling someone a group was deleted. Kinds: a group
 deleted (`groupDeleted`), a removal (`removed`), an ownership offer
-accepted (`offerAccepted`), declined (`offerDeclined`), lapsed, or ended by
-the person offered leaving (`offerLeft`), and ownership claimed from an
-inactive owner, the last two named when the daily run is built. A notice's ID is its kind and group, `<kind>-<groupId>`
-(decided 2026-10-28), so a retried function writes it once, and a later
-notice of the same kind about the same group replaces the earlier one.
+accepted (`offerAccepted`), declined (`offerDeclined`), lapsed
+(`offerLapsed`), or ended by the person offered leaving (`offerLeft`), and
+ownership claimed from an inactive owner (`ownershipClaimed`). A notice's
+ID is its kind and group, `<kind>-<groupId>` (decided 2026-10-28), so a
+retried function writes it once, and a later notice of the same kind about
+the same group replaces the earlier one.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -1413,9 +1416,9 @@ the Blaze change.
   that the live database would answer.
 - Built 2026-10-28: the membership mirror's functions (Section 11.7), group
   deletion (Section 9), the group change trigger's removal and offer
-  notices, and the offer decline callable (Section 18). Still to build: the
-  daily run that lapses offers and offers an inactive owner's group to a
-  member (Section 18), and the pushes for removals, deletions, and offers.
+  notices, the offer decline callable, and the daily run (Section 18).
+  Still to build: the pushes for removals, deletions, and offers, once push
+  tokens are designed.
 - Where each device's push token (from FCM's `getToken()`) is stored, and
   how a stale one is dropped, needed before any function sends a push: the
   removal, deletion, and offer pushes, and the history request alerts in
@@ -1721,7 +1724,9 @@ paywall is switched on before launch.
   everyone. The real checks are written and tested under both answers from
   the start (the rules suite loads the paywall-on version into a second
   emulator project), and switching the paywall on before launch changes
-  that one function.
+  that one function, together with `PAY_LOC_BOO` in
+  `functions/src/daily-run.ts`, which mirrors it so the daily run only
+  offers a group to someone the rules would let accept it.
 
 **Decided (2026-10-22): an owner who disappears.** If the owner stops using the app
 without transferring (a lost phone with no linked sign-in, an
@@ -1737,8 +1742,32 @@ to the longest-standing member who has been active in that time and has a
 free owned slot. That member accepts through the same batch as any
 transfer, so the rules need nothing extra, and if they decline or let it
 lapse, the next run offers it to the next member in line. The old owner
-gets a notice that the group was claimed. 30 days is a starting point: events are
-mostly near term, so it may come down later. This adds a plaintext
+gets a notice that the group was claimed. 30 days is a starting point:
+events are mostly near term, so it may come down later.
+
+**Built (2026-10-28)** as `dayRunFun` in `functions/src/daily-run.ts`, run
+every day at 08:00 UTC, late night across the US:
+- **Offers lapse** once they've stood 7 days. The owner of an offer they
+  made gets an `offerLapsed` notice.
+- **The claim record** (decided 2026-10-28) is a server-only document,
+  `/groups/{groupId}/ownerClaim/current`, which no rule opens to clients,
+  so members never learn who turned the group down. It holds who the claim
+  offer went to (`offeredUid`), who has passed (`passedUids`), and when
+  everyone eligible had passed (`exhaustedAt`).
+- **The absent owner is told only of a claim** (decided 2026-10-28): a
+  claim offer that's declined, lapses, or whose member leaves records a
+  pass and tells nobody, since the owner has nothing to act on. When the
+  member accepts, the old owner gets `ownershipClaimed` instead of
+  `offerAccepted`, and the record is deleted.
+- **When everyone has passed** (decided 2026-10-28), the record says so,
+  and 30 days later it clears and the run asks again from the top, so a
+  group isn't stranded for good if people change their minds.
+- **An owner who comes back** ends the claim: the run deletes the record
+  and withdraws a claim offer still standing.
+- **A free owned slot** is judged as the rules judge it, so the run never
+  offers a group to someone whose acceptance the rules would refuse.
+- The emulator can't fire a v2 schedule, so the functions suite calls the
+  schedule's handler directly through its `run` method. This adds a plaintext
 `lastActiveAt` timestamp to each membership doc (Section 11.3), updated at
 most once a day when the member opens the app, to keep writes low.
 

@@ -2524,6 +2524,27 @@ test( 'a stalled claim frees after 30 minutes, nobody claims in another name or 
 
 
 
+test( "a group's claim record is closed to its members, owner included", async () => { // What: Claim Record Test. Why: Only Cloud Functions track who passed on claiming an absent owner's group, so nobody learns who turned it down (Section 18). How: This seeds a record and tries to read, write, and delete it as the owner and a member.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is a member. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: The record belongs to a real group with members. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/ownerClaim/current', { exhaustedAt : null, offeredUid : 'bob', passedUids : {} } ); // What: Claim Record Seed. Why: Only the daily run writes the record. How: This writes one with the rules off.
+
+	await assertFails( getDoc( doc( aliStoObj, 'groups/gro1/ownerClaim/current' ) ) );                        // What: Owner Read. Why: The owner doesn't see who passed. How: This expects Alice's read refused.
+	await assertFails( getDoc( doc( bobStoObj, 'groups/gro1/ownerClaim/current' ) ) );                        // What: Member Read. Why: Members don't see who passed. How: This expects Bob's read refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/ownerClaim/current' ), { offeredUid : null } ) ); // What: Member Write. Why: Nobody steers a claim. How: This expects Bob's write refused.
+	await assertFails( deleteDoc( doc( aliStoObj, 'groups/gro1/ownerClaim/current' ) ) );                     // What: Owner Delete. Why: The run ends a claim itself when the owner returns. How: This expects Alice's delete refused.
+
+
+} );
+
+
+
 test( 'a document no rule covers is refused', async () => { // What: Uncovered Document Test. Why: Firestore must refuse anything no rule allows. How: This reads and writes a document in a collection no rule names, as a signed-in identity.
 
 

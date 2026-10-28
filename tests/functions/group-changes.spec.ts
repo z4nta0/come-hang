@@ -51,8 +51,9 @@ let funEnvObj : RulesTestEnvironment; // What: Functions Environment Object. Why
 
 // #region Helpers
 
-const datDocFun = ( patValStr : string, datValObj : Record< string, unknown > ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), patValStr ), datValObj ) ); // What: Data Document Function. Why: Most changes are written as their batches would leave the group. How: This updates the document with the rules off.
-const remDocFun = ( patValStr : string ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => deleteDoc( doc( cotAdmObj.firestore(), patValStr ) ) );                                                   // What: Remove Document Function. Why: A leave or removal ends a membership. How: This deletes the document with the rules off.
+const datDocFun = ( patValStr : string, datValObj : Record< string, unknown > ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), patValStr ), datValObj ) );                                          // What: Data Document Function. Why: Most changes are written as their batches would leave the group. How: This updates the document with the rules off.
+const remDocFun = ( patValStr : string ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => deleteDoc( doc( cotAdmObj.firestore(), patValStr ) ) );                                                                                            // What: Remove Document Function. Why: A leave or removal ends a membership. How: This deletes the document with the rules off.
+const seeClaFun = ( groIdeStr : string ) => funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), `groups/${ groIdeStr }/ownerClaim/current` ), { exhaustedAt : null, offeredUid : 'bob', passedUids : {} } ) ); // What: Seed Claim Function. Why: Some offers to Bob are claims the daily run made. How: This writes a claim record naming Bob with the rules off.
 
 
 
@@ -226,6 +227,33 @@ test( 'the old owner is told of an acceptance', async () => { // What: Acceptanc
 	await datDocFun( 'groups/gro1', { ownerUid : 'bob', pendingOfferedAt : null, pendingOwnerUid : null } ); // What: Accept Update. Why: An acceptance makes the member offered the group its owner. How: This writes the group as the acceptance leaves it.
 
 	await expect.poll( async () => ( await reaDocFun( 'accounts/alice/notices/offerAccepted-gro1' ) )?.otherUid ).toBe( 'bob' ); // What: Accepted Notice. Why: Alice learns the handover finished. How: This waits for her notice naming Bob.
+
+
+} );
+
+test( 'an accepted claim tells the old owner their group was claimed and ends the claim, while a claim candidate leaving tells nobody', async () => { // What: Claim Change Test. Why: The absent owner hears only that the group was claimed, never of a claim offer's other ends (Section 18). How: This accepts a claim offer in one group and has the claim candidate leave another, then checks the notices and records.
+
+
+	await seeGroFun( 'gro1' ); // What: Accept Group Seed. Why: Bob accepts a claim of this one. How: This writes it.
+	await seeGroFun( 'gro2' ); // What: Leave Group Seed. Why: Bob leaves this one while it's offered to him as a claim. How: This writes it.
+
+	await seeClaFun( 'gro1' ); // What: Accept Claim Seed. Why: The offer to Bob is a claim. How: This writes gro1's record.
+	await seeClaFun( 'gro2' ); // What: Leave Claim Seed. Why: The offer to Bob is a claim. How: This writes gro2's record.
+
+	await datDocFun( 'groups/gro1', { ownerUid : 'bob', pendingOfferedAt : null, pendingOwnerUid : null } ); // What: Accept Update. Why: Bob takes the claimed group. How: This writes the group as the acceptance leaves it.
+
+	await expect.poll( async () => ( await reaDocFun( 'accounts/alice/notices/ownershipClaimed-gro1' ) )?.otherUid ).toBe( 'bob' ); // What: Claimed Notice. Why: The absent owner learns who has their group now. How: This waits for Alice's notice naming Bob.
+
+	expect( await reaDocFun( 'groups/gro1/ownerClaim/current' ) ).toBeUndefined();            // What: Claim Ended. Why: The group has an owner again, and the record goes in the notice's batch. How: This expects the record deleted.
+	expect( await reaDocFun( 'accounts/alice/notices/offerAccepted-gro1' ) ).toBeUndefined(); // What: No Accept Notice. Why: A claim is reported as a claim. How: This expects no ordinary acceptance notice.
+
+	await remDocFun( 'groups/gro2/members/bob' ); // What: Bob Membership Delete. Why: The claim candidate leaves. How: This deletes Bob's membership.
+
+	await datDocFun( 'groups/gro2', { countedUid : 'bob', memberCount : 2 } ); // What: Leave Update. Why: A leave lowers the count for the member leaving. How: This writes the group as Bob's leave leaves it.
+
+	await expect.poll( async () => ( await reaDocFun( 'groups/gro2' ) )?.pendingOwnerUid ).toBeNull(); // What: Stale Claim Offer Cleared. Why: An offer to someone gone could never be accepted. How: This waits for the offer to be cleared.
+
+	expect( await reaDocFun( 'accounts/alice/notices/offerLeft-gro2' ) ).toBeUndefined(); // What: No Leave Notice. Why: The absent owner never made the claim offer, and the trigger writes its notices before it clears an offer. How: This expects no notice for gro2.
 
 
 } );

@@ -37,8 +37,8 @@ the user: `firestore.rules` covers every Firestore collection in
 ARCHITECTURE.md's data model, `database.rules.json` covers chat and
 presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
-notices, and the offer decline. No Firebase code in the app yet. Next steps
-are in ARCHITECTURE.md's Section 14.
+notices, the offer decline, and the daily run. No Firebase code in the app
+yet. Next steps are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -74,7 +74,10 @@ own emulator session, with the Functions emulator on 8230 and the Auth
 emulator on 8240 for callers' sign-ins, since their triggers write data the
 other suites clear, and `npm test` runs it after the rest. Its specs run one
 at a time, since each clears the data the next one's triggers write. The
-Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The emulators need Java, 21 installed.
+Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The
+emulator can't fire a v2 scheduled function, by itself or on request, so
+the daily run's spec imports it and calls its handler through its `run`
+method, in the test process, against the same emulators. The emulators need Java, 21 installed.
 
 ## Project facts
 
@@ -171,3 +174,5 @@ Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The em
 - Firebase/Google Analytics stays **off** in every Firebase project.
 - Budget alerts and the automatic billing cutoff are set up the same day
   Blaze is enabled (ARCHITECTURE.md Section 15).
+- Switching the paywall on means changing `payLocFun` in `firestore.rules`
+  and `PAY_LOC_BOO` in `functions/src/daily-run.ts` together.

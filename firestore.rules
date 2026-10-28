@@ -256,7 +256,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region payLocFun
 
-		function payLocFun () { // What: Paywall Locked Function. Why: The paywall stays open for everyone until it's switched on before launch. How: This is the switch: false while open, true once the paid caps need a purchase.
+		function payLocFun () { // What: Paywall Locked Function. Why: The paywall stays open for everyone until it's switched on before launch. How: This is the switch: false while open, true once the paid caps need a purchase, switching together with PAY_LOC_BOO in functions/src/daily-run.ts.
 
 
 			return false; // What: Paywall Locked Return. Why: The paywall is still open. How: This reports it unlocked, and the rules suite tests the locked answer in a second emulator project.

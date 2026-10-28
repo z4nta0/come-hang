@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { dayRunFun } from './daily-run.ts';      // What: Day Run Function. Why: Offers lapse and inactive owners' groups are offered on through it. How: This is the schedule.
 import { decOffFun } from './offer-decline.ts';  // What: Decline Offer Function. Why: The member offered a group declines through it. How: This is the callable.
 import { delGroFun } from './group-deletion.ts'; // What: Delete Group Function. Why: The owner deletes a group through it. How: This is the callable.
 import { groChaFun } from './group-changes.ts';  // What: Group Change Function. Why: Removals and ended offers are reported to the people they affect. How: This is its trigger.
@@ -28,6 +29,6 @@ import { mirMemFun } from './mirror.ts';         // What: Mirror Member Function
 
 
 
-export { decOffFun, delGroFun, groChaFun, mirGroFun, mirMemFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { dayRunFun, decOffFun, delGroFun, groChaFun, mirGroFun, mirMemFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 
