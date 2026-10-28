@@ -11,13 +11,13 @@ import { docReaFun                 } from '../support/client.ts';         // Wha
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the membership changed as it should. How: This asserts on what the pages and the emulator return.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read and seed past the rules. How: This connects to the emulator.
 import { keyRawFun                 } from '../support/client.ts';         // What: Key Raw Function. Why: A renamed member's name is decrypted with the group key. How: This exports a page's key.
+import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: Every test starts from a group with an owner and a member. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: Each test needs a member apart from the owner's page. How: This declares tests with a second page.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Each step runs as one identity. How: This calls the app's functions in a page.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: An old activity mark is seeded and read back. How: This builds and reads it.
 import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: An activity mark is aged past the rules. How: This changes it.
 
 
-import type { Page                 } from '@playwright/test';             // What: Page. Why: The setup runs in both identities' pages. How: This types them.
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every read and seed goes through one. How: This types it.
 
 // #endregion Imports
@@ -40,7 +40,6 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * Sections:
  *  - Constants
  *  - Module State
- *  - Helpers
  *  - Module Init
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -64,58 +63,6 @@ const MEM_MOD_STR = '/src/state/members.ts'; // What: Members Module String. Why
 let memEnvObj : RulesTestEnvironment; // What: Members Environment Object. Why: Every read and seed reaches the emulator through it. How: This is set before the first test.
 
 // #endregion Module State
-
-
-
-// #region Helpers
-
-// #region memSetFun
-
-/**
- * memSetFun = Member Setup Function
- *
- * @summary
- * Creates a group as the owner's page and lets the second page in through
- * the invite and the owner's approval, as the app does. Resolves with the
- * group's ID, the owner's UID, and the member's UID.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param ownPagObj - Owner Page Object: The owner's page.
- * @param memPagObj - Member Page Object: The member's page.
- *
- * @returns A promise that resolves with the group's ID and both UIDs.
- *
- * @example
- * ```ts
- * memSetFun(page, secPagObj) // => { groIdeStr, uidMemStr, uidOwnStr }
- * ```
- *
-*/
-
-const memSetFun = async ( ownPagObj : Page, memPagObj : Page ) : Promise< { groIdeStr : string, uidMemStr : string, uidOwnStr : string } > => { // What: Member Setup Function. Why: Every test starts from a group with an owner and a member. How: This creates the group and lets the member in.
-
-
-	const groIdeStr = await runPagFun( ownPagObj, GRO_MOD_STR, 'groCreFun', 'Beach Day', 'Alice' ) as string;                      // What: Group Identifier String. Why: The group under test. How: This creates it as the owner. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
-	const tokValStr = ( await docReaFun( memEnvObj, `groups/${ groIdeStr }` ) )?.currentInviteToken as string;                     // What: Token Value String. Why: The member joins through the link. How: This reads the token the group names. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
-	const uidMemStr = ( await runPagFun( memPagObj, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: UID Member String. Why: The owner answers the member by UID. How: This makes sure the member's identity exists and reads its UID. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity's record. How: The as reads its UID.
-	const uidOwnStr = ( await runPagFun( ownPagObj, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: UID Owner String. Why: The owner's own membership is checked too. How: This reads the owner's UID. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity's record. How: The as reads its UID.
-
-
-	await runPagFun( memPagObj, JOI_MOD_STR, 'reqCreFun', tokValStr, 'Dana Lee', '' ); // What: Request Call. Why: The member asks to join. How: This files the request.
-
-	await runPagFun( ownPagObj, JOI_MOD_STR, 'reqAppFun', groIdeStr, uidMemStr ); // What: Approval Call. Why: The owner lets the member in. How: This approves the request.
-
-
-
-	return { groIdeStr, uidMemStr, uidOwnStr }; // What: Setup Return. Why: The test uses all three. How: This returns them.
-
-
-};
-
-// #endregion memSetFun
-
-// #endregion Helpers
 
 
 
@@ -161,7 +108,7 @@ pagTesObj.beforeEach( async ( { page } ) => { // What: Page Hook. Why: The owner
 pagTesObj( 'members are listed by name, oldest first, and a member renames themselves', async ( { page, secPagObj } ) => { // What: Name Test. Why: Members recognize each other by per-group names only the group can read (Section 11.3). How: This lists both members, renames the second, checks a bad name is refused, then relists with one name garbled, one removed, and the joins reordered.
 
 
-	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a group with two members. How: This sets them up.
+	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with two members. How: This sets them up.
 
 
 	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'memLisFun', groIdeStr ) ).toMatchObject( [ { namTexStr : 'Alice', uidValStr : uidOwnStr }, { namTexStr : 'Dana Lee', uidValStr : uidMemStr } ] ); // What: Members Listed. Why: Each member reads the others' names with the group key. How: This expects the owner, then the member.
@@ -192,7 +139,7 @@ pagTesObj( 'members are listed by name, oldest first, and a member renames thems
 pagTesObj( 'activity is marked at most once a day, to the server time', async ( { page, secPagObj } ) => { // What: Activity Test. Why: The mark decides when ownership can be claimed, and writes stay at one a day (Section 18). How: This marks a fresh membership, then one aged two days.
 
 
-	const { groIdeStr, uidMemStr } = await memSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a member. How: This sets one up.
+	const { groIdeStr, uidMemStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a member. How: This sets one up.
 
 	const memPatStr = `groups/${ groIdeStr }/members/${ uidMemStr }`; // What: Member Path String. Why: The mark is in the membership. How: This names it.
 
@@ -220,7 +167,7 @@ pagTesObj( 'activity is marked at most once a day, to the server time', async ( 
 pagTesObj( "a member leaves, freeing their slot and the device's key, while the owner cannot leave", async ( { page, secPagObj } ) => { // What: Leave Test. Why: Any member but the owner can always leave (Sections 9 and 18). How: This leaves as the member and checks the membership, count, account, and key, then tries as the owner.
 
 
-	const { groIdeStr, uidMemStr } = await memSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a member to leave. How: This sets one up.
+	const { groIdeStr, uidMemStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a member to leave. How: This sets one up.
 
 
 	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'groLeaFun', groIdeStr ) ).toBeUndefined();                               // What: Leave Call. Why: The member leaves. How: This expects it to succeed.
@@ -245,7 +192,7 @@ pagTesObj( "a member leaves, freeing their slot and the device's key, while the 
 pagTesObj( 'the owner removes a member, blocking them and rotating the link, but cannot remove themselves', async ( { page, secPagObj } ) => { // What: Removal Test. Why: A removal ends the membership, and the link the member had stops working (Section 9). How: This removes the member, checks every change, then tries to rejoin and to remove the owner.
 
 
-	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a member to remove. How: This sets one up.
+	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a member to remove. How: This sets one up.
 
 	const tokOldStr = ( await docReaFun( memEnvObj, `groups/${ groIdeStr }` ) )?.currentInviteToken as string; // What: Token Old String. Why: The old link has to stop working. How: This reads it before the removal. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
 	const tokNewStr = await runPagFun( page, MEM_MOD_STR, 'memRemFun', groIdeStr, uidMemStr ) as string;       // What: Token New String. Why: The removal returns the new link to share. How: This removes the member as the owner. // What: Type Assertion Note. Why: memRemFun resolves with the token. How: The as reads it as a string.
@@ -272,7 +219,7 @@ pagTesObj( 'the owner removes a member, blocking them and rotating the link, but
 pagTesObj( 'the owner rotates the link and changes the settings, which a bad value or a member cannot', async ( { page, secPagObj } ) => { // What: Settings Test. Why: The link and the settings are the owner's to change, and the invite keeps the group's real name (Sections 9 and 11.6). How: This rotates, renames, and sets retention, then tries bad values and a member's change.
 
 
-	const { groIdeStr } = await memSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
+	const { groIdeStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
 
 	const tokOldStr = ( await docReaFun( memEnvObj, `groups/${ groIdeStr }` ) )?.currentInviteToken as string; // What: Token Old String. Why: The old link has to stop working. How: This reads it before the rotation. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
 	const tokNewStr = await runPagFun( page, GRO_MOD_STR, 'invRotFun', groIdeStr ) as string;                  // What: Token New String. Why: The rotation returns the new link. How: This rotates as the owner. // What: Type Assertion Note. Why: invRotFun resolves with the token. How: The as reads it as a string.

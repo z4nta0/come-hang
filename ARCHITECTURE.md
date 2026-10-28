@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (members, leaving, removal, link rotation, and
+Last updated: 2026-10-28 (ownership offers and notices in the app, in
+Section 14; members, leaving, removal, link rotation, and
 group settings in the app, in Section 14; joining a group in the app, with the approver
 encrypting the joiner's name, in Sections 11.3, 13, 14, and 17; group creation in the app and emoji listed by code
 point in the rules, in Sections 11.10 and 14; the group key wrapping scheme and extractable
@@ -1470,6 +1471,15 @@ the Blaze change.
   invite, returning the new link to share. `src/state/groups.ts` adds the
   owner's link rotation and settings (the name and chat retention), each one
   transaction that keeps the working invite in step.
+- `src/state/ownership.ts` is the handover (Section 18): the owner offers
+  the group to a member and can withdraw the offer, the member accepts in
+  one transaction that rereads the offer, refuses one that's lapsed or names
+  someone else, and swaps the group between both accounts' maps, or
+  declines through `decOffFun`. An offer refused for a full owned slot
+  rejects with Firestore's permission-denied, which the offer screen
+  explains. `src/state/notices.ts` lists the unexpired notices newest
+  first and dismisses them. The client suite runs with the Functions
+  emulator, so a decline and the notices it leaves are checked end to end.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.

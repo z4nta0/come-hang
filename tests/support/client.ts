@@ -242,13 +242,62 @@ const runPagFun = ( pagValObj : Page, modPatStr : string, funNamStr : string, ..
 
 // #endregion runPagFun
 
+
+
+// #region memSetFun
+
+/**
+ * memSetFun = Member Setup Function
+ *
+ * @summary
+ * Creates a group as the owner's page and lets the second page in through
+ * the invite and the owner's approval, as the app does. Resolves with the
+ * group's ID, the owner's UID, and the member's UID.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param envTesObj - Environment Test Object: The spec's environment.
+ * @param ownPagObj - Owner Page Object: The owner's page.
+ * @param memPagObj - Member Page Object: The member's page.
+ *
+ * @returns A promise that resolves with the group's ID and both UIDs.
+ *
+ * @example
+ * ```ts
+ * memSetFun(envTesObj, page, secPagObj) // => { groIdeStr, uidMemStr, ... }
+ * ```
+ *
+*/
+
+const memSetFun = async ( envTesObj : RulesTestEnvironment, ownPagObj : Page, memPagObj : Page ) : Promise< { groIdeStr : string, uidMemStr : string, uidOwnStr : string } > => { // What: Member Setup Function. Why: Every test starts from a group with an owner and a member. How: This creates the group and lets the member in.
+
+
+	const groIdeStr = await runPagFun( ownPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string;           // What: Group Identifier String. Why: The group under test. How: This creates it as the owner. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+	const tokValStr = ( await docReaFun( envTesObj, `groups/${ groIdeStr }` ) )?.currentInviteToken as string;                     // What: Token Value String. Why: The member joins through the link. How: This reads the token the group names. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
+	const uidMemStr = ( await runPagFun( memPagObj, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: UID Member String. Why: The owner answers the member by UID. How: This makes sure the member's identity exists and reads its UID. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity's record. How: The as reads its UID.
+	const uidOwnStr = ( await runPagFun( ownPagObj, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: UID Owner String. Why: The owner's own membership is checked too. How: This reads the owner's UID. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity's record. How: The as reads its UID.
+
+
+	await runPagFun( memPagObj, '/src/state/joins.ts', 'reqCreFun', tokValStr, 'Dana Lee', '' ); // What: Request Call. Why: The member asks to join. How: This files the request.
+
+	await runPagFun( ownPagObj, '/src/state/joins.ts', 'reqAppFun', groIdeStr, uidMemStr ); // What: Approval Call. Why: The owner lets the member in. How: This approves the request.
+
+
+
+	return { groIdeStr, uidMemStr, uidOwnStr }; // What: Setup Return. Why: The test uses all three. How: This returns them.
+
+
+};
+
+// #endregion memSetFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { decNamFun, docReaFun, keyRawFun, pagTesObj, runPagFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
+export { decNamFun, docReaFun, keyRawFun, memSetFun, pagTesObj, runPagFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
 
 // #endregion Exports
 

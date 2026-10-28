@@ -40,8 +40,9 @@ so far are the membership mirror, group deletion, the removal and offer
 notices, the offer decline, the daily run, and the pushes, with the push
 token rules. The app has its Firebase services, created on first use, the
 identity bootstrap, the group key encryption, group creation, joining
-through an invite with a member's approval, and the membership changes
-(names, activity, leaving, removal, link rotation, and settings), with no
+through an invite with a member's approval, the membership changes
+(names, activity, leaving, removal, link rotation, and settings), and
+ownership offers and notices, with no
 screens using them yet, since screens wait for the design pass. Next steps
 are in ARCHITECTURE.md's Section 14.
 
@@ -70,18 +71,21 @@ npm run test:security        # headers policy, build secrets, npm audit
 The suites start their own dev server on port 5200, and the security suite
 a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
-`npm test`, `npm run test:rules`, and `npm run test:client` run inside
-`firebase emulators:exec`, which starts the Firestore emulator on 8200
-(ease-my-life's uses 8080), the Realtime Database emulator on 8210, the
-Storage emulator on 8220, and for the client suite the Auth emulator on
-8240, under
-the `demo-come-hang` project, which can't reach a real one. The Storage
+`npm test` and `npm run test:rules` run inside `firebase emulators:exec`,
+which starts the Firestore emulator on 8200 (ease-my-life's uses 8080), the
+Realtime Database emulator on 8210, and the Storage emulator on 8220, under
+the `demo-come-hang` project, which can't reach a real one.
+`npm run test:client` builds the functions and runs in its own session,
+with the Auth emulator on 8240 and the Functions emulator on 8230 beside
+Firestore and the Realtime Database, since the app calls callables and the
+triggers' notices are part of what it checks, and `npm test` runs it after
+the browser and rules suites. The Storage
 emulator's rules read that project's Firestore alone, so the Storage spec
 seeds it, and the Firestore spec keeps its data under projects of its own.
 `npm run test:functions` builds the functions and runs them in their
 own emulator session, with the Functions emulator on 8230 and the Auth
 emulator on 8240 for callers' sign-ins, since their triggers write data the
-other suites clear, and `npm test` runs it after the rest. Its specs run one
+other suites clear, and `npm test` runs it last. Its specs run one
 at a time, since each clears the data the next one's triggers write. The
 Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The
 emulator can't fire a v2 scheduled function, by itself or on request, so
