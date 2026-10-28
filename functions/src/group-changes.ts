@@ -6,8 +6,9 @@
 import { claRefFun         } from './claims.ts';                     // What: Claim Reference Function. Why: An accepted or abandoned claim offer is told apart by the claim record. How: This names it.
 import { FIR_DAT_OBJ       } from './setup.ts';                      // What: Firestore Database Object. Why: The trigger writes notices and clears stale offers. How: This reaches Firestore past its rules.
 import { FUN_OPT_OBJ       } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: The trigger spreads them in.
-import { notBatFun         } from './notices.ts';                    // What: Notice Batch Function. Why: Each change the trigger spots leaves someone a notice. How: This adds one to the batch.
+import { notBatFun         } from './notices.ts';
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'; // What: On Document Updated. Why: Every change the trigger reports is an update to a group. How: This registers an update trigger.
+import { pusSenFun         } from './push.ts';                       // What: Notice Batch Function. Why: Each change the trigger spots leaves someone a notice. How: This adds one to the batch.
 
 
 import type { DocumentReference } from 'firebase-admin/firestore'; // What: Document Reference. Why: Clearing an offer works on the group's document. How: This types it.
@@ -32,10 +33,13 @@ import type { DocumentReference } from 'firebase-admin/firestore'; // What: Docu
  *    of the claim kind when the claim record had offered the new owner the
  *    group, and ends any claim. A claim candidate leaving tells the absent
  *    owner nothing.
- * A decline comes through offer-decline.ts instead, which tells the owner
- * itself, and the owner's own withdrawal leaves no notice.
- * A retried trigger writes the same notices again, which notices.ts makes
- * harmless.
+ *  - A new offer pushes the member offered the group, with no notice, since
+ *    they accept in the app.
+ * Each notice goes out as a push too once the notices have landed. A decline
+ * comes through offer-decline.ts instead, which tells the owner itself, and
+ * the owner's own withdrawal leaves no notice. A retried trigger writes the
+ * same notices again, which notices.ts makes harmless, and sends its pushes
+ * again, which may reach a phone twice.
  *
  * Sections:
  *  - Helpers
@@ -137,19 +141,27 @@ const groChaFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 	const couDowBoo = aftDatObj.memberCount < befDatObj.memberCount; // What: Count Down Boolean. Why: Only a leave or a removal lowers the count. How: This compares the counts.
 
-	const offAccBoo = aftDatObj.ownerUid !== befDatObj.ownerUid;                  // What: Offer Accepted Boolean. Why: Accepting an offer is the only way a group changes owner (Section 18). How: This compares the owners.
-	const offLefBoo = couDowBoo && aftDatObj.pendingOwnerUid === couUidStr;       // What: Offer Left Boolean. Why: The member offered the group can leave or be removed while the offer stands. How: This checks the count fell for that member.
-	const remNewBoo = couDowBoo && aftDatObj.removedUids?.[ couUidStr ] === true; // What: Removed New Boolean. Why: Only a removal lowers the count for a UID it blocks, since a blocked joiner was never counted. How: This checks the count fell for a UID now on the blocklist.
+	const offAccBoo = aftDatObj.ownerUid !== befDatObj.ownerUid;                                                     // What: Offer Accepted Boolean. Why: Accepting an offer is the only way a group changes owner (Section 18). How: This compares the owners.
+	const offLefBoo = couDowBoo && aftDatObj.pendingOwnerUid === couUidStr;                                          // What: Offer Left Boolean. Why: The member offered the group can leave or be removed while the offer stands. How: This checks the count fell for that member.
+	const offMadBoo = aftDatObj.pendingOwnerUid !== null && aftDatObj.pendingOwnerUid !== befDatObj.pendingOwnerUid; // What: Offer Made Boolean. Why: The member offered the group gets a push when it's offered (Section 18). How: This checks the offer now names someone it didn't before.
+	const remNewBoo = couDowBoo && aftDatObj.removedUids?.[ couUidStr ] === true;                                    // What: Removed New Boolean. Why: Only a removal lowers the count for a UID it blocks, since a blocked joiner was never counted. How: This checks the count fell for a UID now on the blocklist.
 
-	const claSnaObj = offAccBoo || offLefBoo ? await claRefFun( groIdeStr ).get() : null; // What: Claim Snapshot Object. Why: Only an acceptance or a leave by the member offered the group depends on whether the offer was a claim. How: This reads the claim record for those alone.
-	const claOffStr = claSnaObj?.get( 'offeredUid' ) as string | null | undefined;        // What: Claim Offered String. Why: The claim record names who a claim offer went to. How: This reads it, missing when there's no record. // What: Type Assertion Note. Why: Only the daily run writes the record's offeredUid, as a UID or null. How: The as reads it as either, or missing.
+	const claSnaObj = offAccBoo || offLefBoo || offMadBoo ? await claRefFun( groIdeStr ).get() : null; // What: Claim Snapshot Object. Why: An acceptance, a leave by the member offered the group, and a new offer each depend on whether the offer is a claim. How: This reads the claim record for those alone.
+	const claOffStr = claSnaObj?.get( 'offeredUid' ) as string | null | undefined;                     // What: Claim Offered String. Why: The claim record names who a claim offer went to. How: This reads it, missing when there's no record. // What: Type Assertion Note. Why: Only the daily run writes the record's offeredUid, as a UID or null. How: The as reads it as either, or missing.
+
+	const pusQueArr : [ string, string ][] = []; // What: Push Queue Array. Why: Pushes go out only once the notices have landed. How: This collects each push's UID and kind.
 
 
 
-	if ( offAccBoo ) { // What: Acceptance Block. Why: A new owner ends any claim, and a claimed group is reported as a claim. How: This leaves the old owner the right notice and deletes the claim record.
+	if ( offAccBoo ) { // What: Acceptance Block. Why: A new owner ends any claim, and a claimed group is reported as a claim. How: This leaves the old owner the right notice and push, and deletes the claim record.
 
 
-		notBatFun( batWriObj, befDatObj.ownerUid, claOffStr === aftDatObj.ownerUid ? 'ownershipClaimed' : 'offerAccepted', groIdeStr, groNamStr, aftDatObj.ownerUid ); // What: Accepted Notice Call. Why: The old owner learns the handover finished, or that their group was claimed while they were away (Section 18). How: This leaves them a notice naming the new owner, of the claim kind when the claim record offered them the group.
+		const accKinStr = claOffStr === aftDatObj.ownerUid ? 'ownershipClaimed' : 'offerAccepted'; // What: Accepted Kind String. Why: The old owner learns the handover finished, or that their group was claimed while they were away (Section 18). How: This picks the claim kind when the claim record offered the new owner the group.
+
+
+		notBatFun( batWriObj, befDatObj.ownerUid, accKinStr, groIdeStr, groNamStr, aftDatObj.ownerUid ); // What: Accepted Notice Call. Why: The old owner is told when they're next in the app. How: This leaves them a notice naming the new owner.
+
+		pusQueArr.push( [ befDatObj.ownerUid, accKinStr ] ); // What: Accepted Push Queue. Why: The old owner is told at once too. How: This queues their push.
 
 		batWriObj.delete( claRefFun( groIdeStr ) ); // What: Claim Delete Call. Why: The group has an owner again, so any claim is over. How: This deletes the record, which does nothing when there's none.
 
@@ -158,15 +170,37 @@ const groChaFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 
 
-	if ( offLefBoo && !remNewBoo && claOffStr !== couUidStr ) notBatFun( batWriObj, aftDatObj.ownerUid, 'offerLeft', groIdeStr, groNamStr, couUidStr ); // What: Offer Left Notice Call. Why: The owner didn't cause a leave, so they learn their offer ended, unless it was a claim offer they never made. How: This leaves the owner a notice naming who left.
+	if ( offLefBoo && !remNewBoo && claOffStr !== couUidStr ) { // What: Offer Left Block. Why: The owner didn't cause a leave, so they learn their offer ended, unless it was a claim offer they never made. How: This leaves the owner a notice and a push.
+
+
+		notBatFun( batWriObj, aftDatObj.ownerUid, 'offerLeft', groIdeStr, groNamStr, couUidStr ); // What: Offer Left Notice Call. Why: The owner is told when they're next in the app. How: This leaves them a notice naming who left.
+
+		pusQueArr.push( [ aftDatObj.ownerUid, 'offerLeft' ] ); // What: Offer Left Push Queue. Why: The owner is told at once too. How: This queues their push.
+
+
+	}
 
 
 
-	if ( remNewBoo ) notBatFun( batWriObj, couUidStr, 'removed', groIdeStr, groNamStr ); // What: Removal Notice Call. Why: The group shouldn't just vanish from the removed member's list (Section 9). How: This leaves them a notice.
+	if ( offMadBoo ) pusQueArr.push( [ aftDatObj.pendingOwnerUid, claOffStr === aftDatObj.pendingOwnerUid ? 'claimMade' : 'offerMade' ] ); // What: Offer Push Queue. Why: The member offered the group learns of it, with no notice, since accepting happens in the app. How: This queues their push, of the claim kind when the claim record names them.
+
+
+
+	if ( remNewBoo ) { // What: Removal Block. Why: The group shouldn't just vanish from the removed member's list (Section 9). How: This leaves them a notice and a push.
+
+
+		notBatFun( batWriObj, couUidStr, 'removed', groIdeStr, groNamStr ); // What: Removal Notice Call. Why: The removed member is told when they're next in the app. How: This leaves them a notice.
+
+		pusQueArr.push( [ couUidStr, 'removed' ] ); // What: Removal Push Queue. Why: The removed member is told at once too. How: This queues their push.
+
+
+	}
 
 
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The notices land together. How: This commits them, which does nothing for an update that called for none.
+
+	await Promise.all( pusQueArr.map( ( [ uidValStr, kinValStr ] ) => pusSenFun( uidValStr, kinValStr, groNamStr ) ) ); // What: Push Send Call. Why: Each person told is reached on their phone too. How: This sends every queued push, each one best effort.
 
 
 

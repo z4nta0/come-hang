@@ -10,7 +10,8 @@ import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Da
 import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: The owner is told of the decline. How: This adds their notice to a batch.
-import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The member offered the group declines from the app. How: This registers a callable function, which checks the caller's sign-in.
+import { onCall      } from 'firebase-functions/v2/https';
+import { pusSenFun   } from './push.ts'; // What: On Call. Why: The member offered the group declines from the app. How: This registers a callable function, which checks the caller's sign-in.
 
 // #endregion Imports
 
@@ -26,7 +27,8 @@ import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why
  * never in the emulator, so a decline told apart that way could never be
  * tested. So the rules let only the owner end an offer from the app, and a
  * decline comes here, where the server knows the caller: it clears the offer
- * in a transaction, then leaves the owner a notice naming who declined. A
+ * in a transaction, then leaves the owner a notice naming who declined, and
+ * a push. A
  * claim offer, made by the daily run for an absent owner, is recorded in its
  * claim record as passed instead, and tells nobody.
  *
@@ -115,6 +117,8 @@ const decOffFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 	notBatFun( batWriObj, notSnaObj.get( 'ownerUid' ), 'offerDeclined', groIdeStr, notSnaObj.get( 'name' ), uidValStr ); // What: Declined Notice Call. Why: The owner learns to pick someone else (Section 18). How: This leaves them a notice naming who declined.
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The notice has to land. How: This commits it.
+
+	await pusSenFun( notSnaObj.get( 'ownerUid' ), 'offerDeclined', notSnaObj.get( 'name' ) ); // What: Declined Push Call. Why: The owner is told at once too. How: This sends their push, best effort.
 
 
 } );

@@ -19,11 +19,13 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * them in the local emulator.
  *
  * Each signed-in identity has two documents. accounts/{uid} holds its group
- * memberships and paid flag, which only its owner may read, and starts with
- * no groups, since the paid flag is written only by the payment webhook,
- * which these rules don't govern. users/{uid} holds its public key, which
- * anyone signed in may fetch by UID, so an approving member can wrap a group
- * key for a joiner, while nobody may list the collection.
+ * memberships and paid flag, which only its owner may read, and starts with no
+ * groups, since the paid flag is written only by the payment webhook, which
+ * these rules don't govern. users/{uid} holds its public key, which anyone
+ * signed in may fetch by UID, so an approving member can wrap a group key for
+ * a joiner, while nobody may list the collection. Under the account, the owner
+ * keeps their phone's one push token, refreshed with a 60-day expiry, which
+ * only they may read, write, or delete.
  *
  * A group is created in one batch: the group document, its creator's member
  * document, its first invite, and the group added to the creator's account
@@ -508,6 +510,32 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion addOwnFun
+
+
+
+		// #region setTokFun
+
+		function setTokFun ( uidValStr ) { // What: Set Token Function. Why: The app stores its one push token so Cloud Functions can reach the phone, and refreshes it on each open (ARCHITECTURE.md Section 14). How: This is true for the owner writing exactly a well-formed token, the server's time, and an expiry 50 to 70 days out.
+
+
+			let tokDatObj = request.resource.data; // What: Token Data Object. Why: Every check reads the incoming document. How: This names it once.
+
+			let expValBoo = tokDatObj.expireAt >= request.time + duration.value( 50, 'd' ) && tokDatObj.expireAt <= request.time + duration.value( 70, 'd' ); // What: Expire Valid Boolean. Why: A token nobody refreshed for 60 days is presumed dead, and the app sets the expiry by its own clock, which can't match the server's. How: This allows 50 to 70 days out.
+			let fieAllBoo = tokDatObj.keys().toSet() == [ 'expireAt', 'token', 'updatedAt' ].toSet();                                                         // What: Fields All Boolean. Why: The document holds exactly its three fields. How: This compares them with the full set.
+			let isaOwnBoo = isaOwnFun( uidValStr ); // What: Is-An Owner Boolean. Why: Only the identity registers its own phone. How: This requires the requester to own the account.
+			let tokForBoo = tokDatObj.token.size() <= 4096 && tokDatObj.token.matches( '^[A-Za-z0-9_:-]+$' );                                                 // What: Token Form Boolean. Why: An FCM token is a run of letters, digits, colons, hyphens, and underscores, and nothing larger belongs here. How: This matches that form, one to 4,096 characters, with the length checked apart since the rules' patterns cap a repeat count at 1,000.
+			let updTimBoo = tokDatObj.updatedAt == request.time;                                                                                              // What: Updated Time Boolean. Why: The refresh time has to be real. How: This requires the server's time.
+
+			let setAllBoo = expValBoo && fieAllBoo && isaOwnBoo && tokForBoo && updTimBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return setAllBoo; // What: Set Allowed Return. Why: The token's write rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion setTokFun
 
 		// #endregion Account Rules
 
@@ -2001,6 +2029,18 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 			allow get    : if isaOwnFun( uidValStr ); // What: Account Get Rule. Why: Which groups someone is in, and whether they've paid, are theirs alone. How: This lets only the owner fetch it.
 			allow create : if creAccFun( uidValStr ); // What: Account Create Rule. Why: The identity starts its own account. How: This allows it when creAccFun passes.
 			allow update : if updAccFun( uidValStr ); // What: Account Update Rule. Why: A group joins or leaves an account only as part of a creation, approval, leave, removal, or transfer. How: This allows it when updAccFun passes.
+
+
+
+			match /pushToken/current { // What: Push Token Match. Why: Each identity's one phone is reached through the push token stored here, since the app is one device per person. How: This matches the account's single token document.
+
+
+				allow get            : if isaOwnFun( uidValStr ); // What: Token Get Rule. Why: The app checks what it last stored. How: This lets only the owner fetch it.
+				allow create, update : if setTokFun( uidValStr ); // What: Token Set Rule. Why: The app stores or refreshes its token. How: This allows it when setTokFun passes.
+				allow delete         : if isaOwnFun( uidValStr ); // What: Token Delete Rule. Why: Someone turning notifications off stops the pushes. How: This lets only the owner delete it.
+
+
+			}
 
 
 

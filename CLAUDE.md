@@ -37,8 +37,9 @@ the user: `firestore.rules` covers every Firestore collection in
 ARCHITECTURE.md's data model, `database.rules.json` covers chat and
 presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
-notices, the offer decline, and the daily run. No Firebase code in the app
-yet. Next steps are in ARCHITECTURE.md's Section 14.
+notices, the offer decline, the daily run, and the pushes, with the push
+token rules. No Firebase code in the app yet. Next steps are in
+ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -77,7 +78,11 @@ at a time, since each clears the data the next one's triggers write. The
 Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The
 emulator can't fire a v2 scheduled function, by itself or on request, so
 the daily run's spec imports it and calls its handler through its `run`
-method, in the test process, against the same emulators. The emulators need Java, 21 installed.
+method, in the test process, against the same emulators. There's no FCM
+emulator either, so pushes under the emulator land in an `emulatorPushes`
+collection the specs read, and `npm run test:functions` sets
+`FUNCTIONS_EMULATOR=true` for the test process so the in-process run does
+the same. The emulators need Java, 21 installed.
 
 ## Project facts
 

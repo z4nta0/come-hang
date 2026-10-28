@@ -1200,6 +1200,35 @@ test( 'a user document is refused with a forged time, a wrong-sized or text key,
 
 
 
+test( 'an identity stores, refreshes, and deletes its own push token, which nobody else reads or writes', async () => { // What: Push Token Test. Why: Pushes reach a phone through its one stored token, which is the owner's alone and expires unless refreshed (Section 14). How: This writes a valid token, then tries each fault, other identities, and a second token, then deletes it.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice registers her phone. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob tries to reach Alice's token. How: This acts as him.
+
+	const tokDatObj = { expireAt : Timestamp.fromMillis( Date.now() + 60 * DAY_MIL_NUM ), token : 'fcm1:APA91b-Token_Value', updatedAt : serverTimestamp() }; // What: Token Data Object. Why: Most writes start from a valid token. How: This holds one expiring 60 days out.
+
+
+	await assertSucceeds( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), tokDatObj ) );                                                                       // What: Token Stored. Why: The owner registers her phone. How: This expects Alice's write allowed.
+	await assertSucceeds( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, token : 'fcm2:APA91b-New' } ) );                                     // What: Token Refreshed. Why: FCM can hand the app a new token. How: This expects Alice's replacement allowed.
+	await assertSucceeds( getDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ) ) );                                                                                  // What: Owner Read. Why: The app checks what it last stored. How: This expects Alice's read allowed.
+	await assertFails( getDoc( doc( bobStoObj, 'accounts/alice/pushToken/current' ) ) );                                                                                     // What: Other Read. Why: Nobody else learns where to push Alice. How: This expects Bob refused.
+	await assertFails( setDoc( doc( bobStoObj, 'accounts/alice/pushToken/current' ), tokDatObj ) );                                                                          // What: Other Write. Why: Nobody redirects someone else's pushes. How: This expects Bob refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/second' ), tokDatObj ) );                                                                           // What: Second Token. Why: Each identity has one phone. How: This expects a second token document refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, updatedAt : Timestamp.fromMillis( 1000 ) } ) );                         // What: Forged Time. Why: The refresh time has to be real. How: This expects a chosen time refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, expireAt : Timestamp.fromMillis( Date.now() + 40 * DAY_MIL_NUM ) } ) ); // What: Short Expiry. Why: A token lives 60 days unless refreshed. How: This expects 40 days refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, expireAt : Timestamp.fromMillis( Date.now() + 80 * DAY_MIL_NUM ) } ) ); // What: Long Expiry. Why: A dead token mustn't linger past 60 days. How: This expects 80 days refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, token : '<script>' } ) );                                               // What: Token Form. Why: A token is letters, digits, and a few separators. How: This expects other characters refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, token : 'A'.repeat( 4097 ) } ) );                                       // What: Long Token. Why: Nothing larger than a token belongs here. How: This expects 4,097 characters refused.
+	await assertFails( setDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ), { ...tokDatObj, device : 'phone' } ) );                                                 // What: Extra Field. Why: The document holds its three fields alone. How: This expects another one refused.
+	await assertFails( deleteDoc( doc( bobStoObj, 'accounts/alice/pushToken/current' ) ) );                                                                                  // What: Other Delete. Why: Nobody turns off someone else's pushes. How: This expects Bob refused.
+	await assertSucceeds( deleteDoc( doc( aliStoObj, 'accounts/alice/pushToken/current' ) ) );                                                                               // What: Token Deleted. Why: The owner turns notifications off. How: This expects Alice's delete allowed.
+
+
+} );
+
+
+
 test( 'only the owner replaces its key, the creation time stays put, and nobody deletes it', async () => { // What: User Update Test. Why: A key moves with a linked identity to a new device, and nothing else changes. How: This seeds Alice's document, then changes it as her and as Bob.
 
 

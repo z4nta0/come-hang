@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (the daily run, its server-only claim record, and
+Last updated: 2026-10-28 (push tokens, their rules, and the pushes for
+notices and offers, in Sections 4, 9, 11.1, and 14; the daily run, its server-only claim record, and
 the lapse and claim notices, in Sections 4, 11.1, 14, and 18; declines through a callable and the removal and
 offer notices built, in Sections 9, 11.1, 14, and 18; group deletion built as
 a callable and notice IDs,
@@ -222,6 +223,7 @@ from Spark's 100 to 200,000.
 | Membership mirror | RTDB | `/mirrors/{conversationId}`, written only by a Cloud Function, so the RTDB rules can check membership; see Section 11.7 |
 | Live location | Firestore | One doc per user per group, TTL-expired; see Section 11.4 for why this moved off RTDB |
 | Presence | RTDB | Standard `onDisconnect()` pattern |
+| Push token | Firestore | `/accounts/{uid}/pushToken/current`, the identity's one phone, written and read only by its owner; see Section 11.1 |
 | Ownership claim record | Firestore | `/groups/{groupId}/ownerClaim/current`, read and written only by Cloud Functions; see Section 18 |
 
 **Full field-level schema is in Section 11.**
@@ -578,7 +580,7 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   vanish from their list. A member who leaves on their own gets neither.
   Built 2026-10-28 as `groChaFun` in `functions/src/group-changes.ts`, a
   trigger on every group update that also handles the end of an ownership
-  offer (Section 18); the push waits for push tokens (Section 14).
+  offer (Section 18), and sends the push once the notice has landed.
 - **Deleting a group** (decided 2026-10-26): only the owner can, after a
   confirmation naming the group, through a callable Cloud Function rather
   than a client batch, since a big group's documents won't fit one batch.
@@ -597,7 +599,7 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   the notices, and deletes the working invite. Then go the group's other
   collections, its chat, presence, and mirror, and its history transfers,
   and the group document goes last, so a retry still passes the owner
-  check. The pushes come once push tokens are designed (Section 14).
+  check. Each member's push goes out once the first batch has landed.
 - **Known, accepted limitation**: a removed user can bypass the
   `removedUids` block by clearing local app data (or opening the link in
   a different browser), which mints a brand-new anonymous UID never on
@@ -757,6 +759,28 @@ the same group replaces the earlier one.
 | `otherUid` | plaintext, absent when there's none | The other person involved, such as who declined an offer, named in the app from the group's member docs while they're still readable. |
 | `createdAt` | plaintext | Timestamp. |
 | `expireAt` | plaintext | Firestore TTL field, 30 days out, so a notice never seen doesn't linger. |
+
+`/accounts/{uid}/pushToken/current` (decided 2026-10-28) holds the token FCM
+gives the identity's one phone, since the app is one device per person
+(Section 8): a new phone's token replaces the old one, and the pushes follow
+it. Only the owner reads, writes, or deletes it, and deleting it turns
+pushes off.
+
+| Field | Type | Notes |
+|---|---|---|
+| `token` | plaintext | FCM's registration token, letters, digits, colons, hyphens, and underscores, at most 4,096 characters. |
+| `updatedAt` | plaintext | The server's time of the last refresh. The app rewrites the document each time it opens, at most once a day. |
+| `expireAt` | plaintext, TTL field | 60 days after the last refresh, as Firebase advises for a token, so a phone that stopped opening the app is dropped. The app sets it by its own clock, so the rules accept 50 to 70 days out. |
+
+**Pushes** (decided 2026-10-28, `functions/src/push.ts`): each one carries
+the group's name as its title and a fixed sentence for its kind, never a
+message or a display name, since those are encrypted where the server
+can't read them. Sending is best effort: an identity with no token gets no
+push, a failure is logged without undoing the notice beside it, and a
+token FCM rejects as no longer registered is deleted, unless the app has
+replaced it since. There's no FCM emulator, so under the Functions emulator
+each push is written to an `emulatorPushes` collection instead, which the
+functions suite reads, and which no rule opens.
 
 Global `displayName` deliberately **not** included here. **Resolved**:
 display names are per-group, not global, encrypted per membership, see
@@ -1416,13 +1440,13 @@ the Blaze change.
   that the live database would answer.
 - Built 2026-10-28: the membership mirror's functions (Section 11.7), group
   deletion (Section 9), the group change trigger's removal and offer
-  notices, the offer decline callable, and the daily run (Section 18).
-  Still to build: the pushes for removals, deletions, and offers, once push
-  tokens are designed.
-- Where each device's push token (from FCM's `getToken()`) is stored, and
-  how a stale one is dropped, needed before any function sends a push: the
-  removal, deletion, and offer pushes, and the history request alerts in
-  Section 11.9. Until then those functions write their notices alone.
+  notices, the offer decline callable, the daily run (Section 18), and the
+  push tokens with the pushes for every notice and for each new offer
+  (Section 11.1). Still to build, each with the feature it serves: the
+  history request alerts (Section 11.9), the grouped join request push
+  (Section 17), and chat pushes. The app's side, asking permission, calling
+  FCM's `getToken()`, storing and refreshing the token, and showing a push
+  through the service worker, comes with the app's Firebase wiring.
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM
@@ -1443,6 +1467,10 @@ the Blaze change.
 - [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
       after upload (Section 11.9).
 - [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
+- [ ] Firestore TTL policies on the `expireAt` field of every collection
+      group that has one (`liveLocations`, `events`, `assignments`,
+      `historyRequests`, `notices`, `pushToken`), since a TTL policy is
+      set per collection group in the console, not by the rules.
 - [ ] Authorized domains, API key restrictions, and CSP, per the hosting
       bullet above.
 - [ ] The privacy policy and terms written and published at `/privacy` and

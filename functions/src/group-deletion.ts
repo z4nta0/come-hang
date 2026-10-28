@@ -10,7 +10,8 @@ import { calGroFun   } from './calls.ts';                  // What: Call Group F
 import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: Every other member is told the group was deleted. How: This adds their notice to the first batch.
-import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The owner asks for the deletion from the app. How: This registers a callable function, which checks the caller's sign-in.
+import { onCall      } from 'firebase-functions/v2/https';
+import { pusSenFun   } from './push.ts'; // What: On Call. Why: The owner asks for the deletion from the app. How: This registers a callable function, which checks the caller's sign-in.
 import { REA_DAT_OBJ } from './setup.ts';                  // What: Realtime Database Object. Why: A group's chat, presence, and mirror live there. How: This deletes them.
 import { STO_ADM_OBJ } from './setup.ts';                  // What: Storage Admin Object. Why: A group's history transfers live in Storage. How: This deletes them.
 
@@ -29,14 +30,15 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  * Section 9). A client can't, since no rule allows deleting a group document
  * and a big group's documents wouldn't fit one batch anyway.
  *
- * The first batch deletes every member document, which closes the whole
- * group to every reader at once, since every rule checks membership. The same
- * batch drops the group from every account and leaves each other member a
- * notice. The group's other Firestore collections go next, then its chat,
- * presence, and mirror in the Realtime Database and its history transfers in
- * Storage, and the group document goes last. A failure partway leaves the
- * group document, so the owner's retry passes the owner check and finishes
- * the job, and once the group document is gone a call does nothing.
+ * The first batch deletes every member document, which closes the whole group
+ * to every reader at once, since every rule checks membership. The same batch
+ * drops the group from every account and leaves each other member a notice,
+ * and each gets a push once it lands. The group's other Firestore collections
+ * go next, then its chat, presence, and mirror in the Realtime Database and
+ * its history transfers in Storage, and the group document goes last. A
+ * failure partway leaves the group document, so the owner's retry passes the
+ * owner check and finishes the job, and once the group document is gone a call
+ * does nothing.
  *
  * Sections:
  *  - Helpers
@@ -68,16 +70,17 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  *
  * @param groSnaObj - Group Snapshot Object: The group being deleted.
  *
- * @returns A promise that settles once the batch is committed, with no value.
+ * @returns A promise that resolves with the UIDs of the members left a
+ *          notice, once the batch is committed.
  *
  * @example
  * ```ts
- * firBatFun(groSnaObj) // => Promise<void>
+ * firBatFun(groSnaObj) // => [ 'bob', 'carol' ]
  * ```
  *
 */
 
-const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > => { // What: First Batch Function. Why: Members lose access, their accounts let go of the group, and they're told, all at once. How: This builds and commits the batch.
+const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< string[] > => { // What: First Batch Function. Why: Members lose access, their accounts let go of the group, and they're told, all at once. How: This builds and commits the batch.
 
 
 	const batWriObj = FIR_DAT_OBJ.batch();                               // What: Batch Write Object. Why: Every write lands together or not at all. How: This starts the batch.
@@ -112,6 +115,10 @@ const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > => { 
 	batWriObj.delete( FIR_DAT_OBJ.doc( `invites/${ groSnaObj.get( 'currentInviteToken' ) }` ) ); // What: Invite Delete Call. Why: A link to a deleted group should open nothing. How: This deletes the working invite, since a rotation already deleted every older one.
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The writes land together. How: This commits them.
+
+
+
+	return memQueObj.docs.map( ( memSnaObj ) => memSnaObj.id ).filter( ( uidValStr ) => uidValStr !== ownUidStr ); // What: Notified Return. Why: Each member left a notice gets a push too. How: This returns every member's UID but the owner's.
 
 
 };
@@ -167,7 +174,10 @@ const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 
 
-	await firBatFun( groSnaObj ); // What: First Batch Call. Why: Members lose access and are told before anything else goes. How: This commits the first batch.
+	const notUidArr = await firBatFun( groSnaObj ); // What: Notified UID Array. Why: Members lose access and are told before anything else goes. How: This commits the first batch and keeps who it told.
+
+
+	await Promise.all( notUidArr.map( ( uidValStr ) => pusSenFun( uidValStr, 'groupDeleted', groSnaObj.get( 'name' ) ) ) ); // What: Deletion Push Call. Why: Each member is told at once too, by the group's name. How: This sends each their push, best effort.
 
 
 	for ( const colRefObj of await groRefObj.listCollections() ) await FIR_DAT_OBJ.recursiveDelete( colRefObj ); // What: Collection Delete Loop. Why: Events, their items, requests, and locations all go, including any collection added later. How: This deletes each of the group's collections with everything under it.

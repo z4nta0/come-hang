@@ -7,10 +7,12 @@ import { dayRunFun                 } from '../../functions/src/daily-run.ts'; //
 import { doc                       } from 'firebase/firestore';               // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';                 // What: Expect. Why: Each check passes only when the run left each group as it should. How: This asserts on each read and poll.
 import { getDoc                    } from 'firebase/firestore';               // What: Get Doc. Why: Groups, claim records, and notices are read back. How: This reads one document.
-import { initializeTestEnvironment } from '@firebase/rules-unit-testing';     // What: Initialize Test Environment. Why: The tests seed and read Firestore past its rules, as the server would. How: This connects to the emulator.
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+import { pusLisFun                 } from '../support/pushes.ts';             // What: Push List Function. Why: The lapse and claim pushes are checked. How: This reads what reached a token.     // What: Initialize Test Environment. Why: The tests seed and read Firestore past its rules, as the server would. How: This connects to the emulator.
 import { setDoc                    } from 'firebase/firestore';               // What: Set Doc. Why: The tests seed groups, members, accounts, and claim records. How: This writes a document.
 import { test                      } from '@playwright/test';                 // What: Test. Why: Each step of the run is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';               // What: Timestamp. Why: Offer, join, and activity times are Firestore timestamps. How: This builds them.
+import { Timestamp                 } from 'firebase/firestore';
+import { tokSetFun                 } from '../support/pushes.ts';             // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.               // What: Timestamp. Why: Offer, join, and activity times are Firestore timestamps. How: This builds them.
 
 
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every seed and read goes through one. How: This types it.
@@ -186,14 +188,17 @@ test( 'an offer lapses after 7 days, telling the owner, while a lapsed claim off
 
 	await seeDocFun( 'groups/gro3/ownerClaim/current', { exhaustedAt : null, offeredUid : 'bob', passedUids : {} } ); // What: Claim Record Seed. Why: The run tells a claim offer by its record. How: This writes gro3's record naming Bob.
 
+	await tokSetFun( funEnvObj, 'alice', 'tok-alice' ); // What: Alice Token Seed. Why: The lapse push is checked. How: This registers Alice's phone.
+
 	await runDayFun(); // What: Run Call. Why: The day's run lapses the old offers. How: This starts it.
 
-	expect( ( await reaDocFun( 'groups/gro3' ) )?.pendingOwnerUid ).toBe( 'dave' );                                                     // What: Claim Moved On. Why: Bob passed by letting it lapse, so Dave is next. How: This expects gro3's offer to name Dave.
-	expect( await reaDocFun( 'accounts/alice/notices/offerLapsed-gro1' ) ).toMatchObject( { kind : 'offerLapsed', otherUid : 'bob' } ); // What: Lapse Notice. Why: The owner learns their offer ran out. How: This expects Alice's notice naming Bob.
-	expect( ( await reaDocFun( 'groups/gro1' ) )?.pendingOwnerUid ).toBeNull();                                                         // What: Old Offer Cleared. Why: A lapsed offer can't be accepted. How: This expects gro1's offer gone.
-	expect( ( await reaDocFun( 'groups/gro2' ) )?.pendingOwnerUid ).toBe( 'bob' );                                                      // What: Recent Offer Kept. Why: An offer under 7 days old still stands. How: This expects gro2's offer still Bob's.
-	expect( ( await reaDocFun( 'groups/gro3/ownerClaim/current' ) )?.passedUids ).toEqual( { bob : true } );                            // What: Pass Recorded. Why: Bob isn't asked again for this claim. How: This expects him in the passed map.
-	expect( await reaDocFun( 'accounts/alice/notices/offerLapsed-gro3' ) ).toBeUndefined();                                             // What: No Claim Lapse Notice. Why: The absent owner has nothing to act on. How: This expects no notice for gro3.
+	expect( ( await reaDocFun( 'groups/gro3' ) )?.pendingOwnerUid ).toBe( 'dave' );                                                                   // What: Claim Moved On. Why: Bob passed by letting it lapse, so Dave is next. How: This expects gro3's offer to name Dave.
+	expect( await reaDocFun( 'accounts/alice/notices/offerLapsed-gro1' ) ).toMatchObject( { kind : 'offerLapsed', otherUid : 'bob' } );               // What: Lapse Notice. Why: The owner learns their offer ran out. How: This expects Alice's notice naming Bob.
+	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'Your offer of this group ran out after 7 days.', title : 'Picnic' } ] ); // What: Lapse Push. Why: Alice is told at once too, and of gro1's lapse alone. How: This expects her phone's one push.
+	expect( ( await reaDocFun( 'groups/gro1' ) )?.pendingOwnerUid ).toBeNull();                                                                       // What: Old Offer Cleared. Why: A lapsed offer can't be accepted. How: This expects gro1's offer gone.
+	expect( ( await reaDocFun( 'groups/gro2' ) )?.pendingOwnerUid ).toBe( 'bob' );                                                                    // What: Recent Offer Kept. Why: An offer under 7 days old still stands. How: This expects gro2's offer still Bob's.
+	expect( ( await reaDocFun( 'groups/gro3/ownerClaim/current' ) )?.passedUids ).toEqual( { bob : true } );                                          // What: Pass Recorded. Why: Bob isn't asked again for this claim. How: This expects him in the passed map.
+	expect( await reaDocFun( 'accounts/alice/notices/offerLapsed-gro3' ) ).toBeUndefined();                                                           // What: No Claim Lapse Notice. Why: The absent owner has nothing to act on. How: This expects no notice for gro3.
 
 
 } );
@@ -215,6 +220,8 @@ test( "an inactive owner's group goes to the longest-standing active member with
 	await seeDocFun( 'groups/gro4/ownerClaim/current', { exhaustedAt : dayAgoFun( 31 ), offeredUid : null, passedUids : { carol : true } } ); // What: Reset Record Seed. Why: Everyone passed on gro4 31 days ago. How: This writes its record.
 	await seeDocFun( 'groups/gro5/ownerClaim/current', { exhaustedAt : dayAgoFun( 5 ), offeredUid : null, passedUids : { carol : true } } );  // What: Waiting Record Seed. Why: Everyone passed on gro5 5 days ago. How: This writes its record.
 
+	await tokSetFun( funEnvObj, 'erin', 'tok-erin' ); // What: Erin Token Seed. Why: The claim push is checked. How: This registers Erin's phone.
+
 	await runDayFun(); // What: Run Call. Why: The day's run moves each claim on. How: This starts it.
 
 	expect( ( await reaDocFun( 'groups/gro1' ) )?.pendingOwnerUid ).toBe( 'erin' );                                                                          // What: Erin Picked. Why: Dave is away and Bob has no free slot, so Erin, who joined before Carol, is next in line. How: This expects gro1's offer to name Erin.
@@ -225,6 +232,8 @@ test( "an inactive owner's group goes to the longest-standing active member with
 	expect( ( await reaDocFun( 'groups/gro3' ) )?.pendingOwnerUid ).toBeNull();                                                                              // What: All Passed Unoffered. Why: Nobody's left who hasn't passed. How: This expects gro3 left alone.
 	expect( ( await reaDocFun( 'groups/gro5' ) )?.pendingOwnerUid ).toBeNull();                                                                              // What: Waiting Unoffered. Why: Under 30 days since everyone passed. How: This expects gro5 left alone.
 	expect( ( ( await reaDocFun( 'groups/gro5/ownerClaim/current' ) )?.exhaustedAt as Timestamp ).toMillis() ).toBeLessThan( Date.now() - 4 * DAY_MIL_NUM ); // What: Wait Kept. Why: Rewriting the time on each run would put the reset off forever. How: This expects gro5's record still to carry its time from 5 days ago. // What: Type Assertion Note. Why: The seed wrote a timestamp there. How: The as reads it as one.
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-erin' ) ).toEqual( [ { body : "This group's owner has been away, and you've been asked to take it over.", title : 'Picnic' } ] ); // What: Claim Push. Why: Erin learns she's been asked to take over, through the change trigger reacting to the run's offer. How: This waits for her phone's push.
 
 
 } );

@@ -8,7 +8,8 @@ import { FieldPath   } from 'firebase-admin/firestore';        // What: Field Pa
 import { FIR_DAT_OBJ } from './setup.ts';                      // What: Firestore Database Object. Why: Groups, members, and accounts live in Firestore. How: This reads and writes them past the rules.
 import { FUN_OPT_OBJ } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: The schedule spreads them in.
 import { notBatFun   } from './notices.ts';                    // What: Notice Batch Function. Why: An owner whose offer lapsed is told. How: This adds their notice to a batch.
-import { onSchedule  } from 'firebase-functions/v2/scheduler'; // What: On Schedule. Why: The run happens once a day by itself. How: This registers a scheduled function.
+import { onSchedule  } from 'firebase-functions/v2/scheduler';
+import { pusSenFun   } from './push.ts'; // What: On Schedule. Why: The run happens once a day by itself. How: This registers a scheduled function.
 import { Timestamp   } from 'firebase-admin/firestore';        // What: Timestamp. Why: The run compares and stores times. How: This builds them from milliseconds.
 
 
@@ -78,7 +79,7 @@ const PAY_LOC_BOO = false;            // What: Paywall Locked Boolean. Why: A fr
  * clearing it in a transaction that rereads the group, so an offer replaced
  * or ended since the run's query is left alone. A lapsed claim offer marks
  * its member as having passed and tells nobody. Any other lapsed offer
- * leaves the owner a notice naming the member it went to.
+ * leaves the owner a notice naming the member it went to, and a push.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -146,6 +147,8 @@ const lapOffFun = async ( groRefObj : DocumentReference, cutMilNum : number ) : 
 	notBatFun( batWriObj, notSnaObj.get( 'ownerUid' ), 'offerLapsed', groRefObj.id, notSnaObj.get( 'name' ), notSnaObj.get( 'pendingOwnerUid' ) ); // What: Lapsed Notice Call. Why: The owner learns their offer ran out and can make another (Section 18). How: This leaves them a notice naming the member it went to.
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The notice has to land. How: This commits it.
+
+	await pusSenFun( notSnaObj.get( 'ownerUid' ), 'offerLapsed', notSnaObj.get( 'name' ) ); // What: Lapsed Push Call. Why: The owner is told at once too. How: This sends their push, best effort.
 
 
 };

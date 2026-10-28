@@ -7,10 +7,12 @@ import { deleteDoc                 } from 'firebase/firestore';           // Wha
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the right person was told, and nobody else. How: This asserts on what each read returns.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Notices and groups are read back. How: This reads one document.
-import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests write as the server would. How: This connects to the emulators.
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The removal and offer pushes are checked. How: This reads what reached a token. // What: Initialize Test Environment. Why: The tests write as the server would. How: This connects to the emulators.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed groups and memberships. How: This writes a document.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each kind of change is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: Join and offer times are Firestore timestamps. How: This builds them.
+import { Timestamp                 } from 'firebase/firestore';
+import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.           // What: Timestamp. Why: Join and offer times are Firestore timestamps. How: This builds them.
 import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: Every change the trigger watches is a group update. How: This updates a document.
 
 
@@ -176,11 +178,16 @@ test( 'a removed member is told, and the owner is told when the member offered t
 	await seeGroFun( 'gro1' ); // What: Removal Group Seed. Why: Carol is removed from this one. How: This writes it.
 	await seeGroFun( 'gro2' ); // What: Leave Group Seed. Why: Bob leaves this one. How: This writes it.
 
+	await tokSetFun( funEnvObj, 'alice', 'tok-alice' ); // What: Alice Token Seed. Why: The owner's offer push is checked. How: This registers Alice's phone.
+	await tokSetFun( funEnvObj, 'carol', 'tok-carol' ); // What: Carol Token Seed. Why: The removal push is checked. How: This registers Carol's phone.
+
 	await remDocFun( 'groups/gro1/members/carol' ); // What: Carol Membership Delete. Why: A removal ends the membership. How: This deletes Carol's.
 
 	await datDocFun( 'groups/gro1', { countedUid : 'carol', memberCount : 2, removedUids : { carol : true } } ); // What: Removal Update. Why: A removal blocks the member as the count falls for them. How: This writes the group as the removal leaves it.
 
 	await expect.poll( async () => ( await reaDocFun( 'accounts/carol/notices/removed-gro1' ) )?.kind ).toBe( 'removed' ); // What: Removal Notice. Why: Carol is told she was removed. How: This waits for her notice.
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toEqual( [ { body : 'You were removed from this group.', title : 'Picnic' } ] ); // What: Removal Push. Why: Carol is told at once too. How: This waits for her phone's push.
 
 	await remDocFun( 'accounts/carol/notices/removed-gro1' ); // What: Notice Dismiss Call. Why: Carol has read her notice. How: This deletes it.
 
@@ -191,7 +198,9 @@ test( 'a removed member is told, and the owner is told when the member offered t
 	await datDocFun( 'groups/gro2', { countedUid : 'bob', memberCount : 2 } ); // What: Leave Update. Why: A leave lowers the count for the member leaving. How: This writes the group as Bob's leave leaves it.
 
 	await expect.poll( async () => ( await reaDocFun( 'accounts/alice/notices/offerLeft-gro2' ) )?.otherUid ).toBe( 'bob' ); // What: Offer Left Notice. Why: Alice learns her offer ended with Bob gone. How: This waits for her notice naming him.
-	await expect.poll( async () => ( await reaDocFun( 'groups/gro2' ) )?.pendingOwnerUid ).toBeNull();                       // What: Stale Offer Cleared. Why: An offer to someone gone could never be accepted. How: This waits for the offer to be cleared.
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'The member you offered this group to left it.', title : 'Picnic' } ] ); // What: Offer Left Push. Why: Alice is told at once too. How: This waits for her phone's push.
+	await expect.poll( async () => ( await reaDocFun( 'groups/gro2' ) )?.pendingOwnerUid ).toBeNull();                                                          // What: Stale Offer Cleared. Why: An offer to someone gone could never be accepted. How: This waits for the offer to be cleared.
 
 	expect( await reaDocFun( 'accounts/carol/notices/removed-gro1' ) ).toBeUndefined(); // What: No Repeat Notice. Why: The rename didn't remove anyone, and the emulator runs triggers in order, so the rename's has run by now. How: This expects Carol's dismissed notice not written again.
 
@@ -224,9 +233,13 @@ test( 'the old owner is told of an acceptance', async () => { // What: Acceptanc
 
 	await seeGroFun( 'gro1' ); // What: Group Seed Call. Why: Bob accepts this one. How: This writes it.
 
+	await tokSetFun( funEnvObj, 'alice', 'tok-alice' ); // What: Alice Token Seed. Why: The old owner's push is checked. How: This registers Alice's phone.
+
 	await datDocFun( 'groups/gro1', { ownerUid : 'bob', pendingOfferedAt : null, pendingOwnerUid : null } ); // What: Accept Update. Why: An acceptance makes the member offered the group its owner. How: This writes the group as the acceptance leaves it.
 
 	await expect.poll( async () => ( await reaDocFun( 'accounts/alice/notices/offerAccepted-gro1' ) )?.otherUid ).toBe( 'bob' ); // What: Accepted Notice. Why: Alice learns the handover finished. How: This waits for her notice naming Bob.
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'The member you offered this group to accepted it.', title : 'Picnic' } ] ); // What: Accepted Push. Why: Alice is told at once too. How: This waits for her phone's push.
 
 
 } );
@@ -254,6 +267,24 @@ test( 'an accepted claim tells the old owner their group was claimed and ends th
 	await expect.poll( async () => ( await reaDocFun( 'groups/gro2' ) )?.pendingOwnerUid ).toBeNull(); // What: Stale Claim Offer Cleared. Why: An offer to someone gone could never be accepted. How: This waits for the offer to be cleared.
 
 	expect( await reaDocFun( 'accounts/alice/notices/offerLeft-gro2' ) ).toBeUndefined(); // What: No Leave Notice. Why: The absent owner never made the claim offer, and the trigger writes its notices before it clears an offer. How: This expects no notice for gro2.
+
+
+} );
+
+test( 'a new offer pushes the member offered the group, and a claim offer says it is one', async () => { // What: Offer Push Test. Why: The member offered a group learns of it at once, and a claim asks something different of them (Section 18). How: This makes an ordinary offer in one group and a claim offer in another, then reads the pushes to each phone.
+
+
+	await seeGroFun( 'gro1' ); // What: Offer Group Seed. Why: Carol is offered this one. How: This writes it.
+	await seeGroFun( 'gro2' ); // What: Claim Group Seed. Why: Carol is offered this one as a claim. How: This writes it.
+
+	await tokSetFun( funEnvObj, 'carol', 'tok-carol' ); // What: Carol Token Seed. Why: Carol's pushes are checked. How: This registers her phone.
+
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), 'groups/gro2/ownerClaim/current' ), { exhaustedAt : null, offeredUid : 'carol', passedUids : {} } ) ); // What: Claim Record Seed. Why: The daily run writes the record with its offer. How: This writes gro2's record naming Carol.
+
+	await datDocFun( 'groups/gro1', { pendingOfferedAt : Timestamp.now(), pendingOwnerUid : 'carol' } ); // What: Offer Update. Why: The owner offers gro1 to Carol. How: This writes the new offer.
+	await datDocFun( 'groups/gro2', { pendingOfferedAt : Timestamp.now(), pendingOwnerUid : 'carol' } ); // What: Claim Offer Update. Why: The run offers gro2 to Carol. How: This writes the new offer.
+
+	await expect.poll( async () => ( await pusLisFun( funEnvObj, 'tok-carol' ) ).map( ( pusObj ) => pusObj.body ).sort() ).toEqual( [ "This group's owner has been away, and you've been asked to take it over.", "You've been offered ownership of this group." ] ); // What: Offer Pushes. Why: Carol hears of each offer, the claim told apart. How: This waits for both pushes to her phone.
 
 
 } );

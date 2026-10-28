@@ -10,13 +10,15 @@ import { expect                    } from '@playwright/test';             // Wha
 import { get                       } from 'firebase/database';            // What: Get. Why: The group's Realtime Database data is read back. How: This reads a location once.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Documents are read back after the call. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests seed and read the emulators past their rules, as the server would. How: This connects to them.
-import { listAll                   } from 'firebase/storage';             // What: List All. Why: The group's history transfers are checked for. How: This lists a folder's files.
+import { listAll                   } from 'firebase/storage';
+import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The deletion push is checked. How: This reads what reached a token.             // What: List All. Why: The group's history transfers are checked for. How: This lists a folder's files.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Every Realtime Database read and write names a location. How: This builds a reference.
 import { set                       } from 'firebase/database';            // What: Set. Why: The tests seed the group's chat, presence, and mirror. How: This writes a location.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed the group's documents. How: This writes a document.
 import { ref as stoRefFun          } from 'firebase/storage';             // What: Storage Ref Function. Why: Storage's ref shares its name with the Realtime Database's. How: This imports it under its own name to build a file reference.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the deletion is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
+import { Timestamp                 } from 'firebase/firestore';
+import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
 import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed a history transfer. How: This uploads a file.
 
 
@@ -216,20 +218,25 @@ test( 'the owner deletes a group whole, freeing their slot and leaving each othe
 
 	await seeGroFun(); // What: Group Seed Call. Why: There has to be a full group to delete. How: This writes one.
 
+	await tokSetFun( funEnvObj, aliCalObj.uidValStr, 'tok-alice' ); // What: Alice Token Seed. Why: The owner gets no push of her own deletion. How: This registers Alice's phone.
+	await tokSetFun( funEnvObj, bobCalObj.uidValStr, 'tok-bob' );   // What: Bob Token Seed. Why: The member's push is checked. How: This registers Bob's phone.
+
 	await aliCalObj.calValFun( { groupId : 'gro1' } ); // What: Delete Call. Why: The owner deletes the group. How: This calls the function as Alice.
 
-	expect( await reaDocFun( 'groups/gro1' ) ).toBeUndefined();                                                    // What: Group Gone. Why: The group itself is deleted. How: This expects no document.
-	expect( await reaDocFun( `groups/gro1/members/${ bobCalObj.uidValStr }` ) ).toBeUndefined();                   // What: Membership Gone. Why: Nobody keeps access. How: This expects Bob's member document gone.
-	expect( await reaDocFun( 'groups/gro1/events/eve1/assignments/ite1' ) ).toBeUndefined();                       // What: Item Gone. Why: Collections nested under the group go too. How: This expects the item gone.
-	expect( await reaDocFun( 'groups/gro1/joinRequests/carol' ) ).toBeUndefined();                                 // What: Join Request Gone. Why: A pending request has nothing left to join. How: This expects Carol's gone.
-	expect( await reaDocFun( 'invites/tok1' ) ).toBeUndefined();                                                   // What: Invite Gone. Why: The link opens nothing. How: This expects the invite gone.
-	expect( ( await reaDocFun( `accounts/${ aliCalObj.uidValStr }` ) )?.ownedGroups ).toEqual( {} );               // What: Owner Slot Freed. Why: The owner can start a new group. How: This expects gro1 gone from Alice's owned map.
-	expect( ( await reaDocFun( `accounts/${ bobCalObj.uidValStr }` ) )?.memberGroups ).toEqual( { gro2 : true } ); // What: Member Slot Freed. Why: Only the deleted group leaves Bob's account. How: This expects gro2 alone in his member map.
+	expect( await reaDocFun( 'groups/gro1' ) ).toBeUndefined();                                                                    // What: Group Gone. Why: The group itself is deleted. How: This expects no document.
+	expect( await reaDocFun( `groups/gro1/members/${ bobCalObj.uidValStr }` ) ).toBeUndefined();                                   // What: Membership Gone. Why: Nobody keeps access. How: This expects Bob's member document gone.
+	expect( await reaDocFun( 'groups/gro1/events/eve1/assignments/ite1' ) ).toBeUndefined();                                       // What: Item Gone. Why: Collections nested under the group go too. How: This expects the item gone.
+	expect( await reaDocFun( 'groups/gro1/joinRequests/carol' ) ).toBeUndefined();                                                 // What: Join Request Gone. Why: A pending request has nothing left to join. How: This expects Carol's gone.
+	expect( await reaDocFun( 'invites/tok1' ) ).toBeUndefined();                                                                   // What: Invite Gone. Why: The link opens nothing. How: This expects the invite gone.
+	expect( ( await reaDocFun( `accounts/${ aliCalObj.uidValStr }` ) )?.ownedGroups ).toEqual( {} );                               // What: Owner Slot Freed. Why: The owner can start a new group. How: This expects gro1 gone from Alice's owned map.
+	expect( ( await reaDocFun( `accounts/${ bobCalObj.uidValStr }` ) )?.memberGroups ).toEqual( { gro2 : true } );                 // What: Member Slot Freed. Why: Only the deleted group leaves Bob's account. How: This expects gro2 alone in his member map.
 	expect( await reaDocFun( `accounts/${ bobCalObj.uidValStr }/notices/groupDeleted-gro1` ) ).toMatchObject( { groupId : 'gro1', groupName : 'Picnic', kind : 'groupDeleted' } ); // What: Member Notice. Why: Bob is told the group was deleted, by name. How: This expects his notice.
-	expect( await reaDocFun( `accounts/${ aliCalObj.uidValStr }/notices/groupDeleted-gro1` ) ).toBeUndefined();    // What: No Owner Notice. Why: The owner deleted it themselves. How: This expects Alice has none.
-	expect( await reaDbsFun( 'chats/gro1' ) ).toBeNull();                                                          // What: Chat Gone. Why: The group's messages go. How: This expects its chat empty.
-	expect( await reaDbsFun( 'presence/gro1' ) ).toBeNull();                                                       // What: Presence Gone. Why: Nobody is online in a deleted group. How: This expects its presence empty.
-	expect( await reaDbsFun( 'chats/gro2' ) ).not.toBeNull();                                                      // What: Other Chat Kept. Why: Only the deleted group's data goes. How: This expects gro2's chat still there.
+	expect( await reaDocFun( `accounts/${ aliCalObj.uidValStr }/notices/groupDeleted-gro1` ) ).toBeUndefined();                    // What: No Owner Notice. Why: The owner deleted it themselves. How: This expects Alice has none.
+	expect( await pusLisFun( funEnvObj, 'tok-bob' ) ).toEqual( [ { body : 'The owner deleted this group.', title : 'Picnic' } ] ); // What: Member Push. Why: Bob is told at once too. How: This expects his phone's push.
+	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [] );                                                             // What: No Owner Push. Why: The owner deleted it themselves. How: This expects none to Alice's phone.
+	expect( await reaDbsFun( 'chats/gro1' ) ).toBeNull();                                                                          // What: Chat Gone. Why: The group's messages go. How: This expects its chat empty.
+	expect( await reaDbsFun( 'presence/gro1' ) ).toBeNull();                                                                       // What: Presence Gone. Why: Nobody is online in a deleted group. How: This expects its presence empty.
+	expect( await reaDbsFun( 'chats/gro2' ) ).not.toBeNull();                                                                      // What: Other Chat Kept. Why: Only the deleted group's data goes. How: This expects gro2's chat still there.
 
 	await expect.poll( () => reaDbsFun( 'mirrors/gro1' ) ).toBeNull(); // What: Mirror Gone. Why: The rules' copy of the membership goes too, and the mirror's own triggers run after the deletion. How: This waits for it to be empty.
 

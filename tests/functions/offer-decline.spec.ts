@@ -8,10 +8,12 @@ import { deleteApp                 } from 'firebase/app';                 // Wha
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the offer and the owner's notice are as they should be. How: This asserts on each call and read.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: The group and the notice are read back. How: This reads one document.
-import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests seed and read Firestore past its rules. How: This connects to the emulator.
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The owner's decline push is checked. How: This reads what reached a token. // What: Initialize Test Environment. Why: The tests seed and read Firestore past its rules. How: This connects to the emulator.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed the group. How: This writes a document.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of a decline is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: Join and offer times are Firestore timestamps. How: This builds them.
+import { Timestamp                 } from 'firebase/firestore';
+import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.           // What: Timestamp. Why: Join and offer times are Firestore timestamps. How: This builds them.
 
 
 import type { CalRecTyp            } from '../support/callers.ts';        // What: Caller Record Type. Why: The suite keeps its callers. How: This types them.
@@ -142,10 +144,13 @@ test( 'the member offered the group declines it, which clears the offer and tell
 
 	await seeGroFun(); // What: Group Seed Call. Why: Bob needs a standing offer to decline. How: This writes the group.
 
+	await tokSetFun( funEnvObj, aliCalObj.uidValStr, 'tok-alice' ); // What: Alice Token Seed. Why: The owner's push is checked. How: This registers Alice's phone.
+
 	await bobCalObj.calValFun( { groupId : 'gro1' } ); // What: Decline Call. Why: Bob turns the offer down. How: This calls the function as Bob.
 
 	expect( await reaDocFun( 'groups/gro1' ) ).toMatchObject( { pendingOfferedAt : null, pendingOwnerUid : null } );                                                                               // What: Offer Cleared. Why: A declined offer is used up. How: This expects both offer fields cleared.
 	expect( await reaDocFun( `accounts/${ aliCalObj.uidValStr }/notices/offerDeclined-gro1` ) ).toMatchObject( { groupName : 'Picnic', kind : 'offerDeclined', otherUid : bobCalObj.uidValStr } ); // What: Owner Notice. Why: Alice learns who declined, and in which group. How: This expects her notice naming Bob.
+	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'The member you offered this group to declined it.', title : 'Picnic' } ] );                                           // What: Owner Push. Why: Alice is told at once too. How: This expects her phone's push.
 
 
 } );
