@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (history requests keyed by the asker's UID, with
+Last updated: 2026-10-28 (chat's waiting-on list, the membership mirror,
+and the Realtime Database rules for chat and presence, in Sections 4, 5,
+11.7, 11.8, 11.10, and 14; history requests keyed by the asker's UID, with
 their rules, in Section 11.9, completing the Firestore rules noted in
 Section 14; location sharing's window, expiry, encrypted
 arrived flag, and rules in Sections 5, 10, and 11.4); 2026-10-27 (events as one encrypted bundle with time bounds,
@@ -209,7 +211,8 @@ from Spark's 100 to 200,000.
 | Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
 | Events | Firestore | Under the owning group |
 | Notes / task-assignments | Firestore | Under the owning event; single-owner field per claimable item |
-| Chat messages | RTDB | Under the owning group; ack-map pattern, see Section 5 |
+| Chat messages | RTDB | Under the owning conversation, each with a waiting-on list of who hasn't received it yet; see Sections 5 and 11.7 |
+| Membership mirror | RTDB | `/mirrors/{conversationId}`, written only by a Cloud Function, so the RTDB rules can check membership; see Section 11.7 |
 | Live location | Firestore | One doc per user per group, TTL-expired; see Section 11.4 for why this moved off RTDB |
 | Presence | RTDB | Standard `onDisconnect()` pattern |
 
@@ -285,21 +288,22 @@ out to be too short for a given group, once it's gone, it's gone.
 
 ### Chat
 Strictly sync-based, not time-based, with these refinements:
-- A message's "has everyone received this" check is evaluated against
-  the recipients snapshot taken at send time (`recipientUids`, Section
-  11.7), so a member who joins later is never waited on. A member who
-  leaves or is removed is dropped from the pending-ack list, so they
-  can't block cleanup after they're gone.
+- A message's "has everyone received this" check reads its waiting-on
+  list (`waitingOn`, Section 11.7), filled at send time with every other
+  member, so a member who joins later is never waited on. Each member
+  takes themselves off the list once their device has the message, and a
+  member who leaves or is removed is taken off by anyone, so they can't
+  block cleanup after they're gone.
 - **Multi-device is explicitly out of scope** (see Section 8): the app
   is single-device per user, so "delivered" means delivered to that one
   device, no cross-device history backfill is attempted.
 - A safety-valve max-retention TTL exists as a backstop for a message
   stuck waiting on a member whose device never comes back online
   (uninstalled, abandoned). **Resolved**: defaults to 30 days, and is a
-  per-group setting the creator can adjust between a 7-day floor and a
+  per-group setting the owner can adjust between a 7-day floor and a
   180-day ceiling, rather than one fixed global number. Stored as
   `chatTtlDays` on `/groups/{groupId}` (Section 11.2), checked by every
-  client's own opportunistic ack/TTL sweep (Section 11.7) against that
+  client's own opportunistic cleanup sweep (Section 11.7) against that
   group's configured value instead of a hardcoded constant. Changing it
   only affects future enforcement, it doesn't retroactively rescue
   anything already deleted under a prior value.
@@ -337,7 +341,7 @@ moment they leave) and a long-term recurring user (their own device
 keeps full history); avoids per-operation cost blowup by not keeping a
 permanent server-side archive at all.
 **Cons**: meaningfully more implementation complexity than a simple
-time-based expiry (ack-tracking, live-membership checks, transaction-safe
+time-based expiry (delivery tracking, a membership mirror, transaction-safe
 deletion); an inactive-but-still-a-member device can delay cleanup of a
 message until the TTL backstop kicks in; a user who loses their device
 without linking a recovery credential loses their entire local history
@@ -748,7 +752,7 @@ different names.
 | `removedUids` | plaintext map `{ uid: true }` | Checked by security rules to block redemption by a specific identity; low write-frequency, so a map field (not a subcollection) is fine here. |
 | `memberCount` | plaintext number | How many member docs the group has, since rules can't count documents. Moves by exactly one in the same batch as each join, leave, and removal, and the rules check it against the member cap (Section 18). |
 | `countedUid` | plaintext | The UID whose join, leave, or removal the last `memberCount` change counted, starting as the creator (decided 2026-10-25). Rules can't see which member doc a batch creates or deletes, so the count may change only when the member doc for this UID is created or deleted in the same batch. Without it, any member could raise the count to the cap and block every join. |
-| `chatTtlDays` | plaintext, creator-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic ack/TTL check (11.7) for this group's chat instead of a hardcoded constant. |
+| `chatTtlDays` | plaintext, owner-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic cleanup check (11.7), through the membership mirror there for this group's chat instead of a hardcoded constant. |
 
 **Exception to "encrypt all content"**: the group's own name is the one
 piece of content proposed to stay plaintext, not encrypted like
@@ -763,7 +767,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 
 | Field | Type | Notes |
 |---|---|---|
-| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.7. |
+| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, through the membership mirror, see 11.7. |
 | `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Absent until the member writes it, right after the group is created or their join is approved. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
@@ -895,39 +899,65 @@ only kind of conversation is a group's own chat.
 
 | Field | Type | Notes |
 |---|---|---|
-| `senderUid` | plaintext | Routing metadata. |
-| `sentAt` | plaintext | Ordering, and the TTL-safety-valve check below. |
-| `ciphertext` / `iv` | ciphertext | Message content. |
-| `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with the join-time cutoff below) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
-| `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own UID in via a targeted field-path update on sync. |
+| `senderUid` | plaintext | Routing metadata. Always the sender's own UID. |
+| `sentAt` | plaintext number | The server's time when it was sent (milliseconds), for ordering, the join-time cutoff, and the TTL safety valve below. |
+| `ciphertext` / `iv` | base64 strings | Message content, AES-GCM under the group key. The IV is 12 bytes (16 base64 characters), and the ciphertext holds 1 to 2,000 characters (Section 11.10) at 3 bytes each plus the 16-byte tag, so at most 8,024 base64 characters. |
+| `waitingOn` | plaintext map `{ uid: true }` | Who hasn't received the message yet (decided 2026-10-28, replacing a recipients snapshot plus an acknowledgement map): the sender lists every other member, so a member who joins later is never on it, and each member deletes their own entry once their device has the message. RTDB drops an empty map, so a message no one is waiting on has no `waitingOn` at all. |
+
+**The membership mirror** (decided 2026-10-28): RTDB's rules can't read
+Firestore, so a Cloud Function copies each group's membership into
+`/mirrors/{conversationId}` whenever it changes: `members`, a map of each
+member's UID to their `joinedAt` in milliseconds, and the group's
+`chatTtlDays`. Clients can't read or write it. A group's chat uses the group
+ID as its conversation ID, so presence (11.8) reads the same mirror. A
+member who has just joined or left may meet the old membership for the
+moment the function takes to run.
+
+**Rules** (`database.rules.json`, decided 2026-10-28):
+- **Sending**: a member creates a message with all four fields above and
+  nothing else, as themselves, stamped with the server's time. Messages are
+  never edited.
+- **Reading**: a member reads only through a query ordered by `sentAt` that
+  starts exactly at their own `joinedAt` from the mirror, so nobody reads
+  chat from before they joined. The rules can only compare where a query
+  starts for equality (measured in the emulator, which refused every
+  ordering comparison), so the client starts its query at its join time
+  rather than anywhere later.
+- **Waiting-on entries**: each one is `true` for a current member. A member
+  deletes their own entry, and any member deletes the entry of someone no
+  longer in the group. Nothing else changes them.
 
 **Deletion, still opportunistic and client-triggered** (no Cloud
-Function, matching the rest of the design): whichever client is already
-reading/acking a message checks two conditions and deletes if either is
-true: (a) `recipientUids` minus anyone since removed from the group
-minus `ackedBy` is empty, or (b) `sentAt` is older than that group's own
-`chatTtlDays` (Section 5, default 30, creator-adjustable 7-180, stored on
-`/groups/{groupId}`, Section 11.2). RTDB has no native TTL, so this
-reuses the same ack-checking codepath rather than needing separate
-infrastructure for the safety valve.
+Function): whichever client is already reading a message deletes it once
+either is true, which the rules check: (a) its `waitingOn` is empty, or (b)
+its `sentAt` is older than the group's own `chatTtlDays` (Section 5, default
+30, owner-adjustable 7-180), read from the mirror. RTDB has no native TTL,
+so this reuses the same cleanup codepath rather than needing separate
+infrastructure for the safety valve. The rules can't check that a sender
+listed every other member, so a sender who leaves someone off only shortens
+how long that message waits, and the history requests in 11.9 cover anyone
+who missed it.
 
 **Resolved** (originally an open question, settled via 11.9): a member
 who joins after a message was sent does **not** automatically see it,
-the client only queries/subscribes to messages with
-`sentAt >= their own joinedAt`. Keeps chat consistent with "not a
-permanent archive" rather than showing new joiners a partial, arbitrary
-slice of not-yet-deleted backlog. This does NOT apply to events/notes,
-those are persistent Firestore documents a new joiner should see in
-full, matching your original description of new members "syncing
-whatever information was already there for that group." A new joiner
-who specifically wants older chat context can request it explicitly,
-see 11.9.
+since the read rule above only lets them query from their own `joinedAt`.
+Keeps chat consistent with "not a permanent archive" rather than showing
+new joiners a partial, arbitrary slice of not-yet-deleted backlog. This
+does NOT apply to events/notes, those are persistent Firestore documents a
+new joiner should see in full, matching your original description of new
+members "syncing whatever information was already there for that group." A
+new joiner who specifically wants older chat context can request it
+explicitly, see 11.9.
 
 ### 11.8 RTDB: `/presence/{groupId}/{uid}`
 
 | Field | Type | Notes |
 |---|---|---|
 | `online` | plaintext boolean | Set `true` on connect; `onDisconnect()` clears it automatically. Standard RTDB presence pattern, no Firestore equivalent exists for this, which is why presence is the one thing staying in RTDB alongside chat. |
+
+**Rules** (decided 2026-10-28): members of the group, by the membership
+mirror (11.7), read its presence, and each member writes only their own
+entry, holding nothing but `online`.
 
 ### 11.9 Peer-Assisted History Sync Requests
 
@@ -1143,8 +1173,10 @@ person types usually passes. The rules check every plaintext field
 directly. The display name, events, and items are encrypted, so the app
 checks them before encrypting and the rules can only cap each ciphertext's
 size, at 3 bytes per character plus the 16-byte tag (Sections 11.3 and
-11.5). The event and item rows were decided 2026-10-27. Chat gets its limits
-when it's built.
+11.5). The event and item rows were decided 2026-10-27. A chat message holds
+1 to 2,000 characters (decided 2026-10-28), which the rules cap at its
+ciphertext's size (Section 11.7); the characters it allows are decided with
+the chat screen.
 
 ### 11.11 Untrusted Text And Paths
 
@@ -1319,16 +1351,19 @@ the Blaze change.
   and abuse (Section 15).
 
 **Infrastructure, still open**:
-- Security rules for RTDB and Storage, written and tested against the
-  emulator, with a walkthrough of each rule as it's written, as the
-  Firestore rules were. `firestore.rules` covers every collection in
-  Section 11 as of 2026-10-28, proven by the rules suite in `tests/rules/`
-  (`npm run test:rules`), which runs against the Firestore emulator that
+- Security rules for Storage, written and tested against the emulator, with
+  a walkthrough of each rule as it's written, as the database rules were.
+  `firestore.rules` covers every collection in Section 11, and
+  `database.rules.json` covers chat and presence, both as of 2026-10-28,
+  proven by the rules suite in `tests/rules/` (`npm run test:rules`), which
+  runs against the Firestore and Realtime Database emulators that
   `firebase.json` sets up (2026-10-25).
 - The Cloud Functions decided with the transfer rules (2026-10-26):
   deleting a group (Section 9), the notices and pushes for removals,
   deletions, and offers (Section 11.1), and the daily run that lapses
   offers and offers an inactive owner's group to a member (Section 18).
+- The Cloud Function that keeps each group's membership mirror current for
+  the RTDB rules (Section 11.7, decided 2026-10-28).
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM
@@ -1545,7 +1580,7 @@ paywall is switched on before launch.
   meets the paywall just for being invited; one who does sees why when
   the join is blocked.
 - **A group's member cap follows its owner's status**: 50 if the owner is
-  paid, 20 otherwise. The chat recipient list and ack map (Section 11.7)
+  paid, 20 otherwise. Each message's waiting-on list (Section 11.7)
   grow with the group, and every joiner needs the key wrapped for them,
   so smaller groups are cheaper too.
 - **Caps start conservative** because raising one later is one number in
@@ -1651,7 +1686,7 @@ designed properly rather than rushed. It isn't a big architectural change,
 since it reuses chat:
 - **Built now**: chat is keyed by a conversation ID rather than the group
   ID (`/chats/{conversationId}`), with a group's own chat as one kind of
-  conversation. Everything in Section 11.7 (ack map, cleanup, TTL) then
+  conversation. Everything in Section 11.7 (waiting-on list, cleanup, TTL) then
   works for a two-person conversation unchanged, and adding private
   messages later needs no change to how group chat is stored.
 - **Encryption needs no new exchange**: each user already publishes an

@@ -8,10 +8,10 @@
 		"dev": "vite",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"test": "firebase emulators:exec --only firestore --project demo-come-hang \"playwright test --config tests/playwright.config.ts\"",
+		"test": "firebase emulators:exec --only firestore,database --project demo-come-hang \"playwright test --config tests/playwright.config.ts\"",
 		"test:accessibility": "playwright test --config tests/playwright.config.ts --project \"accessibility-*\"",
 		"test:interaction": "playwright test --config tests/playwright.config.ts --project \"interaction-*\"",
-		"test:rules": "firebase emulators:exec --only firestore --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project rules\"",
+		"test:rules": "firebase emulators:exec --only firestore,database --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project rules\"",
 		"test:security": "playwright test --config tests/playwright.config.ts --project \"security-*\"",
 		"typecheck": "tsc -b"
 	},
