@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (the app's Firebase services and identity
+Last updated: 2026-10-28 (the group key wrapping scheme and extractable
+group keys, in Sections 6 and 14; the app's Firebase services and identity
 bootstrap, in Sections 8 and 14; push tokens, their rules, and the pushes for
 notices and offers, in Sections 4, 9, 11.1, and 14; the daily run, its server-only claim record, and
 the lapse and claim notices, in Sections 4, 11.1, 14, and 18; declines through a callable and the removal and
@@ -384,10 +385,23 @@ member or full metadata privacy.
   binary value (a public key, an IV, ciphertext, a wrapped key) is stored
   as Firestore bytes rather than text, so the security rules can check its
   exact size. A public key is the raw 65-byte point WebCrypto exports. A
-  wrapped group key is one opaque bytes field of at most 256 bytes, which
-  leaves the exact wrapping scheme (how the joiner derives the same
-  unwrapping key as the approver) to be settled when the encryption is
-  built. An AES-GCM IV is 12 bytes.
+  wrapped group key is one opaque bytes field of at most 256 bytes. An
+  AES-GCM IV is 12 bytes.
+- **Wrapping a group key** (decided 2026-10-28, `src/platform/crypto.ts`):
+  each wrap uses a one-time key. The wrapper makes a throwaway ECDH P-256
+  pair, derives a key-wrapping key from its private half and the member's
+  published public key through HKDF-SHA-256, bound to both public keys,
+  and wraps the group key with AES-KW. The member document stores the
+  throwaway public key followed by the wrapped key, 105 bytes. Unwrapping
+  needs only the member's own private key, so a wrap keeps working whoever
+  made it and whatever later happens to their key. The group key itself is
+  AES-GCM, 256 bits, with a fresh random IV for every encryption.
+- **Group keys stay extractable** (decided 2026-10-28): any member may
+  approve a join and wrap the group key for the joiner (Section 17), and
+  WebCrypto only wraps an extractable key, so a member's copy of a group
+  key can be read by script on their device. The identity's ECDH private
+  key, which every wrap for this member depends on, is the one key kept
+  non-extractable.
 
 **Pros**
 - Firebase itself can never read actual content, satisfying "not sent in
@@ -1365,10 +1379,11 @@ the Blaze change.
   the build tooling and the Cloud Functions runtime, not an app server.
 - Local storage: raw IndexedDB, as in ease-my-life, with no wrapper
   library. It covers everything the client keeps:
-  - The ECDH private key and unwrapped group keys, stored as
-    non-extractable `CryptoKey` objects, which IndexedDB can hold
-    directly (localStorage can't), so the raw key bytes are never
-    readable by script.
+  - The ECDH private key and unwrapped group keys, stored as `CryptoKey`
+    objects, which IndexedDB can hold directly (localStorage can't). The
+    private key is non-extractable, so its bytes are never readable by
+    script, while group keys stay extractable so any member can wrap one
+    for a joiner (Section 6).
   - The decrypted chat history. RTDB's web SDK keeps no offline copy on
     disk, so this cache is ours to keep, as Section 5 already assumes.
   - Firestore's own offline cache uses IndexedDB too, managed by its SDK.
@@ -1408,7 +1423,7 @@ the Blaze change.
   `/users/{uid}`, and an empty `/accounts/{uid}`. Each step writes only
   what's missing, and a key pair lost while the sign-in survives is
   replaced and republished.
-- The browser suite in `tests/firebase/` (`npm run test:firebase`) checks
+- The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.
 

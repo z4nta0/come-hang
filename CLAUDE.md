@@ -57,7 +57,7 @@ npm run lint                 # ESLint across the repo
 npm run typecheck            # tsc -b, plus the Cloud Functions
 npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
-npm run test:firebase        # the app's Firebase code, in all three engines
+npm run test:client          # the app's own code, in all three engines
 npm run test:functions       # Cloud Functions, end to end in the emulators
 npm run test:interaction     # navigation and interaction feedback
 npm run test:rules           # Firestore, Realtime Database, and Storage rules
@@ -67,10 +67,10 @@ npm run test:security        # headers policy, build secrets, npm audit
 The suites start their own dev server on port 5200, and the security suite
 a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
-`npm test`, `npm run test:rules`, and `npm run test:firebase` run inside
+`npm test`, `npm run test:rules`, and `npm run test:client` run inside
 `firebase emulators:exec`, which starts the Firestore emulator on 8200
 (ease-my-life's uses 8080), the Realtime Database emulator on 8210, the
-Storage emulator on 8220, and for the Firebase suite the Auth emulator on
+Storage emulator on 8220, and for the client suite the Auth emulator on
 8240, under
 the `demo-come-hang` project, which can't reach a real one. The Storage
 emulator's rules read that project's Firestore alone, so the Storage spec
