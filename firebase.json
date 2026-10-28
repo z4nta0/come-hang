@@ -3,6 +3,9 @@
 		"rules": "database.rules.json"
 	},
 	"emulators": {
+		"auth": {
+			"port": 8240
+		},
 		"database": {
 			"port": 8210
 		},

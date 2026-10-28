@@ -95,8 +95,8 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 
 		}) ) ),
 
-		{ name : 'functions', testMatch : 'functions/**/*.spec.ts' }, // What: Functions Project. Why: The Cloud Functions are checked end to end in the local emulators, which test:functions starts around it apart from the other suites, since the functions write data the other suites clear, with no browser, so the project runs once. How: This runs every spec in tests/functions.
-		{ name : 'rules',     testMatch : 'rules/**/*.spec.ts' }      // What: Rules Project. Why: The security rules are checked in the local emulators, which test:rules starts around it, with no browser, so the project runs once rather than in each engine. How: This runs every spec in tests/rules.
+		{ name : 'functions', testMatch : 'functions/**/*.spec.ts', workers : 1 }, // What: Functions Project. Why: The Cloud Functions are checked end to end in the local emulators, which test:functions starts around it apart from the other suites, since the functions write data the other suites clear, with no browser, so the project runs once, one spec at a time, since each spec clears the data the next one's triggers write. How: This runs every spec in tests/functions.
+		{ name : 'rules',     testMatch : 'rules/**/*.spec.ts'                  }  // What: Rules Project. Why: The security rules are checked in the local emulators, which test:rules starts around it, with no browser, so the project runs once rather than in each engine. How: This runs every spec in tests/rules.
 
 
 	],

@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (every service in us-central1, the Cloud
+Last updated: 2026-10-28 (group deletion built as a callable and notice IDs,
+in Sections 9, 11.1, and 14; every service in us-central1, the Cloud
 Functions' layout, and the membership mirror's functions, in Sections 11.7
 and 14; the Storage rules for history transfers, their
 25 MB cap, and the bucket's 15-day cleanup, in Sections 11.9 and 14; chat's waiting-on list, the membership mirror,
@@ -580,7 +581,16 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   a push. No client rule allows deleting a group document. The function
   works in batches and finishes the job if it's retried, so a failure
   partway is completed rather than left half done, and the group stops
-  being readable to anyone as soon as its first batch lands.
+  being readable to anyone as soon as its first batch lands. Built
+  2026-10-28 as `delGroFun` in `functions/src/group-deletion.ts`, called
+  with `{ groupId }`: it refuses a caller with no sign-in, an ID that isn't
+  in Firestore's own ID form (so it can't name another path), and anyone
+  but the owner, and does nothing once the group document is gone. Its
+  first batch deletes every member doc, frees every account's slot, writes
+  the notices, and deletes the working invite. Then go the group's other
+  collections, its chat, presence, and mirror, and its history transfers,
+  and the group document goes last, so a retry still passes the owner
+  check. The pushes come once push tokens are designed (Section 14).
 - **Known, accepted limitation**: a removed user can bypass the
   `removedUids` block by clearing local app data (or opening the link in
   a different browser), which mints a brand-new anonymous UID never on
@@ -726,11 +736,13 @@ notices, which the rules enforce by allowing clients no writes, so a
 member can't forge one telling someone a group was deleted. Kinds: a group
 deleted, a removal, an ownership offer accepted, declined, lapsed, or
 ended by the person offered leaving, and ownership claimed from an
-inactive owner.
+inactive owner. A notice's ID is its kind and group, `<kind>-<groupId>`
+(decided 2026-10-28), so a retried function writes it once, and a later
+notice of the same kind about the same group replaces the earlier one.
 
 | Field | Type | Notes |
 |---|---|---|
-| `kind` | plaintext | Which of the kinds above this is, picking the message the app shows. |
+| `kind` | plaintext | Which of the kinds above this is, picking the message the app shows, such as `groupDeleted`. |
 | `groupId` | plaintext | The group it's about, which may no longer exist. |
 | `groupName` | plaintext | The group's name when it happened, so a deleted group can still be named. |
 | `otherUid` | plaintext, absent when there's none | The other person involved, such as who declined an offer, named in the app from the group's member docs while they're still readable. |
@@ -1393,12 +1405,16 @@ the Blaze change.
   fail a test when dropped, except the chat read rule's ordering check,
   which the emulator can't exercise, since it refuses an unindexed query
   that the live database would answer.
-- The membership mirror's functions are built (2026-10-28, Section 11.7).
-  Still to build, the Cloud Functions decided with the transfer rules
-  (2026-10-26):
+- The membership mirror's functions and group deletion are built
+  (2026-10-28, Sections 11.7 and 9). Still to build, the rest of the Cloud
+  Functions decided with the transfer rules (2026-10-26):
   deleting a group (Section 9), the notices and pushes for removals,
   deletions, and offers (Section 11.1), and the daily run that lapses
   offers and offers an inactive owner's group to a member (Section 18).
+- Where each device's push token (from FCM's `getToken()`) is stored, and
+  how a stale one is dropped, needed before any function sends a push: the
+  removal, deletion, and offer pushes, and the history request alerts in
+  Section 11.9. Until then those functions write their notices alone.
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM

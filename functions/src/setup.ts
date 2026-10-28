@@ -5,6 +5,7 @@
 
 import { getDatabase   } from 'firebase-admin/database';  // What: Get Database. Why: Functions write the Realtime Database's server-only data. How: This returns the default database instance.
 import { getFirestore  } from 'firebase-admin/firestore'; // What: Get Firestore. Why: Functions read the app's Firestore documents. How: This returns the default database.
+import { getStorage    } from 'firebase-admin/storage';   // What: Get Storage. Why: Functions delete files from Cloud Storage. How: This returns the Storage service.
 import { initializeApp } from 'firebase-admin/app';       // What: Initialize App. Why: The Admin SDK needs an app before any service. How: This sets one up from the environment Firebase provides.
 
 // #endregion Imports
@@ -48,6 +49,7 @@ initializeApp(); // What: App Initialize Call. Why: The services below need an a
 
 const FIR_DAT_OBJ = getFirestore(); // What: Firestore Database Object. Why: Functions read Firestore past its rules. How: This is the Admin SDK's Firestore.
 const REA_DAT_OBJ = getDatabase();  // What: Realtime Database Object. Why: Functions write the Realtime Database past its rules. How: This is the Admin SDK's Realtime Database.
+const STO_ADM_OBJ = getStorage();   // What: Storage Admin Object. Why: Functions delete files past the Storage rules. How: This is the Admin SDK's Storage, whose default bucket each caller opens.
 
 // #endregion Module State
 
@@ -55,7 +57,7 @@ const REA_DAT_OBJ = getDatabase();  // What: Realtime Database Object. Why: Func
 
 // #region Exports
 
-export { FIR_DAT_OBJ, FUN_OPT_OBJ, REA_DAT_OBJ }; // What: Named Exports. Why: Every function module reads the shared services and options. How: This exports all three.
+export { FIR_DAT_OBJ, FUN_OPT_OBJ, REA_DAT_OBJ, STO_ADM_OBJ }; // What: Named Exports. Why: Every function module reads the shared services and options. How: This exports the three services and the options.
 
 // #endregion Exports
 
