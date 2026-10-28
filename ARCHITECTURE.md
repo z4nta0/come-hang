@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (chat's waiting-on list, the membership mirror,
+Last updated: 2026-10-28 (the Storage rules for history transfers, their
+25 MB cap, and the bucket's 15-day cleanup, in Sections 11.9 and 14; chat's waiting-on list, the membership mirror,
 and the Realtime Database rules for chat and presence, in Sections 4, 5,
 11.7, 11.8, 11.10, and 14; history requests keyed by the asker's UID, with
 their rules, in Section 11.9, completing the Firestore rules noted in
@@ -986,7 +987,7 @@ chat.
 | Path | Service | Notes |
 |---|---|---|
 | `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification fires whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
-| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle of cached ciphertext envelopes, written only by whoever currently holds the claim. |
+| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle of cached ciphertext envelopes, keyed like the request it answers, written only by whoever currently holds the claim. One binary file of at most 25 MB (decided 2026-10-28), about 125,000 typical messages. |
 
 **Rules (decided 2026-10-28)**: a member files only their own request,
 pending and unclaimed, at the server's time. Any other member claims a
@@ -995,6 +996,18 @@ asker is still in the group, since history goes only to a current member.
 The claimant releases their claim at any time, and any member may release
 it once it's 30 minutes old. Only the asker marks a claimed request
 fulfilled or deletes their request, and a fulfilled one can't be reopened.
+
+**Storage rules (`storage.rules`, decided 2026-10-28)**: they read the
+request and the group's members from Firestore. Only the member holding a
+standing claim uploads the bundle, or replaces a failed attempt, and only
+while both they and the asker are still in the group. A bundle is one file
+typed as generic binary (`application/octet-stream`), 1 byte to 25 MB, with
+no custom metadata, since metadata would sit beside it unencrypted. Only the
+asker downloads it, while still a member. The asker deletes it, and the
+claimant may withdraw it while their claim stands. Nobody lists the folder.
+A bundle nobody collects is deleted by the bucket's own lifecycle setting
+15 days after upload, after its request has expired (decided 2026-10-28), so
+no Cloud Function is needed for it.
 
 **`kind` distinguishes the two cases, and the requester, not the
 fulfiller, sets the scope**:
@@ -1351,13 +1364,15 @@ the Blaze change.
   and abuse (Section 15).
 
 **Infrastructure, still open**:
-- Security rules for Storage, written and tested against the emulator, with
-  a walkthrough of each rule as it's written, as the database rules were.
-  `firestore.rules` covers every collection in Section 11, and
-  `database.rules.json` covers chat and presence, both as of 2026-10-28,
-  proven by the rules suite in `tests/rules/` (`npm run test:rules`), which
-  runs against the Firestore and Realtime Database emulators that
-  `firebase.json` sets up (2026-10-25).
+- The security rules are complete as of 2026-10-28: `firestore.rules`
+  covers every collection in Section 11, `database.rules.json` covers chat
+  and presence, and `storage.rules` covers history transfers, proven by the
+  rules suite in `tests/rules/` (`npm run test:rules`), which runs against
+  the Firestore, Realtime Database, and Storage emulators that
+  `firebase.json` sets up (2026-10-25). Every check in them was confirmed to
+  fail a test when dropped, except the chat read rule's ordering check,
+  which the emulator can't exercise, since it refuses an unindexed query
+  that the live database would answer.
 - The Cloud Functions decided with the transfer rules (2026-10-26):
   deleting a group (Section 9), the notices and pushes for removals,
   deletions, and offers (Section 11.1), and the daily run that lapses
@@ -1380,6 +1395,8 @@ the Blaze change.
 - [ ] Budget alerts and the automatic billing cutoff (Section 15), set up
       the same day Blaze is enabled, on every project.
 - [ ] Cloud Functions capped with `maxInstances`.
+- [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
+      after upload (Section 11.9).
 - [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
 - [ ] Authorized domains, API key restrictions, and CSP, per the hosting
       bullet above.

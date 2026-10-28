@@ -31,11 +31,12 @@ current decisions:
 
 Scaffolded: the app shell answering at one address, a placeholder home
 page, the global stylesheet, the accessibility, interaction, and security
-suites, and the Firebase Emulator harness with a rules suite.
-`firestore.rules` covers every Firestore collection in ARCHITECTURE.md's
-data model and `database.rules.json` covers chat and presence, each walked
-through with the user, and the Storage rules come next. No Firebase code in
-the app yet. Next steps are in ARCHITECTURE.md's Section 14.
+suites, and the Firebase Emulator harness with a rules suite. The security
+rules are complete, each walked through with the user: `firestore.rules`
+covers every Firestore collection in ARCHITECTURE.md's data model,
+`database.rules.json` covers chat and presence, and `storage.rules` covers
+history transfers. No Firebase code in the app yet. Next steps are in
+ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -52,7 +53,7 @@ npm run typecheck            # tsc -b
 npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
 npm run test:interaction     # navigation and interaction feedback
-npm run test:rules           # Firestore and Realtime Database rules, in the emulators
+npm run test:rules           # Firestore, Realtime Database, and Storage rules
 npm run test:security        # headers policy, build secrets, npm audit
 ```
 
@@ -60,9 +61,12 @@ The suites start their own dev server on port 5200, and the security suite
 a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
 `npm test` and `npm run test:rules` run inside `firebase emulators:exec`,
-which starts the Firestore emulator on 8200 (ease-my-life's uses 8080) and
-the Realtime Database emulator on 8210 under the `demo-come-hang` project,
-which can't reach a real one. The emulators need Java, 21 installed.
+which starts the Firestore emulator on 8200 (ease-my-life's uses 8080), the
+Realtime Database emulator on 8210, and the Storage emulator on 8220 under
+the `demo-come-hang` project, which can't reach a real one. The Storage
+emulator's rules read that project's Firestore alone, so the Storage spec
+seeds it, and the Firestore spec keeps its data under projects of its own.
+The emulators need Java, 21 installed.
 
 ## Project facts
 

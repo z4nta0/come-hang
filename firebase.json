@@ -10,11 +10,17 @@
 			"port": 8200
 		},
 		"singleProjectMode": true,
+		"storage": {
+			"port": 8220
+		},
 		"ui": {
 			"enabled": false
 		}
 	},
 	"firestore": {
 		"rules": "firestore.rules"
+	},
+	"storage": {
+		"rules": "storage.rules"
 	}
 }

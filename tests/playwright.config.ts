@@ -19,15 +19,15 @@ import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why
  * WebKit), one project per suite and engine, since a check that passes in one
  * engine proves nothing about the others. Chromium runs as Chrome's full
  * headless mode rather than Playwright's headless shell. The rules suite opens
- * no browser, checking the Firestore and Realtime Database security rules in
- * the Firebase Emulators on ports 8200 and 8210 instead, so it runs once. Each
- * suite is a folder under tests/, such as accessibility, which the pre-commit
- * check runs. Playwright starts the Vite dev server on port 5200, which every
- * browser suite but security opens, and a production build served by vite
- * preview on 5201, which the security suite opens, and stops both afterwards,
- * so a dev server already running on the usual 5173, or a sibling project's
- * suites on 5190 through 5199, are never touched. Reports and failure
- * screenshots land in tests/output, which git ignores.
+ * no browser, checking the Firestore, Realtime Database, and Storage security
+ * rules in the Firebase Emulators on ports 8200, 8210, and 8220 instead, so it
+ * runs once. Each suite is a folder under tests/, such as accessibility, which
+ * the pre-commit check runs. Playwright starts the Vite dev server on port
+ * 5200, which every browser suite but security opens, and a production build
+ * served by vite preview on 5201, which the security suite opens, and stops
+ * both afterwards, so a dev server already running on the usual 5173, or a
+ * sibling project's suites on 5190 through 5199, are never touched. Reports
+ * and failure screenshots land in tests/output, which git ignores.
  *
  * Sections:
  *  - Constants

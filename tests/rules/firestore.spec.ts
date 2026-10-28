@@ -1096,7 +1096,7 @@ test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one conn
 
 
 		firestore : { host : '127.0.0.1', port : 8200, rules : RUL_TEX_STR }, // What: Firestore Options. Why: The emulator has to check the real rules. How: This names its address, the port firebase.json gives it, and the rules file's text.
-		projectId : 'demo-come-hang'                                          // What: Project Identifier. Why: A demo project can never reach a real one. How: This names it, matching the project test:rules starts the emulator under.
+		projectId : 'demo-come-hang-firestore'                                // What: Project Identifier. Why: A demo project can never reach a real one, and demo-come-hang's own data belongs to the Storage spec, whose rules read that project's Firestore. How: This names a project of this spec's own.
 
 
 	});
