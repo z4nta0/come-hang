@@ -77,7 +77,7 @@ Realtime Database emulator on 8210, and the Storage emulator on 8220, under
 the `demo-come-hang` project, which can't reach a real one.
 `npm run test:client` builds the functions and runs in its own session,
 with the Auth emulator on 8240 and the Functions emulator on 8230 beside
-Firestore and the Realtime Database, since the app calls callables and the
+Firestore, the Realtime Database, and Storage, since the app calls callables and the
 triggers' notices are part of what it checks, and `npm test` runs it after
 the browser and rules suites. The Storage
 emulator's rules read that project's Firestore alone, so the Storage spec

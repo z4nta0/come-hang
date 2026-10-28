@@ -28,14 +28,14 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * members.spec.ts = Members Spec
  *
  * @summary
- * Checks the changes to a group's members and settings in a real browser,
- * in each engine, against the Emulator Suite, with the real security rules.
- * Each test starts from a group with two identities, the page's own as its
- * owner and a member who joined through a second browser context, and runs
- * the app's own modules in each page: listing and renaming members, marking
- * activity, leaving, removing, rotating the link, and changing the group's
- * settings. The tests read back what was written and decrypt names outside
- * the browser.
+ * Checks the changes to a group's members and settings in a real browser, in
+ * each engine, against the Emulator Suite, with the real security rules. Each
+ * test starts from a group with two identities, the page's own as its owner
+ * and a member who joined through a second browser context, and runs the app's
+ * own modules in each page: listing and renaming members, marking activity,
+ * leaving, removing, rotating the link, changing the group's settings, and
+ * deleting the group. The tests read back what was written and decrypt names
+ * outside the browser.
  *
  * Sections:
  *  - Constants
@@ -164,11 +164,13 @@ pagTesObj( 'activity is marked at most once a day, to the server time', async ( 
 
 
 
-pagTesObj( "a member leaves, freeing their slot and the device's key, while the owner cannot leave", async ( { page, secPagObj } ) => { // What: Leave Test. Why: Any member but the owner can always leave (Sections 9 and 18). How: This leaves as the member and checks the membership, count, account, and key, then tries as the owner.
+pagTesObj( "a member leaves, freeing their slot and the device's key, while the owner cannot leave", async ( { page, secPagObj } ) => { // What: Leave Test. Why: Any member but the owner can always leave (Sections 9 and 18). How: This loads the key on the member's device, leaves as the member, and checks the membership, count, account, and key, then tries as the owner.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a member to leave. How: This sets one up.
 
+
+	await keyRawFun( secPagObj, groIdeStr ); // What: Key Load Call. Why: The member's device has to hold the key for its deletion to show. How: This loads it from the member's wrap, keeping it on the device.
 
 	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'groLeaFun', groIdeStr ) ).toBeUndefined();                               // What: Leave Call. Why: The member leaves. How: This expects it to succeed.
 	expect( await runPagFun( page, MEM_MOD_STR, 'groLeaFun', groIdeStr ) ).toBe( 'error:Error' );                              // What: Owner Leave Refused. Why: The owner transfers the group first. How: This expects an Error.
@@ -235,6 +237,23 @@ pagTesObj( 'the owner rotates the link and changes the settings, which a bad val
 	expect( await runPagFun( page, GRO_MOD_STR, 'groSetFun', groIdeStr, 'Bad <name>', 30 ) ).toBe( 'error:RangeError' );            // What: Bad Name Refused. Why: A group name allows no angle brackets. How: This expects a RangeError.
 	expect( await runPagFun( secPagObj, GRO_MOD_STR, 'groSetFun', groIdeStr, 'Mine Now', 30 ) ).toBe( 'error:permission-denied' );  // What: Member Change Refused. Why: Only the owner changes the settings. How: This expects the rules to refuse it.
 	expect( await runPagFun( secPagObj, GRO_MOD_STR, 'invRotFun', groIdeStr ) ).toBe( 'error:permission-denied' );                  // What: Member Rotation Refused. Why: Only the owner rotates the link. How: This expects the rules to refuse it.
+
+
+} );
+
+pagTesObj( 'the owner deletes the group, telling the member and freeing both slots, which the member cannot do', async ( { page, secPagObj } ) => { // What: Deletion Test. Why: Only the owner deletes a group, and the members it vanishes for are told (Section 9). How: This tries a member's deletion, deletes as the owner, then checks the group, both accounts, the key, and the member's notice.
+
+
+	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
+
+
+	expect( await runPagFun( secPagObj, GRO_MOD_STR, 'groDelFun', groIdeStr ) ).toBe( 'error:functions/permission-denied' );                                              // What: Member Deletion Refused. Why: Only the owner deletes a group. How: This expects the function's refusal.
+	expect( await runPagFun( page, GRO_MOD_STR, 'groDelFun', groIdeStr ) ).toBeUndefined();                                                                               // What: Deletion Call. Why: The owner deletes the group. How: This expects the deletion to succeed.
+	expect( await runPagFun( page, '/src/platform/key-store.ts', 'keyGetFun', `group:${ groIdeStr }` ) ).toBeUndefined();                                                 // What: Key Forgotten. Why: A deleted group's key has no use on the device. How: This expects its record gone.
+	expect( await docReaFun( memEnvObj, `groups/${ groIdeStr }` ) ).toBeUndefined();                                                                                      // What: Group Gone. Why: The group is deleted. How: This expects no group document.
+	expect( await docReaFun( memEnvObj, `accounts/${ uidMemStr }` ) ).toMatchObject( { memberGroups : {} } );                                                             // What: Member Slot Freed. Why: The group no longer counts against the member. How: This expects an empty member map.
+	expect( await docReaFun( memEnvObj, `accounts/${ uidOwnStr }` ) ).toMatchObject( { ownedGroups : {} } );                                                              // What: Owner Slot Freed. Why: Deleting a group frees its owned slot (Section 18). How: This expects an empty owned map.
+	expect( await runPagFun( secPagObj, '/src/state/notices.ts', 'notLisFun' ) ).toMatchObject( [ { groIdeStr, groNamStr : 'Beach Day', kinValStr : 'groupDeleted' } ] ); // What: Member Told. Why: The group mustn't just vanish from the member's list. How: This expects the deletion notice.
 
 
 } );

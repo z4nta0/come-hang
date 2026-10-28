@@ -12,7 +12,9 @@ import { firGetFun       } from '../platform/firebase.ts';  // What: Firebase Ge
 import { getDoc          } from 'firebase/firestore';       // What: Get Doc. Why: A lost group key is recovered from the member document. How: This reads it.
 import { groKeyFun       } from '../platform/crypto.ts';    // What: Group Key Function. Why: Each new group has its own key. How: This makes one.
 import { groNamFun       } from '../core/text-limits.ts';   // What: Group Name Function. Why: A group name is checked before anything is written. How: This applies the limits.
+import { httpsCallable   } from 'firebase/functions';       // What: HTTPS Callable. Why: A group is deleted by a Cloud Function, since a big one won't fit one batch (Section 9). How: This calls it.
 import { ideEnsFun       } from './identity.ts';            // What: Identity Ensure Function. Why: Creating a group is a first group action. How: This makes sure the identity exists.
+import { keyDelFun       } from '../platform/key-store.ts'; // What: Key Delete Function. Why: A deleted group's key has no use on the device. How: This deletes it.
 import { keyGetFun       } from '../platform/key-store.ts'; // What: Key Get Function. Why: A group key is kept on the device. How: This reads it.
 import { keyPutFun       } from '../platform/key-store.ts'; // What: Key Put Function. Why: A group key is kept on the device. How: This stores it.
 import { perNamFun       } from '../core/text-limits.ts';   // What: Person Name Function. Why: The encrypted display name is checked by the app alone. How: This applies the limits.
@@ -42,7 +44,8 @@ import { writeBatch      } from 'firebase/firestore';       // What: Write Batch
  * group:{groupId}. A key missing from the device, such as after its storage
  * was cleared, is recovered from the member's own wrap and kept again. The
  * owner rotates the invite link, and renames the group or changes its chat
- * retention, each in one transaction that keeps the invite in step.
+ * retention, each in one transaction that keeps the invite in step, and
+ * deletes the group through a Cloud Function.
  *
  * Sections:
  *  - Helpers
@@ -157,6 +160,45 @@ const groCreFun = async ( groNamStr : string, perNamStr : string ) : Promise< st
 };
 
 // #endregion groCreFun
+
+
+
+// #region groDelFun
+
+/**
+ * groDelFun = Group Delete Function
+ *
+ * @summary
+ * Deletes a group as its owner, through the delGroFun Cloud Function, which
+ * deletes everything the group holds and tells every other member, then
+ * deletes the group's key from the device. Rejects with the function's
+ * error, coded functions/permission-denied, when this identity isn't the
+ * owner.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ *
+ * @returns A promise that settles once the group is gone, with no value.
+ *
+ * @example
+ * ```ts
+ * groDelFun('Xk3...') // => Promise<void>
+ * ```
+ *
+*/
+
+const groDelFun = async ( groIdeStr : string ) : Promise< void > => { // What: Group Delete Function. Why: Only the owner deletes a group, after confirming it by name (Section 9). How: This calls delGroFun, then forgets the key.
+
+
+	await httpsCallable( firGetFun().funValObj, 'delGroFun' )( { groupId : groIdeStr } ); // What: Delete Call. Why: The function deletes the group in batches and tells its members. How: This calls it with the group's ID.
+
+	await keyDelFun( `group:${ groIdeStr }` ); // What: Key Delete Call. Why: A deleted group's key has no use on the device. How: This deletes it.
+
+
+};
+
+// #endregion groDelFun
 
 
 
@@ -358,7 +400,7 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 
 // #region Exports
 
-export { groCreFun, groSetFun, invRotFun, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, change their settings and link, and read their keys. How: This exports the functions.
+export { groCreFun, groDelFun, groSetFun, invRotFun, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, change their settings and link, and read their keys. How: This exports the functions.
 
 // #endregion Exports
 

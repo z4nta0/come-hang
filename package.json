@@ -11,7 +11,7 @@
 		"preview": "vite preview",
 		"test": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'accessibility-*' --project 'interaction-*' --project 'security-*' --project rules\" && npm run test:client && npm run test:functions",
 		"test:accessibility": "playwright test --config tests/playwright.config.ts --project \"accessibility-*\"",
-		"test:client": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'client-*'\"",
+		"test:client": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'client-*'\"",
 		"test:functions": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"FUNCTIONS_EMULATOR=true playwright test --config tests/playwright.config.ts --project functions\"",
 		"test:interaction": "playwright test --config tests/playwright.config.ts --project \"interaction-*\"",
 		"test:rules": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project rules\"",
