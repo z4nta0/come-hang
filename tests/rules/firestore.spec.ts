@@ -59,13 +59,23 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
 
 // #region Constants
 
-const DAY_MIL_NUM = 86400000;                                            // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
-const GRO_NAM_STR = 'Dinner Club';                                       // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
-const HOU_MIL_NUM = 3600000;                                             // What: Hour Milliseconds Number. Why: A shared location expires an hour after its last update. How: This is one hour in milliseconds.
-const LOC_SWI_STR = 'return false; // What: Paywall Locked Return';      // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
-const NEW_TOK_STR = 'N'.repeat( 22 );                                    // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
-const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null }; // What: Offer End Object. Why: A withdrawal and a decline both clear the offer. How: This is the change that does it.
-const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                            // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
+const DAY_MIL_NUM = 86400000;                                                      // What: Day Milliseconds Number. Why: A request's expiry is counted in days. How: This is one day in milliseconds.
+const GRO_NAM_STR = 'Dinner Club';                                                 // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
+const HIS_REL_OBJ = { claimedAt : null, claimedByUid : null, status : 'pending' }; // What: History Release Object. Why: Every release clears the claim the same way. How: This is the change a release makes.
+const HOU_MIL_NUM = 3600000;                                                       // What: Hour Milliseconds Number. Why: A shared location expires an hour after its last update. How: This is one hour in milliseconds.
+const LOC_SWI_STR = 'return false; // What: Paywall Locked Return';                // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
+const NEW_TOK_STR = 'N'.repeat( 22 );                                              // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
+const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null };           // What: Offer End Object. Why: A withdrawal and a decline both clear the offer. How: This is the change that does it.
+const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                                      // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
+
+const HIS_CLA_OBJ = { // What: History Claim Object. Why: Every claim sets the same status and server time. How: This is the change a claim makes, beside the claimant's UID.
+
+
+	claimedAt : serverTimestamp(),
+	status    : 'claimed'
+
+
+};
 
 // #endregion Constants
 
@@ -1011,6 +1021,55 @@ const locDatFun = ( eveIdeStr : string, locChaObj : Record< string, unknown > = 
 });
 
 // #endregion locDatFun
+
+
+
+// #region hisDatFun
+
+/**
+ * hisDatFun = History Data Function
+ *
+ * @summary
+ * Builds a valid new history request: pending and unclaimed, stamped with
+ * the server's time, expiring 10 days out by the test's clock, with no range
+ * start. Fields can be changed or added by an option, a backlog's range
+ * start included.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param uidValStr - UID Value String: The asker.
+ * @param kinValStr - Kind Value String: The request's kind, recovery or
+ *                    backlog.
+ * @param hisChaObj - History Change Object: Fields to change or add, empty by
+ *                    default.
+ *
+ * @returns The request's fields.
+ *
+ * @example
+ * ```ts
+ * hisDatFun('bob', 'recovery') // => { kind : 'recovery', ... }
+ * ```
+ *
+*/
+
+const hisDatFun = ( uidValStr : string, kinValStr : string, hisChaObj : Record< string, unknown > = {} ) => ({ // What: History Data Function. Why: Every history test starts from a valid request. How: This returns its fields with the test's changes.
+
+
+	claimedAt      : null,
+	claimedByUid   : null,
+	createdAt      : serverTimestamp(),
+	expireAt       : Timestamp.fromMillis( Date.now() + 10 * DAY_MIL_NUM ),
+	kind           : kinValStr,
+	rangeStart     : null,
+	requestedByUid : uidValStr,
+	status         : 'pending',
+
+	...hisChaObj // What: History Change Spread. Why: A test changes the fields it checks. How: This merges them over the defaults.
+
+
+});
+
+// #endregion hisDatFun
 
 // #endregion Helpers
 
@@ -2338,6 +2397,128 @@ test( "a member who left can't keep sharing but can still delete their location"
 
 	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ), locDatFun( 'eve1' ) ) ); // What: Left Sharer Update. Why: Bob is no longer a member. How: This expects his update refused.
 	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/liveLocations/bob' ) ) );                // What: Left Sharer Delete. Why: A person can always take their own location down. How: This expects his delete allowed.
+
+
+} );
+
+
+
+test( 'a member asks once for chat history, which members read, and another member claims, releases, and fulfils it', async () => { // What: History Test. Why: Any member can help another get chat history back, one claimant at a time (Section 11.9). How: This files a recovery as Bob, then claims, releases, reclaims, and fulfils it as the others.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice claims and then releases the request. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob asks for history. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol claims the request after Alice. How: This acts as her.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob asks as a member. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins as a third member. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol is a second member able to help. How: This approves her as Alice.
+
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery' ) ) );                      // What: Request Filed. Why: A member asks for their history back. How: This expects Bob's recovery allowed.
+	await assertSucceeds( getDocs( collection( carStoObj, 'groups/gro1/historyRequests' ) ) );                                                  // What: Member Request List. Why: Members see who needs history. How: This expects Carol's listing allowed.
+	await assertFails( getDoc( doc( accStoFun( 'dave' ), 'groups/gro1/historyRequests/bob' ) ) );                                               // What: Outsider Request Read. Why: Requests are for the group only. How: This expects Dave refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'bob' } ) );            // What: Self Claim. Why: The asker is the one missing the history. How: This expects Bob claiming his own refused.
+	await assertFails( updateDoc( doc( accStoFun( 'dave' ), 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'dave' } ) ); // What: Outsider Claim. Why: Only members hold the group's history. How: This expects Dave's claim refused.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'alice' } ) );       // What: Request Claimed. Why: Any other member claims a pending request. How: This expects Alice's claim allowed.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'carol' } ) );          // What: Second Claim. Why: One claimant at a time keeps one upload per request. How: This expects Carol claiming a claimed request refused.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), HIS_REL_OBJ ) );                                         // What: Early Release. Why: Another member frees a claim only once it has stalled. How: This expects Carol releasing a fresh claim refused.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1/historyRequests/bob' ), HIS_REL_OBJ ) );                                      // What: Claim Released. Why: The claimant may let the claim go at any time. How: This expects Alice's release allowed.
+	await assertSucceeds( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'carol' } ) );       // What: Request Reclaimed. Why: A released request can be claimed again. How: This expects Carol's claim allowed.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { status : 'fulfilled' } ) );                            // What: Claimant Fulfils. Why: Only the asker knows the history arrived. How: This expects Carol marking it fulfilled refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), { status : 'done' } ) );                                 // What: Unknown Status. Why: A request is pending, claimed, or fulfilled. How: This expects another status refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), { kind : 'backlog', status : 'fulfilled' } ) );          // What: Smuggled Fulfil Kind. Why: Fulfilling changes only the status. How: This expects a kind change beside it refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), { status : 'fulfilled' } ) );                         // What: Request Fulfilled. Why: The asker marks it done once they have the history. How: This expects Bob's update allowed.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), HIS_REL_OBJ ) );                                         // What: Fulfilled Reopened. Why: A fulfilled request is done, and reopening it would notify the group again. How: This expects Carol releasing it refused.
+	await assertFails( deleteDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ) ) );                                                      // What: Other Member Delete. Why: Only the asker clears a request. How: This expects Carol refused.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ) ) );                                                   // What: Request Cleared. Why: The asker clears the request once it's done. How: This expects Bob's delete allowed.
+
+
+} );
+
+
+
+test( 'a history request is filed only by a member in their own name, starting pending, with a real time, a 7 to 14 day expiry, and a range that fits its kind', async () => { // What: History Shape Test. Why: Each request notifies the whole group, and a backlog's range decides how much older chat a newcomer is shown (Section 11.9). How: This files a request with one fault at a time, then valid ones.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob asks for history. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob asks as a member who joined after the group began. How: This approves Bob into the group.
+
+	await assertFails( setDoc( doc( accStoFun( 'alice' ), 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery' ) ) );                                                            // What: Request For Another. Why: Nobody asks in someone else's name. How: This expects Alice filing Bob's refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'alice', 'recovery' ) ) );                                                                     // What: Other Asker Named. Why: A request names the member it belongs to. How: This expects Bob's request naming Alice refused.
+	await assertFails( setDoc( doc( accStoFun( 'dave' ), 'groups/gro1/historyRequests/dave' ), hisDatFun( 'dave', 'recovery' ) ) );                                                           // What: Outsider Request. Why: Only members have history to ask for. How: This expects Dave refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { status : 'claimed' } ) ) );                                               // What: Claimed Start. Why: A request starts pending. How: This expects one filed as claimed refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { claimedByUid : 'alice' } ) ) );                                           // What: Claimant At Start. Why: Nobody has claimed a new request. How: This expects one naming a claimant refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { createdAt : Timestamp.fromMillis( 1000 ) } ) ) );                         // What: Backdated Request. Why: The creation time has to be the server's. How: This expects a chosen time refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { expireAt : Timestamp.fromMillis( Date.now() + 6 * DAY_MIL_NUM ) } ) ) );  // What: Short Expiry. Why: A request stays up at least 7 days. How: This expects 6 refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { expireAt : Timestamp.fromMillis( Date.now() + 15 * DAY_MIL_NUM ) } ) ) ); // What: Long Expiry. Why: A request disappears within 14 days. How: This expects 15 refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'everything' ) ) );                                                                     // What: Unknown Kind. Why: A request is a recovery or a backlog. How: This expects another kind refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { rangeStart : Timestamp.fromMillis( 5000 ) } ) ) );                        // What: Ranged Recovery. Why: A recovery's range is implied by the asker's join. How: This expects one with a range start refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'backlog' ) ) );                                                                        // What: Unranged Backlog. Why: A backlog says how far back it asks. How: This expects one without a range start refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'backlog', { rangeStart : Timestamp.fromMillis( 500 ) } ) ) );                          // What: Backlog Before Group. Why: No chat exists from before the group. How: This expects a range start before its creation refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'backlog', { rangeStart : Timestamp.fromMillis( Date.now() + DAY_MIL_NUM ) } ) ) );     // What: Backlog After Join. Why: A backlog asks for what came before the asker joined. How: This expects a range start after their join refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'recovery', { extra : true } ) ) );                                                     // What: Extra Field. Why: A request holds exactly its eight fields. How: This expects a ninth refused.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), hisDatFun( 'bob', 'backlog', { rangeStart : Timestamp.fromMillis( 5000 ) } ) ) );                      // What: Valid Backlog. Why: The requests above failed only for their one fault. How: This expects a backlog starting after the group's creation allowed.
+
+
+} );
+
+
+
+test( 'a stalled claim frees after 30 minutes, nobody claims in another name or for an asker who left, and only a claimed request is fulfilled', async () => { // What: History Claim Test. Why: A request mustn't get stuck behind one claimant, and history goes only to someone still in the group (Section 11.9). How: This seeds requests in each state, then tries each claim, release, and fulfilment.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who tries the claims. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob asks for history. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Store Object. Why: Carol frees a stalled claim. How: This acts as her.
+
+	const bacClaObj = { // What: Backdated Claim Object. Why: A claim's time decides when it stalls, so a chosen one is tried. How: This is a claim by Carol dated 31 minutes back.
+
+
+		claimedAt    : Timestamp.fromMillis( Date.now() - 31 * 60000 ),
+		claimedByUid : 'carol',
+		status       : 'claimed'
+
+
+	};
+
+	const staClaObj = { // What: Stalled Claim Object. Why: The seeded request carries a claim made 31 minutes ago. How: This is Alice's claim at that time, on a request filed long before.
+
+
+		claimedAt    : Timestamp.fromMillis( Date.now() - 31 * 60000 ),
+		claimedByUid : 'alice',
+		createdAt    : Timestamp.fromMillis( 1000 ),
+		status       : 'claimed'
+
+
+	};
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob asks as a member. How: This approves Bob into the group.
+
+	await seeReqFun( tesEnvObj, 'carol' ); // What: Carol Request Seed. Why: Carol joins as a third member. How: This seeds her pending request.
+
+	await appBatFun( aliStoObj, 'carol' ); // What: Carol Approval Call. Why: Carol is a member able to free a claim. How: This approves her as Alice.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/historyRequests/bob', hisDatFun( 'bob', 'recovery', staClaObj ) ); // What: Stalled Claim Seed. Why: A claim made 31 minutes ago has stalled. How: This writes Bob's request claimed by Alice then.
+
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), { status : 'pending' } ) );                                       // What: Half Release. Why: A released request carries no claim. How: This expects the status changed alone refused.
+	await assertFails( updateDoc( doc( accStoFun( 'dave' ), 'groups/gro1/historyRequests/bob' ), HIS_REL_OBJ ) );                                        // What: Outsider Release. Why: Only members free a stalled claim. How: This expects Dave refused.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_REL_OBJ, kind : 'backlog' } ) );                         // What: Smuggled Release Kind. Why: A release changes only the claim. How: This expects a kind change beside it refused.
+	await assertSucceeds( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), HIS_REL_OBJ ) );                                               // What: Stalled Claim Freed. Why: Any member frees a claim after 30 minutes. How: This expects Carol's release allowed.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ), { status : 'fulfilled' } ) );                                     // What: Pending Fulfilled. Why: Only a claimed request has been answered. How: This expects Bob fulfilling a pending one refused.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'alice' } ) );                   // What: Claim For Another. Why: Nobody claims in someone else's name. How: This expects Carol claiming as Alice refused.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), bacClaObj ) );                                                    // What: Backdated Claim. Why: A claim's time decides when it stalls. How: This expects a chosen time refused.
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'carol', kind : 'backlog' } ) ); // What: Smuggled Kind. Why: A claim changes only the claim. How: This expects a kind change beside it refused.
+
+	await lefBatFun( bobStoObj, 'bob' ); // What: Leave Call. Why: Bob leaves with his request still pending. How: This commits his leave.
+
+	await assertFails( updateDoc( doc( carStoObj, 'groups/gro1/historyRequests/bob' ), { ...HIS_CLA_OBJ, claimedByUid : 'carol' } ) ); // What: Claim For Leaver. Why: History goes only to someone still in the group. How: This expects Carol claiming Bob's request refused.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, 'groups/gro1/historyRequests/bob' ) ) );                                          // What: Leaver Clears Request. Why: The asker can always withdraw their own request. How: This expects Bob's delete allowed.
 
 
 } );

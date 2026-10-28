@@ -83,6 +83,12 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * comes first. Members read the shared locations, and only the sharer
  * deletes theirs.
  *
+ * A member asks the group for chat history with one request under their own
+ * UID, a recovery of their own or a backlog from before they joined. Any
+ * other member claims a pending request for an asker still in the group, the
+ * claimant or anyone after 30 minutes releases it, and the asker marks it
+ * fulfilled and deletes it.
+ *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
@@ -1592,6 +1598,185 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region History Request Rules
+
+		// #region valHisFun
+
+		function valHisFun () { // What: Valid History Function. Why: A new history request holds who asked, what kind it is, its range, and its times, and starts unclaimed (Section 11.9). How: This checks the incoming request's fields, its server-stamped creation, an expiry 7 to 14 days out, and its pending, unclaimed start.
+
+
+			let hisDatObj = request.resource.data; // What: History Data Object. Why: Every check reads the incoming request. How: This names it once.
+
+			let claNulBoo = hisDatObj.claimedByUid == null && hisDatObj.claimedAt == null;                                                                   // What: Claim Null Boolean. Why: Nobody has claimed a new request. How: This requires both claim fields empty, two halves of one check, so they stay inline.
+			let creTimBoo = hisDatObj.createdAt == request.time;                                                                                             // What: Creation Time Boolean. Why: A client could otherwise backdate the request. How: This requires the server's own time.
+			let expValBoo = hisDatObj.expireAt >= request.time + duration.value( 7, 'd' ) && hisDatObj.expireAt <= request.time + duration.value( 14, 'd' ); // What: Expire Valid Boolean. Why: An unanswered request disappears 7 to 14 days out, and the app sets 10 days by its own clock. How: This checks the expiry against both bounds, two halves of one check, so they stay inline.
+			let fieAllBoo = hisDatObj.keys().toSet() == [ 'claimedAt', 'claimedByUid', 'createdAt', 'expireAt', 'kind', 'rangeStart', 'requestedByUid', 'status' ].toSet(); // What: Fields All Boolean. Why: A request holds exactly its eight fields. How: This compares them with the full set.
+			let staPenBoo = hisDatObj.status == 'pending';                                                                                                   // What: Status Pending Boolean. Why: A new request waits for a member to claim it. How: This requires the pending status.
+
+			let valHisBoo = claNulBoo && creTimBoo && expValBoo && fieAllBoo && staPenBoo; // What: Valid History Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valHisBoo; // What: Valid History Return. Why: The request's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valHisFun
+
+
+
+		// #region ranHisFun
+
+		function ranHisFun ( groIdeStr, uidValStr ) { // What: Range History Function. Why: A recovery asks for the asker's own history, with no range of its own, while a backlog asks for chat from before they joined, starting no earlier than the group itself (Section 11.9). How: This is true for a recovery with no range start, or a backlog whose range start falls between the group's creation and the asker's join.
+
+
+			let hisDatObj = request.resource.data; // What: History Data Object. Why: The checks read the incoming request. How: This names it.
+
+			let recValBoo = hisDatObj.kind == 'recovery' && hisDatObj.rangeStart == null;                   // What: Recovery Valid Boolean. Why: A recovery's range is implied by the asker's own join. How: This requires the kind and an empty range start, two halves of one check, so they stay inline.
+			let bacKinBoo = hisDatObj.kind == 'backlog';                                                    // What: Backlog Kind Boolean. Why: A backlog asks for older chat. How: This checks the kind.
+			let ranAftBoo = hisDatObj.rangeStart >= get( groPatFun( groIdeStr ) ).data.createdAt;           // What: Range After Boolean. Why: No chat exists from before the group. How: This requires the range start at or after its creation, and anything but a time fails the comparison, refusing the write.
+			let ranBefBoo = hisDatObj.rangeStart <= get( memPatFun( groIdeStr, uidValStr ) ).data.joinedAt; // What: Range Before Boolean. Why: A backlog asks for what came before the asker joined. How: This requires the range start at or before their join.
+
+			let bacValBoo = bacKinBoo && ranAftBoo && ranBefBoo; // What: Backlog Valid Boolean. Why: A backlog needs its kind and a range inside its bounds. How: This combines them.
+
+			let ranValBoo = recValBoo || bacValBoo; // What: Range Valid Boolean. Why: A request is one kind or the other. How: This allows either, checking a recovery first.
+
+
+
+			return ranValBoo; // What: Range Valid Return. Why: The request's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion ranHisFun
+
+
+
+		// #region creHisFun
+
+		function creHisFun ( groIdeStr, uidValStr ) { // What: Create History Function. Why: A member asks for chat history in their own name, one request at a time, since each request notifies the whole group. How: This is true for a member writing a valid request under their own UID that names them as the asker.
+
+
+			let isaMemBoo = isaMemFun( groIdeStr );                            // What: Is-A Member Boolean. Why: Only members have history to ask for. How: This requires the requester to be a member.
+			let isaOwnBoo = isaOwnFun( uidValStr );                            // What: Is-An Owner Boolean. Why: Each member's one request sits under their own UID, which caps how many notifications one person can send. How: This requires the document to be the requester's own.
+			let ranValBoo = ranHisFun( groIdeStr, uidValStr );                 // What: Range Valid Boolean. Why: The kind and range have to agree. How: This checks them.
+			let reqUidBoo = request.resource.data.requestedByUid == uidValStr; // What: Requester UID Boolean. Why: The request names who asked. How: This requires it to match the document's UID.
+			let valHisBoo = valHisFun();                                       // What: Valid History Boolean. Why: The request keeps its shape. How: This checks it.
+
+			let creAllBoo = isaMemBoo && isaOwnBoo && ranValBoo && reqUidBoo && valHisBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The request's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creHisFun
+
+
+
+		// #region claHisFun
+
+		function claHisFun ( groIdeStr ) { // What: Claim History Function. Why: Any member but the asker claims a pending request to fulfil it, one claimant at a time, and only for an asker still in the group (Section 11.9). How: This is true for a member claiming a pending request in their own name at the server's time, changing nothing else, while the dispatch has already checked the new status is claimed.
+
+
+			let hisNewObj = request.resource.data; // What: History New Object. Why: The checks read the request as it will be. How: This names it.
+
+			let claSelBoo = isaOwnFun( hisNewObj.claimedByUid );                                                                 // What: Claim Self Boolean. Why: Nobody claims in someone else's name. How: This requires the claimant to be the requester.
+			let claTimBoo = hisNewObj.claimedAt == request.time;                                                                 // What: Claim Time Boolean. Why: A stalled claim times out after 30 minutes, so its time has to be real. How: This requires the server's own time.
+			let fieOnlBoo = hisNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'claimedAt', 'claimedByUid', 'status' ] ); // What: Fields Only Boolean. Why: A claim changes the claim and nothing else. How: This allows changes to the three claim fields alone.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                              // What: Is-A Member Boolean. Why: Only members hold the group's history to share. How: This requires the requester to be a member.
+			let notReqBoo = !isaOwnFun( resource.data.requestedByUid );                                                          // What: Not Requester Boolean. Why: The asker is the one missing the history. How: This refuses the asker's own claim.
+			let penOldBoo = resource.data.status == 'pending';                                                                   // What: Pending Old Boolean. Why: A claimed request can't be claimed again, which is the compare-and-swap that keeps one upload per request. How: This requires the request to be pending before the write.
+			let reqMemBoo = exists( memPatFun( groIdeStr, resource.data.requestedByUid ) );                                      // What: Requester Member Boolean. Why: History goes only to someone still in the group. How: This requires the asker's membership.
+
+			let claAllBoo = claSelBoo && claTimBoo && fieOnlBoo && isaMemBoo && notReqBoo && penOldBoo && reqMemBoo; // What: Claim Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return claAllBoo; // What: Claim Allowed Return. Why: The request's update dispatch reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion claHisFun
+
+
+
+		// #region relHisFun
+
+		function relHisFun ( groIdeStr ) { // What: Release History Function. Why: A claim goes back to pending when its claimant lets it go, or when it has stalled for 30 minutes, so the request isn't stuck behind one claimant (Section 11.9). How: This is true for the claimant, or any member once the claim is 30 minutes old, clearing a claim, while the dispatch has already checked the new status is pending.
+
+
+			let hisNewObj = request.resource.data; // What: History New Object. Why: The checks read the request as it will be. How: This names it.
+
+			let claNulBoo = hisNewObj.claimedByUid == null && hisNewObj.claimedAt == null;                                       // What: Claim Null Boolean. Why: A released request carries no claim. How: This requires both claim fields cleared, two halves of one check, so they stay inline.
+			let claOldBoo = resource.data.status == 'claimed';                                                                   // What: Claimed Old Boolean. Why: Only a claim can be released. How: This requires the request to be claimed before the write.
+			let fieOnlBoo = hisNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'claimedAt', 'claimedByUid', 'status' ] ); // What: Fields Only Boolean. Why: A release changes the claim and nothing else. How: This allows changes to the three claim fields alone.
+			let isaClaBoo = isaOwnFun( resource.data.claimedByUid );                                                             // What: Is-A Claimant Boolean. Why: The claimant may let the claim go at any time. How: This checks the requester holds the claim.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                              // What: Is-A Member Boolean. Why: Any member may free a stalled claim. How: This requires the requester to be a member.
+			let staLeaBoo = request.time > resource.data.claimedAt + duration.value( 30, 'm' );                                  // What: Stale Boolean. Why: A claim stalls after 30 minutes without an upload. How: This compares the claim's time with the server's.
+
+			let whoValBoo = isaClaBoo || ( isaMemBoo && staLeaBoo ); // What: Who Valid Boolean. Why: The claimant releases at will, and anyone else in the group only once the claim has stalled. How: This combines those two cases.
+
+			let relAllBoo = claNulBoo && claOldBoo && fieOnlBoo && whoValBoo; // What: Release Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return relAllBoo; // What: Release Allowed Return. Why: The request's update dispatch reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion relHisFun
+
+
+
+		// #region fulHisFun
+
+		function fulHisFun () { // What: Fulfilled History Function. Why: The asker marks a claimed request fulfilled once they've merged the history (Section 11.9). How: This is true for the asker moving a claimed request to fulfilled, changing nothing else.
+
+
+			let claOldBoo = resource.data.status == 'claimed';                                                  // What: Claimed Old Boolean. Why: Only a claimed request has been answered. How: This requires the request to be claimed before the write.
+			let fieOnlBoo = request.resource.data.diff( resource.data ).affectedKeys().hasOnly( [ 'status' ] ); // What: Fields Only Boolean. Why: Fulfilling changes the status alone. How: This allows that one field.
+			let isaReqBoo = isaOwnFun( resource.data.requestedByUid );                                          // What: Is-A Requester Boolean. Why: Only the asker knows the history arrived. How: This requires the requester to be the asker.
+			let staFulBoo = request.resource.data.status == 'fulfilled';                                        // What: Status Fulfilled Boolean. Why: The request is done. How: This requires the fulfilled status.
+
+			let fulAllBoo = claOldBoo && fieOnlBoo && isaReqBoo && staFulBoo; // What: Fulfilled Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return fulAllBoo; // What: Fulfilled Allowed Return. Why: The request's update dispatch reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion fulHisFun
+
+
+
+		// #region updHisFun
+
+		function updHisFun ( groIdeStr ) { // What: Update History Function. Why: A request changes in three ways, told apart by the status it moves to. How: This routes a write to the claim, release, or fulfilled check by its new status.
+
+
+			let newStaStr = request.resource.data.status; // What: New Status String. Why: The new status says which change a write is. How: This names it.
+
+
+
+			return newStaStr == 'claimed' ? claHisFun( groIdeStr ) : newStaStr == 'pending' ? relHisFun( groIdeStr ) : fulHisFun(); // What: Update History Return. Why: Each write is checked only against the change it could be. How: This picks the claim, release, or fulfilled check, and the fulfilled check refuses any other status.
+
+
+		}
+
+		// #endregion updHisFun
+
+		// #endregion History Request Rules
+
+
+
 		// #region Update Dispatch
 
 		// #region updAccFun
@@ -1859,6 +2044,19 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 				allow read   : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Read Rule. Why: Members review the requests, and a joiner checks on their own. How: This lets members fetch and list them, and the joiner fetch theirs.
 				allow create : if creReqFun( groIdeStr, uidValStr );                // What: Request Create Rule. Why: A joiner asks to join through the invite. How: This allows it when creReqFun passes.
 				allow delete : if isaMemFun( groIdeStr ) || isaOwnFun( uidValStr ); // What: Request Delete Rule. Why: Any member may decline a request, and the joiner may withdraw it. How: This lets either delete it.
+
+
+			}
+
+
+
+			match /historyRequests/{uidValStr} { // What: History Request Match. Why: Each member's one open request for chat history is keyed by their UID (Section 11.9). How: This matches one request by the asker's UID.
+
+
+				allow read   : if isaMemFun( groIdeStr );            // What: History Read Rule. Why: Members see who needs history, so a willing one can claim it. How: This lets members fetch and list the requests.
+				allow create : if creHisFun( groIdeStr, uidValStr ); // What: History Create Rule. Why: A member asks for history. How: This allows it when creHisFun passes.
+				allow update : if updHisFun( groIdeStr );            // What: History Update Rule. Why: A request is claimed, released, or fulfilled. How: This allows it when updHisFun passes.
+				allow delete : if isaOwnFun( uidValStr );            // What: History Delete Rule. Why: The asker withdraws a request or clears it once fulfilled. How: This lets only the asker delete theirs.
 
 
 			}

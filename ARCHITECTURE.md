@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (location sharing's window, expiry, encrypted
+Last updated: 2026-10-28 (history requests keyed by the asker's UID, with
+their rules, in Section 11.9, completing the Firestore rules noted in
+Section 14; location sharing's window, expiry, encrypted
 arrived flag, and rules in Sections 5, 10, and 11.4); 2026-10-27 (events as one encrypted bundle with time bounds,
 and items expiring on their own, in Section 11.5, with their text limits in
 Section 11.10; the owner renames the group with its invite in
@@ -953,8 +955,16 @@ chat.
 
 | Path | Service | Notes |
 |---|---|---|
-| `/groups/{groupId}/historyRequests/{requestId}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`. Visible to all current members; an FCM notification fires whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field, 7-14 days out, so an unfulfilled request quietly disappears instead of lingering forever. |
-| `groupHistoryTransfers/{groupId}/{requestId}` | Storage | The uploaded bundle of cached ciphertext envelopes, written only by whoever currently holds the claim. |
+| `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification fires whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
+| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle of cached ciphertext envelopes, written only by whoever currently holds the claim. |
+
+**Rules (decided 2026-10-28)**: a member files only their own request,
+pending and unclaimed, at the server's time. Any other member claims a
+pending one in their own name, at the server's time, but only while the
+asker is still in the group, since history goes only to a current member.
+The claimant releases their claim at any time, and any member may release
+it once it's 30 minutes old. Only the asker marks a claimed request
+fulfilled or deletes their request, and a fulfilled one can't be reopened.
 
 **`kind` distinguishes the two cases, and the requester, not the
 fulfiller, sets the scope**:
@@ -1309,12 +1319,12 @@ the Blaze change.
   and abuse (Section 15).
 
 **Infrastructure, still open**:
-- Security rules for Firestore, RTDB, and Storage, written and tested
-  against the emulator (the biggest remaining task). The user wants a
-  walkthrough of each rule as it's written. The harness is in place
-  (2026-10-25): `firebase.json`, a `firestore.rules` that refuses
-  everything, and a rules suite in `tests/rules/` run by `npm run
-  test:rules`.
+- Security rules for RTDB and Storage, written and tested against the
+  emulator, with a walkthrough of each rule as it's written, as the
+  Firestore rules were. `firestore.rules` covers every collection in
+  Section 11 as of 2026-10-28, proven by the rules suite in `tests/rules/`
+  (`npm run test:rules`), which runs against the Firestore emulator that
+  `firebase.json` sets up (2026-10-25).
 - The Cloud Functions decided with the transfer rules (2026-10-26):
   deleting a group (Section 9), the notices and pushes for removals,
   deletions, and offers (Section 11.1), and the daily run that lapses
