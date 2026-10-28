@@ -31,7 +31,8 @@
 // #region Constants
 
 const GRO_NAM_REG = /^[\p{L}\p{M}\p{N}\p{So}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1FAFF}\u{200D}\u{E0020}-\u{E007F}.,'’\-&!?():#/+]+( [\p{L}\p{M}\p{N}\p{So}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1FAFF}\u{200D}\u{E0020}-\u{E007F}.,'’\-&!?():#/+]+)*$/u; // What: Group Name Regular Expression. Why: A group name allows letters, numbers, basic punctuation, and emoji, with single spaces (Section 11.10). How: This is the rules' namGroFun pattern, runs of its character class joined by single spaces, with the emoji blocks listed by code point as the rules list them.
-const PER_NAM_REG = /^[\p{L}\p{M}'’\-.]+( [\p{L}\p{M}'’\-.]+)*$/u; // What: Person Name Regular Expression. Why: A person's name is letters with their accents and a few joining marks, so an approver can recognize it (Section 11.10). How: This is the rules' namPerFun pattern, runs of its character class joined by single spaces.
+const JOI_NOT_REG = /^[\p{L}\p{M}\p{N}.,'’\-&!?():#/+]+( [\p{L}\p{M}\p{N}.,'’\-&!?():#/+]+)*$/u; // What: Join Note Regular Expression. Why: A join note is letters and numbers in any script with basic punctuation, and no emoji (Section 11.10). How: This is the rules' notJoiFun pattern, runs of its character class joined by single spaces.
+const PER_NAM_REG = /^[\p{L}\p{M}'’\-.]+( [\p{L}\p{M}'’\-.]+)*$/u;                               // What: Person Name Regular Expression. Why: A person's name is letters with their accents and a few joining marks, so an approver can recognize it (Section 11.10). How: This is the rules' namPerFun pattern, runs of its character class joined by single spaces.
 
 // #endregion Constants
 
@@ -47,6 +48,10 @@ const groNamFun = ( namValStr : string ) : boolean => namValStr.length <= 50 && 
 
 
 
+const joiNotFun = ( notValStr : string ) : boolean => notValStr.length <= 150 && ( notValStr === '' || JOI_NOT_REG.test( notValStr ) ); // What: Join Note Function. Why: A join note is plaintext the rules check, so it's checked here first. How: This is true for an empty note, or up to 150 characters matching the join note pattern.
+
+
+
 const perNamFun = ( namValStr : string ) : boolean => namValStr.length <= 40 && PER_NAM_REG.test( namValStr ); // What: Person Name Function. Why: A display name is encrypted, so the rules can't check it and the app must. How: This is true for 1 to 40 characters matching the person name pattern, which can't match an empty name.
 
 // #endregion Helpers
@@ -55,7 +60,7 @@ const perNamFun = ( namValStr : string ) : boolean => namValStr.length <= 40 && 
 
 // #region Exports
 
-export { groNamFun, perNamFun, texNorFun }; // What: Named Exports. Why: Every form that saves typed text tidies and checks it this way. How: This exports the three helpers.
+export { groNamFun, joiNotFun, perNamFun, texNorFun }; // What: Named Exports. Why: Every form that saves typed text tidies and checks it this way. How: This exports the helpers.
 
 // #endregion Exports
 

@@ -39,7 +39,8 @@ presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
 notices, the offer decline, the daily run, and the pushes, with the push
 token rules. The app has its Firebase services, created on first use, the
-identity bootstrap, the group key encryption, and group creation, with no
+identity bootstrap, the group key encryption, group creation, and joining
+through an invite with a member's approval, with no
 screens using them yet, since screens wait for the design pass. Next steps
 are in ARCHITECTURE.md's Section 14.
 

@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (group creation in the app and emoji listed by code
+Last updated: 2026-10-28 (joining a group in the app, with the approver
+encrypting the joiner's name, in Sections 11.3, 13, 14, and 17; group creation in the app and emoji listed by code
 point in the rules, in Sections 11.10 and 14; the group key wrapping scheme and extractable
 group keys, in Sections 6 and 14; the app's Firebase services and identity
 bootstrap, in Sections 8 and 14; push tokens, their rules, and the pushes for
@@ -834,7 +835,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 |---|---|---|
 | `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, through the membership mirror, see 11.7. |
 | `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
-| `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Absent until the member writes it, right after the group is created or their join is approved. |
+| `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Written with the membership itself: the creator's as the group is created, and a joiner's by the approving member, who encrypts the name from the join request (Section 17). The rules also accept a membership without one, and the member may change it at any time. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
 
 A subcollection, not a map field on the group doc, specifically so many
@@ -1343,7 +1344,14 @@ real, and the app is built against both:
 - **Partly resolved (2026-10-22): carrying an invite across an iOS
   install.** A "Paste invite link" option is built in regardless, see
   Section 16; the real-iPhone test of the invite address still decides
-  whether it's the main path or only the backup.
+  whether it's the main path or only the backup. Also still open, for
+  the invite screen's design: whether the invite page shown in Safari
+  before the install names the group. Reading an invite needs a sign-in,
+  and the app's invite read runs the identity bootstrap, which would leave
+  an identity in Safari's storage that the installed app can't use
+  (Section 16). The page could skip the name there, or sign in
+  anonymously without the rest of the bootstrap, at the cost of one
+  never-used Auth account per visitor.
 - **Resolved (2026-10-22): environments.** Decided: the Emulator Suite
   for daily development and every automated test, plus two real Firebase
   projects, live and staging, the staging one backing Netlify deploy
@@ -1440,6 +1448,16 @@ the Blaze change.
   is recovered from the member's own wrap. Screens come after the design
   pass (decided 2026-10-28), so each feature is built and tested as app
   code first.
+- `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
+  for its group's name, filing a join request with a tidied and checked
+  name and note, the joiner's view of where it stands, withdrawing it, and
+  for members, listing the unexpired requests oldest first, approving one,
+  declining one, and declining and blocking its sender. An approval is one
+  transaction that rereads the request and the count, wraps the group key
+  for the joiner's published public key, encrypts the requested name, and
+  writes the membership, the account entry, the count, and the request's
+  end together. Once in, the joiner loads the key from their own wrap the
+  same way a lost key is recovered.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.
@@ -1650,7 +1668,11 @@ history requests). Declining is open to any member too.
   such as two members who share a name or a name the approver doesn't
   know.
 - The name becomes the joiner's starting per-group display name (Section
-  11.3), so they're not asked twice.
+  11.3), so they're not asked twice: the approving member encrypts it
+  under the group key into the new membership (decided 2026-10-28), since
+  the request holding it ends with the approval. The new member is never
+  shown without a name, and the joiner's device doesn't have to keep what
+  they typed while they wait. The joiner can change it afterwards.
 - A typed name is only a claim. Anyone holding the link can type any
   name, including a real member's, so the approval screen says to
   approve only people you recognize, and to check with them outside the
@@ -1676,8 +1698,9 @@ the joiner's `publicKey` from `/users/{uid}`, create
 joiner's `/accounts/{uid}` member map, raise the group's `memberCount` by one and
 set its `countedUid` to the joiner, and delete the request. The rules let a member change another person's
 account only that way: adding this one group, alongside creating their
-member doc, within the joiner's and the group's caps (Section 18). The joiner's listener sees the membership appear, unwraps the
-key, and writes their encrypted display name. **Declining** deletes the
+member doc, within the joiner's and the group's caps (Section 18). The member doc carries the
+joiner's name from the request, encrypted. The joiner's app sees the membership appear and
+unwraps the key from it. **Declining** deletes the
 request; declining and blocking adds the UID to `removedUids` as well.
 
 **Floods**:
