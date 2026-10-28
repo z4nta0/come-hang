@@ -3,10 +3,10 @@
 
 // #region Imports
 
-import { FIR_DAT_OBJ       } from './setup.ts';                        // What: Firestore Database Object. Why: The mirror copies Firestore's membership. How: This reads the documents.
-import { FUN_OPT_OBJ       } from './setup.ts';                        // What: Function Options Object. Why: Every function shares the deploy options. How: Each trigger spreads them in.
+import { FIR_DAT_OBJ       } from './setup.ts';                      // What: Firestore Database Object. Why: The mirror copies Firestore's membership. How: This reads the documents.
+import { FUN_OPT_OBJ       } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: Each trigger spreads them in.
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'; // What: On Document Written. Why: The mirror follows every change to a group or a membership. How: This registers a trigger for creates, updates, and deletes.
-import { REA_DAT_OBJ       } from './setup.ts';                        // What: Realtime Database Object. Why: The mirror lives in the Realtime Database. How: This writes it.
+import { REA_DAT_OBJ       } from './setup.ts';                      // What: Realtime Database Object. Why: The mirror lives in the Realtime Database. How: This writes it.
 
 
 import type { Timestamp } from 'firebase-admin/firestore'; // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This types it.
