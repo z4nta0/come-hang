@@ -31,12 +31,13 @@ current decisions:
 
 Scaffolded: the app shell answering at one address, a placeholder home
 page, the global stylesheet, the accessibility, interaction, and security
-suites, and the Firebase Emulator harness with a rules suite. The security
-rules are complete, each walked through with the user: `firestore.rules`
-covers every Firestore collection in ARCHITECTURE.md's data model,
-`database.rules.json` covers chat and presence, and `storage.rules` covers
-history transfers. No Firebase code in the app yet. Next steps are in
-ARCHITECTURE.md's Section 14.
+suites, and the Firebase Emulator harness with a rules suite and a
+functions suite. The security rules are complete, each walked through with
+the user: `firestore.rules` covers every Firestore collection in
+ARCHITECTURE.md's data model, `database.rules.json` covers chat and
+presence, and `storage.rules` covers history transfers. The Cloud Functions
+have started with the membership mirror. No Firebase code in the app yet.
+Next steps are in ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -49,9 +50,10 @@ chosen.
 npm run dev                  # Vite dev server
 npm run build                # type check, then production build to dist/
 npm run lint                 # ESLint across the repo
-npm run typecheck            # tsc -b
+npm run typecheck            # tsc -b, plus the Cloud Functions
 npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
+npm run test:functions       # Cloud Functions, end to end in the emulators
 npm run test:interaction     # navigation and interaction feedback
 npm run test:rules           # Firestore, Realtime Database, and Storage rules
 npm run test:security        # headers policy, build secrets, npm audit
@@ -66,7 +68,10 @@ Realtime Database emulator on 8210, and the Storage emulator on 8220 under
 the `demo-come-hang` project, which can't reach a real one. The Storage
 emulator's rules read that project's Firestore alone, so the Storage spec
 seeds it, and the Firestore spec keeps its data under projects of its own.
-The emulators need Java, 21 installed.
+`npm run test:functions` builds the functions and runs them in their
+own emulator session, with the Functions emulator on 8230, since their
+triggers write data the other suites clear, and `npm test` runs it after
+the rest. The emulators need Java, 21 installed.
 
 ## Project facts
 
@@ -83,6 +88,15 @@ The emulators need Java, 21 installed.
   Database, Cloud Messaging, Storage, Cloud Functions, App Check). No
   other server.
 - **Hosting**: Netlify.
+- **Location** (decided 2026-10-28): every Firebase service in us-central1.
+- **Cloud Functions** (decided 2026-10-28): Firebase's standard `functions/`
+  folder with its own `package.json`, compiled from TypeScript to the
+  git-ignored `functions/lib` on Node 24. Its entry, `functions/src/main.ts`,
+  imports each function from its module and exports them all, an exception
+  to the no-barrel-files rule, since Firebase deploys exactly what that one
+  file exports. Every function spreads `FUN_OPT_OBJ` from
+  `functions/src/setup.ts` into its options (us-central1, at most 10
+  instances).
 - **Environments**: the Firebase Emulator Suite for development and
   automated tests, plus two real Firebase projects, live and staging
   (staging backs Netlify deploy previews).

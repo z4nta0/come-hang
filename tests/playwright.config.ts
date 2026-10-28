@@ -73,7 +73,7 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 	testDir       : '.',              // What: Test Directory. Why: Each project picks its own folder below. How: This roots test discovery at tests/.
 	workers       : 3,                // What: Workers. Why: The engines are independent, but each worker drives a full browser. How: This runs up to three spec files at once.
 
-	projects : [ // What: Projects. Why: Each suite runs on its own, a browser suite once in each engine. How: This crosses every browser suite with every engine into a project named after both, then adds the rules project, each runnable alone with --project.
+	projects : [ // What: Projects. Why: Each suite runs on its own, a browser suite once in each engine. How: This crosses every browser suite with every engine into a project named after both, then adds the functions and rules projects, each runnable alone with --project.
 
 
 		...SUI_NAM_ARR.flatMap( ( suiNamStr ) => ENG_NAM_ARR.map( ( engNamStr ) => ({ // What: Browser Projects. Why: A browser suite runs on its own in each engine. How: This crosses every suite with every engine into a project named after both.
@@ -95,7 +95,8 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 
 		}) ) ),
 
-		{ name : 'rules', testMatch : 'rules/**/*.spec.ts' } // What: Rules Project. Why: The security rules are checked in the local emulators, which test:rules starts around it, with no browser, so the project runs once rather than in each engine. How: This runs every spec in tests/rules.
+		{ name : 'functions', testMatch : 'functions/**/*.spec.ts' }, // What: Functions Project. Why: The Cloud Functions are checked end to end in the local emulators, which test:functions starts around it apart from the other suites, since the functions write data the other suites clear, with no browser, so the project runs once. How: This runs every spec in tests/functions.
+		{ name : 'rules',     testMatch : 'rules/**/*.spec.ts' }      // What: Rules Project. Why: The security rules are checked in the local emulators, which test:rules starts around it, with no browser, so the project runs once rather than in each engine. How: This runs every spec in tests/rules.
 
 
 	],

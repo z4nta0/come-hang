@@ -8,12 +8,13 @@
 		"dev": "vite",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"test": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts\"",
+		"test": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project '*-*' --project rules\" && npm run test:functions",
 		"test:accessibility": "playwright test --config tests/playwright.config.ts --project \"accessibility-*\"",
+		"test:functions": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore,database --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project functions\"",
 		"test:interaction": "playwright test --config tests/playwright.config.ts --project \"interaction-*\"",
 		"test:rules": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project rules\"",
 		"test:security": "playwright test --config tests/playwright.config.ts --project \"security-*\"",
-		"typecheck": "tsc -b"
+		"typecheck": "tsc -b && tsc -p functions --noEmit"
 	},
 	"dependencies": {
 		"firebase": "12.19.0",

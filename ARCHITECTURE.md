@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (the Storage rules for history transfers, their
+Last updated: 2026-10-28 (every service in us-central1, the Cloud
+Functions' layout, and the membership mirror's functions, in Sections 11.7
+and 14; the Storage rules for history transfers, their
 25 MB cap, and the bucket's 15-day cleanup, in Sections 11.9 and 14; chat's waiting-on list, the membership mirror,
 and the Realtime Database rules for chat and presence, in Sections 4, 5,
 11.7, 11.8, 11.10, and 14; history requests keyed by the asker's UID, with
@@ -912,7 +914,11 @@ member's UID to their `joinedAt` in milliseconds, and the group's
 `chatTtlDays`. Clients can't read or write it. A group's chat uses the group
 ID as its conversation ID, so presence (11.8) reads the same mirror. A
 member who has just joined or left may meet the old membership for the
-moment the function takes to run.
+moment the function takes to run. Built 2026-10-28 as two triggers in
+`functions/src/mirror.ts`, one on group documents and one on member
+documents. Since Firebase may deliver triggers late, out of order, or more
+than once, each reads the document's current state rather than the change
+it was handed, and rereads after writing until the two reads agree.
 
 **Rules** (`database.rules.json`, decided 2026-10-28):
 - **Sending**: a member creates a message with all four fields above and
@@ -1362,6 +1368,20 @@ the Blaze change.
   sign-in), and Firebase's addresses in the CSP's `connect-src`.
 - App Check moves from "later" to launch, given the concern about bots
   and abuse (Section 15).
+- Location (decided 2026-10-28): every service in us-central1, so Cloud
+  Functions sit beside the databases they react to and Firestore has its
+  cheapest pricing. The Realtime Database offers only three locations, and
+  Firestore's can never change once the project is created.
+- Cloud Functions layout (decided 2026-10-28): Firebase's standard
+  `functions/` folder with its own `package.json` and `tsconfig.json`, so a
+  deploy uploads only server dependencies. TypeScript compiles to the
+  git-ignored `functions/lib` before each deploy and test run, on Node 24,
+  and `functions/src/main.ts` exports every function Firebase deploys.
+  Every function runs in us-central1 with at most 10 instances. The
+  functions suite in `tests/functions/` (`npm run test:functions`) checks
+  them end to end in the Functions emulator, apart from the other suites,
+  since the functions write data those suites clear. The security suite's
+  dependency audit covers the functions' lockfile too.
 
 **Infrastructure, still open**:
 - The security rules are complete as of 2026-10-28: `firestore.rules`
@@ -1373,12 +1393,12 @@ the Blaze change.
   fail a test when dropped, except the chat read rule's ordering check,
   which the emulator can't exercise, since it refuses an unindexed query
   that the live database would answer.
-- The Cloud Functions decided with the transfer rules (2026-10-26):
+- The membership mirror's functions are built (2026-10-28, Section 11.7).
+  Still to build, the Cloud Functions decided with the transfer rules
+  (2026-10-26):
   deleting a group (Section 9), the notices and pushes for removals,
   deletions, and offers (Section 11.1), and the daily run that lapses
   offers and offers an inactive owner's group to a member (Section 18).
-- The Cloud Function that keeps each group's membership mirror current for
-  the RTDB rules (Section 11.7, decided 2026-10-28).
 - Environments, see Section 13.
 - Combining the service workers: a PWA gets one service worker per
   scope, but `vite-plugin-pwa` generates one for offline caching and FCM
@@ -1394,7 +1414,8 @@ the Blaze change.
       it would cut against this app's privacy stance.
 - [ ] Budget alerts and the automatic billing cutoff (Section 15), set up
       the same day Blaze is enabled, on every project.
-- [ ] Cloud Functions capped with `maxInstances`.
+- [x] Cloud Functions capped with `maxInstances`: 10 each, set in
+      `functions/src/setup.ts`.
 - [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
       after upload (Section 11.9).
 - [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.

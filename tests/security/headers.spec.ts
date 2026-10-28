@@ -23,12 +23,12 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
  * @summary
  * Checks the security policy and what ships rather than a page, so it runs in
  * the Chromium project only, since a file reads the same in every engine. The
- * headers public/_headers sends have to hold the app to its own strict
- * policy, such as refusing framing. The production build, which the security
- * suite's preview server builds before the run, has to hold no private key or
- * provider token. npm audit has to find no high or critical advisory in the
- * shipped dependencies, and skips with a message when npm's registry can't
- * be reached.
+ * headers public/_headers sends have to hold the app to its own strict policy,
+ * such as refusing framing. The production build, which the security suite's
+ * preview server builds before the run, has to hold no private key or provider
+ * token. npm audit has to find no high or critical advisory in the shipped
+ * dependencies of the app or the Cloud Functions, and skips with a message
+ * when npm's registry can't be reached.
  *
  * Sections:
  *  - Constants
@@ -42,9 +42,19 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
 
 // #region Constants
 
-const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                  // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
-const DIS_DIR_STR = fileURLToPath( new URL( '../../dist/', import.meta.url ) ); // What: Distribution Directory String. Why: The secret search reads what visitors download. How: This resolves the build folder, dist/.
-const ROO_DIR_STR = fileURLToPath( new URL( '../..', import.meta.url ) );       // What: Root Directory String. Why: npm audit reads the repo's lockfile. How: This resolves the repo root.
+const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                       // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
+const DIS_DIR_STR = fileURLToPath( new URL( '../../dist/', import.meta.url ) );      // What: Distribution Directory String. Why: The secret search reads what visitors download. How: This resolves the build folder, dist/.
+const FUN_DIR_STR = fileURLToPath( new URL( '../../functions/', import.meta.url ) ); // What: Functions Directory String. Why: The Cloud Functions ship dependencies from their own lockfile. How: This resolves the functions folder.
+const ROO_DIR_STR = fileURLToPath( new URL( '../..', import.meta.url ) );            // What: Root Directory String. Why: npm audit reads the app's lockfile at the repo root. How: This resolves the repo root.
+
+const AUD_DIR_ARR = [ // What: Audit Directory Array. Why: The app and the Cloud Functions each ship dependencies from their own lockfile. How: Each row names a package folder and what ships from it.
+
+
+	{ dirStr : ROO_DIR_STR, labStr : 'app'             }, // What: App Audit Row. Why: The app's dependencies reach every visitor. How: This names the repo root.
+	{ dirStr : FUN_DIR_STR, labStr : 'Cloud Functions' }  // What: Functions Audit Row. Why: The functions' dependencies run on the server with full access to the data. How: This names the functions folder.
+
+
+];
 
 const SEC_PAT_ARR = [ // What: Secret Pattern Array. Why: A key pasted into the source would ship to every visitor. How: Each entry matches one well-known kind of private key or provider token.
 
@@ -145,43 +155,49 @@ test( 'the built app holds no secrets', () => { // What: Secret Search Test. Why
 
 
 
-test( 'the shipped dependencies have no high or critical advisory', () => { // What: Dependency Audit Test. Why: A known hole in a library the app ships reaches every visitor. How: This runs npm audit on the production dependencies and checks the high and critical counts.
+for ( const audDirObj of AUD_DIR_ARR ) { // What: Audit Loop. Why: Each package folder is audited on its own. How: This declares one audit test per folder.
 
 
-	let audTexStr = ''; // What: Audit Text String. Why: npm reports its findings as JSON on standard output, even when it exits with an error for finding some. How: This holds that output.
+	test( `the shipped dependencies of the ${ audDirObj.labStr } have no high or critical advisory`, () => { // What: Dependency Audit Test. Why: A known hole in a library the app or the Cloud Functions ship reaches every visitor or the data itself. How: This runs npm audit on one folder's production dependencies and checks the high and critical counts.
 
 
-
-	try { // What: Audit Run Attempt. Why: npm audit exits with an error whenever it finds an advisory, which would otherwise end the test. How: This runs it and keeps its JSON output when it succeeds.
-
-
-		audTexStr = execFileSync( 'npm', [ 'audit', '--omit=dev', '--json' ], { cwd : ROO_DIR_STR, encoding : 'utf8' } ); // What: Audit Run Assignment. Why: The advisories come from npm's registry. How: This runs npm audit on the production dependencies.
-
-
-	}
-
-	catch ( errCatObj ) { // What: Audit Failure Catch. Why: A run that found advisories still prints its JSON report. How: This reads the output the thrown error carries.
-
-
-		audTexStr = String( ( errCatObj as { stdout? : string } ).stdout ?? '' ); // What: Failed Audit Output Assignment. Why: npm audit exits with an error when it finds advisories, and still prints them. How: This keeps the output the error carries. // What: Type Assertion Note. Why: A failed execFileSync throws an error carrying the command's output. How: The as reads its stdout field.
-
-
-	}
+		let audTexStr = ''; // What: Audit Text String. Why: npm reports its findings as JSON on standard output, even when it exits with an error for finding some. How: This holds that output.
 
 
 
-	const audDatObj = JSON.parse( audTexStr || '{}' ) as { metadata? : { vulnerabilities? : Record< string, number > } }; // What: Audit Data Object. Why: The counts are read by severity. How: This parses npm's JSON, or an empty object when there was no output. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as names only the fields read.
-	const vulCouObj = audDatObj.metadata?.vulnerabilities;                                                                // What: Vulnerability Count Object. Why: Only a real report has counts. How: This reads them, or undefined when npm couldn't reach its registry.
+		try { // What: Audit Run Attempt. Why: npm audit exits with an error whenever it finds an advisory, which would otherwise end the test. How: This runs it and keeps its JSON output when it succeeds.
 
 
-	test.skip( !vulCouObj, 'npm audit could not reach the registry, so the dependencies went unchecked.' ); // What: Offline Skip. Why: Without a report there's nothing to check, and passing would hide that. How: This skips the test with a message saying why.
+			audTexStr = execFileSync( 'npm', [ 'audit', '--omit=dev', '--json' ], { cwd : audDirObj.dirStr, encoding : 'utf8' } ); // What: Audit Run Assignment. Why: The advisories come from npm's registry. How: This runs npm audit on the folder's production dependencies.
+
+
+		}
+
+		catch ( errCatObj ) { // What: Audit Failure Catch. Why: A run that found advisories still prints its JSON report. How: This reads the output the thrown error carries.
+
+
+			audTexStr = String( ( errCatObj as { stdout? : string } ).stdout ?? '' ); // What: Failed Audit Output Assignment. Why: npm audit exits with an error when it finds advisories, and still prints them. How: This keeps the output the error carries. // What: Type Assertion Note. Why: A failed execFileSync throws an error carrying the command's output. How: The as reads its stdout field.
+
+
+		}
 
 
 
-	expect( vulCouObj!.high + vulCouObj!.critical ).toBe( 0 ); // What: No Severe Advisory Assertion. Why: A high or critical advisory needs fixing before the app ships. How: This checks there are none. // What: Non-Null Note. Why: The skip above ends the test when the counts are missing. How: The ! says they're present here.
+		const audDatObj = JSON.parse( audTexStr || '{}' ) as { metadata? : { vulnerabilities? : Record< string, number > } }; // What: Audit Data Object. Why: The counts are read by severity. How: This parses npm's JSON, or an empty object when there was no output. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as names only the fields read.
+		const vulCouObj = audDatObj.metadata?.vulnerabilities;                                                                // What: Vulnerability Count Object. Why: Only a real report has counts. How: This reads them, or undefined when npm couldn't reach its registry.
 
 
-} );
+		test.skip( !vulCouObj, 'npm audit could not reach the registry, so the dependencies went unchecked.' ); // What: Offline Skip. Why: Without a report there's nothing to check, and passing would hide that. How: This skips the test with a message saying why.
+
+
+
+		expect( vulCouObj!.high + vulCouObj!.critical ).toBe( 0 ); // What: No Severe Advisory Assertion. Why: A high or critical advisory needs fixing before the app ships. How: This checks there are none. // What: Non-Null Note. Why: The skip above ends the test when the counts are missing. How: The ! says they're present here.
+
+
+	} );
+
+
+}
 
 // #endregion Build Checks
 
