@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (push tokens, their rules, and the pushes for
+Last updated: 2026-10-28 (the app's Firebase services and identity
+bootstrap, in Sections 8 and 14; push tokens, their rules, and the pushes for
 notices and offers, in Sections 4, 9, 11.1, and 14; the daily run, its server-only claim record, and
 the lapse and claim notices, in Sections 4, 11.1, 14, and 18; declines through a callable and the removal and
 offer notices built, in Sections 9, 11.1, 14, and 18; group deletion built as
@@ -454,7 +455,8 @@ in place of their name. Any member can reassign or release it (Section 11.5).
 
 - **No signup required.** Firebase Anonymous Authentication
   (`signInAnonymously()`) generates a random UID per device with no
-  user-provided credential.
+  user-provided credential, at the first group action rather than on page
+  load (Section 16), together with the device's key pair (Section 14).
 - **Single-device by design**: no multi-device sync is attempted or
   promised. The anonymous identity lives entirely in that browser's
   local storage; it's not portable on its own.
@@ -1389,6 +1391,26 @@ the Blaze change.
   - The legal pages, `/privacy` and `/terms`, are static pages served at
     fixed addresses, outside the app, since Google's sign-in verification
     and app listings link to them.
+
+**App's Firebase wiring, built 2026-10-28**:
+- `src/platform/firebase.ts` creates the services the first time something
+  asks, never on page load, so a visitor who hasn't acted makes no
+  connection. The dev server always runs against the Emulator Suite under
+  the demo project (`npm run emulators` starts it beside `npm run dev`). A
+  production build reads its web config, public by design, from the
+  `VITE_FIREBASE_CONFIG` environment variable Netlify sets per environment,
+  and fails with a clear error without it. Firestore keeps its offline cache
+  in IndexedDB, shared between tabs.
+- `src/state/identity.ts` is the identity bootstrap (Section 8), run at the
+  first group action rather than on load (Section 16): an anonymous
+  sign-in, an ECDH P-256 key pair in IndexedDB (`src/platform/key-store.ts`)
+  whose private key script can't export, the raw public key published to
+  `/users/{uid}`, and an empty `/accounts/{uid}`. Each step writes only
+  what's missing, and a key pair lost while the sign-in survives is
+  replaced and republished.
+- The browser suite in `tests/firebase/` (`npm run test:firebase`) checks
+  this in Chromium, Firefox, and WebKit against the emulators, since
+  WebCrypto and IndexedDB differ between engines.
 
 **App structure, still open**:
 - The exact hook API/conventions (naming, loading/error state shape, how

@@ -38,7 +38,8 @@ ARCHITECTURE.md's data model, `database.rules.json` covers chat and
 presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
 notices, the offer decline, the daily run, and the pushes, with the push
-token rules. No Firebase code in the app yet. Next steps are in
+token rules. The app has its Firebase services, created on first use, and
+the identity bootstrap, with no screens using them yet. Next steps are in
 ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
@@ -49,12 +50,14 @@ chosen.
 ## Commands
 
 ```
-npm run dev                  # Vite dev server
+npm run dev                  # Vite dev server, against the emulators
+npm run emulators            # the Emulator Suite the dev server uses
 npm run build                # type check, then production build to dist/
 npm run lint                 # ESLint across the repo
 npm run typecheck            # tsc -b, plus the Cloud Functions
 npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
+npm run test:firebase        # the app's Firebase code, in all three engines
 npm run test:functions       # Cloud Functions, end to end in the emulators
 npm run test:interaction     # navigation and interaction feedback
 npm run test:rules           # Firestore, Realtime Database, and Storage rules
@@ -64,9 +67,11 @@ npm run test:security        # headers policy, build secrets, npm audit
 The suites start their own dev server on port 5200, and the security suite
 a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
-`npm test` and `npm run test:rules` run inside `firebase emulators:exec`,
-which starts the Firestore emulator on 8200 (ease-my-life's uses 8080), the
-Realtime Database emulator on 8210, and the Storage emulator on 8220 under
+`npm test`, `npm run test:rules`, and `npm run test:firebase` run inside
+`firebase emulators:exec`, which starts the Firestore emulator on 8200
+(ease-my-life's uses 8080), the Realtime Database emulator on 8210, the
+Storage emulator on 8220, and for the Firebase suite the Auth emulator on
+8240, under
 the `demo-come-hang` project, which can't reach a real one. The Storage
 emulator's rules read that project's Firestore alone, so the Storage spec
 seeds it, and the Firestore spec keeps its data under projects of its own.
