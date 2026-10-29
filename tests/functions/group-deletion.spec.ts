@@ -4,6 +4,7 @@
 // #region Imports
 
 import { calCreFun                 } from '../support/callers.ts';        // What: Caller Create Function. Why: The tests call as signed-in and signed-out callers. How: This builds each one.
+import { DBS_URL_STR               } from '../support/database.ts';       // What: Database URL String. Why: The Realtime Database is read in the instance the app and functions share. How: This names it.
 import { deleteApp                 } from 'firebase/app';                 // What: Delete App. Why: Each caller's app closes with the suite. How: This shuts one down.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the group is gone, or untouched, as it should be. How: This asserts on what each read returns.
@@ -79,7 +80,7 @@ const reaDbsFun = async ( patValStr : string ) : Promise< unknown > => { // What
 	let datValAny : unknown = null; // What: Data Value Any. Why: The read happens inside the rules-off callback. How: This carries its result out.
 
 
-	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { datValAny = ( await get( ref( cotAdmObj.database(), patValStr ) ) ).val(); } ); // What: Database Read Call. Why: The rules hide what's being checked. How: This reads it with them off.
+	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { datValAny = ( await get( ref( cotAdmObj.database( DBS_URL_STR ), patValStr ) ) ).val(); } ); // What: Database Read Call. Why: The rules hide what's being checked. How: This reads it with them off.
 
 
 
@@ -135,8 +136,8 @@ const reaDocFun = async ( patValStr : string ) : Promise< Record< string, unknow
 const seeGroFun = () => funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { // What: Seed Group Function. Why: The main test deletes a full group. How: This writes every part of it with the rules off.
 
 
-	const fsDatObj = cotAdmObj.firestore(); // What: Firestore Data Object. Why: Most of the group is in Firestore. How: This is Firestore with the rules off.
-	const reDatObj = cotAdmObj.database();  // What: Realtime Data Object. Why: The chat, presence, and mirror are in the Realtime Database. How: This is the database with the rules off.
+	const fsDatObj = cotAdmObj.firestore();             // What: Firestore Data Object. Why: Most of the group is in Firestore. How: This is Firestore with the rules off.
+	const reDatObj = cotAdmObj.database( DBS_URL_STR ); // What: Realtime Data Object. Why: The chat, presence, and mirror are in the Realtime Database. How: This is the database with the rules off.
 
 
 	await setDoc( doc( fsDatObj, 'groups/gro1' ), { chatTtlDays : 30, currentInviteToken : 'tok1', name : 'Picnic', ownerUid : aliCalObj.uidValStr } ); // What: Group Seed. Why: The group being deleted. How: This writes it, owned by Alice.

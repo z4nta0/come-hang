@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { DBS_URL_STR               } from '../support/database.ts';       // What: Database URL String. Why: The Realtime Database is read in the instance the app and functions share. How: This names it.
 import { deleteDoc                 } from 'firebase/firestore';           // What: Delete Doc. Why: Ending a membership or a group has to clear its mirror entry. How: This deletes a document.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the mirror holds what Firestore does. How: This asserts on what each poll reads.
@@ -87,7 +88,7 @@ const reaMirFun = async ( patValStr : string ) : Promise< unknown > => { // What
 	let mirValAny : unknown = null; // What: Mirror Value Any. Why: The read happens inside the rules-off callback. How: This carries its result out.
 
 
-	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { mirValAny = ( await get( ref( cotAdmObj.database(), patValStr ) ) ).val(); } ); // What: Mirror Read Call. Why: Only the server reads the mirror. How: This reads it with the rules off.
+	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { mirValAny = ( await get( ref( cotAdmObj.database( DBS_URL_STR ), patValStr ) ) ).val(); } ); // What: Mirror Read Call. Why: Only the server reads the mirror. How: This reads it with the rules off.
 
 
 
