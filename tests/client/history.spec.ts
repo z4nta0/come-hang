@@ -3,15 +3,19 @@
 
 // #region Imports
 
+import { doc                       } from 'firebase/firestore';           // What: Doc. Why: A membership is changed by path. How: This builds a reference.
 import { docReaFun                 } from '../support/client.ts';         // What: Document Read Function. Why: The tests read what the pages wrote. How: This reads past the rules.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the history or presence behaved as it should. How: This asserts on what the pages and the emulators return.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read and seed past the rules. How: This connects to the emulators.
+import { joiWaiFun                 } from '../support/client.ts';         // What: Join Wait Function. Why: Messages sent after a join must come after it, though the clock can step back. How: This waits out a step.
 import { keyRawFun                 } from '../support/client.ts';         // What: Key Raw Function. Why: A forged bundle is encrypted with the group key. How: This exports a page's key.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: Most tests start from a group with an owner and a member. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: Each test needs a member apart from the owner's page. How: This declares tests with a second page.
 import { ref                       } from 'firebase/storage';             // What: Ref. Why: A forged bundle is uploaded by path. How: This builds its reference.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Each step runs as one identity. How: This calls the app's functions in a page.
 import { senPolFun                 } from '../support/client.ts';         // What: Send Poll Function. Why: A send just after a membership change waits for the mirror. How: This retries a send until it lands.
+import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: Join times are read and set. How: This reads and builds them.
+import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: A join time is set past the rules. How: This changes it.
 import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: A forged bundle is seeded past the rules. How: This uploads it.
 
 
@@ -151,6 +155,8 @@ pagTesObj( 'a member who lost their history recovers it from another member, and
 	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( hisEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
 
 
+	await joiWaiFun( hisEnvObj, groIdeStr, uidMemStr ); // What: Join Wait Call. Why: The test machine's clock can step back, so messages sent next must come after the join. How: This waits out a step.
+
 	await senPolFun( page, groIdeStr, 'one' ); // What: First Send Call. Why: There has to be history to lose. How: This sends once the mirror is ready.
 
 	await runPagFun( page, CHA_MOD_STR, 'chaSenFun', groIdeStr, 'two' ); // What: Second Send Call. Why: More than one message is recovered. How: This sends another.
@@ -174,7 +180,13 @@ pagTesObj( 'a member who lost their history recovers it from another member, and
 
 	await runPagFun( page, HIS_MOD_STR, 'hisAskFun', groIdeStr, 'recovery', null ); // What: Owner Ask Call. Why: A member who joined later has to hold older history to help the owner. How: This files the owner's recovery.
 
-	expect( await runPagFun( secPagObj, HIS_MOD_STR, 'hisCovFun', groIdeStr, uidOwnStr ) ).toBe( false ); // What: Member Lacks Coverage. Why: The member joined after the owner and holds nothing older. How: This expects no coverage.
+	await locCleFun( secPagObj ); // What: Member Clear Call. Why: The coverage checks use times set far apart, since the test machine's clock can step back. How: This empties the member's store.
+
+	await hisEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { await updateDoc( doc( cotAdmObj.firestore(), `groups/${ groIdeStr }/members/${ uidMemStr }` ), { joinedAt : Timestamp.fromMillis( Date.now() + 1800000 ) } ); } ); // What: Late Join Call. Why: The member has to have joined after the owner, by a margin no clock step can undo. How: This sets the member's join half an hour from now with the rules off.
+
+	await runPagFun( secPagObj, STO_MOD_STR, 'mesPutFun', { groIdeStr, mesIdeStr : 'new', senUidStr : uidOwnStr, sntTimNum : Date.now() + 3600000, texValStr : 'new' } ); // What: New Seed Call. Why: History starting well after the owner's join doesn't cover it. How: This stores a message timed an hour from now.
+
+	expect( await runPagFun( secPagObj, HIS_MOD_STR, 'hisCovFun', groIdeStr, uidOwnStr ) ).toBe( false ); // What: Member Lacks Coverage. Why: The member joined after the owner and holds nothing older. How: This expects no coverage for history that starts later.
 
 	await runPagFun( secPagObj, STO_MOD_STR, 'mesPutFun', { groIdeStr, mesIdeStr : 'old', senUidStr : uidOwnStr, sntTimNum : 1, texValStr : 'old' } ); // What: Old Seed Call. Why: History reaching back past the start covers it whoever joined when. How: This stores a message from long ago on the member's device.
 
@@ -194,6 +206,8 @@ pagTesObj( 'a newer member asks for chat from before they joined and gets only t
 	const groIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The owner chats alone first. How: This creates the group. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
 
 
+	await joiWaiFun( hisEnvObj, groIdeStr, ( await docReaFun( hisEnvObj, `groups/${ groIdeStr }` ) )?.ownerUid as string ); // What: Creation Wait Call. Why: A backlog starts no earlier than the group, and the test machine's clock can step back. How: This waits for the clock to pass the owner's join. // What: Type Assertion Note. Why: The rules store the owner as a string. How: The as reads it as one.
+
 	await senPolFun( page, groIdeStr, 'first' ); // What: First Send Call. Why: Chat from before the backlog's start. How: This sends once the mirror is ready.
 
 	await runPagFun( page, CHA_MOD_STR, 'chaSenFun', groIdeStr, 'second' ); // What: Second Send Call. Why: Chat from inside the backlog's range. How: This sends it.
@@ -206,6 +220,8 @@ pagTesObj( 'a newer member asks for chat from before they joined and gets only t
 	await runPagFun( secPagObj, '/src/state/joins.ts', 'reqCreFun', groDatObj?.currentInviteToken, 'Dana Lee', '' ); // What: Request Call. Why: The member asks to join. How: This files the request.
 
 	await runPagFun( page, '/src/state/joins.ts', 'reqAppFun', groIdeStr, uidMemStr ); // What: Approval Call. Why: The owner lets the member in. How: This approves the request.
+
+	await joiWaiFun( hisEnvObj, groIdeStr, uidMemStr ); // What: Join Wait Call. Why: The test machine's clock can step back, so messages sent next must come after the join. How: This waits out a step.
 
 	await expect.poll( () => runPagFun( secPagObj, CHA_MOD_STR, 'chaSynFun', groIdeStr ) ).toBe( 0 ); // What: Member Sync Poll. Why: The member reads once the mirror has them, from their join on. How: This retries until a sync keeps nothing.
 
@@ -246,7 +262,7 @@ pagTesObj( 'a bundle is untrusted, so only well-formed messages in the range are
 
 	const keyValObj = await crypto.subtle.importKey( 'raw', Buffer.from( await keyRawFun( page, groIdeStr ), 'base64' ), 'AES-GCM', false, [ 'encrypt' ] ); // What: Key Value Object. Why: The forged bundle is encrypted with the group's key. How: This imports it.
 	const iniVecArr = crypto.getRandomValues( new Uint8Array( 12 ) );                                                                                       // What: Initialization Vector Array. Why: Each encryption takes a fresh IV. How: This draws one.
-	const nowTimNum = Date.now(); // What: Now Time Number. Why: A message in range is timed now. How: This reads the clock.
+	const nowTimNum = ( ( await docReaFun( hisEnvObj, `groups/${ groIdeStr }/members/${ uidMemStr }` ) )?.joinedAt as Timestamp ).toMillis() + 1000;        // What: Now Time Number. Why: A message in range comes after the member's join, whatever the clock does. How: This times it a second after the join. // What: Type Assertion Note. Why: The rules store it as a timestamp. How: The as reads it as one.
 
 	const entValArr = [ // What: Entry Value Array. Why: Each entry tests one way a bundle can be bad. How: This lists one good entry and several bad ones.
 

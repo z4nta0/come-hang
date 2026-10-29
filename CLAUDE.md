@@ -98,7 +98,12 @@ collection the specs read, and `npm run test:functions` sets
 the same. The app, the functions, and the specs share the Realtime Database's default
 instance, `demo-come-hang-default-rtdb`, where the emulator loads
 `database.rules.json`; `functions/src/setup.ts` names it under the emulator,
-and specs open it through `DBS_URL_STR` in `tests/support/database.ts`. The
+and specs open it through `DBS_URL_STR` in `tests/support/database.ts`. Under WSL2 the system clock steps back by a couple of seconds now and then
+during heavy test runs (measured 2026-10-29), so a spec never relies on two
+times stamped seconds apart landing in order: `joiWaiFun` in
+`tests/support/client.ts` waits until the clock is 3 seconds past a join
+before sending messages the member must read, and other checks set their
+times explicitly. The
 emulators need Java, 21 installed.
 
 ## Project facts

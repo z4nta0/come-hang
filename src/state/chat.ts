@@ -18,6 +18,7 @@ import { keyLoaFun       } from './groups.ts';               // What: Key Load F
 import { linNorFun       } from '../core/text-limits.ts';    // What: Lines Normalize Function. Why: A message keeps its line breaks while it's tidied. How: This normalizes it.
 import { mesPutFun       } from '../platform/chat-store.ts'; // What: Message Put Function. Why: The device keeps its chat history. How: This stores a message.
 import { onChildAdded    } from 'firebase/database';         // What: On Child Added. Why: A watched chat hears each message as it arrives. How: This listens to the query.
+import { onValue         } from 'firebase/database';         // What: On Value. Why: The device's offset from the server's clock is read once. How: This listens to it a single time.
 import { orderByChild    } from 'firebase/database';         // What: Order By Child. Why: The rules let a member read only messages ordered by when they were sent. How: This orders the query.
 import { push            } from 'firebase/database';         // What: Push. Why: Each message takes the database's own time-ordered ID. How: This writes it under a new one.
 import { query           } from 'firebase/database';         // What: Query. Why: Reads are a query the rules check. How: This builds it.
@@ -85,6 +86,10 @@ const b64EncFun = ( bytValArr : Uint8Array ) : string => btoa( String.fromCharCo
 
 
 const memUidFun = async ( groIdeStr : string ) : Promise< Set< string > > => new Set( ( await getDocs( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/members` ) ) ).docs.map( ( memDocObj ) => memDocObj.id ) ); // What: Member UID Function. Why: Sending and cleaning up both need who's in the group now. How: This reads the members' UIDs.
+
+
+
+const srvTimFun = async () : Promise< number > => Date.now() + await new Promise< number >( ( resValFun ) => onValue( ref( firGetFun().reaDatObj, '.info/serverTimeOffset' ), ( offSnaObj ) => resValFun( ( offSnaObj.val() as number | null ) ?? 0 ), { onlyOnce : true } ) ); // What: Server Time Function. Why: The device's copy of its own message has to sort among messages timed by the server, and a phone's clock can be minutes off. How: This adds the database's measured offset to the device's clock. // What: Type Assertion Note. Why: The offset is a number of milliseconds, or null before it's known. How: The as reads it as either.
 
 
 
@@ -276,14 +281,14 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 	} );
 
 
-	await mesPutFun({ // What: Store Call. Why: The sender keeps their own message. How: This stores it, timed by the device until a sync reads the server's time.
+	await mesPutFun({ // What: Store Call. Why: The sender keeps their own message. How: This stores it, timed by the server's clock as the device estimates it.
 
 
-		groIdeStr,                  // What: Group Identifier String. Why: The message is kept under its group. How: This names it.
-		mesIdeStr : mesRefObj.key!, // What: Message Identifier String. Why: A later sync of the same message replaces this copy. How: This uses the server's ID. // What: Non-Null Note. Why: A pushed reference always has a key. How: The ! reads it as present.
-		senUidStr : uidValStr,      // What: Sender UID String. Why: The chat shows who sent it. How: This names this identity.
-		sntTimNum : Date.now(),     // What: Sent Time Number. Why: The history is ordered by time. How: This uses the device's clock.
-		texValStr : mesNorStr       // What: Text Value String. Why: The history shows the text. How: This keeps the tidied message.
+		groIdeStr,                     // What: Group Identifier String. Why: The message is kept under its group. How: This names it.
+		mesIdeStr : mesRefObj.key!,    // What: Message Identifier String. Why: A later sync of the same message replaces this copy. How: This uses the server's ID. // What: Non-Null Note. Why: A pushed reference always has a key. How: The ! reads it as present.
+		senUidStr : uidValStr,         // What: Sender UID String. Why: The chat shows who sent it. How: This names this identity.
+		sntTimNum : await srvTimFun(), // What: Sent Time Number. Why: The history is ordered by time. How: This uses the device's clock corrected by its offset from the server's, since a phone's clock can be minutes off.
+		texValStr : mesNorStr          // What: Text Value String. Why: The history shows the text. How: This keeps the tidied message.
 
 
 	});

@@ -157,6 +157,49 @@ const decNamFun = async ( envTesObj : RulesTestEnvironment, groIdeStr : string, 
 
 
 
+// #region joiWaiFun
+
+/**
+ * joiWaiFun = Join Wait Function
+ *
+ * @summary
+ * Waits until the test machine's clock is 3 seconds past a member's join
+ * time. Under WSL2 the system clock steps back by a couple of seconds now
+ * and then, when Windows corrects its drift (measured 2026-10-29, at about
+ * 2.4 seconds), so a time stamped just after a join can fall before it, and
+ * a message sent then would sit outside what the member may read.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param envTesObj - Environment Test Object: The spec's environment.
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param uidValStr - UID Value String: The member's UID.
+ *
+ * @returns A promise that settles once the join time has passed, with no
+ *          value.
+ *
+ * @example
+ * ```ts
+ * joiWaiFun(envTesObj, 'Xk3...', 'u9F...') // => Promise<void>
+ * ```
+ *
+*/
+
+const joiWaiFun = async ( envTesObj : RulesTestEnvironment, groIdeStr : string, uidValStr : string ) : Promise< void > => { // What: Join Wait Function. Why: The test machine's clock can step back by seconds, while production's servers don't. How: This waits out a step for one join.
+
+
+	const joiTimNum = ( ( await docReaFun( envTesObj, `groups/${ groIdeStr }/members/${ uidValStr }` ) )?.joinedAt as { toMillis : () => number } ).toMillis(); // What: Join Time Number. Why: Messages count from this time. How: This reads the member's join time in milliseconds. // What: Type Assertion Note. Why: The rules store it as a timestamp. How: The as reads its conversion.
+
+
+	await expect.poll( () => Date.now(), { timeout : 15000 } ).toBeGreaterThan( joiTimNum + 3000 ); // What: Clock Poll. Why: A message sent now has to come after the join, even if the clock steps back. How: This waits until the clock is 3 seconds past it, more than the steps measured.
+
+
+};
+
+// #endregion joiWaiFun
+
+
+
 // #region keyRawFun
 
 /**
@@ -342,7 +385,7 @@ const senPolFun = async ( pagValObj : Page, groIdeStr : string, mesTexStr : stri
 
 // #region Exports
 
-export { decNamFun, docReaFun, keyRawFun, memSetFun, pagTesObj, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
+export { decNamFun, docReaFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
 
 // #endregion Exports
 

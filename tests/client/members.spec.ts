@@ -111,10 +111,10 @@ pagTesObj( 'members are listed by name, oldest first, and a member renames thems
 	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with two members. How: This sets them up.
 
 
-	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'memLisFun', groIdeStr ) ).toMatchObject( [ { namTexStr : 'Alice', uidValStr : uidOwnStr }, { namTexStr : 'Dana Lee', uidValStr : uidMemStr } ] ); // What: Members Listed. Why: Each member reads the others' names with the group key. How: This expects the owner, then the member.
-	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'namSetFun', groIdeStr, '  Dana   L. ' ) ).toBeUndefined();                                                                                        // What: Rename Call. Why: A member chooses their own name. How: This expects the tidied rename to succeed.
-	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'namSetFun', groIdeStr, 'Dana 2' ) ).toBe( 'error:RangeError' );                                                                                   // What: Bad Name Refused. Why: A name is letters, so a number fails. How: This expects a RangeError.
-	expect( await decNamFun( memEnvObj, groIdeStr, uidMemStr, await keyRawFun( page, groIdeStr ) ) ).toBe( 'Dana L.' );                                                                                 // What: Name Decrypted. Why: The owner's key opens the new name, saved tidied. How: This expects the renamed name.
+	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'memLisFun', groIdeStr ) ).toEqual( expect.arrayContaining( [ expect.objectContaining( { namTexStr : 'Alice', uidValStr : uidOwnStr } ), expect.objectContaining( { namTexStr : 'Dana Lee', uidValStr : uidMemStr } ) ] ) ); // What: Members Listed. Why: Each member reads the others' names with the group key. How: This expects both, in any order, since the test machine's clock can step back between the two joins, and the order is checked below with set times.
+	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'namSetFun', groIdeStr, '  Dana   L. ' ) ).toBeUndefined();        // What: Rename Call. Why: A member chooses their own name. How: This expects the tidied rename to succeed.
+	expect( await runPagFun( secPagObj, MEM_MOD_STR, 'namSetFun', groIdeStr, 'Dana 2' ) ).toBe( 'error:RangeError' );   // What: Bad Name Refused. Why: A name is letters, so a number fails. How: This expects a RangeError.
+	expect( await decNamFun( memEnvObj, groIdeStr, uidMemStr, await keyRawFun( page, groIdeStr ) ) ).toBe( 'Dana L.' ); // What: Name Decrypted. Why: The owner's key opens the new name, saved tidied. How: This expects the renamed name.
 
 
 

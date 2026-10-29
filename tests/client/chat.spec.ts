@@ -9,6 +9,7 @@ import { docReaFun                 } from '../support/client.ts';         // Wha
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when chat behaved as it should. How: This asserts on what the pages and the emulators return.
 import { get                       } from 'firebase/database';            // What: Get. Why: The tests read the chat on the server. How: This reads a location once.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read and seed past the rules. How: This connects to the emulators.
+import { joiWaiFun                 } from '../support/client.ts';         // What: Join Wait Function. Why: Messages sent after a join must come after it, though the clock can step back. How: This waits out a step.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: Most tests start from a group with an owner and a member. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: Each test needs a member apart from the owner's page. How: This declares tests with a second page.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Chat locations are named by path. How: This builds a reference.
@@ -134,6 +135,10 @@ pagTesObj( 'a message reaches the other member, is kept on both devices, and lea
 
 	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( chaEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
 
+
+	await joiWaiFun( chaEnvObj, groIdeStr, uidMemStr ); // What: Join Wait Call. Why: The test machine's clock can step back, so messages sent next must come after the join. How: This waits out a step.
+
+
 	const mesIdeStr = await senPolFun( page, groIdeStr, '  Hi @Dana,  50% off "pies" *today* 🎉 ' ); // What: Message Identifier String. Why: The owner sends with punctuation chat needs. How: This sends once the mirror is ready.
 
 	const mesPatStr = `chats/${ groIdeStr }/messages/${ mesIdeStr }`; // What: Message Path String. Why: The message is checked on the server. How: This names it.
@@ -183,6 +188,10 @@ pagTesObj( 'a member reads only from when they joined, and a message waiting on 
 
 	const groIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The owner chats alone first. How: This creates the group. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
 
+
+	await joiWaiFun( chaEnvObj, groIdeStr, ( await docReaFun( chaEnvObj, `groups/${ groIdeStr }` ) )?.ownerUid as string ); // What: Creation Wait Call. Why: The owner reads from their own join, and the test machine's clock can step back. How: This waits for the clock to pass it. // What: Type Assertion Note. Why: The rules store the owner as a string. How: The as reads it as one.
+
+
 	const befIdeStr = await senPolFun( page, groIdeStr, 'Before you joined' ); // What: Before Identifier String. Why: A message from before the member joined. How: This sends it.
 
 	const tokValStr = ( await docReaFun( chaEnvObj, `groups/${ groIdeStr }` ) )?.currentInviteToken as string;                     // What: Token Value String. Why: The member joins through the link. How: This reads the token the group names. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
@@ -192,6 +201,8 @@ pagTesObj( 'a member reads only from when they joined, and a message waiting on 
 	await runPagFun( secPagObj, '/src/state/joins.ts', 'reqCreFun', tokValStr, 'Dana Lee', '' ); // What: Request Call. Why: The member asks to join. How: This files the request.
 
 	await runPagFun( page, '/src/state/joins.ts', 'reqAppFun', groIdeStr, uidMemStr ); // What: Approval Call. Why: The owner lets the member in. How: This approves the request.
+
+	await joiWaiFun( chaEnvObj, groIdeStr, uidMemStr ); // What: Join Wait Call. Why: The test machine's clock can step back, so messages sent next must come after the join. How: This waits out a step.
 
 	await expect.poll( () => runPagFun( secPagObj, CHA_MOD_STR, 'chaSynFun', groIdeStr ) ).toBe( 0 ); // What: Member Sync Poll. Why: The member can read once the mirror has their join time, and sees nothing from before it. How: This retries until a sync keeps no messages.
 
