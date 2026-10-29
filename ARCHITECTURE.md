@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (Google linking and recovery in the app, the
+Last updated: 2026-10-29 (the purchase's checkout and webhook functions,
+their delivery records, and the app's side of buying, in Sections 4, 14,
+and 18; Google linking and recovery in the app, the
 group key shared again with a recovered member, and the newest phone's
 key standing, in Sections 6, 8, 11.1, 11.3, 12, and 14; push notifications in the app, its one service
 worker, and offline opening, in Sections 2, 11.1, and 14; the activity pushes, for chat, join requests,
@@ -245,6 +247,7 @@ from Spark's 100 to 200,000.
 | Presence | RTDB | Standard `onDisconnect()` pattern |
 | Push token | Firestore | `/accounts/{uid}/pushToken/current`, the identity's one phone, written and read only by its owner; see Section 11.1 |
 | Ownership claim record | Firestore | `/groups/{groupId}/ownerClaim/current`, read and written only by Cloud Functions; see Section 18 |
+| Handled payment deliveries | Firestore | `/polarEvents/{webhookId}`, read and written only by the purchase webhook, expiring a day later; see Section 18 |
 
 **Full field-level schema is in Section 11.**
 
@@ -1628,6 +1631,12 @@ the Blaze change.
   `functions/src/activity-pushes.ts`. The client suite drives the Auth
   emulator's own Google popup to recover a member on a fresh browser
   context and has the owner share the key.
+- `src/state/purchase.ts` starts a purchase through `cheCreFun` and reads
+  the paid flag (Section 18). The functions suite checks the checkout and
+  webhook in a Node process of their own
+  (`tests/support/purchase-child.ts`), since Playwright's loader can't link
+  the HTTP functions' module, with Polar's API stood in and webhooks signed
+  the way Polar signs them.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.
@@ -1720,12 +1729,20 @@ the Blaze change.
 - [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
 - [ ] Firestore TTL policies on the `expireAt` field of every collection
       group that has one (`liveLocations`, `events`, `assignments`,
-      `historyRequests`, `notices`, `pushToken`), since a TTL policy is
-      set per collection group in the console, not by the rules.
+      `historyRequests`, `notices`, `pushToken`, `polarEvents`), since a
+      TTL policy is set per collection group in the console, not by the
+      rules.
 - [ ] Authorized domains, API key restrictions, and CSP, per the hosting
       bullet above, the CSP's `connect-src` including FCM's token
       addresses (`fcmregistrations.googleapis.com` and
       `firebaseinstallations.googleapis.com`).
+- [ ] Polar: the upgrade's product made in the sandbox (staging) and live
+      (live), each project's `POLAR_ACCESS_TOKEN` and
+      `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,
+      its `functions/.env.<projectId>` giving `POLAR_PRODUCT_ID`,
+      `POLAR_API_URL` (`https://api.polar.sh` for live), and
+      `POLAR_SUCCESS_URL`, and Polar's webhook pointed at the project's
+      `polWebFun` address for `order.paid` and `order.refunded`.
 - [ ] The web push (VAPID) key pair generated in each project's Cloud
       Messaging settings, its public key set as `VITE_FIREBASE_VAPID_KEY`
       in Netlify for that environment.
@@ -1954,6 +1971,27 @@ paywall is switched on before launch.
   Function here, writes a permanent `paid` flag on `/accounts/{uid}`
   (Section 11.1), which the rules read and no client can write. A refund
   clears the flag, and the "over a limit" rule above applies.
+- **How it runs** (decided 2026-10-29, `functions/src/purchase.ts` and
+  `src/state/purchase.ts`): the app calls `cheCreFun`, which refuses an
+  identity not linked to Google or already paid, and creates a Polar
+  checkout tagged with the UID (as the customer's external ID and in the
+  order's metadata) and prefilled with the Google email, returning its
+  address for the app to open. Polar sends the buyer back to a fixed
+  address per project, the app's root with `?purchase=done`, so the
+  function can't be made to redirect anywhere else. `polWebFun` takes
+  Polar's webhook: it checks the Standard Webhooks signature and refuses
+  one unsigned, mis-signed, or more than five minutes old, then sets the
+  flag for a paid order of the product and removes it for a fully refunded
+  one. Each delivery's ID is recorded in `/polarEvents`, in the same
+  transaction as the flag, so a replayed event never acts twice while a
+  failed write leaves Polar free to retry. An order for another product,
+  another kind of event, or an order naming no account is logged and
+  acknowledged. Each project gives its own settings: the token and webhook
+  secret in Secret Manager, and the product, the API's address (the
+  sandbox for staging, live Polar for live), and the return address in its
+  `functions/.env.<projectId>`. A project without a product sells and
+  grants nothing. The price, $9.99, lives in the Polar product, and the
+  screens will show it.
 
 **Ownership transfer (decided 2026-10-22)**:
 - **Offer, then accept.** The owner offers ownership to a current member

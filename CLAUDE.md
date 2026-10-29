@@ -39,14 +39,15 @@ presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
 notices, the offer decline, the daily run, and the pushes, with the push
 token rules, including the activity pushes for chat, join requests, history
-requests, and key requests. The app has its Firebase services, created on first use, the
+requests, and key requests, and the purchase's Polar checkout and
+webhook. The app has its Firebase services, created on first use, the
 identity bootstrap, the group key encryption, group creation, joining
 through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
 ownership offers and notices, events with their bring-lists, chat
 with its on-device history, presence, history requests, location
-sharing, push notifications, and Google linking and recovery with the
-group keys shared again, with no
+sharing, push notifications, Google linking and recovery with the
+group keys shared again, and buying the upgrade, with no
 screens using them yet, since screens wait for the design pass. Its one
 service worker opens the app offline and shows pushes. Next steps are in
 ARCHITECTURE.md's Section 14.
@@ -92,7 +93,10 @@ seeds it, and the Firestore spec keeps its data under projects of its own.
 own emulator session, with the Functions emulator on 8230 and the Auth
 emulator on 8240 for callers' sign-ins, since their triggers write data the
 other suites clear, and `npm test` runs it last. Its specs run one
-at a time, since each clears the data the next one's triggers write. The
+at a time, since each clears the data the next one's triggers write.
+Playwright's loader can't link the HTTP functions' module, so the purchase
+spec runs the checkout and webhook in a Node process of their own,
+`tests/support/purchase-child.ts`, which loads the functions' build. The
 Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The
 emulator can't fire a v2 scheduled function, by itself or on request, so
 the daily run's spec imports it and calls its handler through its `run`

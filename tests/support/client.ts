@@ -26,8 +26,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * browser context of its own, so each page is its own device with its own
  * identity and storage. The helpers call the app's own exported functions in
  * either page, export a group key out of one, read what the pages wrote with
- * the rules off, and decrypt a member's name outside the browser, as any
- * member's device would.
+ * the rules off, decrypt a member's name outside the browser, as any member's
+ * device would, and sign in through the Auth emulator's Google popup.
  *
  * Sections:
  *  - Constants
@@ -288,6 +288,78 @@ const runPagFun = ( pagValObj : Page, modPatStr : string, funNamStr : string, ..
 
 
 
+// #region gooRunFun
+
+/**
+ * gooRunFun = Google Run Function
+ *
+ * @summary
+ * Runs one of the identity module's Google functions in a page and signs in
+ * through the Auth emulator's popup it opens: picking the account with the
+ * email when the popup lists it, or adding it otherwise. Resolves with what
+ * runPagFun returns, the function's result or its error's code.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param pagValObj - Page Value Object: The phone's page.
+ * @param funNamStr - Function Name String: gooLinFun or gooRecFun.
+ * @param emaValStr - Email Value String: The Google account's email.
+ *
+ * @returns A promise that resolves with the result or the error's code.
+ *
+ * @example
+ * ```ts
+ * gooRunFun(page, 'gooLinFun', 'dana@example.com') // => undefined
+ * ```
+ *
+*/
+
+const gooRunFun = async ( pagValObj : Page, funNamStr : string, emaValStr : string ) : Promise< unknown > => { // What: Google Run Function. Why: Google sign-in only happens through its popup. How: This runs the function and fills the popup in.
+
+
+	const popPagPro = pagValObj.waitForEvent( 'popup' );                           // What: Popup Page Promise. Why: The function opens the popup. How: This waits for it.
+	const runResPro = runPagFun( pagValObj, '/src/state/identity.ts', funNamStr ); // What: Run Result Promise. Why: The function opens the popup and waits on it. How: This runs it, settling with its value or its error's code.
+	const popPagObj = await popPagPro;                                             // What: Popup Page Object. Why: The account is chosen there. How: This waits for the popup.
+
+
+	await popPagObj.waitForLoadState(); // What: Popup Load Wait. Why: The widget lists its accounts once loaded. How: This waits for it.
+
+
+
+	const accIteObj = popPagObj.getByText( emaValStr ); // What: Account Item Object. Why: An account the emulator already has is picked from its list. How: This finds the entry by email.
+
+
+	if ( await accIteObj.count() > 0 ) { // What: Known Account Block. Why: Signing in again uses the same account. How: This picks it.
+
+
+		await accIteObj.first().click(); // What: Account Click. Why: The account is chosen. How: This clicks its entry.
+
+
+	}
+
+	else { // What: New Account Block. Why: The first sign-in adds the account. How: This fills the form and signs in.
+
+
+		await popPagObj.getByRole( 'button', { name : 'Add new account' } ).click(); // What: Add Click. Why: The form opens. How: This clicks its button.
+
+		await popPagObj.locator( '#email-input' ).fill( emaValStr ); // What: Email Fill. Why: The account is known by its email. How: This types it.
+
+		await popPagObj.getByRole( 'button', { name : 'Sign in with Google.com' } ).click(); // What: Sign In Click. Why: The account is created and signed in. How: This clicks the button.
+
+
+	}
+
+
+
+	return runResPro; // What: Result Return. Why: The test checks what the function did. How: This returns its settled result.
+
+
+};
+
+// #endregion gooRunFun
+
+
+
 // #region memSetFun
 
 /**
@@ -385,7 +457,7 @@ const senPolFun = async ( pagValObj : Page, groIdeStr : string, mesTexStr : stri
 
 // #region Exports
 
-export { decNamFun, docReaFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
+export { decNamFun, docReaFun, gooRunFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
 
 // #endregion Exports
 

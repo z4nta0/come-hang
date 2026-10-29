@@ -5,6 +5,7 @@
 
 import { docReaFun                 } from '../support/client.ts';         // What: Document Read Function. Why: The tests read what the pages wrote. How: This reads past the rules.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when recovery behaved as it should. How: This asserts on what the pages and the emulator return.
+import { gooRunFun                 } from '../support/client.ts';         // What: Google Run Function. Why: Linking and recovery go through Google's popup. How: This runs one and fills the popup in.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read past the rules. How: This connects to the emulator.
 import { keyRawFun                 } from '../support/client.ts';         // What: Key Raw Function. Why: The recovered phone has to hold the group's own key. How: This exports a page's key.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: Each test starts from a group with an owner and a member. How: This creates the group and lets the member in.
@@ -71,78 +72,6 @@ const mesGetFun = ( pagValObj : Page, modPatStr : string, funNamStr : string, ..
 
 
 const pubGetFun = async ( uidValStr : string ) : Promise< Bytes > => ( await docReaFun( recEnvObj, `users/${ uidValStr }` ) )?.publicKey as Bytes; // What: Public Get Function. Why: Recovery publishes the new phone's key. How: This reads the identity's published key. // What: Type Assertion Note. Why: The rules store the key as bytes. How: The as reads it as such.
-
-
-
-// #region gooRunFun
-
-/**
- * gooRunFun = Google Run Function
- *
- * @summary
- * Runs one of the identity module's Google functions in a page and signs in
- * through the Auth emulator's popup it opens: picking the account with the
- * email when the popup lists it, or adding it otherwise. Resolves with what
- * runPagFun returns, the function's result or its error's code.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param pagValObj - Page Value Object: The phone's page.
- * @param funNamStr - Function Name String: gooLinFun or gooRecFun.
- * @param emaValStr - Email Value String: The Google account's email.
- *
- * @returns A promise that resolves with the result or the error's code.
- *
- * @example
- * ```ts
- * gooRunFun(page, 'gooLinFun', 'dana@example.com') // => undefined
- * ```
- *
-*/
-
-const gooRunFun = async ( pagValObj : Page, funNamStr : string, emaValStr : string ) : Promise< unknown > => { // What: Google Run Function. Why: Google sign-in only happens through its popup. How: This runs the function and fills the popup in.
-
-
-	const popPagPro = pagValObj.waitForEvent( 'popup' );              // What: Popup Page Promise. Why: The function opens the popup. How: This waits for it.
-	const runResPro = runPagFun( pagValObj, IDE_MOD_STR, funNamStr ); // What: Run Result Promise. Why: The function opens the popup and waits on it. How: This runs it, settling with its value or its error's code.
-	const popPagObj = await popPagPro;                                // What: Popup Page Object. Why: The account is chosen there. How: This waits for the popup.
-
-
-	await popPagObj.waitForLoadState(); // What: Popup Load Wait. Why: The widget lists its accounts once loaded. How: This waits for it.
-
-
-
-	const accIteObj = popPagObj.getByText( emaValStr ); // What: Account Item Object. Why: An account the emulator already has is picked from its list. How: This finds the entry by email.
-
-
-	if ( await accIteObj.count() > 0 ) { // What: Known Account Block. Why: Signing in again uses the same account. How: This picks it.
-
-
-		await accIteObj.first().click(); // What: Account Click. Why: The account is chosen. How: This clicks its entry.
-
-
-	}
-
-	else { // What: New Account Block. Why: The first sign-in adds the account. How: This fills the form and signs in.
-
-
-		await popPagObj.getByRole( 'button', { name : 'Add new account' } ).click(); // What: Add Click. Why: The form opens. How: This clicks its button.
-
-		await popPagObj.locator( '#email-input' ).fill( emaValStr ); // What: Email Fill. Why: The account is known by its email. How: This types it.
-
-		await popPagObj.getByRole( 'button', { name : 'Sign in with Google.com' } ).click(); // What: Sign In Click. Why: The account is created and signed in. How: This clicks the button.
-
-
-	}
-
-
-
-	return runResPro; // What: Result Return. Why: The test checks what the function did. How: This returns its settled result.
-
-
-};
-
-// #endregion gooRunFun
 
 // #endregion Helpers
 
