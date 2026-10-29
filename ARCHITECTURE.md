@@ -11,8 +11,10 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (events and their bring-lists in the app, and a
-description's blank lines, in Sections 11.10 and 14); 2026-10-28 (group
+Last updated: 2026-10-29 (chat in the app, its allowed characters, and the
+emulator's shared database instance, in Sections 11.10 and 14; events and
+their bring-lists in the app, and a description's blank lines, in Sections
+11.10 and 14); 2026-10-28 (group
 deletion in the app, in Section 14;
 ownership offers and notices in the app, in Section 14; members, leaving, removal, link rotation, and
 group settings in the app, in Section 14; joining a group in the app, with the approver
@@ -1269,8 +1271,14 @@ checks them before encrypting and the rules can only cap each ciphertext's
 size, at 3 bytes per character plus the 16-byte tag (Sections 11.3 and
 11.5). The event and item rows were decided 2026-10-27. A chat message holds
 1 to 2,000 characters (decided 2026-10-28), which the rules cap at its
-ciphertext's size (Section 11.7); the characters it allows are decided with
-the chat screen.
+ciphertext's size (Section 11.7). It allows any visible text (decided
+2026-10-29): letters, numbers, punctuation, symbols, emoji, spaces, and line
+breaks, refusing only control, format, private-use, and unassigned
+characters and the line and paragraph separators, so nothing invisible or
+direction-reversing can disguise a message. The zero-width joiner and
+non-joiner and the emoji tag characters stay allowed, since emoji, flags,
+and scripts such as Persian need them. It's tidied line by line, like a
+description.
 
 ### 11.11 Untrusted Text And Paths
 
@@ -1500,6 +1508,25 @@ the Blaze change.
   line, and refuses an item for a cancelled event. A claim is the
   compare-and-swap Section 7 describes, refusing with "Someone already
   claimed that" when the item names an assignee.
+- `src/state/chat.ts` is the group's chat (Sections 5 and 11.7). A message
+  is tidied, checked as visible text, encrypted, and sent waiting on every
+  other member, and the sender's device keeps a copy. A member reads from
+  their own join time, by a one-time sync or by watching, and each message
+  read is kept on the device, acknowledged, cleared of departed members'
+  entries (after rereading the members, so a new member isn't taken for
+  gone), and deleted once nobody waits on it or it's past the retention.
+  The device's history lives in `src/platform/chat-store.ts`, beside the
+  keys in the app's one IndexedDB database, which
+  `src/platform/local-db.ts` opens at version 2, creating whichever stores
+  are missing.
+- Under the emulator, the app, the Cloud Functions, and the tests share the
+  Realtime Database's default instance, `demo-come-hang-default-rtdb`, where
+  the emulator loads `database.rules.json`, as production's app and
+  functions share the project's default instance. The Functions emulator
+  otherwise hands the Admin SDK a namespace named after the bare project ID,
+  so `functions/src/setup.ts` names the instance there (found 2026-10-29,
+  when the mirror the chat rules read sat in a different namespace from the
+  app's chat).
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.

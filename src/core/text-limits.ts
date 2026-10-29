@@ -30,6 +30,7 @@
 
 // #region Constants
 
+const CHA_MES_REG = /^(?:[^\p{C}\p{Zl}\p{Zp}]|[\n\u{200C}\u{200D}\u{E0020}-\u{E007F}])+$/u;                                      // What: Chat Message Regular Expression. Why: A message allows any visible text, refusing only invisible and direction-reversing characters that could disguise it (decided 2026-10-29). How: This refuses control, format, private-use, and unassigned characters and the line and paragraph separators, keeping line breaks, the joiners emoji and some scripts need, and the tag characters of flag emoji.
 const GRO_NAM_REG = /^[\p{L}\p{M}\p{N}\p{So}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1FAFF}\u{200D}\u{E0020}-\u{E007F}.,'’\-&!?():#/+]+( [\p{L}\p{M}\p{N}\p{So}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1FAFF}\u{200D}\u{E0020}-\u{E007F}.,'’\-&!?():#/+]+)*$/u; // What: Group Name Regular Expression. Why: A group name allows letters, numbers, basic punctuation, and emoji, with single spaces (Section 11.10). How: This is the rules' namGroFun pattern, runs of its character class joined by single spaces, with the emoji blocks listed by code point as the rules list them.
 const EVE_DES_REG = new RegExp( `^${ GRO_NAM_REG.source.slice( 1, -1 ) }(\n\n?${ GRO_NAM_REG.source.slice( 1, -1 ) })*$`, 'u' ); // What: Event Description Regular Expression. Why: A description allows the title's set plus line breaks, with at most one blank line between paragraphs (Section 11.10). How: This joins lines of the group name pattern with one or two line breaks.
 const JOI_NOT_REG = /^[\p{L}\p{M}\p{N}.,'’\-&!?():#/+]+( [\p{L}\p{M}\p{N}.,'’\-&!?():#/+]+)*$/u;                                 // What: Join Note Regular Expression. Why: A join note is letters and numbers in any script with basic punctuation, and no emoji (Section 11.10). How: This is the rules' notJoiFun pattern, runs of its character class joined by single spaces.
@@ -45,7 +46,7 @@ const texNorFun = ( texValStr : string ) : string => texValStr.normalize( 'NFC' 
 
 
 
-const desNorFun = ( desValStr : string ) : string => desValStr.normalize( 'NFC' ).split( /\r\n|\r|\n/ ).map( ( linValStr ) => linValStr.trim().replace( /\s+/g, ' ' ) ).join( '\n' ).replace( /\n{3,}/g, '\n\n' ).trim(); // What: Description Normalize Function. Why: A description keeps its line breaks, while each line is tidied like any other text (Section 11.10). How: This normalizes to NFC, trims and single-spaces each line, keeps at most one blank line between paragraphs, and trims the ends.
+const chaMesFun = ( mesValStr : string ) : boolean => mesValStr.length <= 2000 && CHA_MES_REG.test( mesValStr ); // What: Chat Message Function. Why: A message is encrypted, so the rules can only cap its size and the app checks its characters. How: This is true for 1 to 2,000 characters of visible text, which can't match an empty message.
 
 
 
@@ -73,6 +74,10 @@ const joiNotFun = ( notValStr : string ) : boolean => notValStr.length <= 150 &&
 
 
 
+const linNorFun = ( texValStr : string ) : string => texValStr.normalize( 'NFC' ).split( /\r\n|\r|\n/ ).map( ( linValStr ) => linValStr.trim().replace( /\s+/g, ' ' ) ).join( '\n' ).replace( /\n{3,}/g, '\n\n' ).trim(); // What: Lines Normalize Function. Why: Text with line breaks, such as a description or a chat message, keeps them while each line is tidied like any other text (Section 11.10). How: This normalizes to NFC, trims and single-spaces each line, keeps at most one blank line between paragraphs, and trims the ends.
+
+
+
 const perNamFun = ( namValStr : string ) : boolean => namValStr.length <= 40 && PER_NAM_REG.test( namValStr ); // What: Person Name Function. Why: A display name is encrypted, so the rules can't check it and the app must. How: This is true for 1 to 40 characters matching the person name pattern, which can't match an empty name.
 
 // #endregion Helpers
@@ -81,7 +86,7 @@ const perNamFun = ( namValStr : string ) : boolean => namValStr.length <= 40 && 
 
 // #region Exports
 
-export { desNorFun, eveDesFun, eveLocFun, eveTitFun, groNamFun, iteLabFun, joiNotFun, perNamFun, texNorFun }; // What: Named Exports. Why: Every form that saves typed text tidies and checks it this way. How: This exports the helpers.
+export { chaMesFun, eveDesFun, eveLocFun, eveTitFun, groNamFun, iteLabFun, joiNotFun, linNorFun, perNamFun, texNorFun }; // What: Named Exports. Why: Every form that saves typed text tidies and checks it this way. How: This exports the helpers.
 
 // #endregion Exports
 

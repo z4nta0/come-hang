@@ -1,6 +1,15 @@
 
 
 
+// #region Imports
+
+import { datOpeFun   } from './local-db.ts'; // What: Database Open Function. Why: The keys live in the app's IndexedDB database. How: This opens it.
+import { KEY_STO_STR } from './local-db.ts'; // What: Key Store String. Why: Keys have their own object store. How: This names it.
+
+// #endregion Imports
+
+
+
 /**
  * key-store.ts = Key Store
  *
@@ -11,10 +20,10 @@
  * ever being readable by script, which localStorage couldn't do. Each record
  * sits in one object store under a name of the caller's choosing, and each
  * read, write, or delete closes its connection once its transaction
- * finishes.
+ * finishes. The database itself is opened by local-db.ts, which this store
+ * shares with the chat history.
  *
  * Sections:
- *  - Constants
  *  - Helpers
  *  - Exports
  *
@@ -24,55 +33,7 @@
 
 
 
-// #region Constants
-
-const DAT_BAS_STR = 'come-hang'; // What: Database Base String. Why: The app's IndexedDB database needs a name of its own. How: This names it after the app.
-const KEY_STO_STR = 'keys';      // What: Key Store String. Why: Keys live apart from anything else the app stores later. How: This names their object store.
-
-// #endregion Constants
-
-
-
 // #region Helpers
-
-// #region datOpeFun
-
-/**
- * datOpeFun = Database Open Function
- *
- * @summary
- * Opens the app's IndexedDB database, creating its key store the first time,
- * and resolves once it's ready.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param void - This function takes no parameters.
- *
- * @returns A promise that resolves with the open database.
- *
- * @example
- * ```ts
- * datOpeFun() // => IDBDatabase
- * ```
- *
-*/
-
-const datOpeFun = () : Promise< IDBDatabase > => new Promise( ( resValFun, rejValFun ) => { // What: Database Open Function. Why: Every read and write needs the open database. How: This wraps IndexedDB's open request in a promise.
-
-
-	const opeReqObj = indexedDB.open( DAT_BAS_STR, 1 ); // What: Open Request Object. Why: The database opens asynchronously. How: This asks for version 1.
-
-
-	opeReqObj.onupgradeneeded = () => opeReqObj.result.createObjectStore( KEY_STO_STR ); // What: Upgrade Handler. Why: A new database has no stores yet. How: This creates the key store when the database is first made.
-	opeReqObj.onsuccess       = () => resValFun( opeReqObj.result );                     // What: Success Handler. Why: The caller works with the open database. How: This resolves with it.
-	opeReqObj.onerror         = () => rejValFun( opeReqObj.error );                      // What: Error Handler. Why: A failed open has to reach the caller. How: This rejects with the error.
-
-
-} );
-
-// #endregion datOpeFun
-
-
 
 // #region keyDelFun
 

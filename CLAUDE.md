@@ -42,7 +42,8 @@ token rules. The app has its Firebase services, created on first use, the
 identity bootstrap, the group key encryption, group creation, joining
 through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
-ownership offers and notices, and events with their bring-lists, with no
+ownership offers and notices, events with their bring-lists, and chat
+with its on-device history, with no
 screens using them yet, since screens wait for the design pass. Next steps
 are in ARCHITECTURE.md's Section 14.
 
@@ -94,7 +95,11 @@ method, in the test process, against the same emulators. There's no FCM
 emulator either, so pushes under the emulator land in an `emulatorPushes`
 collection the specs read, and `npm run test:functions` sets
 `FUNCTIONS_EMULATOR=true` for the test process so the in-process run does
-the same. The emulators need Java, 21 installed.
+the same. The app, the functions, and the specs share the Realtime Database's default
+instance, `demo-come-hang-default-rtdb`, where the emulator loads
+`database.rules.json`; `functions/src/setup.ts` names it under the emulator,
+and specs open it through `DBS_URL_STR` in `tests/support/database.ts`. The
+emulators need Java, 21 installed.
 
 ## Project facts
 
