@@ -44,10 +44,11 @@ identity bootstrap, the group key encryption, group creation, joining
 through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
 ownership offers and notices, events with their bring-lists, chat
-with its on-device history, presence, history requests, and location
-sharing, with no
-screens using them yet, since screens wait for the design pass. Next steps
-are in ARCHITECTURE.md's Section 14.
+with its on-device history, presence, history requests, location
+sharing, and push notifications, with no
+screens using them yet, since screens wait for the design pass. Its one
+service worker opens the app offline and shows pushes. Next steps are in
+ARCHITECTURE.md's Section 14.
 
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
@@ -69,10 +70,11 @@ npm run test:functions       # Cloud Functions, end to end in the emulators
 npm run test:interaction     # navigation and interaction feedback
 npm run test:rules           # Firestore, Realtime Database, and Storage rules
 npm run test:security        # headers policy, build secrets, npm audit
+npm run test:worker          # the service worker, offline, in the build
 ```
 
-The suites start their own dev server on port 5200, and the security suite
-a production build served by `vite preview` on 5201 (sibling projects use
+The suites start their own dev server on port 5200, and the security and
+worker suites a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
 `npm test` and `npm run test:rules` run inside `firebase emulators:exec`,
 which starts the Firestore emulator on 8200 (ease-my-life's uses 8080), the
@@ -117,8 +119,9 @@ emulators need Java, 21 installed.
   registered 2026-10-22, not yet deployed).
 - **Support email**: support@comehang.app.
 - **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
-  first file), and `vite-plugin-pwa` once the service worker is built (not
-  yet installed).
+  first file), and `vite-plugin-pwa`, building the app's one service
+  worker, `src/service-worker.ts`, which caches the app for offline use and
+  shows pushes, type checked through `tsconfig.sw.json`.
 - **Backend**: Firebase on the Blaze plan (Auth, Firestore, Realtime
   Database, Cloud Messaging, Storage, Cloud Functions, App Check). No
   other server.

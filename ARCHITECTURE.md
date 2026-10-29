@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (the activity pushes, for chat, join requests,
+Last updated: 2026-10-29 (push notifications in the app, its one service
+worker, and offline opening, in Sections 2, 11.1, and 14; the activity pushes, for chat, join requests,
 and history requests, in Sections 11.1, 11.7, 11.9, 14, and 17; location
 sharing in the app, its throttle, and
 the position's rounding, in Sections 5, 11.4, and 14; presence and history
@@ -122,8 +123,9 @@ model like Firestore's.
 **Pros**
 - Standard, well-documented, widely-supported tooling; easy to hire for
   or find help with later.
-- `vite-plugin-pwa` gives install/offline-shell caching for free without
-  hand-rolling a service worker.
+- `vite-plugin-pwa` writes the build's file list into the app's one
+  service worker, so caching the app for offline use is a few lines of
+  Workbox, beside the push handling the worker also does.
 - TypeScript catches a real class of bugs early, especially valuable
   given the amount of cross-service data shuffling (Firestore, RTDB,
   WebCrypto) this app involves.
@@ -798,10 +800,30 @@ gives the identity's one phone, since the app is one device per person
 it. Only the owner reads, writes, or deletes it, and deleting it turns
 pushes off.
 
+**The app's side** (decided 2026-10-29, `src/state/push.ts` and
+`src/platform/messaging.ts`): notifications are turned on from a tap,
+since a browser shows its permission prompt only then, and only where the
+browser can show pushes, which on iOS means once the app is installed
+(Section 16). Once permission is granted the app stores the token and
+keeps the choice on the device, so each open refreshes a token that's on
+and restores one the server dropped, while turning notifications off in
+the app deletes the token, retires it with FCM, and forgets the choice, so
+no open turns them back on. When the person withdraws the permission in
+the browser's settings, the next open deletes the token and turns
+notifications off. FCM gets the token through the app's one service
+worker (Section 14), with the project's public web push (VAPID) key, which
+Netlify sets as `VITE_FIREBASE_VAPID_KEY`. There's no FCM emulator, so
+development stores a stand-in token of the same form, and the Functions
+emulator records what would be pushed to it. A push that arrives while
+the app is open and in front goes to the page rather than the phone's
+notifications, and the app doesn't show it, since the screens will show
+the same activity as it happens. A tap on a push brings the app forward,
+opening it at its root when it isn't open.
+
 | Field | Type | Notes |
 |---|---|---|
 | `token` | plaintext | FCM's registration token, letters, digits, colons, hyphens, and underscores, at most 4,096 characters. |
-| `updatedAt` | plaintext | The server's time of the last refresh. The app rewrites the document each time it opens, at most once a day. |
+| `updatedAt` | plaintext | The server's time of the last refresh. The app rewrites the document as it opens, at most once a day, or at once when FCM's token has changed or the document is gone. |
 | `expireAt` | plaintext, TTL field | 60 days after the last refresh, as Firebase advises for a token, so a phone that stopped opening the app is dropped. The app sets it by its own clock, so the rules accept 50 to 70 days out. |
 
 **Pushes** (decided 2026-10-28, `functions/src/push.ts`): each one carries
@@ -1623,17 +1645,26 @@ the Blaze change.
   push tokens with the pushes for every notice and for each new offer
   (Section 11.1). Built 2026-10-29 in `functions/src/activity-pushes.ts`:
   the history request push (Section 11.9), the grouped join request push
-  (Section 17), and chat pushes (Section 11.7). The app's side, asking permission, calling
-  FCM's `getToken()`, storing and refreshing the token, and showing a push
-  through the service worker, comes with the app's Firebase wiring.
+  (Section 17), and chat pushes (Section 11.7). Built 2026-10-29: the
+  app's side, asking permission, getting and storing the token, and
+  keeping it fresh (Section 11.1), checked in the client suite, which also
+  follows a stored token to the push a removal sends.
 - Environments, see Section 13.
-- Combining the service workers: a PWA gets one service worker per
-  scope, but `vite-plugin-pwa` generates one for offline caching and FCM
-  by default registers its own `firebase-messaging-sw.js` for background
-  push. Plan: `vite-plugin-pwa`'s `injectManifest` mode with one
-  hand-written worker that does both (Workbox precaching plus Firebase
-  Messaging's background handler), and that worker's registration passed
-  to FCM's `getToken()` so it never registers a second one.
+- One service worker (decided 2026-10-28, built 2026-10-29,
+  `src/service-worker.ts`): a PWA gets one service worker per scope, while
+  `vite-plugin-pwa` would generate one for offline caching and FCM would
+  register its own `firebase-messaging-sw.js` for background push. So the
+  plugin's `injectManifest` mode builds one hand-written worker that does
+  both: Workbox caches the build's files and answers every navigation but
+  the legal pages with the app's page, so the app opens without a
+  connection, and in a production build Firebase Messaging's handler shows
+  each push. The app hands that worker's registration to FCM's
+  `getToken()`, so FCM never registers a second one. A deferred script the
+  plugin adds registers it on every load. The worker runs only in a
+  production build, so the worker suite in `tests/worker/` checks it
+  against the preview server, opening the app offline at its root and at
+  an address with no file of its own. The web app manifest stays
+  hand-written, so the plugin writes none.
 
 **Setup checklist (don't skip)**:
 - [ ] **Turn Firebase/Google Analytics OFF** when creating each Firebase
@@ -1651,7 +1682,12 @@ the Blaze change.
       `historyRequests`, `notices`, `pushToken`), since a TTL policy is
       set per collection group in the console, not by the rules.
 - [ ] Authorized domains, API key restrictions, and CSP, per the hosting
-      bullet above.
+      bullet above, the CSP's `connect-src` including FCM's token
+      addresses (`fcmregistrations.googleapis.com` and
+      `firebaseinstallations.googleapis.com`).
+- [ ] The web push (VAPID) key pair generated in each project's Cloud
+      Messaging settings, its public key set as `VITE_FIREBASE_VAPID_KEY`
+      in Netlify for that environment.
 - [ ] The privacy policy and terms written and published at `/privacy` and
       `/terms`, before Google sign-in is set up (its verification asks for
       both URLs).

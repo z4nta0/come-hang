@@ -23,11 +23,11 @@ import { fileURLToPath } from 'node:url';         // What: File URL To Path. Why
  * rules in the Firebase Emulators on ports 8200, 8210, and 8220 instead, so it
  * runs once. Each suite is a folder under tests/, such as accessibility, which
  * the pre-commit check runs. Playwright starts the Vite dev server on port
- * 5200, which every browser suite but security opens, and a production build
- * served by vite preview on 5201, which the security suite opens, and stops
- * both afterwards, so a dev server already running on the usual 5173, or a
- * sibling project's suites on 5190 through 5199, are never touched. Reports
- * and failure screenshots land in tests/output, which git ignores.
+ * 5200, which every browser suite but security and worker opens, and a
+ * production build served by vite preview on 5201, which those two open, and
+ * stops both afterwards, so a dev server already running on the usual 5173,
+ * or a sibling project's suites on 5190 through 5199, are never touched.
+ * Reports and failure screenshots land in tests/output, which git ignores.
  *
  * Sections:
  *  - Constants
@@ -51,7 +51,8 @@ const ENG_NAM_ARR = [ // What: Engine Name Array. Why: Every suite runs in all t
 
 ] as const;
 
-const PRE_URL_STR = 'http://localhost:5201';                           // What: Preview URL String. Why: The security suite loads the production build, since the dev server injects inline scripts the security policy would block. How: This is the address the preview server answers on and the security suite's baseURL.
+const PRE_SUI_ARR = [ 'security', 'worker' ];                          // What: Preview Suite Array. Why: The security suite loads the production build, since the dev server injects inline scripts the security policy would block, and the service worker runs only in a production build. How: This names the suites that open the preview server.
+const PRE_URL_STR = 'http://localhost:5201';                           // What: Preview URL String. Why: Some suites check what ships. How: This is the address the preview server answers on and those suites' baseURL.
 const ROO_DIR_STR = fileURLToPath( new URL( '..', import.meta.url ) ); // What: Root Directory String. Why: Both servers must run from the repo root, where vite.config.ts lives. How: This resolves the folder above tests/.
 const SER_URL_STR = 'http://localhost:5200';                           // What: Server URL String. Why: Every other suite opens the app from the same dev server. How: This is the address Playwright waits on and every other suite's baseURL.
 
@@ -61,7 +62,8 @@ const SUI_NAM_ARR = [ // What: Suite Name Array. Why: Each suite lives in its ow
 	'accessibility', // What: Accessibility Suite. Why: The pre-commit accessibility scan runs from here. How: This names tests/accessibility.
 	'client',        // What: Client Suite. Why: The app's own code, its Firebase wiring and its encryption among it, is checked in each engine, since WebCrypto and IndexedDB differ between them. How: This names tests/client, which test:client runs in an emulator session of its own, with the Cloud Functions.
 	'interaction',   // What: Interaction Suite. Why: How moving between pages and using controls behaves is checked from here. How: This names tests/interaction.
-	'security'       // What: Security Suite. Why: The app's security policy, its build, and its dependencies are checked from here. How: This names tests/security.
+	'security',      // What: Security Suite. Why: The app's security policy, its build, and its dependencies are checked from here. How: This names tests/security.
+	'worker'         // What: Worker Suite. Why: The service worker runs only in a production build, which it caches so the app opens without a connection. How: This names tests/worker.
 
 
 ];
@@ -83,12 +85,12 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 			name      : `${ suiNamStr }-${ engNamStr }`, // What: Name. Why: A failure has to say which suite and engine it came from. How: This names the project after both.
 			testMatch : `${ suiNamStr }/**/*.spec.ts`,   // What: Test Match. Why: Each suite lives in its own folder. How: This runs every spec in the suite's folder under tests/.
 
-			use : { // What: Use. Why: The project has to launch its own engine, and the security suite its own server. How: This sets the browser it runs in, which build of it, and the server its pages open from.
+			use : { // What: Use. Why: The project has to launch its own engine, and the suites that check what ships their own server. How: This sets the browser it runs in, which build of it, and the server its pages open from.
 
 
-				baseURL     : suiNamStr === 'security' ? PRE_URL_STR : SER_URL_STR, // What: Base URL. Why: The security suite checks the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
-				browserName : engNamStr,                                            // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
-				channel     : engNamStr === 'chromium' ? 'chromium' : undefined     // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
+				baseURL     : PRE_SUI_ARR.includes( suiNamStr ) ? PRE_URL_STR : SER_URL_STR, // What: Base URL. Why: The security and worker suites check the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
+				browserName : engNamStr,                                                     // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
+				channel     : engNamStr === 'chromium' ? 'chromium' : undefined              // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
 
 
 			}
@@ -124,7 +126,7 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 	webServer : [ // What: Web Server. Why: The suites need the app running, without touching any dev server already open. How: This starts the dev server and the production preview, each on its own strict port from the repo root, and stops both when the run ends.
 
 
-		{ // What: Dev Server. Why: Every suite but the security suite checks the app as it's developed. How: This starts the Vite dev server on 5200.
+		{ // What: Dev Server. Why: Every suite but the security and worker suites checks the app as it's developed. How: This starts the Vite dev server on 5200.
 
 
 			command             : 'npx vite --port 5200 --strictPort', // What: Command. Why: A strict port fails loudly instead of drifting onto another server's port. How: This starts the Vite dev server on 5200.
@@ -136,7 +138,7 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 
 		},
 
-		{ // What: Preview Server. Why: The security suite checks what ships, and the dev server's inline scripts would break a strict policy. How: This builds the app and serves the build on 5201.
+		{ // What: Preview Server. Why: The security and worker suites check what ships, since the dev server's inline scripts would break a strict policy and it runs no service worker. How: This builds the app and serves the build on 5201.
 
 
 			command             : 'npm run build && npx vite preview --port 5201 --strictPort', // What: Command. Why: The preview serves only a fresh build, and a strict port fails loudly. How: This type checks and builds the app, then serves dist/ on 5201.

@@ -20,6 +20,7 @@ import { persistentMultipleTabManager } from 'firebase/firestore'; // What: Pers
 
 import type { Auth            } from 'firebase/auth';      // What: Auth. Why: The services record holds Auth. How: This types it.
 import type { Database        } from 'firebase/database';  // What: Database. Why: The services record holds the Realtime Database. How: This types it.
+import type { FirebaseApp     } from 'firebase/app';       // What: Firebase App. Why: The services record holds the app itself. How: This types it.
 import type { FirebaseOptions } from 'firebase/app';       // What: Firebase Options. Why: The web config has a known shape. How: This types it.
 import type { FirebaseStorage } from 'firebase/storage';   // What: Firebase Storage. Why: The services record holds Storage. How: This types it.
 import type { Firestore       } from 'firebase/firestore'; // What: Firestore. Why: The services record holds Firestore. How: This types it.
@@ -59,7 +60,7 @@ import type { Functions       } from 'firebase/functions'; // What: Functions. W
 
 // #region Types
 
-type FirSerTyp = { autValObj : Auth, funValObj : Functions, fstDatObj : Firestore, reaDatObj : Database, stoValObj : FirebaseStorage }; // What: Firebase Services Type. Why: Callers reach every service through one record. How: This types the record firGetFun returns.
+type FirSerTyp = { appValObj : FirebaseApp, autValObj : Auth, fstDatObj : Firestore, funValObj : Functions, reaDatObj : Database, stoValObj : FirebaseStorage }; // What: Firebase Services Type. Why: Callers reach every service through one record. How: This types the record firGetFun returns.
 
 // #endregion Types
 
@@ -103,7 +104,7 @@ let firSerObj : FirSerTyp | null = null; // What: Firebase Services Object. Why:
  *
  * @example
  * ```ts
- * firGetFun() // => { autValObj, fstDatObj, funValObj, reaDatObj, stoValObj }
+ * firGetFun() // => { appValObj, autValObj, fstDatObj, funValObj, ... }
  * ```
  *
 */
@@ -146,7 +147,7 @@ const firGetFun = () : FirSerTyp => { // What: Firebase Get Function. Why: Every
 
 
 
-	firSerObj = { autValObj, fstDatObj, funValObj, reaDatObj, stoValObj }; // What: Services Assignment. Why: Later calls reuse the services. How: This keeps the record.
+	firSerObj = { appValObj, autValObj, fstDatObj, funValObj, reaDatObj, stoValObj }; // What: Services Assignment. Why: Later calls reuse the services, and Messaging is created from the app itself when push is turned on. How: This keeps the record.
 
 
 

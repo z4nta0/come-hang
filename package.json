@@ -9,20 +9,23 @@
 		"emulators": "npm --prefix functions run build && firebase emulators:start --only auth,functions,firestore,database,storage --project demo-come-hang",
 		"lint": "eslint .",
 		"preview": "vite preview",
-		"test": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'accessibility-*' --project 'interaction-*' --project 'security-*' --project rules\" && npm run test:client && npm run test:functions",
+		"test": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'accessibility-*' --project 'interaction-*' --project 'security-*' --project 'worker-*' --project rules\" && npm run test:client && npm run test:functions",
 		"test:accessibility": "playwright test --config tests/playwright.config.ts --project \"accessibility-*\"",
 		"test:client": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'client-*'\"",
 		"test:functions": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"FUNCTIONS_EMULATOR=true playwright test --config tests/playwright.config.ts --project functions\"",
 		"test:interaction": "playwright test --config tests/playwright.config.ts --project \"interaction-*\"",
 		"test:rules": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project rules\"",
 		"test:security": "playwright test --config tests/playwright.config.ts --project \"security-*\"",
+		"test:worker": "playwright test --config tests/playwright.config.ts --project \"worker-*\"",
 		"typecheck": "tsc -b && tsc -p functions --noEmit"
 	},
 	"dependencies": {
 		"firebase": "12.19.0",
 		"react": "^19.3.0",
 		"react-dom": "^19.3.0",
-		"react-router": "^8.4.0"
+		"react-router": "^8.4.0",
+		"workbox-precaching": "^7.4.1",
+		"workbox-routing": "^7.4.1"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.13.0",
@@ -39,7 +42,10 @@
 		"jiti": "^2.7.0",
 		"typescript": "~6.0.3",
 		"typescript-eslint": "^8.71.1",
-		"vite": "^8.3.4"
+		"vite": "^8.3.4",
+		"vite-plugin-pwa": "^2.0.0",
+		"workbox-build": "^7.4.1",
+		"workbox-window": "^7.4.1"
 	},
 	"overrides": {
 		"@firebase/firestore": {

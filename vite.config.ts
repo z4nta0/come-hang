@@ -6,7 +6,8 @@
 import reaPluFun from '@vitejs/plugin-react'; // What: React Plugin Function. Why: Vite needs the React plugin to compile JSX. How: This is called first in the plugins array.
 
 
-import { defineConfig } from 'vite'; // What: Define Config. Why: Vite's config helper passes the config through with its types. How: This wraps VIT_CON_OBJ.
+import { defineConfig } from 'vite';            // What: Define Config. Why: Vite's config helper passes the config through with its types. How: This wraps VIT_CON_OBJ.
+import { VitePWA      } from 'vite-plugin-pwa'; // What: Vite PWA. Why: The app's service worker is built with the file list it caches. How: This returns the plugin.
 
 
 import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a Vite plugin. How: This types minHtmFun's return value.
@@ -20,11 +21,14 @@ import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a
  *
  * @summary
  * The build and dev server config. It compiles React, reads CSS module class
- * names as camelCase keys, and, for production builds only, compacts
+ * names as camelCase keys, builds the app's one service worker from
+ * src/service-worker.ts, writing the build's file list into it and adding the
+ * script that registers it, and, for production builds only, compacts
  * index.html, which Vite processes but never minifies, so the page's comments
- * and indentation stay out of what visitors download. Every other setting
- * stays at Vite's default, including copying the files in public/ (such as
- * Netlify's _redirects) into the build untouched.
+ * and indentation stay out of what visitors download. The web app manifest
+ * stays hand-written, so the plugin writes none. Every other setting stays at
+ * Vite's default, including copying the files in public/ (such as Netlify's
+ * _redirects) into the build untouched.
  *
  * Sections:
  *  - Helpers
@@ -105,7 +109,28 @@ const VIT_CON_OBJ = defineConfig({ // What: Vite Config Object. Why: Vite reads 
 
 
 	css     : { modules : { localsConvention : 'camelCaseOnly' } }, // What: CSS. Why: CSS modules expose each class name as a camelCase key only, so a modifier class such as .butBasAnc--primary is read as cssModObj.butBasAncPrimary, per the CSS modules rules. How: This sets the locals convention.
-	plugins : [ reaPluFun(), minHtmFun() ]                          // What: Plugins. Why: Vite builds the app through these plugins, in this order. How: This lists React and the page minifier.
+
+	plugins : [ // What: Plugins. Why: Vite builds the app through these plugins, in this order. How: This lists React, the service worker, and the page minifier.
+
+
+		reaPluFun(), // What: React Plugin Call. Why: JSX has to compile. How: This adds React's plugin.
+
+		VitePWA({ // What: Vite PWA Call. Why: Workbox's caching and FCM's push handling share one worker, since a scope holds one (ARCHITECTURE.md Section 14). How: This builds the hand-written worker rather than generating one.
+
+
+			filename       : 'service-worker.ts', // What: Filename. Why: The worker is written in TypeScript beside the app. How: This names it, built to service-worker.js.
+			injectRegister : 'script-defer',      // What: Inject Register. Why: The worker should register on every load without holding up the page. How: This adds a deferred script that registers it.
+			manifest       : false,               // What: Manifest. Why: The web app manifest is hand-written static JSON. How: This keeps the plugin from writing one.
+			srcDir         : 'src',               // What: Source Directory. Why: The worker is compiled like the app's own code. How: This looks for it in src.
+			strategies     : 'injectManifest'     // What: Strategies. Why: The worker is hand-written, with the build's file list written into it. How: This injects the list rather than generating a worker.
+
+
+		}),
+
+		minHtmFun() // What: Minify HTML Call. Why: The shipped page drops its comments. How: This adds the page minifier, last.
+
+
+	]
 
 
 });
