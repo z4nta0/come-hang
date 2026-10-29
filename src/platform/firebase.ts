@@ -3,27 +3,27 @@
 
 // #region Imports
 
-import { connectAuthEmulator           } from 'firebase/auth';      // What: Connect Auth Emulator. Why: Development signs in against the local emulator. How: This points Auth at it.
-import { connectDatabaseEmulator       } from 'firebase/database';  // What: Connect Database Emulator. Why: Development uses the local Realtime Database. How: This points the database at it.
-import { connectFirestoreEmulator      } from 'firebase/firestore'; // What: Connect Firestore Emulator. Why: Development uses the local Firestore. How: This points Firestore at it.
-import { connectFunctionsEmulator      } from 'firebase/functions'; // What: Connect Functions Emulator. Why: Development calls the local functions. How: This points Functions at them.
-import { connectStorageEmulator        } from 'firebase/storage';   // What: Connect Storage Emulator. Why: Development uses the local Storage. How: This points Storage at it.
-import { getAuth                       } from 'firebase/auth';      // What: Get Auth. Why: Every identity signs in through Auth. How: This returns the app's Auth instance.
-import { getDatabase                   } from 'firebase/database';  // What: Get Database. Why: Chat and presence live in the Realtime Database. How: This returns the app's database.
-import { getFunctions                  } from 'firebase/functions'; // What: Get Functions. Why: Some actions go through callables. How: This returns the app's Functions instance in the functions' region.
-import { getStorage                    } from 'firebase/storage';   // What: Get Storage. Why: History transfers live in Storage. How: This returns the app's Storage.
-import { initializeApp                 } from 'firebase/app';       // What: Initialize App. Why: Every service hangs off one Firebase app. How: This creates it from the web config.
-import { initializeFirestore           } from 'firebase/firestore'; // What: Initialize Firestore. Why: Firestore keeps an offline copy on the device. How: This creates Firestore with its local cache.
-import { persistentLocalCache          } from 'firebase/firestore'; // What: Persistent Local Cache. Why: The app works through a dropped connection. How: This keeps Firestore's cache in IndexedDB.
-import { persistentMultipleTabManager  } from 'firebase/firestore'; // What: Persistent Multiple Tab Manager. Why: Two tabs of the app may be open at once. How: This lets them share the cache.
+import { connectAuthEmulator          } from 'firebase/auth';      // What: Connect Auth Emulator. Why: Development signs in against the local emulator. How: This points Auth at it.
+import { connectDatabaseEmulator      } from 'firebase/database';  // What: Connect Database Emulator. Why: Development uses the local Realtime Database. How: This points the database at it.
+import { connectFirestoreEmulator     } from 'firebase/firestore'; // What: Connect Firestore Emulator. Why: Development uses the local Firestore. How: This points Firestore at it.
+import { connectFunctionsEmulator     } from 'firebase/functions'; // What: Connect Functions Emulator. Why: Development calls the local functions. How: This points Functions at them.
+import { connectStorageEmulator       } from 'firebase/storage';   // What: Connect Storage Emulator. Why: Development uses the local Storage. How: This points Storage at it.
+import { getAuth                      } from 'firebase/auth';      // What: Get Auth. Why: Every identity signs in through Auth. How: This returns the app's Auth instance.
+import { getDatabase                  } from 'firebase/database';  // What: Get Database. Why: Chat and presence live in the Realtime Database. How: This returns the app's database.
+import { getFunctions                 } from 'firebase/functions'; // What: Get Functions. Why: Some actions go through callables. How: This returns the app's Functions instance in the functions' region.
+import { getStorage                   } from 'firebase/storage';   // What: Get Storage. Why: History transfers live in Storage. How: This returns the app's Storage.
+import { initializeApp                } from 'firebase/app';       // What: Initialize App. Why: Every service hangs off one Firebase app. How: This creates it from the web config.
+import { initializeFirestore          } from 'firebase/firestore'; // What: Initialize Firestore. Why: Firestore keeps an offline copy on the device. How: This creates Firestore with its local cache.
+import { persistentLocalCache         } from 'firebase/firestore'; // What: Persistent Local Cache. Why: The app works through a dropped connection. How: This keeps Firestore's cache in IndexedDB.
+import { persistentMultipleTabManager } from 'firebase/firestore'; // What: Persistent Multiple Tab Manager. Why: Two tabs of the app may be open at once. How: This lets them share the cache.
 
 
 import type { Auth            } from 'firebase/auth';      // What: Auth. Why: The services record holds Auth. How: This types it.
 import type { Database        } from 'firebase/database';  // What: Database. Why: The services record holds the Realtime Database. How: This types it.
 import type { FirebaseOptions } from 'firebase/app';       // What: Firebase Options. Why: The web config has a known shape. How: This types it.
+import type { FirebaseStorage } from 'firebase/storage';   // What: Firebase Storage. Why: The services record holds Storage. How: This types it.
 import type { Firestore       } from 'firebase/firestore'; // What: Firestore. Why: The services record holds Firestore. How: This types it.
 import type { Functions       } from 'firebase/functions'; // What: Functions. Why: The services record holds Functions. How: This types it.
-import type { FirebaseStorage } from 'firebase/storage';   // What: Firebase Storage. Why: The services record holds Storage. How: This types it.
 
 // #endregion Imports
 
