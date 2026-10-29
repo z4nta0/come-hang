@@ -3,15 +3,15 @@
 
 // #region Imports
 
+import { calGroFun   } from './calls.ts';                  // What: Call Group Function. Why: The deletion names a group and needs a signed-in caller. How: This checks both.
 import { FieldPath   } from 'firebase-admin/firestore';    // What: Field Path. Why: A group's ID becomes a map key in each account. How: This names that key without reading it as a dotted path.
 import { FieldValue  } from 'firebase-admin/firestore';    // What: Field Value. Why: The group is dropped from each account's maps. How: This supplies the field delete.
 import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Database Object. Why: Most of a group lives in Firestore. How: This reads and deletes it.
-import { calGroFun   } from './calls.ts';                  // What: Call Group Function. Why: The deletion names a group and needs a signed-in caller. How: This checks both.
 import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: Every other member is told the group was deleted. How: This adds their notice to the first batch.
-import { onCall      } from 'firebase-functions/v2/https';
-import { pusSenFun   } from './push.ts'; // What: On Call. Why: The owner asks for the deletion from the app. How: This registers a callable function, which checks the caller's sign-in.
+import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The owner asks for the deletion from the app. How: This registers a callable function, which checks the caller's sign-in.
+import { pusSenFun   } from './push.ts';                   // What: Push Send Function. Why: Every other member hears of the deletion on their phone. How: This sends each push once the first batch has landed.
 import { REA_DAT_OBJ } from './setup.ts';                  // What: Realtime Database Object. Why: A group's chat, presence, and mirror live there. How: This deletes them.
 import { STO_ADM_OBJ } from './setup.ts';                  // What: Storage Admin Object. Why: A group's history transfers live in Storage. How: This deletes them.
 

@@ -6,9 +6,9 @@
 import { claRefFun         } from './claims.ts';                     // What: Claim Reference Function. Why: An accepted or abandoned claim offer is told apart by the claim record. How: This names it.
 import { FIR_DAT_OBJ       } from './setup.ts';                      // What: Firestore Database Object. Why: The trigger writes notices and clears stale offers. How: This reaches Firestore past its rules.
 import { FUN_OPT_OBJ       } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: The trigger spreads them in.
-import { notBatFun         } from './notices.ts';
+import { notBatFun         } from './notices.ts';                    // What: Notice Batch Function. Why: Each change the trigger spots leaves someone a notice. How: This adds one to the batch.
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'; // What: On Document Updated. Why: Every change the trigger reports is an update to a group. How: This registers an update trigger.
-import { pusSenFun         } from './push.ts';                       // What: Notice Batch Function. Why: Each change the trigger spots leaves someone a notice. How: This adds one to the batch.
+import { pusSenFun         } from './push.ts';                       // What: Push Send Function. Why: Each notice the trigger leaves, and each new offer, reaches the person's phone. How: This sends the push once the notices have landed.
 
 
 import type { DocumentReference } from 'firebase-admin/firestore'; // What: Document Reference. Why: Clearing an offer works on the group's document. How: This types it.

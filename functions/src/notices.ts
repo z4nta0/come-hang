@@ -91,7 +91,7 @@ const notBatFun = ( batWriObj : WriteBatch, uidValStr : string, kinValStr : stri
 		...( othUidStr ? { otherUid : othUidStr } : {} ) // What: Other UID Spread. Why: Some notices name the other person involved (Section 11.1). How: This adds otherUid when one was given.
 
 
-	});
+	} );
 
 
 };

@@ -8,8 +8,8 @@ import { FieldPath   } from 'firebase-admin/firestore';        // What: Field Pa
 import { FIR_DAT_OBJ } from './setup.ts';                      // What: Firestore Database Object. Why: Groups, members, and accounts live in Firestore. How: This reads and writes them past the rules.
 import { FUN_OPT_OBJ } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: The schedule spreads them in.
 import { notBatFun   } from './notices.ts';                    // What: Notice Batch Function. Why: An owner whose offer lapsed is told. How: This adds their notice to a batch.
-import { onSchedule  } from 'firebase-functions/v2/scheduler';
-import { pusSenFun   } from './push.ts'; // What: On Schedule. Why: The run happens once a day by itself. How: This registers a scheduled function.
+import { onSchedule  } from 'firebase-functions/v2/scheduler'; // What: On Schedule. Why: The run happens once a day by itself. How: This registers a scheduled function.
+import { pusSenFun   } from './push.ts';                       // What: Push Send Function. Why: An owner whose offer lapsed hears of it on their phone. How: This sends the push once the notice has landed.
 import { Timestamp   } from 'firebase-admin/firestore';        // What: Timestamp. Why: The run compares and stores times. How: This builds them from milliseconds.
 
 

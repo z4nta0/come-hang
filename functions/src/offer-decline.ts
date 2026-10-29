@@ -10,8 +10,8 @@ import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Da
 import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: The owner is told of the decline. How: This adds their notice to a batch.
-import { onCall      } from 'firebase-functions/v2/https';
-import { pusSenFun   } from './push.ts'; // What: On Call. Why: The member offered the group declines from the app. How: This registers a callable function, which checks the caller's sign-in.
+import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The member offered the group declines from the app. How: This registers a callable function, which checks the caller's sign-in.
+import { pusSenFun   } from './push.ts';                   // What: Push Send Function. Why: The owner hears of the decline on their phone. How: This sends the push once the notice has landed.
 
 // #endregion Imports
 
