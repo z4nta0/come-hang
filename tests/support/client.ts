@@ -4,6 +4,7 @@
 // #region Imports
 
 import { doc    } from 'firebase/firestore'; // What: Doc. Why: A document is read by path. How: This builds a reference.
+import { expect } from '@playwright/test';   // What: Expect. Why: A send is retried until it lands. How: This polls it.
 import { getDoc } from 'firebase/firestore'; // What: Get Doc. Why: The tests read back what the pages wrote. How: This reads one document.
 import { test   } from '@playwright/test';   // What: Test. Why: The client specs need a second identity beside the page's own. How: This is extended with a second page.
 
@@ -291,13 +292,57 @@ const memSetFun = async ( envTesObj : RulesTestEnvironment, ownPagObj : Page, me
 
 // #endregion memSetFun
 
+
+
+// #region senPolFun
+
+/**
+ * senPolFun = Send Poll Function
+ *
+ * @summary
+ * Sends a message from a page, retrying while the rules refuse it because
+ * the mirror function hasn't yet caught up with the sender's membership,
+ * and resolves with the message's ID.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param pagValObj - Page Value Object: The sender's page.
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param mesTexStr - Message Text String: The message, as typed.
+ *
+ * @returns A promise that resolves with the message's ID.
+ *
+ * @example
+ * ```ts
+ * senPolFun(page, 'Xk3...', 'Hi') // => '-Nx...'
+ * ```
+ *
+*/
+
+const senPolFun = async ( pagValObj : Page, groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Send Poll Function. Why: A send just after a membership change can meet the old mirror for a moment. How: This retries the send until it lands.
+
+
+	let mesIdeStr = ''; // What: Message Identifier String. Why: The poll keeps the ID of the send that landed. How: This starts empty.
+
+
+	await expect.poll( async () => { mesIdeStr = await runPagFun( pagValObj, '/src/state/chat.ts', 'chaSenFun', groIdeStr, mesTexStr ) as string; return mesIdeStr; } ).not.toMatch( /^error:/ ); // What: Send Poll Call. Why: The send succeeds once the mirror has the sender. How: This retries until no error comes back. // What: Type Assertion Note. Why: chaSenFun resolves with the ID, or runPagFun with an error string. How: The as reads either as a string.
+
+
+
+	return mesIdeStr; // What: Message Return. Why: The test finds the message by ID. How: This returns it.
+
+
+};
+
+// #endregion senPolFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { decNamFun, docReaFun, keyRawFun, memSetFun, pagTesObj, runPagFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
+export { decNamFun, docReaFun, keyRawFun, memSetFun, pagTesObj, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
 
 // #endregion Exports
 

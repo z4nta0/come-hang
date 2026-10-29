@@ -13,12 +13,12 @@ import { memSetFun                 } from '../support/client.ts';         // Wha
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: Each test needs a member apart from the owner's page. How: This declares tests with a second page.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Chat locations are named by path. How: This builds a reference.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Each step runs as one identity. How: This calls the app's functions in a page.
+import { senPolFun                 } from '../support/client.ts';         // What: Send Poll Function. Why: A send just after a membership change waits for the mirror. How: This retries a send until it lands.
 import { set                       } from 'firebase/database';            // What: Set. Why: An old message is seeded. How: This writes it.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A membership is backdated. How: This builds the time.
 import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: A membership is backdated past the rules. How: This changes it.
 
 
-import type { Page                 } from '@playwright/test';             // What: Page. Why: The send helper runs in either identity's page. How: This types it.
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every read and seed goes through one. How: This types it.
 
 // #endregion Imports
@@ -84,50 +84,6 @@ const dbsReaFun = async ( patValStr : string ) : Promise< unknown > => { // What
 
 
 };
-
-
-
-// #region senPolFun
-
-/**
- * senPolFun = Send Poll Function
- *
- * @summary
- * Sends a message from a page, retrying while the rules refuse it because
- * the mirror function hasn't yet caught up with the sender's membership,
- * and resolves with the message's ID.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param pagValObj - Page Value Object: The sender's page.
- * @param groIdeStr - Group Identifier String: The group's ID.
- * @param mesTexStr - Message Text String: The message, as typed.
- *
- * @returns A promise that resolves with the message's ID.
- *
- * @example
- * ```ts
- * senPolFun(page, 'Xk3...', 'Hi') // => '-Nx...'
- * ```
- *
-*/
-
-const senPolFun = async ( pagValObj : Page, groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Send Poll Function. Why: A send just after a membership change can meet the old mirror for a moment. How: This retries the send until it lands.
-
-
-	let mesIdeStr = ''; // What: Message Identifier String. Why: The poll keeps the ID of the send that landed. How: This starts empty.
-
-
-	await expect.poll( async () => { mesIdeStr = await runPagFun( pagValObj, CHA_MOD_STR, 'chaSenFun', groIdeStr, mesTexStr ) as string; return mesIdeStr; } ).not.toMatch( /^error:/ ); // What: Send Poll Call. Why: The send succeeds once the mirror has the sender. How: This retries until no error comes back. // What: Type Assertion Note. Why: chaSenFun resolves with the ID, or runPagFun with an error string. How: The as reads either as a string.
-
-
-
-	return mesIdeStr; // What: Message Return. Why: The test finds the message by ID. How: This returns it.
-
-
-};
-
-// #endregion senPolFun
 
 // #endregion Helpers
 

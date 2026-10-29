@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (chat in the app, its allowed characters, and the
+Last updated: 2026-10-29 (presence and history requests in the app, the
+history bundle's format, and coverage by join time, in Sections 11.9 and
+14; chat in the app, its allowed characters, and the
 emulator's shared database instance, in Sections 11.10 and 14; events and
 their bring-lists in the app, and a description's blank lines, in Sections
 11.10 and 14); 2026-10-28 (group
@@ -1054,15 +1056,17 @@ fulfill.
 
 No new cryptography is needed: the fulfiller already holds the group's
 symmetric key (from their own `wrappedGroupKey`), and so does the
-requester, so the fulfiller forwards the original cached ciphertext
-envelopes (`senderUid`, `sentAt`, `ciphertext`, `iv`) as-is. Firebase
-relaying the bundle still never sees plaintext, same guarantee as live
-chat.
+requester. A device keeps its chat history decrypted (Section 5), so the
+fulfiller encrypts the requested messages (each one's ID, sender, time, and
+text) as one bundle under the group key, with a fresh IV (decided
+2026-10-29). Firebase relaying the bundle still never sees plaintext, same
+guarantee as live chat, and Storage sees only the bundle's total size, not
+how many messages it holds or how long each is.
 
 | Path | Service | Notes |
 |---|---|---|
 | `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification fires whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
-| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle of cached ciphertext envelopes, keyed like the request it answers, written only by whoever currently holds the claim. One binary file of at most 25 MB (decided 2026-10-28), about 125,000 typical messages. |
+| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle, the requested messages encrypted as one under the group key with its 12-byte IV first, keyed like the request it answers, written only by whoever currently holds the claim. One binary file of at most 25 MB (decided 2026-10-28), about 125,000 typical messages. |
 
 **Rules (decided 2026-10-28)**: a member files only their own request,
 pending and unclaimed, at the server's time. Any other member claims a
@@ -1166,7 +1170,7 @@ because this feature exists.
 - Reuses two patterns that already exist elsewhere in this design
   instead of inventing new ones: the claim transaction (Section 7) and
   the transient relay-then-delete lifecycle (used everywhere else).
-- No new cryptography, re-encryption, or key exchange, reuses the
+- No new cryptography or key exchange: the bundle is encrypted under the
   already-shared group key.
 
 **Cons**
@@ -1190,9 +1194,14 @@ because this feature exists.
   they can simply ask again.
 
 **Locked in, not deferred**: a member is only offered the claim option
-for a `backlog` request if their own local cache actually covers it,
-specifically, their earliest cached message for that group's chat is at
-or before the request's `rangeStart`. This is a purely local check
+for a request if their own local cache actually covers it, specifically,
+their earliest cached message for that group's chat is at or before the
+start of the request's range (the `rangeStart` of a `backlog`, the asker's
+`joinedAt` for a `recovery`). A member who joined at or before that start
+and holds history counts as covering it too (decided 2026-10-29), since a
+chat that began after the start has no message that early, and without
+this nobody could ever answer a request for a group whose chat began
+later. This is a purely local check
 (their own IndexedDB, no network round trip, no new infrastructure) and
 is deliberately based on actual cached coverage rather than `joinedAt`
 alone, `joinedAt` only approximates "could plausibly have it," actual
@@ -1519,6 +1528,13 @@ the Blaze change.
   keys in the app's one IndexedDB database, which
   `src/platform/local-db.ts` opens at version 2, creating whichever stores
   are missing.
+- `src/state/presence.ts` marks a member online with an entry the server
+  clears if the device drops, clears it on going offline, and watches who's
+  online (Section 11.8). `src/state/history.ts` is peer-assisted history
+  (Section 11.9): asking for a recovery or a backlog, listing open
+  requests, checking this device's coverage, claiming as a compare-and-swap,
+  releasing, sending the range as one encrypted bundle, collecting it while
+  keeping only well-formed messages inside the range, and withdrawing.
 - Under the emulator, the app, the Cloud Functions, and the tests share the
   Realtime Database's default instance, `demo-come-hang-default-rtdb`, where
   the emulator loads `database.rules.json`, as production's app and

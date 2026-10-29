@@ -42,8 +42,8 @@ token rules. The app has its Firebase services, created on first use, the
 identity bootstrap, the group key encryption, group creation, joining
 through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
-ownership offers and notices, events with their bring-lists, and chat
-with its on-device history, with no
+ownership offers and notices, events with their bring-lists, chat
+with its on-device history, presence, and history requests, with no
 screens using them yet, since screens wait for the design pass. Next steps
 are in ARCHITECTURE.md's Section 14.
 
