@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-28 (group deletion in the app, in Section 14;
+Last updated: 2026-10-29 (events and their bring-lists in the app, and a
+description's blank lines, in Sections 11.10 and 14); 2026-10-28 (group
+deletion in the app, in Section 14;
 ownership offers and notices in the app, in Section 14; members, leaving, removal, link rotation, and
 group settings in the app, in Section 14; joining a group in the app, with the approver
 encrypting the joiner's name, in Sections 11.3, 13, 14, and 17; group creation in the app and emoji listed by code
@@ -1260,7 +1262,8 @@ ones pass. A letter added to Unicode after 6.0 still fails the rules'
 Every field refuses leading or trailing spaces and runs of two or more
 spaces (an event description's line breaks aside), and the app trims,
 collapses spaces, and normalizes text (Unicode NFC) before saving, so what a
-person types usually passes. The rules check every plaintext field
+person types usually passes. A description is tidied line by line and keeps
+at most one blank line between paragraphs (decided 2026-10-29). The rules check every plaintext field
 directly. The display name, events, and items are encrypted, so the app
 checks them before encrypting and the rules can only cap each ciphertext's
 size, at 3 bytes per character plus the 16-byte tag (Sections 11.3 and
@@ -1482,6 +1485,21 @@ the Blaze change.
   explains. `src/state/notices.ts` lists the unexpired notices newest
   first and dismisses them. The client suite runs with the Functions
   emulator, so a decline and the notices it leaves are checked end to end.
+- `src/state/events.ts` is the group's events (Sections 5 and 11.5): any
+  member plans one, and its creator or the owner changes or cancels it. The
+  title, description, and location are tidied, checked, and encrypted as
+  one bundle, and the times are checked as the rules check them. Moving an
+  event's end moves every item's deletion time in the same batch, and
+  cancelling an event deletes its items with it. The list leaves out events
+  past their deletion time and reads untrusted details safely, showing a
+  bundle that won't decrypt or parse, or a part that isn't text, as empty.
+  `src/state/items.ts` is the bring-list (Section 7): adding, relabeling,
+  claiming, reassigning, releasing, and removing items. Each write reads
+  the event in its transaction and stamps the item with the event's
+  deletion time, which also brings an item that fell out of step back in
+  line, and refuses an item for a cancelled event. A claim is the
+  compare-and-swap Section 7 describes, refusing with "Someone already
+  claimed that" when the item names an assignee.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.
