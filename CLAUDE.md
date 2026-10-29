@@ -55,7 +55,8 @@ ARCHITECTURE.md's Section 14.
 **Placeholders to replace in the design pass**: the colors and the main
 font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
 text width tokens, which need re-measuring once the main font is
-chosen.
+chosen. The design they're replaced with is chosen (see "Visual design"
+below) and goes in next.
 
 ## Commands
 
@@ -171,6 +172,19 @@ emulators need Java, 21 installed.
   panel; phones get a group switcher in the header, the sections as bottom
   tabs, and the next event pinned above the chat, which leads on the day of
   an event.
+- **Visual design** (decided 2026-10-29, from the design pass's canvas):
+  Dusk's colors, a periwinkle main accent (`#4A4FC9`) with a coral spark
+  (`#E9735D`) on cool off-white, with a dark mode; every member gets their
+  own pastel, carried by their avatar, their claims, and their status lines;
+  Bricolage Grotesque for headings and Figtree for text.
+- **Brand artwork** (decided 2026-10-29): the source files live in
+  `design/brand/`. The mark is a map pin tilted 35 degrees so its point reads
+  as a speech bubble's tail, with a subtle inward cut just above the tip and
+  three typing dots, the middle one coral (`icon.svg`); smaller sizes drop to
+  one coral dot (`icon-small.svg`) and then the outline alone
+  (`icon-tiny.svg`). The wordmark is "Come Hang" in Bricolage Grotesque,
+  extra bold. `monogram.svg`, a "ch" monogram, wasn't chosen and is kept
+  unused in case it's useful later.
 - **Routing** (decided 2026-10-25, an app rather than a website): the app
   answers at one address, its root. React Router stays, with a single path:
   - **Unknown addresses** render a redirect that replaces the address with
