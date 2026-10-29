@@ -209,6 +209,56 @@ test( 'the identity signs in once, keeps its key pair private and across reloads
 
 } );
 
+
+
+test( 'the storage is kept once the identity exists, never asked for on page load, and not asked for again once kept', async ( { page } ) => { // What: Storage Keep Test. Why: The device holds what only it has, while a visitor who hasn't acted shouldn't be prompted (Section 14). How: This stands in the browser's persistence calls, opens the app, runs the bootstrap, and asks again, checking how often the browser was asked, then removes the API.
+
+
+	const couGetFun = () : Promise< number > => page.evaluate( () => ( window as unknown as { __perCouNum : number } ).__perCouNum ); // What: Count Get Function. Why: The test checks how often the browser was asked. How: This reads the stand-in's count. // What: Type Assertion Note. Why: The window has no such field in its type. How: The as reads it as one that does.
+	const stoRunFun = () : Promise< boolean > => page.evaluate( async () => { const modPatStr = '/src/platform/persist.ts'; return ( await import( /* @vite-ignore */ modPatStr ) ).stoPerFun(); } ); // What: Storage Run Function. Why: The request is asked again directly. How: This calls stoPerFun in the page.
+
+
+	await page.addInitScript( () => { // What: Persistence Stand-In Call. Why: Browsers answer persistence differently, and Firefox may prompt. How: This replaces both calls before the app runs, counting each request and keeping the storage once asked.
+
+
+		const winCouObj = window as unknown as { __perCouNum : number }; // What: Window Count Object. Why: The count is kept where the test reads it. How: This views the window with its count. // What: Type Assertion Note. Why: The window has no such field in its type. How: The as names the one this adds.
+
+		let keeValBoo = false; // What: Kept Value Boolean. Why: The stand-in keeps the storage once asked. How: This starts unkept.
+
+
+		winCouObj.__perCouNum = 0; // What: Count Start. Why: Nothing has asked yet. How: This sets zero.
+
+		Object.defineProperty( StorageManager.prototype, 'persisted', { configurable : true, value : async () => keeValBoo } ); // What: Persisted Stand-In. Why: The app checks before asking. How: This answers whether the storage is kept, on the prototype, since WebKit doesn't take one on the instance.
+
+		Object.defineProperty( StorageManager.prototype, 'persist', { configurable : true, value : async () => { winCouObj.__perCouNum += 1; keeValBoo = true; return true; } } ); // What: Persist Stand-In. Why: The app asks here. How: This counts the request and keeps the storage, on the prototype.
+
+
+	} );
+
+	await page.goto( '/' ); // What: Home Visit. Why: Opening the app is the first case. How: This opens it.
+
+	await page.waitForLoadState( 'networkidle' ); // What: Idle Wait. Why: A request made late in loading would still count. How: This waits until the page settles.
+
+
+	expect( await couGetFun() ).toBe( 0 ); // What: Not On Load Check. Why: A visitor who hasn't acted isn't asked. How: This expects no request.
+
+	await page.evaluate( async () => { const modPatStr = '/src/state/identity.ts'; await ( await import( /* @vite-ignore */ modPatStr ) ).ideEnsFun(); } ); // What: Bootstrap Call. Why: The first group action makes the identity. How: This runs the bootstrap in the page.
+
+	await expect.poll( couGetFun ).toBe( 1 ); // What: Asked Check. Why: Once the identity exists, the storage holds what only this device has. How: This waits for one request.
+
+
+	expect( await stoRunFun() ).toBe( true ); // What: Kept Check. Why: Kept storage reports as kept. How: This expects true.
+	expect( await couGetFun() ).toBe( 1 );    // What: Not Again Check. Why: Asking again could prompt for nothing. How: This expects no second request.
+
+	await page.evaluate( () => Object.defineProperty( StorageManager.prototype, 'persist', { configurable : true, value : undefined } ) ); // What: API Removal. Why: An older browser has no persistence calls. How: This removes the request.
+
+
+	expect( await stoRunFun() ).toBe( false ); // What: No API Check. Why: Nothing can be asked without the API. How: This expects false.
+
+
+} );
+
+
 // #endregion Module Init
 
 

@@ -15,6 +15,7 @@ import { serverTimestamp    } from 'firebase/firestore';       // What: Server T
 import { setDoc             } from 'firebase/firestore';       // What: Set Doc. Why: The bootstrap creates the user and account documents. How: This writes a document.
 import { signInAnonymously  } from 'firebase/auth';            // What: Sign In Anonymously. Why: No signup is required (Section 8). How: This creates an anonymous identity.
 import { signInWithPopup    } from 'firebase/auth';            // What: Sign In With Popup. Why: A new phone takes a linked identity back. How: This signs in through Google's popup.
+import { stoPerFun          } from '../platform/persist.ts';   // What: Storage Persist Function. Why: The device holds what only it has. How: This asks the browser to keep the storage.
 import { updateDoc          } from 'firebase/firestore';       // What: Update Doc. Why: A replaced key pair republishes its public key. How: This updates the user document.
 
 // #endregion Imports
@@ -25,20 +26,20 @@ import { updateDoc          } from 'firebase/firestore';       // What: Update D
  * identity.ts = Identity
  *
  * @summary
- * Makes sure this device has a working identity before its first group
- * action (ARCHITECTURE.md Sections 6 and 8), and never on page load, so on
- * iOS nothing is created before the app is installed (Section 16). The
- * bootstrap signs in anonymously unless already signed in, keeps an ECDH
- * P-256 key pair in IndexedDB whose private key can't be read by script,
- * publishes the raw public key to users/{uid}, and starts the private
- * accounts/{uid} with no groups. Every step checks what's already there, so
- * calling it again, or after a failure partway, repeats nothing. A key pair
- * stored for a different UID, left by an identity since replaced, is
- * replaced too. Only a pair made now is published, so after a recovery onto
- * a new phone (Section 8), an older phone still signed in to the identity
- * never takes the published key back. Google sign-in links the identity, so
- * it can be recovered on a new phone, where signing in with Google takes it
- * back before the bootstrap makes that phone's key pair.
+ * Makes sure this device has a working identity before its first group action
+ * (ARCHITECTURE.md Sections 6 and 8), and never on page load, so on iOS
+ * nothing is created before the app is installed (Section 16). The bootstrap
+ * signs in anonymously unless already signed in, keeps an ECDH P-256 key pair
+ * in IndexedDB whose private key can't be read by script, publishes the raw
+ * public key to users/{uid}, and starts the private accounts/{uid} with no
+ * groups, then asks the browser to keep the app's storage. Every step checks
+ * what's already there, so calling it again, or after a failure partway,
+ * repeats nothing. A key pair stored for a different UID, left by an identity
+ * since replaced, is replaced too. Only a pair made now is published, so after
+ * a recovery onto a new phone (Section 8), an older phone still signed in to
+ * the identity never takes the published key back. Google sign-in links the
+ * identity, so it can be recovered on a new phone, where signing in with
+ * Google takes it back before the bootstrap makes that phone's key pair.
  *
  * Sections:
  *  - Types
@@ -78,6 +79,7 @@ let ideProObj : Promise< IdeRecTyp > | null = null; // What: Identity Promise Ob
  * @summary
  * Runs the bootstrap's steps in order: sign in, key pair, public key,
  * account. Each step reads first and writes only what's missing or wrong.
+ * Then asks the browser to keep the storage, without waiting for it.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -133,6 +135,10 @@ const ideBooFun = async () : Promise< IdeRecTyp > => { // What: Identity Boot Fu
 
 
 	if ( !( await getDoc( accRefObj ) ).exists() ) await setDoc( accRefObj, { memberGroups : {}, ownedGroups : {} } ); // What: Account Create Call. Why: Creating or joining a group updates the account's maps. How: This starts it empty when it's missing.
+
+
+
+	void stoPerFun().catch( () => false ); // What: Persist Request Call. Why: Once the identity exists, the device holds its private key and soon its groups' history, which only it has (Section 14). How: This asks the browser to keep the storage without holding up the bootstrap, ignoring a failure.
 
 
 

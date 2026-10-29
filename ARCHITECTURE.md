@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (the purchase's checkout and webhook functions,
+Last updated: 2026-10-29 (asking the browser to keep the storage once the
+identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
 and 18; Google linking and recovery in the app, the
 group key shared again with a recovered member, and the newest phone's
@@ -1497,8 +1498,12 @@ the Blaze change.
   - The decrypted chat history. RTDB's web SDK keeps no offline copy on
     disk, so this cache is ours to keep, as Section 5 already assumes.
   - Firestore's own offline cache uses IndexedDB too, managed by its SDK.
-  - The app calls `navigator.storage.persist()` on every launch, so the
-    browser treats its storage as worth keeping.
+  - The app asks the browser to keep its storage (`navigator.storage.persist()`,
+    `src/platform/persist.ts`) on each launch once the identity exists, as
+    the bootstrap finishes at the first group action, and not when the
+    browser already keeps it (decided 2026-10-29). Never before a group
+    action, so a visitor who hasn't acted isn't prompted (Firefox may ask),
+    and nothing runs on iOS before the app is installed (Section 16).
 - UI: no component library; every component is built in-house.
 - Routing (decided 2026-10-25): the app answers at one address, its root,
   since it's an app rather than a website with pages to land on:
