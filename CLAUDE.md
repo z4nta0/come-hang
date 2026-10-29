@@ -166,6 +166,11 @@ emulators need Java, 21 installed.
   `app.tsx`, which holds whichever page the address matches. There's no bar
   or tab bar yet, so it's everything after the skip link; once the tab bar
   joins, it stays the open screen's content, past the bar.
+- **Layout** (decided 2026-10-29, ARCHITECTURE.md Section 14): wide screens
+  get a rail of groups, the group's sections, its content, and a next-event
+  panel; phones get a group switcher in the header, the sections as bottom
+  tabs, and the next event pinned above the chat, which leads on the day of
+  an event.
 - **Routing** (decided 2026-10-25, an app rather than a website): the app
   answers at one address, its root. React Router stays, with a single path:
   - **Unknown addresses** render a redirect that replaces the address with

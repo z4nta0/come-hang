@@ -11,7 +11,8 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (asking the browser to keep the storage once the
+Last updated: 2026-10-29 (the screen layout, in Section 14; leaving and
+arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
 and 18; Google linking and recovery in the app, the
@@ -730,6 +731,15 @@ in place of their name. Any member can reassign or release it (Section 11.5).
     distinct status flag (e.g. an "Arrived" badge), separate from the
     ambient live-location display. The flag is encrypted with the position
     (decided 2026-10-28), so Firebase can't tell who has arrived.
+  - **Leaving and arriving post to the chat** (decided 2026-10-29): an
+    "I'm on my way" button and the "I've arrived" action each post a short
+    status line to the group's chat ("Sam is on the way", "Dana arrived"),
+    so the group sees it without opening the map. Only those two do: the
+    ambient position updates never post, so the chat isn't flooded. Leaving
+    is a tap, never detected, since the app can't watch a phone's position
+    in the background (above). A status post is an ordinary chat message
+    whose kind is marked inside its encryption (Section 11.7), so Firebase
+    can't tell it from any other message.
   - Every displayed location shows a staleness timestamp ("updated 6 min
     ago") so an old ping is never presented as if it were live.
   - Users are told plainly, at the point they enable sharing, that
@@ -1038,7 +1048,7 @@ only kind of conversation is a group's own chat.
 |---|---|---|
 | `senderUid` | plaintext | Routing metadata. Always the sender's own UID. |
 | `sentAt` | plaintext number | The server's time when it was sent (milliseconds), for ordering, the join-time cutoff, and the TTL safety valve below. |
-| `ciphertext` / `iv` | base64 strings | Message content, AES-GCM under the group key. The IV is 12 bytes (16 base64 characters), and the ciphertext holds 1 to 2,000 characters (Section 11.10) at 3 bytes each plus the 16-byte tag, so at most 8,024 base64 characters. |
+| `ciphertext` / `iv` | base64 strings | Message content, AES-GCM under the group key. A status post (leaving or arriving, Section 10) marks its kind inside the encrypted content, so the stored fields look the same for every message (decided 2026-10-29, not built yet). The IV is 12 bytes (16 base64 characters), and the ciphertext holds 1 to 2,000 characters (Section 11.10) at 3 bytes each plus the 16-byte tag, so at most 8,024 base64 characters. |
 | `waitingOn` | plaintext map `{ uid: true }` | Who hasn't received the message yet (decided 2026-10-28, replacing a recipients snapshot plus an acknowledgement map): the sender lists every other member, so a member who joins later is never on it, and each member deletes their own entry once their device has the message. RTDB drops an empty map, so a message no one is waiting on has no `waitingOn` at all. |
 
 **The membership mirror** (decided 2026-10-28): RTDB's rules can't read
@@ -1505,6 +1515,16 @@ the Blaze change.
     action, so a visitor who hasn't acted isn't prompted (Firefox may ask),
     and nothing runs on iOS before the app is installed (Section 16).
 - UI: no component library; every component is built in-house.
+- Layout (decided 2026-10-29, from the wireframes of the design pass):
+  - **Wide screens**: a rail of every group down the left, then the open
+    group's sections (chat, events, map, people, settings), its content,
+    and a panel with the next event and its bring-list.
+  - **Phones**: the group's name at the top opens a sheet of every group,
+    with joining and creating one; the group's sections are tabs along the
+    bottom; and the group's next event is pinned above its chat, opening
+    as a sheet with its details and bring-list.
+  - **On the day of an event** the group leads with it: the pinned event
+    offers the map, "I'm on my way", and "I've arrived" (Section 10).
 - Routing (decided 2026-10-25): the app answers at one address, its root,
   since it's an app rather than a website with pages to land on:
   - An address the app doesn't use is replaced with the root, so the address
