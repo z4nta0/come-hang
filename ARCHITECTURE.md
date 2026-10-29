@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (presence and history requests in the app, the
+Last updated: 2026-10-29 (location sharing in the app, its throttle, and
+the position's rounding, in Sections 5, 11.4, and 14; presence and history
+requests in the app, the
 history bundle's format, and coverage by join time, in Sections 11.9 and
 14; chat in the app, its allowed characters, and the
 emulator's shared database instance, in Sections 11.10 and 14; events and
@@ -276,7 +278,9 @@ from Spark's 100 to 200,000.
   getting ready and the trip there, and never earlier.
 - Throttled client-side by time-since-last-update **and** distance moved
   (whichever threshold is hit first), not a fixed-interval ping, to keep
-  bandwidth/battery cost down.
+  bandwidth/battery cost down: an update every 2 minutes or every 100
+  meters, and never more than every 15 seconds (decided 2026-10-29). Opening
+  the app and arriving always send a fresh fix.
 
 **Pros**: minimal storage footprint, minimal privacy exposure (no
 location history ever accumulates server-side), simple mental model with
@@ -880,7 +884,7 @@ alongside chat): moved to Firestore. Reasoning:
 
 | Field | Type | Notes |
 |---|---|---|
-| `locationEnc` / `iv` | ciphertext bytes | The lat/lng, its accuracy, and the "I've arrived" flag, encrypted together. Safe to encrypt since nothing server-side ever queries into it, all distance/proximity math happens client-side after each member decrypts everyone's current location. The rules cap the ciphertext at 128 bytes, and the IV is 12. |
+| `locationEnc` / `iv` | ciphertext bytes | The lat/lng, rounded to 6 decimal places (about 0.1 meters), its accuracy in whole meters, and the "I've arrived" flag, encrypted together as JSON. Safe to encrypt since nothing server-side ever queries into it, all distance/proximity math happens client-side after each member decrypts everyone's current location. The rules cap the ciphertext at 128 bytes, and the IV is 12. |
 | `updatedAt` | plaintext | Timestamp, for staleness display in the UI, always the server's own time. |
 | `expireAt` | plaintext, TTL field | Refreshed to an hour after each update, or the event's end time if that's sooner. Firestore's TTL policy targets this field. The phone sets it by its own clock, which can't match the server's exactly, so the rules accept any expiry after the server's time, no later than the event's end, and no more than 65 minutes out, an hour plus 5 minutes of allowance for a clock running ahead. A manual "stop sharing" action deletes the doc directly rather than waiting on TTL. |
 | `eventId` | plaintext | Which event this share-session belongs to. The rules allow a share only from 3 hours before that event starts until it ends. |
@@ -1535,6 +1539,14 @@ the Blaze change.
   requests, checking this device's coverage, claiming as a compare-and-swap,
   releasing, sending the range as one encrypted bundle, collecting it while
   keeping only well-formed messages inside the range, and withdrawing.
+- `src/state/location.ts` is location sharing (Sections 5, 10, and 11.4):
+  sharing a position for an event, inside its window and expiring an hour on
+  or at the event's end, stopping, listing and watching the valid unexpired
+  shares, and a sharing session that sends a fix on start, as the device
+  moves while the app is open, on each return to the app, and on arrival,
+  throttled as Section 5 says. `src/platform/geolocation.ts` wraps the
+  browser's position calls, and `public/_headers` allows geolocation to the
+  app's own origin alone.
 - Under the emulator, the app, the Cloud Functions, and the tests share the
   Realtime Database's default instance, `demo-come-hang-default-rtdb`, where
   the emulator loads `database.rules.json`, as production's app and

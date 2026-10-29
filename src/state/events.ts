@@ -14,6 +14,7 @@ import { eveTitFun  } from '../core/text-limits.ts';  // What: Event Title Funct
 import { firGetFun  } from '../platform/firebase.ts'; // What: Firebase Get Function. Why: Events live in Firestore. How: This returns the services.
 import { getDocs    } from 'firebase/firestore';      // What: Get Docs. Why: Events and their items are read together. How: This reads a collection.
 import { ideEnsFun  } from './identity.ts';           // What: Identity Ensure Function. Why: An event names its creator. How: This reads the identity.
+import { jsoObjFun  } from '../utils/json.ts';        // What: JSON Object Function. Why: Another member wrote the bundle, so it may not be JSON. How: This parses it safely.
 import { keyLoaFun  } from './groups.ts';             // What: Key Load Function. Why: Details are encrypted with the group key. How: This loads it.
 import { linNorFun  } from '../core/text-limits.ts';  // What: Lines Normalize Function. Why: A description keeps its line breaks while it's tidied. How: This normalizes it.
 import { setDoc     } from 'firebase/firestore';      // What: Set Doc. Why: A new event is written whole. How: This writes it.
@@ -72,52 +73,6 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: An event's 
 
 
 // #region Helpers
-
-// #region detParFun
-
-/**
- * detParFun = Details Parse Function
- *
- * @summary
- * Parses a decrypted details bundle into a record of its parts. Another
- * member wrote the bundle, so it's untrusted: text that isn't JSON, or JSON
- * that isn't an object, comes back as an empty record, and the caller still
- * checks each part is text.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param detTexStr - Details Text String: The decrypted bundle.
- *
- * @returns The bundle's parts, or an empty record.
- *
- * @example
- * ```ts
- * detParFun('{"t":"Picnic"}') // => { t : 'Picnic' }
- * ```
- *
-*/
-
-const detParFun = ( detTexStr : string ) : Record< string, unknown > => { // What: Details Parse Function. Why: A bad bundle mustn't break the event list. How: This parses it, falling back to an empty record.
-
-
-	let detValAny : unknown = null; // What: Details Value Any. Why: The parse may fail. How: This starts with nothing parsed.
-
-
-
-	try { detValAny = JSON.parse( detTexStr ); } // What: Parse Assignment. Why: The bundle is JSON when a member wrote it through the app. How: This parses it.
-
-	catch { detValAny = null; } // What: Parse Fallback. Why: Text that isn't JSON is ignored, an expected case for untrusted data. How: This keeps nothing parsed.
-
-
-
-	return ( detValAny !== null && typeof detValAny === 'object' ? detValAny : {} ) as Record< string, unknown >; // What: Record Return. Why: Only an object has parts. How: This returns it, or an empty record for anything else. // What: Type Assertion Note. Why: A parsed object's keys are unknown. How: The as reads it as a record of unknowns.
-
-
-};
-
-// #endregion detParFun
-
-
 
 // #region eveFieFun
 
@@ -332,7 +287,7 @@ const eveLisFun = async ( groIdeStr : string ) : Promise< EveRecTyp[] > => { // 
 
 
 		const detTexStr = await decTexFun( groKeyObj, ( eveDocObj.get( 'detailsEnc' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >, ( eveDocObj.get( 'iv' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer > ).catch( () => '{}' ); // What: Details Text String. Why: The details are stored encrypted. How: This decrypts them, standing in an empty bundle when they won't decrypt. // What: Type Assertion Note. Why: The rules store both as bytes, and toUint8Array returns an array over a plain buffer. How: The as read them as such.
-		const detRecObj = detParFun( detTexStr ); // What: Details Record Object. Why: The parts are read by key. How: This parses the bundle, standing in an empty record when it isn't a JSON object.
+		const detRecObj = jsoObjFun( detTexStr ) ?? {}; // What: Details Record Object. Why: The parts are read by key. How: This parses the bundle, standing in an empty record when it isn't a JSON object.
 
 
 

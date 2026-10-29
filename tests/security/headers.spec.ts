@@ -114,6 +114,8 @@ test( 'the other hardening headers are set', () => { // What: Hardening Headers 
 	expect( heaAllObj[ 'x-frame-options' ] ).toBe( 'DENY' );                                               // What: Frame Options Assertion. Why: Older browsers ignore frame-ancestors. How: This checks framing is refused the older way too.
 	expect( heaAllObj[ 'referrer-policy' ] ).toBeTruthy();                                                 // What: Referrer Policy Assertion. Why: Without one, each browser's own default decides how much of the address other sites learn. How: This checks a policy is set.
 	expect( heaAllObj[ 'permissions-policy' ] ).toBeTruthy();                                              // What: Permissions Policy Assertion. Why: Browser features the app doesn't use shouldn't be available to injected code. How: This checks a policy is set.
+	expect( heaAllObj[ 'permissions-policy' ] ).toMatch( /(^|, )geolocation=\(self\)(,|$)/ );              // What: Geolocation Assertion. Why: Location sharing needs the position, but only for this app's own pages. How: This expects geolocation allowed to this origin alone.
+	expect( heaAllObj[ 'permissions-policy' ] ).toMatch( /(^|, )camera=\(\)(,|$)/ );                       // What: Camera Assertion. Why: A feature the app doesn't use stays off. How: This expects the camera turned off.
 
 
 } );

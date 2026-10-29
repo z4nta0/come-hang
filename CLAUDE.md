@@ -43,7 +43,8 @@ identity bootstrap, the group key encryption, group creation, joining
 through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
 ownership offers and notices, events with their bring-lists, chat
-with its on-device history, presence, and history requests, with no
+with its on-device history, presence, history requests, and location
+sharing, with no
 screens using them yet, since screens wait for the design pass. Next steps
 are in ARCHITECTURE.md's Section 14.
 
@@ -139,8 +140,9 @@ emulators need Java, 21 installed.
   policy is strict while the app talks to no other origin: the Firebase work
   adds its addresses to the Content-Security-Policy and turns the secret
   search's Google key pattern into an allowance for the Firebase web config's
-  browser key (named here when it lands), and location sharing opens
-  `geolocation` in the Permissions-Policy, each in the change that needs it.
+  browser key (named here when it lands), each in the change that needs it.
+  Location sharing opened `geolocation` to the app's own origin
+  (`geolocation=(self)`), which the headers spec checks.
 - **Firestore SDK override**: the Firestore SDK's Node build pins
   `@grpc/grpc-js` to 1.9, which carries a high advisory and failed the
   security suite's audit, so `package.json` overrides it to 1.14.6 under
