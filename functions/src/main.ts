@@ -10,6 +10,7 @@ import { delGroFun } from './group-deletion.ts';  // What: Delete Group Function
 import { groChaFun } from './group-changes.ts';   // What: Group Change Function. Why: Removals and ended offers are reported to the people they affect. How: This is its trigger.
 import { hisPusFun } from './activity-pushes.ts'; // What: History Push Function. Why: Members learn someone needs chat history. How: This is the history request trigger.
 import { joiPusFun } from './activity-pushes.ts'; // What: Join Push Function. Why: Members learn someone is waiting to join. How: This is the join request trigger.
+import { keyPusFun } from './activity-pushes.ts'; // What: Key Push Function. Why: Members learn someone on a new phone needs the group's key. How: This is the key request trigger.
 import { mirGroFun } from './mirror.ts';          // What: Mirror Group Function. Why: The group's retention is mirrored for the chat rules. How: This is its trigger.
 import { mirMemFun } from './mirror.ts';          // What: Mirror Member Function. Why: Membership is mirrored for the chat and presence rules. How: This is its trigger.
 
@@ -32,6 +33,6 @@ import { mirMemFun } from './mirror.ts';          // What: Mirror Member Functio
 
 
 
-export { chaPusFun, dayRunFun, decOffFun, delGroFun, groChaFun, hisPusFun, joiPusFun, mirGroFun, mirMemFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { chaPusFun, dayRunFun, decOffFun, delGroFun, groChaFun, hisPusFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 

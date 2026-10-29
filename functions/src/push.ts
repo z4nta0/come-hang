@@ -67,6 +67,7 @@ const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why:
 	groupDeleted     : 'The owner deleted this group.',
 	historyRequest   : 'A member is asking for chat history they missed.',
 	joinRequest      : 'Someone wants to join.',
+	keyRequest       : "A member on a new phone is waiting for this group's key.",
 	offerAccepted    : 'The member you offered this group to accepted it.',
 	offerDeclined    : 'The member you offered this group to declined it.',
 	offerLapsed      : 'Your offer of this group ran out after 7 days.',

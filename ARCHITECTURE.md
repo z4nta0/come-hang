@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (push notifications in the app, its one service
+Last updated: 2026-10-29 (Google linking and recovery in the app, the
+group key shared again with a recovered member, and the newest phone's
+key standing, in Sections 6, 8, 11.1, 11.3, 12, and 14; push notifications in the app, its one service
 worker, and offline opening, in Sections 2, 11.1, and 14; the activity pushes, for chat, join requests,
 and history requests, in Sections 11.1, 11.7, 11.9, 14, and 17; location
 sharing in the app, its throttle, and
@@ -414,6 +416,18 @@ member or full metadata privacy.
   needs only the member's own private key, so a wrap keeps working whoever
   made it and whatever later happens to their key. The group key itself is
   AES-GCM, 256 bits, with a fresh random IV for every encryption.
+- **A recovered member gets each key shared again** (decided 2026-10-29,
+  `src/state/key-share.ts`): a member recovered onto a new phone (Section
+  8) has a new key pair, so the wrap made for the old phone won't open.
+  Loading the group's key then stamps a key request on their membership
+  (`keyRequestedAt`), which pushes every other member, and any member
+  holding the key answers it the way an approval wraps one: they wrap the
+  key for the member's newly published public key, replacing the old wrap
+  and ending the request in one write. The rules let a member file only
+  their own request, at the server's time, and let only another member
+  answer it, with a new wrap, and only while it stands, so nobody can spoil
+  a wrap that works. A member who's the only one in a group has nobody to
+  ask (Section 12).
 - **Group keys stay extractable** (decided 2026-10-28): any member may
   approve a join and wrap the group key for the joiner (Section 17), and
   WebCrypto only wraps an extractable key, so a member's copy of a group
@@ -501,6 +515,20 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   or a Google/Apple sign-in) to the existing anonymous UID. This
   preserves the same UID and all group memberships on a new device, using
   Firebase's supported linking mechanism, no custom backend required.
+  - **How recovery runs** (decided 2026-10-29, `src/state/identity.ts`):
+    linking and recovery each start from the person's tap and go through
+    Google's sign-in popup. On the new phone, signing in with Google brings
+    the identity back, then the bootstrap makes that phone's key pair and
+    publishes it, and each group's key waits for a member to share it
+    (Section 6). Recovery refuses, before signing in, on a phone whose own
+    identity already belongs to a group, since those groups would be
+    stranded. A Google account linked to no identity simply becomes a new
+    identity, linked from the start. The bootstrap publishes only a key
+    pair it has just made, so an old phone still signed in to the
+    identity never takes the published key back from the newer one. A
+    Google account linked to one identity can't be linked to another.
+    Whether the popup works in an installed iOS app, or recovery there has
+    to use a redirect instead, is checked on a real phone against staging.
   - Raw credential/token export (e.g. a backup file containing the
     Firebase refresh token) was explicitly rejected: not a supported
     recovery path, relies on undocumented internals, and creates a
@@ -875,6 +903,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 | `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Written with the membership itself: the creator's as the group is created, and a joiner's by the approving member, who encrypts the name from the join request (Section 17). The rules also accept a membership without one, and the member may change it at any time. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
+| `keyRequestedAt` | plaintext, absent unless asking | Set by the member alone, to the server's time, when the wrap won't open on a phone they were recovered onto, and removed by the member who answers by replacing `wrappedGroupKey` (Section 6). |
 
 A subcollection, not a map field on the group doc, specifically so many
 members can update their own entry (or be added) without contending on
@@ -1373,6 +1402,10 @@ real, and the app is built against both:
 - Data already delivered to a device (chat history, notes, event
   details) cannot be retroactively revoked if that member is later
   removed from the group.
+- A member recovered onto a new phone reads a group again only once
+  another member shares its key (Section 6), so a group whose other
+  members never come back stays closed to them, and a group they're the
+  only member of can't be opened again at all.
 - The group's symmetric key is never rotated when a member is removed.
   They still hold a local copy of it, but rotation is skipped: security
   rules already cut off their access to any *future* ciphertext, so a
@@ -1496,7 +1529,8 @@ the Blaze change.
   whose private key script can't export, the raw public key published to
   `/users/{uid}`, and an empty `/accounts/{uid}`. Each step writes only
   what's missing, and a key pair lost while the sign-in survives is
-  replaced and republished.
+  replaced and republished, while a phone that kept its pair never
+  republishes it over a newer one.
 - `src/state/groups.ts` creates a group (Sections 9 and 11) once both
   names are tidied and checked (`src/core/text-limits.ts`): the identity
   bootstrap, a new group key and invite token, then one batch with the
@@ -1587,6 +1621,13 @@ the Blaze change.
   so `functions/src/setup.ts` names the instance there (found 2026-10-29,
   when the mirror the chat rules read sat in a different namespace from the
   app's chat).
+- `src/state/identity.ts` links the identity to Google and recovers it on
+  a new phone (Section 8), and `src/state/key-share.ts` lists a group's key
+  requests and answers one by wrapping the key for the member's new public
+  key (Section 6), whose push comes from `keyPusFun` in
+  `functions/src/activity-pushes.ts`. The client suite drives the Auth
+  emulator's own Google popup to recover a member on a fresh browser
+  context and has the owner share the key.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.

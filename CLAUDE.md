@@ -38,14 +38,15 @@ ARCHITECTURE.md's data model, `database.rules.json` covers chat and
 presence, and `storage.rules` covers history transfers. The Cloud Functions
 so far are the membership mirror, group deletion, the removal and offer
 notices, the offer decline, the daily run, and the pushes, with the push
-token rules, including the activity pushes for chat, join requests, and
-history requests. The app has its Firebase services, created on first use, the
+token rules, including the activity pushes for chat, join requests, history
+requests, and key requests. The app has its Firebase services, created on first use, the
 identity bootstrap, the group key encryption, group creation, joining
 through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
 ownership offers and notices, events with their bring-lists, chat
 with its on-device history, presence, history requests, location
-sharing, and push notifications, with no
+sharing, push notifications, and Google linking and recovery with the
+group keys shared again, with no
 screens using them yet, since screens wait for the design pass. Its one
 service worker opens the app offline and shows pushes. Next steps are in
 ARCHITECTURE.md's Section 14.

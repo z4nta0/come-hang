@@ -6,6 +6,7 @@
 import { FIR_DAT_OBJ       } from './setup.ts';                      // What: Firestore Database Object. Why: Members, names, and requests live in Firestore. How: This reads them past the rules.
 import { FUN_OPT_OBJ       } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: Each trigger spreads them into its own.
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'; // What: On Document Created. Why: A new join request is a created document. How: This registers a create trigger.
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore'; // What: On Document Updated. Why: A key request is stamped on an existing membership. How: This registers an update trigger.
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'; // What: On Document Written. Why: A history request becomes pending when filed or released. How: This registers a write trigger.
 import { onValueCreated    } from 'firebase-functions/v2/database';  // What: On Value Created. Why: A chat message is created in the Realtime Database. How: This registers a create trigger there.
 import { pusSenFun         } from './push.ts';                       // What: Push Send Function. Why: Each activity reaches phones as a push. How: This sends one.
@@ -19,16 +20,16 @@ import { REA_DAT_OBJ       } from './setup.ts';                      // What: Re
  * activity-pushes.ts = Activity Pushes
  *
  * @summary
- * Pushes for what happens in a group while members are away
- * (ARCHITECTURE.md Sections 11.1, 11.7, 11.9, and 17). None leaves a notice,
- * since the app shows each activity itself, and like every push each carries
- * only the group's name and a fixed sentence, never what anyone wrote. A
- * history request that becomes pending, whether filed or released, pushes
- * every other member. A new join request pushes every member with how many
- * requests are waiting, tagged so it replaces the group's earlier join push
- * on the phone. A new chat message pushes each member still waiting on it
- * who doesn't have the group open by presence, tagged so a busy chat shows as
- * one notification.
+ * Pushes for what happens in a group while members are away (ARCHITECTURE.md
+ * Sections 6, 11.1, 11.7, 11.9, and 17). None leaves a notice, since the app
+ * shows each activity itself, and like every push each carries only the
+ * group's name and a fixed sentence, never what anyone wrote. A history
+ * request that becomes pending, whether filed or released, pushes every other
+ * member. A new join request pushes every member with how many requests are
+ * waiting, tagged so it replaces the group's earlier join push on the phone. A
+ * new chat message pushes each member still waiting on it who doesn't have the
+ * group open by presence, tagged so a busy chat shows as one notification. A
+ * member asking for the group's key on a new phone pushes every other member.
  *
  * Sections:
  *  - Helpers
@@ -202,13 +203,62 @@ const joiPusFun = onDocumentCreated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 // #endregion joiPusFun
 
+
+
+// #region keyPusFun
+
+/**
+ * keyPusFun = Key Push Function
+ *
+ * @summary
+ * Runs on every update to a membership and, when the update files a key
+ * request, which the rules allow only as the request's own write, pushes
+ * every other member. Any other update pushes nobody.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param eveValObj - Event Value Object: The membership before and after
+ *                    the update, with the group's ID and the member's UID in
+ *                    its params.
+ *
+ * @returns A promise that settles once the pushes are sent, with no value.
+ *
+ * @example
+ * ```ts
+ * keyPusFun(eveValObj) // => Promise<void>
+ * ```
+ *
+*/
+
+const keyPusFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groIdeStr}/members/{uidMemStr}' }, async ( eveValObj ) : Promise< void > => { // What: Key Push Function. Why: A member on a new phone can't read the group until someone online shares its key (Section 6). How: This pushes every other member when a request is filed.
+
+
+	const reqNewBoo = eveValObj.data?.before.get( 'keyRequestedAt' ) === undefined && eveValObj.data?.after.get( 'keyRequestedAt' ) !== undefined; // What: Request New Boolean. Why: Only a request just filed asks for help, not a name change or an answer. How: This compares the field before and after, both plain reads, so the chain stays inline.
+
+
+	if ( !reqNewBoo ) return; // What: Not New Guard. Why: Any other update tells nobody. How: This ends the run.
+
+
+
+	const groNamStr = ( await namGetFun( eveValObj.params.groIdeStr ) ) ?? '';                                                               // What: Group Name String. Why: The push's title is the group's name. How: This reads it, empty only for a group whose members are already gone, so nobody is pushed.
+	const othUidArr = ( await memUidFun( eveValObj.params.groIdeStr ) ).filter( ( memUidStr ) => memUidStr !== eveValObj.params.uidMemStr ); // What: Other UID Array. Why: The member asking has no key to share. How: This lists every other member.
+
+
+
+	await Promise.all( othUidArr.map( ( othUidStr ) => pusSenFun( othUidStr, 'keyRequest', groNamStr ) ) ); // What: Push Send Calls. Why: Any member online can share the key. How: This pushes each.
+
+
+} );
+
+// #endregion keyPusFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { chaPusFun, hisPusFun, joiPusFun }; // What: Named Exports. Why: The entry file exports every function Firebase deploys. How: This exports the three triggers.
+export { chaPusFun, hisPusFun, joiPusFun, keyPusFun }; // What: Named Exports. Why: The entry file exports every function Firebase deploys. How: This exports the four triggers.
 
 // #endregion Exports
 

@@ -1811,6 +1811,38 @@ test( 'a member writes only their own encrypted name and activity time', async (
 
 
 
+test( "a member asks once for the group's key, and only another member answers it, with a new wrap", async () => { // What: Key Share Test. Why: A member recovered onto a new phone can't open their old wrap, and nobody may spoil a working one (Section 6). How: This files Bob's request with each fault and once validly, then answers it with each fault and once validly, checking which pass.
+
+
+	const aliStoObj = accStoFun( 'alice' );                                    // What: Alice Store Object. Why: Alice holds the key to share. How: This acts as her.
+	const bobRefStr = 'groups/gro1/members/bob';                               // What: Bob Reference String. Why: Every write is to Bob's membership. How: This names its path.
+	const bobStoObj = accStoFun( 'bob' );                                      // What: Bob Store Object. Why: Bob is on a new phone. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' );                                    // What: Carol Store Object. Why: Carol isn't a member. How: This acts as her.
+	const newWraObj = Bytes.fromUint8Array( new Uint8Array( 105 ).fill( 7 ) ); // What: New Wrap Object. Why: An answer replaces the wrap with a different one. How: This is a wrap-sized run of bytes unlike the old one.
+
+
+	await seeTwoFun(); // What: Two Seed Call. Why: Bob needs a membership and Alice a key. How: This seeds the group with both.
+
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                   // What: Unasked Share. Why: A working wrap mustn't be replaced. How: This expects an answer with no request refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : Timestamp.fromMillis( 9e12 ) } ) );                                                 // What: Forged Request Time. Why: The time tells members how long Bob has waited. How: This expects a chosen time refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp(), wrappedGroupKey : newWraObj } ) );                               // What: Request With Wrap. Why: A request changes nothing else. How: This expects Bob's own wrap refused with it.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                            // What: Request For Another. Why: Only Bob asks for his key. How: This expects Alice refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                         // What: Own Request. Why: Bob asks for the key. How: This expects his request allowed.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                            // What: Second Request. Why: A standing request needs no second one. How: This expects another refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                   // What: Own Answer. Why: Bob has no key to share. How: This expects him refused.
+	await assertFails( updateDoc( doc( carStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                   // What: Outsider Answer. Why: Only a member holds the key. How: This expects Carol refused.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField() } ) );                                                                // What: Cleared Request. Why: A request is answered only by a new wrap. How: This expects a clear alone refused.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { wrappedGroupKey : newWraObj } ) );                                                                   // What: Wrap Without Answer. Why: The answer ends the request. How: This expects a wrap that leaves it standing refused.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : bytFilFun( 257 ) } ) );                            // What: Large Wrap. Why: A wrap fits in 256 bytes. How: This expects 257 refused.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { displayNameEnc : bytFilFun( 40 ), keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) ); // What: Answer With Name. Why: Sharing touches the wrap and request alone. How: This expects a name with it refused.
+	await assertSucceeds( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                // What: Valid Answer. Why: Alice shares the key. How: This expects her answer allowed.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : bytFilFun( 105 ) } ) );                            // What: Answered Again. Why: Nothing stands once answered. How: This expects a second answer refused.
+
+
+} );
+
+
+
 test( 'the member count moves only with a membership the same batch creates', async () => { // What: Count Test. Why: An inflated count could block every join, so it can't move on its own. How: This raises the count as Alice for an existing member and for nobody, checking both fail.
 
 

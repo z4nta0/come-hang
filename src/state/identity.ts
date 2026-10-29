@@ -3,16 +3,19 @@
 
 // #region Imports
 
-import { Bytes             } from 'firebase/firestore';       // What: Bytes. Why: The public key is stored as Firestore bytes, so the rules can check its size (Section 6). How: This wraps the raw key.
-import { doc               } from 'firebase/firestore';       // What: Doc. Why: The identity's documents are read and written by path. How: This builds a reference.
-import { firGetFun         } from '../platform/firebase.ts';  // What: Firebase Get Function. Why: The identity signs in and publishes through Firebase. How: This returns the services.
-import { getDoc            } from 'firebase/firestore';       // What: Get Doc. Why: The bootstrap checks what's already published. How: This reads one document.
-import { keyGetFun         } from '../platform/key-store.ts'; // What: Key Get Function. Why: A key pair made before is reused. How: This reads it from IndexedDB.
-import { keyPutFun         } from '../platform/key-store.ts'; // What: Key Put Function. Why: A new key pair has to survive the app closing. How: This stores it in IndexedDB.
-import { serverTimestamp   } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules require the server's time on a new user document. How: This asks the server to fill it in.
-import { setDoc            } from 'firebase/firestore';       // What: Set Doc. Why: The bootstrap creates the user and account documents. How: This writes a document.
-import { signInAnonymously } from 'firebase/auth';            // What: Sign In Anonymously. Why: No signup is required (Section 8). How: This creates an anonymous identity.
-import { updateDoc         } from 'firebase/firestore';       // What: Update Doc. Why: A replaced key pair republishes its public key. How: This updates the user document.
+import { Bytes              } from 'firebase/firestore';       // What: Bytes. Why: The public key is stored as Firestore bytes, so the rules can check its size (Section 6). How: This wraps the raw key.
+import { doc                } from 'firebase/firestore';       // What: Doc. Why: The identity's documents are read and written by path. How: This builds a reference.
+import { firGetFun          } from '../platform/firebase.ts';  // What: Firebase Get Function. Why: The identity signs in and publishes through Firebase. How: This returns the services.
+import { getDoc             } from 'firebase/firestore';       // What: Get Doc. Why: The bootstrap checks what's already published. How: This reads one document.
+import { GoogleAuthProvider } from 'firebase/auth';            // What: Google Auth Provider. Why: Recovery signs in with Google alone for now (Section 8). How: This names the provider.
+import { keyGetFun          } from '../platform/key-store.ts'; // What: Key Get Function. Why: A key pair made before is reused. How: This reads it from IndexedDB.
+import { keyPutFun          } from '../platform/key-store.ts'; // What: Key Put Function. Why: A new key pair has to survive the app closing. How: This stores it in IndexedDB.
+import { linkWithPopup      } from 'firebase/auth';            // What: Link With Popup. Why: An identity is linked to Google from the person's tap. How: This links it through Google's popup.
+import { serverTimestamp    } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules require the server's time on a new user document. How: This asks the server to fill it in.
+import { setDoc             } from 'firebase/firestore';       // What: Set Doc. Why: The bootstrap creates the user and account documents. How: This writes a document.
+import { signInAnonymously  } from 'firebase/auth';            // What: Sign In Anonymously. Why: No signup is required (Section 8). How: This creates an anonymous identity.
+import { signInWithPopup    } from 'firebase/auth';            // What: Sign In With Popup. Why: A new phone takes a linked identity back. How: This signs in through Google's popup.
+import { updateDoc          } from 'firebase/firestore';       // What: Update Doc. Why: A replaced key pair republishes its public key. How: This updates the user document.
 
 // #endregion Imports
 
@@ -31,7 +34,11 @@ import { updateDoc         } from 'firebase/firestore';       // What: Update Do
  * accounts/{uid} with no groups. Every step checks what's already there, so
  * calling it again, or after a failure partway, repeats nothing. A key pair
  * stored for a different UID, left by an identity since replaced, is
- * replaced too.
+ * replaced too. Only a pair made now is published, so after a recovery onto
+ * a new phone (Section 8), an older phone still signed in to the identity
+ * never takes the published key back. Google sign-in links the identity, so
+ * it can be recovered on a new phone, where signing in with Google takes it
+ * back before the bootstrap makes that phone's key pair.
  *
  * Sections:
  *  - Types
@@ -101,11 +108,9 @@ const ideBooFun = async () : Promise< IdeRecTyp > => { // What: Identity Boot Fu
 	const stoRecAny = await keyGetFun( 'identity' ) as IdeRecTyp | undefined; // What: Stored Record Any. Why: A key pair made before is reused. How: This reads the stored record. // What: Type Assertion Note. Why: Only this file writes the identity record. How: The as reads it as one, or missing.
 
 
-	const keyParObj = stoRecAny?.uidValStr === uidValStr ? stoRecAny.keyParObj : await crypto.subtle.generateKey( { name : 'ECDH', namedCurve : 'P-256' }, false, [ 'deriveBits', 'deriveKey' ] ); // What: Key Pair Object. Why: A group key is wrapped for this identity through ECDH (Section 6). How: This reuses the stored pair for this UID, or generates a P-256 pair whose private key script can never export.
+	const keyNewBoo = stoRecAny?.uidValStr !== uidValStr; // What: Key New Boolean. Why: A stored pair belongs to one UID, and a pair made now has to be published and kept. How: This is true when no pair is stored for this UID.
 
-
-
-	if ( stoRecAny?.keyParObj !== keyParObj ) await keyPutFun( 'identity', { keyParObj, uidValStr } ); // What: New Key Store Call. Why: A new pair has to survive the app closing. How: This stores it with its UID when it wasn't the stored one.
+	const keyParObj = keyNewBoo ? await crypto.subtle.generateKey( { name : 'ECDH', namedCurve : 'P-256' }, false, [ 'deriveBits', 'deriveKey' ] ) : stoRecAny!.keyParObj; // What: Key Pair Object. Why: A group key is wrapped for this identity through ECDH (Section 6). How: This generates a P-256 pair whose private key script can never export, or reuses the stored one. // What: Non-Null Note. Why: A pair that isn't new was stored for this UID. How: The ! says the record is there.
 
 
 
@@ -116,7 +121,11 @@ const ideBooFun = async () : Promise< IdeRecTyp > => { // What: Identity Boot Fu
 
 	if ( !useSnaObj.exists() ) await setDoc( useRefObj, { createdAt : serverTimestamp(), publicKey : pubKeyObj } ); // What: User Create Call. Why: Approvers fetch the key to wrap a group key for this identity. How: This creates the document at the server's time.
 
-	else if ( !( useSnaObj.get( 'publicKey' ) as Bytes ).isEqual( pubKeyObj ) ) await updateDoc( useRefObj, { publicKey : pubKeyObj } ); // What: Key Replace Call. Why: A replaced key pair needs its new public key published. How: This updates the key, keeping the creation time. // What: Type Assertion Note. Why: The rules store the public key as bytes. How: The as reads it as such.
+	else if ( keyNewBoo ) await updateDoc( useRefObj, { publicKey : pubKeyObj } ); // What: Key Replace Call. Why: A new pair, after the device lost its keys or on a phone this identity was recovered onto, needs its public key published, while a phone that kept its pair never takes the key back from a newer one. How: This updates the key, keeping the creation time.
+
+
+
+	if ( keyNewBoo ) await keyPutFun( 'identity', { keyParObj, uidValStr } ); // What: New Key Store Call. Why: A new pair has to survive the app closing. How: This stores it with its UID once it's published, so a failure before that makes a fresh pair next time rather than keeping one nobody can wrap for.
 
 
 
@@ -184,13 +193,157 @@ const ideEnsFun = () : Promise< IdeRecTyp > => { // What: Identity Ensure Functi
 
 // #endregion ideEnsFun
 
+
+
+// #region gooLinFun
+
+/**
+ * gooLinFun = Google Link Function
+ *
+ * @summary
+ * Links this phone's identity to the person's Google account, from their
+ * tap, through Google's sign-in popup, so the identity, with its groups, can
+ * be recovered on a new phone (Section 8). Rejects with Firebase's error when
+ * the popup is closed, or when that Google account is already linked to
+ * another identity.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that settles once the identity is linked, with no
+ *          value.
+ *
+ * @example
+ * ```ts
+ * gooLinFun() // => Promise<void>
+ * ```
+ *
+*/
+
+const gooLinFun = async () : Promise< void > => { // What: Google Link Function. Why: Recovery is opt-in, through Google sign-in alone for now (Section 8). How: This links the identity through the popup.
+
+
+	await ideEnsFun(); // What: Identity Ensure Call. Why: Only an identity that exists can be linked. How: This makes sure it does.
+
+	await linkWithPopup( firGetFun().autValObj.currentUser!, new GoogleAuthProvider() ); // What: Link Call. Why: The identity keeps its UID, now reachable from Google. How: This links it through the popup. // What: Non-Null Note. Why: The bootstrap just signed the identity in. How: The ! says it's there.
+
+
+};
+
+// #endregion gooLinFun
+
+
+
+// #region gooRecFun
+
+/**
+ * gooRecFun = Google Recover Function
+ *
+ * @summary
+ * Takes a linked identity back on this phone, from the person's tap, by
+ * signing in with Google through the popup, then runs the bootstrap again,
+ * which makes this phone's key pair and publishes it. Each group's key then
+ * waits for a member to share it (Section 6). A Google account not linked to
+ * any identity becomes a new identity linked from the start. Refuses with an
+ * Error, before anything changes, when this phone's identity already belongs
+ * to a group, since signing in would leave those groups behind.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that resolves with the identity signed in.
+ *
+ * @example
+ * ```ts
+ * gooRecFun() // => { keyParObj, uidValStr }
+ * ```
+ *
+*/
+
+const gooRecFun = async () : Promise< IdeRecTyp > => { // What: Google Recover Function. Why: Someone on a new phone gets their identity and groups back (Section 8). How: This signs in with Google, then remakes the phone's key pair.
+
+
+	const { autValObj, fstDatObj } = firGetFun(); // What: Firebase Services. Why: The sign-in and the group check need Auth and Firestore. How: This reads both.
+
+
+	await autValObj.authStateReady(); // What: Auth Ready Call. Why: This phone may already have an identity. How: This waits until Auth knows.
+
+
+
+	const curUidStr = autValObj.currentUser?.uid; // What: Current UID String. Why: An identity already here may belong to groups. How: This reads it, undefined when there's none.
+
+	const accDatObj = curUidStr === undefined ? undefined : ( await getDoc( doc( fstDatObj, `accounts/${ curUidStr }` ) ) ).data(); // What: Account Data Object. Why: The account lists the groups the identity belongs to. How: This reads it, undefined with no identity or account.
+
+	const groCouNum = Object.keys( accDatObj?.memberGroups ?? {} ).length + Object.keys( accDatObj?.ownedGroups ?? {} ).length; // What: Group Count Number. Why: Signing in would leave this identity's groups behind. How: This counts both maps.
+
+
+	if ( groCouNum > 0 ) throw new Error( "This phone already belongs to a group, so it can't take another identity." ); // What: Groups Here Guard. Why: An identity with groups would be stranded. How: This refuses before signing in.
+
+
+
+	await signInWithPopup( autValObj, new GoogleAuthProvider() ); // What: Sign In Call. Why: The linked identity comes back by its Google account. How: This signs in through the popup.
+
+	ideProObj = null; // What: Bootstrap Reset. Why: The bootstrap ran, if at all, for the identity signed out. How: This forgets it.
+
+
+
+	return ideEnsFun(); // What: Bootstrap Return. Why: The recovered identity needs this phone's key pair published. How: This runs the bootstrap again and resolves with the identity.
+
+
+};
+
+// #endregion gooRecFun
+
+
+
+// #region gooStaFun
+
+/**
+ * gooStaFun = Google State Function
+ *
+ * @summary
+ * Resolves with whether this phone's identity is linked to a Google
+ * account, false when there's no identity yet.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that resolves with true when the identity is linked.
+ *
+ * @example
+ * ```ts
+ * gooStaFun() // => false
+ * ```
+ *
+*/
+
+const gooStaFun = async () : Promise< boolean > => { // What: Google State Function. Why: Settings show whether the identity can be recovered. How: This checks the signed-in identity's providers.
+
+
+	const { autValObj } = firGetFun(); // What: Auth Value Object. Why: The identity's providers are on Auth's user. How: This reads Auth.
+
+
+	await autValObj.authStateReady(); // What: Auth Ready Call. Why: The identity is restored asynchronously. How: This waits for it.
+
+
+
+	return autValObj.currentUser?.providerData.some( ( proDatObj ) => proDatObj.providerId === 'google.com' ) ?? false; // What: Linked Return. Why: A linked identity lists Google among its providers. How: This looks for it, false with no identity.
+
+
+};
+
+// #endregion gooStaFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { ideEnsFun, type IdeRecTyp }; // What: Named Exports. Why: Group actions start from the identity. How: This exports the ensure function and its record's type.
+export { gooLinFun, gooRecFun, gooStaFun, ideEnsFun, type IdeRecTyp }; // What: Named Exports. Why: Group actions start from the identity, which Google sign-in links and recovers. How: This exports the ensure function, the Google functions, and the record's type.
 
 // #endregion Exports
 

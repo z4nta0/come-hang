@@ -722,6 +722,59 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #endregion updMemFun
 
+
+
+		// #region keyReqFun
+
+		function keyReqFun ( uidValStr ) { // What: Key Request Function. Why: A member recovered onto a new phone can't open the key wrapped for their old one, so they ask the group for it (ARCHITECTURE.md Section 6). How: This is true for the member stamping only a request time, at the server's time, when none is standing.
+
+
+			let memNewObj = request.resource.data; // What: Member New Object. Why: The checks read the membership as it will be. How: This names it.
+
+			let fieOnlBoo = memNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'keyRequestedAt' ] ); // What: Fields Only Boolean. Why: A request changes nothing else. How: This allows the request time alone.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                                         // What: Is-An Owner Boolean. Why: Only the member asks for their own key. How: This requires the requester to be the member.
+			let reqNewBoo = !( 'keyRequestedAt' in resource.data );                                         // What: Request New Boolean. Why: A standing request needs no second one. How: This requires none to stand.
+			let reqTimBoo = memNewObj.keyRequestedAt == request.time;                                       // What: Request Time Boolean. Why: The time tells members how long the request has waited. How: This requires the server's time.
+
+			let reqAllBoo = fieOnlBoo && isaOwnBoo && reqNewBoo && reqTimBoo; // What: Request Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return reqAllBoo; // What: Request Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion keyReqFun
+
+
+
+		// #region keyShaFun
+
+		function keyShaFun ( groIdeStr, uidValStr ) { // What: Key Share Function. Why: Any member holding the group key can wrap it for a member who asked, as an approval does (Section 6). How: This is true for another member replacing the wrap and ending a standing request, with a wrap of the right size.
+
+
+			let memNewObj = request.resource.data; // What: Member New Object. Why: The checks read the membership as it will be. How: This names it.
+
+			let fieOnlBoo = memNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'keyRequestedAt', 'wrappedGroupKey' ] );                     // What: Fields Only Boolean. Why: Sharing touches the wrap and the request alone. How: This allows those fields only.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                                                // What: Is-A Member Boolean. Why: Only a member holds the key to share. How: This requires the requester's membership.
+			let othMemBoo = request.auth.uid != uidValStr;                                                                                         // What: Other Member Boolean. Why: A member who can't open their wrap has nothing to share with themselves. How: This requires someone else.
+			let reqEndBoo = !( 'keyRequestedAt' in memNewObj );                                                                                    // What: Request End Boolean. Why: A shared key answers the request. How: This requires the request to be gone.
+			let reqStaBoo = 'keyRequestedAt' in resource.data;                                                                                     // What: Request Standing Boolean. Why: A member's wrap is replaced only when they asked, so no one can spoil a working one. How: This requires a standing request.
+			let wraKeyBoo = memNewObj.wrappedGroupKey is bytes && memNewObj.wrappedGroupKey.size() > 0 && memNewObj.wrappedGroupKey.size() <= 256; // What: Wrapped Key Boolean. Why: A wrapped key fits in 256 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let wraNewBoo = memNewObj.wrappedGroupKey != resource.data.wrappedGroupKey;                                                            // What: Wrap New Boolean. Why: A request is answered only by a new wrap, never just cleared. How: This requires the wrap to change.
+
+			let shaAllBoo = fieOnlBoo && isaMemBoo && othMemBoo && reqEndBoo && reqStaBoo && wraKeyBoo && wraNewBoo; // What: Share Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return shaAllBoo; // What: Share Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion keyShaFun
+
 		// #endregion Member Rules
 
 
@@ -2069,10 +2122,10 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 			match /members/{uidValStr} { // What: Member Match. Why: Each membership is its own document. How: This matches one member document by UID.
 
 
-				allow read   : if isaMemFun( groIdeStr );                                                 // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
-				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr ); // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
-				allow update : if updMemFun( groIdeStr, uidValStr );                                      // What: Member Update Rule. Why: A member writes their own name and activity time. How: This allows it when updMemFun passes.
-				allow delete : if delMemFun( groIdeStr, uidValStr );                                      // What: Member Delete Rule. Why: A member leaves, or the owner removes them. How: This allows it when delMemFun passes.
+				allow read   : if isaMemFun( groIdeStr );                                                                           // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
+				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr );                           // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
+				allow update : if updMemFun( groIdeStr, uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr, uidValStr ); // What: Member Update Rule. Why: A member writes their own name and activity time, asks for the group key on a new phone, or shares it with a member who asked. How: This allows it when updMemFun, keyReqFun, or keyShaFun passes.
+				allow delete : if delMemFun( groIdeStr, uidValStr );                                                                // What: Member Delete Rule. Why: A member leaves, or the owner removes them. How: This allows it when delMemFun passes.
 
 
 			}

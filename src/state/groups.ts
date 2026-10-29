@@ -23,6 +23,7 @@ import { serverTimestamp } from 'firebase/firestore';       // What: Server Time
 import { texNorFun       } from '../core/text-limits.ts';   // What: Text Normalize Function. Why: Typed names are tidied before they're checked. How: This normalizes them.
 import { tokCreFun       } from '../platform/crypto.ts';    // What: Token Create Function. Why: Each group starts with an invite link. How: This draws its token.
 import { unwKeyFun       } from '../platform/crypto.ts';    // What: Unwrap Key Function. Why: A lost group key is recovered from the member's own wrap. How: This unwraps it.
+import { updateDoc       } from 'firebase/firestore';       // What: Update Doc. Why: A wrap that won't open on this phone asks the group for the key. How: This stamps the request on the membership.
 import { wraKeyFun       } from '../platform/crypto.ts';    // What: Wrap Key Function. Why: The creator's membership holds the group key wrapped for them. How: This wraps it.
 import { writeBatch      } from 'firebase/firestore';       // What: Write Batch. Why: A group is created whole or not at all. How: This groups the creation's writes.
 
@@ -42,18 +43,29 @@ import { writeBatch      } from 'firebase/firestore';       // What: Write Batch
  * display name encrypted, the group's first invite, and the group in the
  * creator's owned map. The key is then kept on the device under
  * group:{groupId}. A key missing from the device, such as after its storage
- * was cleared, is recovered from the member's own wrap and kept again. The
- * owner rotates the invite link, and renames the group or changes its chat
- * retention, each in one transaction that keeps the invite in step, and
- * deletes the group through a Cloud Function.
+ * was cleared, is recovered from the member's own wrap and kept again, and a
+ * wrap made for another phone's key, after a recovery onto a new phone, asks
+ * the group to share the key instead. The owner rotates the invite link, and
+ * renames the group or changes its chat retention, each in one transaction
+ * that keeps the invite in step, and deletes the group through a Cloud
+ * Function.
  *
  * Sections:
+ *  - Constants
  *  - Helpers
  *  - Exports
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
+
+
+
+// #region Constants
+
+const KEY_WAI_STR = "This group's key is waiting for a member to share it."; // What: Key Waiting String. Why: A screen tells someone on a new phone why a group won't open yet. How: This is the message keyLoaFun rejects with while a key request stands.
+
+// #endregion Constants
 
 
 
@@ -351,8 +363,11 @@ const invRotFun = async ( groIdeStr : string ) : Promise< string > => { // What:
  * @summary
  * Resolves with this device's key for a group: the one kept on the device,
  * or, when it's missing, the one unwrapped from this identity's member
- * document, which is then kept again. Rejects when this identity isn't a
- * member.
+ * document, which is then kept again. When the wrap won't open, since it was
+ * made for the key pair of a phone this identity was recovered from, files a
+ * key request on the membership unless one stands, and rejects with
+ * {@link KEY_WAI_STR}, until a member shares the key (Section 6). Rejects
+ * when this identity isn't a member.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -381,7 +396,15 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 
 	const memSnaObj = await getDoc( doc( firGetFun().fstDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ) ); // What: Member Snapshot Object. Why: The member document holds the key wrapped for this identity. How: This reads it.
 
-	const groKeyObj = await unwKeyFun( ( memSnaObj.get( 'wrappedGroupKey' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >, keyParObj ); // What: Group Key Object. Why: The wrap opens with this identity's private key alone. How: This unwraps it. // What: Type Assertion Note. Why: The rules store the wrap as bytes, and toUint8Array returns an array over a plain buffer. How: The two as read them as such.
+	const groKeyObj = await unwKeyFun( ( memSnaObj.get( 'wrappedGroupKey' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >, keyParObj ).catch( async () => { // What: Group Key Object. Why: The wrap opens with this identity's private key alone. How: This unwraps it, or asks for the key when it won't open. // What: Type Assertion Note. Why: The rules store the wrap as bytes, and toUint8Array returns an array over a plain buffer. How: The two as read them as such.
+
+
+		if ( memSnaObj.get( 'keyRequestedAt' ) === undefined ) await updateDoc( memSnaObj.ref, { keyRequestedAt : serverTimestamp() } ); // What: Key Request Call. Why: The wrap was made for another phone's key, so a member has to share the key again (Section 6). How: This stamps a request at the server's time, unless one stands.
+
+		throw new Error( KEY_WAI_STR ); // What: Waiting Rethrow. Why: The group can't open until the key is shared. How: This rejects with the waiting message.
+
+
+	} );
 
 	await keyPutFun( `group:${ groIdeStr }`, groKeyObj ); // What: Key Store Call. Why: The next read shouldn't need recovery. How: This keeps the key again.
 
@@ -400,7 +423,7 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 
 // #region Exports
 
-export { groCreFun, groDelFun, groSetFun, invRotFun, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, change their settings and link, and read their keys. How: This exports the functions.
+export { groCreFun, groDelFun, groSetFun, invRotFun, KEY_WAI_STR, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, change their settings and link, and read their keys, and tell a key that's waiting to be shared. How: This exports the functions and the waiting message.
 
 // #endregion Exports
 

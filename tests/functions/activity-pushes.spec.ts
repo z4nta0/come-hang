@@ -4,6 +4,7 @@
 // #region Imports
 
 import { DBS_URL_STR               } from '../support/database.ts';       // What: Database URL String. Why: Chat and presence are seeded in the instance the functions read. How: This names it.
+import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: An answered key request is cleared. How: This removes its time.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore seed names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the right members were pushed. How: This asserts on the pushes the emulator kept.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests write as the app would, past the rules. How: This connects to the emulators.
@@ -32,8 +33,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * members and their phones' tokens, then writes as the app would, past the
  * rules, and reads which pushes the emulator kept for each token: history
  * requests as they become pending, join requests with their count and
- * replacing tag, and chat messages to waiting members who don't have the
- * group open.
+ * replacing tag, chat messages to waiting members who don't have the group
+ * open, and key requests from a member on a new phone.
  *
  * Sections:
  *  - Module State
@@ -202,6 +203,30 @@ test( 'a chat message pushes each waiting member away from the group, and nobody
 
 	expect( await pusLisFun( funEnvObj, 'tok-carol' ) ).toEqual( [] ); // What: Carol Not Pushed. Why: Carol has the group open. How: This expects none for her.
 	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [] ); // What: Sender Not Pushed. Why: Alice isn't waiting on her own message. How: This expects none for her.
+
+
+} );
+
+
+
+test( 'a key request pushes every other member, and other membership changes push nobody', async () => { // What: Key Push Test. Why: A member on a new phone needs someone online to share the group's key (Section 6). How: This files a request, then changes the membership and answers the request, and checks each member's pushes.
+
+
+	await seeGroFun( [ 'alice', 'bob', 'carol' ] ); // What: Group Seed Call. Why: The test needs three members. How: This seeds them.
+
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/members/bob' ), { keyRequestedAt : Timestamp.now() } ) ); // What: Request Call. Why: Bob is on a new phone. How: This files his request.
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : "A member on a new phone is waiting for this group's key.", title : 'Picnic' } ] ); // What: Alice Pushed Check. Why: Alice holds the key to share. How: This waits for her push.
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toHaveLength( 1 );                                                                                      // What: Carol Pushed Check. Why: Carol can share it too. How: This waits for her push.
+
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/members/bob' ), { lastActiveAt : Timestamp.now() } ) ); // What: Activity Call. Why: A change while the request stands asks nothing new. How: This marks Bob active.
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/members/bob' ), { keyRequestedAt : deleteField() } ) ); // What: Answer Call. Why: An answer asks nothing. How: This ends the request.
+
+	await new Promise( ( resValFun ) => setTimeout( resValFun, 2000 ) ); // What: Change Settle Wait. Why: A push from either change would arrive within this time, the function already being warm from the request. How: This waits 2 seconds.
+
+
+	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toHaveLength( 1 ); // What: Changes Silent Check. Why: Only the request asked for help. How: This expects no push beyond the first.
+	expect( await pusLisFun( funEnvObj, 'tok-bob' ) ).toEqual( [] );       // What: Asker Not Pushed Check. Why: Bob has no key to share. How: This expects none for him.
 
 
 } );
