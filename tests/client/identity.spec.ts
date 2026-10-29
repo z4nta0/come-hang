@@ -171,7 +171,7 @@ test( 'opening the app with no group action makes no Firebase connection', async
 
 
 
-test( 'the identity signs in once, keeps its key pair private and across reloads, replaces a lost one, and publishes its key and an empty account', async ( { page } ) => { // What: Bootstrap Test. Why: Every group action needs the identity's parts, made once and kept (Sections 6 and 8). How: This runs the bootstrap, reloads and runs it again, deletes the key store and runs it once more, and reads what it published.
+test( 'the identity signs in once, keeps its key pair private and across reloads, replaces a lost one, and publishes its key and an empty account', async ( { page } ) => { // What: Bootstrap Test. Why: Every group action needs the identity's parts, made once and kept (Sections 6 and 8). How: This runs the bootstrap, reloads and runs it again, deletes the key store and runs it once more, and checks what it published each time.
 
 
 	await page.goto( '/' ); // What: Home Visit. Why: The bootstrap runs in the app's own page. How: This opens it.

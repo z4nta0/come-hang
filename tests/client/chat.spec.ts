@@ -183,7 +183,7 @@ pagTesObj( 'a message is visible text, tidied, and refused when empty, too long,
 
 
 
-pagTesObj( 'a member reads only from when they joined, and a message waiting on someone who left is cleaned up', async ( { page, secPagObj } ) => { // What: Join And Leave Test. Why: Nobody reads chat from before they joined, and someone who left can't hold up cleanup (Sections 5 and 11.7). How: This sends before a member joins, syncs as them, sends again, has them leave, and syncs as the owner.
+pagTesObj( 'a member reads only from when they joined, and a message waiting on someone who left is cleaned up', async ( { page, secPagObj } ) => { // What: Join And Leave Test. Why: Nobody reads chat from before they joined, and someone who left can't hold up cleanup (Sections 5 and 11.7). How: This sends before a member joins, syncs as them, sends again, has them leave, and syncs as the owner, checking the member never sees the early message and the server ends up empty.
 
 
 	const groIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The owner chats alone first. How: This creates the group. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.

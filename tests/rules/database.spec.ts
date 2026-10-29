@@ -255,7 +255,7 @@ test( 'a member sends a message, members read chat starting at their own join, a
 
 
 
-test( 'a message is sent only by a member in their own name, at the server time, waiting only on members, with sized base64 content and nothing else', async () => { // What: Message Shape Test. Why: Encrypted content can only be checked by size and form, and its time and waiting list decide when it's deleted (Section 11.7). How: This sends a message with one fault at a time, then one at the size limit.
+test( 'a message is sent only by a member in their own name, at the server time, waiting only on members, with sized base64 content and nothing else', async () => { // What: Message Shape Test. Why: Encrypted content can only be checked by size and form, and its time and waiting list decide when it's deleted (Section 11.7). How: This sends a message with one fault at a time, then one at the size limit, checking each fault fails and the limit passes.
 
 
 	const bobDbsObj = accDbsFun( 'bob' ); // What: Bob Database Object. Why: Bob sends the messages. How: This acts as him.
@@ -306,7 +306,7 @@ test( "any member clears a departed member's wait, and a message past the group'
 
 
 
-test( 'a member sets only their own presence as an online flag, which only members read', async () => { // What: Presence Test. Why: Who's online is for the group, and nobody can mark someone else online (Section 11.8). How: This sets presence as each person, with one fault at a time, and reads it as a member and an outsider.
+test( 'a member sets only their own presence as an online flag, which only members read', async () => { // What: Presence Test. Why: Who's online is for the group, and nobody can mark someone else online (Section 11.8). How: This sets presence as each person, with one fault at a time, and reads it as a member and an outsider, checking who the rules let through.
 
 
 	const bobDbsObj = accDbsFun( 'bob' ); // What: Bob Database Object. Why: Bob sets his presence. How: This acts as him.

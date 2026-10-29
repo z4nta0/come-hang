@@ -197,7 +197,7 @@ pagTesObj( 'a member approves a request filed through the invite, letting the jo
 
 
 
-pagTesObj( 'a request is checked before it is sent, leaves out an empty note, and can be withdrawn', async ( { secPagObj, page } ) => { // What: Request Test. Why: A bad name, note, or link fails before anything is written, and a joiner may take a request back (Section 17). How: This tries bad links and text, then files a request and withdraws it.
+pagTesObj( 'a request is checked before it is sent, leaves out an empty note, and can be withdrawn', async ( { secPagObj, page } ) => { // What: Request Test. Why: A bad name, note, or link fails before anything is written, and a joiner may take a request back (Section 17). How: This tries bad links and text, then files a request and withdraws it, checking each refusal, the request's fields, and its end.
 
 
 	const { groIdeStr, tokValStr, uidJoiStr } = await groSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a group and a joiner. How: This sets them up.
@@ -231,7 +231,7 @@ pagTesObj( 'a request is checked before it is sent, leaves out an empty note, an
 
 
 
-pagTesObj( 'a decline ends a request, and a block also keeps its sender from asking again', async ( { secPagObj, page } ) => { // What: Decline Test. Why: Any member may decline a request, or decline and block its sender (Section 17). How: This declines one request, then blocks a second, and tries a third.
+pagTesObj( 'a decline ends a request, and a block also keeps its sender from asking again', async ( { secPagObj, page } ) => { // What: Decline Test. Why: Any member may decline a request, or decline and block its sender (Section 17). How: This declines one request, then blocks a second, and tries a third, checking the blocklist and the final refusal.
 
 
 	const { groIdeStr, tokValStr, uidJoiStr } = await groSetFun( page, secPagObj ); // What: Setup Values. Why: The test needs a group and a joiner. How: This sets them up.

@@ -206,7 +206,7 @@ test.beforeEach( async ( { page } ) => { // What: Page Hook. Why: The modules ru
 
 
 
-test( 'creating a group writes the group, its owner with a wrapped key and encrypted name, its invite, and the owned slot', async ( { page } ) => { // What: Creation Test. Why: A group is created whole, through the real rules, readable only with its key (Sections 6 and 11). How: This creates a group in the page, then reads back every document it wrote.
+test( 'creating a group writes the group, its owner with a wrapped key and encrypted name, its invite, and the owned slot', async ( { page } ) => { // What: Creation Test. Why: A group is created whole, through the real rules, readable only with its key (Sections 6 and 11). How: This creates a group in the page, then reads back every document it wrote and checks each one's fields.
 
 
 	const resValObj = await page.evaluate( groRunFun, [ 'Beach Day 🏖️', 'Ålice' ] as [ string, string ] ); // What: Result Value Object. Why: The creation runs in the page. How: This creates a group there. // What: Type Assertion Note. Why: A literal array types as string[]. How: The as reads it as the two names.
@@ -289,7 +289,7 @@ test( "a group key lost from the device is recovered from the member's own wrap"
 
 
 
-test( 'names are tidied before saving, and a name outside its limits is refused before anything is written', async ( { page } ) => { // What: Name Test. Why: What a person types usually passes as they meant it, and an encrypted name is held to its limits by the app alone (Section 11.10). How: This creates a group with untidy names, then tries a bad group name and a bad display name.
+test( 'names are tidied before saving, and a name outside its limits is refused before anything is written', async ( { page } ) => { // What: Name Test. Why: What a person types usually passes as they meant it, and an encrypted name is held to its limits by the app alone (Section 11.10). How: This creates a group with untidy names, then tries a bad group name and a bad display name, checking the names were saved tidied and the bad ones refused.
 
 
 	const resValObj = await page.evaluate( groRunFun, [ '  Beach   Day ', '  Alice   Smith ' ] as [ string, string ] ); // What: Result Value Object. Why: Untidy names are tidied, not refused. How: This creates a group with extra spaces. // What: Type Assertion Note. Why: A literal array types as string[]. How: The as reads it as the two names.

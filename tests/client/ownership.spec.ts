@@ -194,7 +194,7 @@ pagTesObj( 'the owner withdraws an offer, and the member declines another, which
 
 
 
-pagTesObj( 'a lapsed offer cannot be accepted, and an offer to a member with no free slot is refused', async ( { page, secPagObj } ) => { // What: Refusal Test. Why: An offer lapses after 7 days, and the owner learns at once when a member can't take a group (Section 18). How: This ages an offer, tries to accept it, then offers to a member whose owned slots are full.
+pagTesObj( 'a lapsed offer cannot be accepted, and an offer to a member with no free slot is refused', async ( { page, secPagObj } ) => { // What: Refusal Test. Why: An offer lapses after 7 days, and the owner learns at once when a member can't take a group (Section 18). How: This ages an offer, tries to accept it, then offers to a member whose owned slots are full, checking both are refused.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( ownEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.

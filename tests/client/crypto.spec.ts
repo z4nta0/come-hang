@@ -37,7 +37,7 @@ test.beforeEach( async ( { page } ) => { // What: Page Hook. Why: The module run
 
 
 
-test( 'a group key wrapped for one member opens for that member alone, as a fresh 105-byte wrap each time', async ( { page } ) => { // What: Wrap Test. Why: Only the member a wrap was made for can read the group, whoever wrapped it (Section 6). How: This wraps a key for one member, then unwraps it as them, as someone else, and from a tampered wrap.
+test( 'a group key wrapped for one member opens for that member alone, as a fresh 105-byte wrap each time', async ( { page } ) => { // What: Wrap Test. Why: Only the member a wrap was made for can read the group, whoever wrapped it (Section 6). How: This wraps a key for one member, then unwraps it as them, as someone else, and from a tampered wrap, checking only the first opens, to the same key.
 
 
 	const resValObj = await page.evaluate( async () => { // What: Result Value Object. Why: The wrap is checked where it really runs. How: This runs the module in the page and reports what it saw.
@@ -82,7 +82,7 @@ test( 'a group key wrapped for one member opens for that member alone, as a fres
 
 
 
-test( 'text encrypts under a fresh IV and decrypts only unaltered with its own key', async ( { page } ) => { // What: Text Test. Why: Firebase only ever sees ciphertext, and a changed message must not pass for the real one (Section 6). How: This encrypts one text twice and decrypts it with the right key, the wrong key, and an altered ciphertext.
+test( 'text encrypts under a fresh IV and decrypts only unaltered with its own key', async ( { page } ) => { // What: Text Test. Why: Firebase only ever sees ciphertext, and a changed message must not pass for the real one (Section 6). How: This encrypts one text twice and decrypts it with the right key, the wrong key, and an altered ciphertext, checking only the first reads it back, and that the IVs differ.
 
 
 	const resValObj = await page.evaluate( async () => { // What: Result Value Object. Why: The encryption is checked where it really runs. How: This runs the module in the page and reports what it saw.

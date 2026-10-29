@@ -200,7 +200,7 @@ pagTesObj( 'a member who lost their history recovers it from another member, and
 
 
 
-pagTesObj( 'a newer member asks for chat from before they joined and gets only that, from one claim', async ( { page, secPagObj } ) => { // What: Backlog Test. Why: A backlog covers only chat from before the asker joined, and one helper claims it at a time (Section 11.9). How: This sends twice before and once after a member joins, has them ask for the backlog from the second message, claims, releases, claims again, and sends.
+pagTesObj( 'a newer member asks for chat from before they joined and gets only that, from one claim', async ( { page, secPagObj } ) => { // What: Backlog Test. Why: A backlog covers only chat from before the asker joined, and one helper claims it at a time (Section 11.9). How: This sends twice before and once after a member joins, has them ask for the backlog from the second message, claims, releases, claims again, and sends, checking the member gets the second message alone.
 
 
 	const groIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The owner chats alone first. How: This creates the group. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
@@ -294,7 +294,7 @@ pagTesObj( 'a bundle is untrusted, so only well-formed messages in the range are
 
 
 
-pagTesObj( 'a member shows online to the group, and goes offline by choice or when the device drops', async ( { page, secPagObj } ) => { // What: Presence Test. Why: Members see who's around, and a dropped device doesn't stay online (Section 11.8). How: This watches as the owner while the member comes online, goes offline, comes back, and closes their page.
+pagTesObj( 'a member shows online to the group, and goes offline by choice or when the device drops', async ( { page, secPagObj } ) => { // What: Presence Test. Why: Members see who's around, and a dropped device doesn't stay online (Section 11.8). How: This watches as the owner while the member comes online, goes offline, comes back, and closes their page, waiting each time for the owner's list to follow.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( hisEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.

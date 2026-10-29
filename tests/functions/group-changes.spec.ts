@@ -120,7 +120,7 @@ const seeGroFun = ( groIdeStr : string ) => funEnvObj.withSecurityRulesDisabled(
 		removedUids        : {}
 
 
-	});
+	} );
 
 	for ( const uidValStr of [ 'alice', 'bob', 'carol' ] ) await setDoc( doc( fsDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), { joinedAt : Timestamp.fromMillis( 1000 ) } ); // What: Member Seed Loop. Why: All three are members. How: This writes each membership.
 
@@ -172,7 +172,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from a
 
 
 
-test( 'a removed member is told, and the owner is told when the member offered the group leaves, which clears the offer', async () => { // What: Removal And Leave Test. Why: Nobody should find a group gone or an offer silently dead (Sections 9 and 18). How: This removes Carol from one group, then renames it after she dismisses her notice, and has Bob leave another, polling for each notice and the cleared offer.
+test( 'a removed member is told, and the owner is told when the member offered the group leaves, which clears the offer', async () => { // What: Removal And Leave Test. Why: Nobody should find a group gone or an offer silently dead (Sections 9 and 18). How: This removes Carol from one group, then renames it after she dismisses her notice, and has Bob leave another, waiting for each notice and the cleared offer.
 
 
 	await seeGroFun( 'gro1' ); // What: Removal Group Seed. Why: Carol is removed from this one. How: This writes it.
@@ -228,7 +228,7 @@ test( 'removing the member offered the group clears the offer without telling th
 
 
 
-test( 'the old owner is told of an acceptance', async () => { // What: Acceptance Test. Why: Every offer ends in a notice to the owner unless the owner ended it, and a decline tells the owner through its own function (Section 18). How: This accepts the offer, then polls for the old owner's notice.
+test( 'the old owner is told of an acceptance', async () => { // What: Acceptance Test. Why: Every offer ends in a notice to the owner unless the owner ended it, and a decline tells the owner through its own function (Section 18). How: This accepts the offer, then waits for the old owner's notice.
 
 
 	await seeGroFun( 'gro1' ); // What: Group Seed Call. Why: Bob accepts this one. How: This writes it.
@@ -271,7 +271,7 @@ test( 'an accepted claim tells the old owner their group was claimed and ends th
 
 } );
 
-test( 'a new offer pushes the member offered the group, and a claim offer says it is one', async () => { // What: Offer Push Test. Why: The member offered a group learns of it at once, and a claim asks something different of them (Section 18). How: This makes an ordinary offer in one group and a claim offer in another, then reads the pushes to each phone.
+test( 'a new offer pushes the member offered the group, and a claim offer says it is one', async () => { // What: Offer Push Test. Why: The member offered a group learns of it at once, and a claim asks something different of them (Section 18). How: This makes an ordinary offer in one group and a claim offer in another, then checks the pushes to each phone.
 
 
 	await seeGroFun( 'gro1' ); // What: Offer Group Seed. Why: Carol is offered this one. How: This writes it.

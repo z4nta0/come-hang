@@ -256,7 +256,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from e
 
 
 
-test( 'the claimant uploads a bundle that only its asker downloads, and the asker deletes it', async () => { // What: Transfer Test. Why: History goes from the member who claimed the request to the member who asked, and nobody else sees it (Section 11.9). How: This uploads as each member, downloads as each, then deletes.
+test( 'the claimant uploads a bundle that only its asker downloads, and the asker deletes it', async () => { // What: Transfer Test. Why: History goes from the member who claimed the request to the member who asked, and nobody else sees it (Section 11.9). How: This uploads as each member, downloads as each, then deletes, checking who the rules let through.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Storage Object. Why: Alice asked for history. How: This acts as her.
@@ -282,7 +282,7 @@ test( 'the claimant uploads a bundle that only its asker downloads, and the aske
 
 
 
-test( 'a bundle is one binary file of 1 byte to 25 MB with no custom metadata', async () => { // What: Bundle Shape Test. Why: A bundle is encrypted, so only its size and form can be checked, and plain metadata would sit beside it unencrypted (Section 11.9). How: This uploads with one fault at a time, then at the size limit.
+test( 'a bundle is one binary file of 1 byte to 25 MB with no custom metadata', async () => { // What: Bundle Shape Test. Why: A bundle is encrypted, so only its size and form can be checked, and plain metadata would sit beside it unencrypted (Section 11.9). How: This uploads with one fault at a time, then at the size limit, checking each fault fails and the limit passes.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Storage Object. Why: Bob uploads the bundles. How: This acts as him.
@@ -301,13 +301,13 @@ test( 'a bundle is one binary file of 1 byte to 25 MB with no custom metadata', 
 
 
 
-test( 'an upload needs a standing claim, with the claimant and the asker both still in the group', async () => { // What: Claim Test. Why: History is shared only through a live claim and only between current members (Section 11.9). How: This seeds the request in each state that should block an upload, then a claimant's withdrawal.
+test( 'an upload needs a standing claim, with the claimant and the asker both still in the group', async () => { // What: Claim Test. Why: History is shared only through a live claim and only between current members (Section 11.9). How: This seeds the request in each state that should block an upload, then a claimant's withdrawal, checking each upload fails and the withdrawal passes.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Storage Object. Why: Bob uploads the bundles. How: This acts as him.
 
 
-	await seeGroFun({ claimedByUid : null, status : 'pending' }); // What: Pending Seed Call. Why: A request nobody has claimed takes no bundle yet. How: This writes the request unclaimed.
+	await seeGroFun( { claimedByUid : null, status : 'pending' } ); // What: Pending Seed Call. Why: A request nobody has claimed takes no bundle yet. How: This writes the request unclaimed.
 
 	await assertFails( uplFilFun( bobStoObj ) ); // What: Unclaimed Upload. Why: A member claims a request before sharing. How: This expects Bob refused.
 

@@ -214,7 +214,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from e
 
 
 
-test( 'the owner deletes a group whole, freeing their slot and leaving each other member a notice', async () => { // What: Full Deletion Test. Why: A deleted group leaves nothing behind and nobody is left wondering where it went (Section 9). How: This seeds a full group, deletes it as Alice, then reads back every part.
+test( 'the owner deletes a group whole, freeing their slot and leaving each other member a notice', async () => { // What: Full Deletion Test. Why: A deleted group leaves nothing behind and nobody is left wondering where it went (Section 9). How: This seeds a full group, deletes it as Alice, then checks every part is gone.
 
 
 	await seeGroFun(); // What: Group Seed Call. Why: There has to be a full group to delete. How: This writes one.

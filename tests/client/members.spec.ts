@@ -136,7 +136,7 @@ pagTesObj( 'members are listed by name, oldest first, and a member renames thems
 
 
 
-pagTesObj( 'activity is marked at most once a day, to the server time', async ( { page, secPagObj } ) => { // What: Activity Test. Why: The mark decides when ownership can be claimed, and writes stay at one a day (Section 18). How: This marks a fresh membership, then one aged two days.
+pagTesObj( 'activity is marked at most once a day, to the server time', async ( { page, secPagObj } ) => { // What: Activity Test. Why: The mark decides when ownership can be claimed, and writes stay at one a day (Section 18). How: This marks a fresh membership, then one aged two days, checking only the second writes, to the server's recent time.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a member. How: This sets one up.
@@ -218,7 +218,7 @@ pagTesObj( 'the owner removes a member, blocking them and rotating the link, but
 
 
 
-pagTesObj( 'the owner rotates the link and changes the settings, which a bad value or a member cannot', async ( { page, secPagObj } ) => { // What: Settings Test. Why: The link and the settings are the owner's to change, and the invite keeps the group's real name (Sections 9 and 11.6). How: This rotates, renames, and sets retention, then tries bad values and a member's change.
+pagTesObj( 'the owner rotates the link and changes the settings, which a bad value or a member cannot', async ( { page, secPagObj } ) => { // What: Settings Test. Why: The link and the settings are the owner's to change, and the invite keeps the group's real name (Sections 9 and 11.6). How: This rotates, renames, and sets retention, then tries bad values and a member's change, checking the new link and settings and each refusal.
 
 
 	const { groIdeStr } = await memSetFun( memEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.

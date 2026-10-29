@@ -139,7 +139,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from a
 
 
 
-test( 'the member offered the group declines it, which clears the offer and tells the owner', async () => { // What: Decline Test. Why: The owner has to learn to pick someone else (Section 18). How: This declines as Bob, then reads the group and Alice's notice.
+test( 'the member offered the group declines it, which clears the offer and tells the owner', async () => { // What: Decline Test. Why: The owner has to learn to pick someone else (Section 18). How: This declines as Bob, then checks the group and Alice's notice.
 
 
 	await seeGroFun(); // What: Group Seed Call. Why: Bob needs a standing offer to decline. How: This writes the group.
@@ -157,7 +157,7 @@ test( 'the member offered the group declines it, which clears the offer and tell
 
 
 
-test( 'only the member offered the group declines it, while a standing offer lasts', async () => { // What: Refusal Test. Why: Nobody turns down an offer made to someone else, and a decline needs one to turn down (Section 18). How: This calls as each wrong caller and with bad IDs, then declines twice.
+test( 'only the member offered the group declines it, while a standing offer lasts', async () => { // What: Refusal Test. Why: Nobody turns down an offer made to someone else, and a decline needs one to turn down (Section 18). How: This calls as each wrong caller and with bad IDs, then declines twice, checking each refusal.
 
 
 	await seeGroFun(); // What: Group Seed Call. Why: The refused calls must leave a real offer untouched. How: This writes the group.
@@ -177,7 +177,7 @@ test( 'only the member offered the group declines it, while a standing offer las
 
 } );
 
-test( 'declining a claim offer records a pass and tells nobody', async () => { // What: Claim Decline Test. Why: The absent owner has nothing to act on, and the next run has to ask someone else (Section 18). How: This declines a claim offer as Bob, then reads the record, the group, and Alice's notices.
+test( 'declining a claim offer records a pass and tells nobody', async () => { // What: Claim Decline Test. Why: The absent owner has nothing to act on, and the next run has to ask someone else (Section 18). How: This declines a claim offer as Bob, then checks the record, the group, and Alice's notices.
 
 
 	await seeGroFun(); // What: Group Seed Call. Why: Bob needs a standing offer to decline. How: This writes the group.

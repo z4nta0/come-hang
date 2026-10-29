@@ -113,7 +113,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from a
 
 
 
-test( 'a push goes to the stored token with the group as its title, and nobody without a token is sent one', async () => { // What: Send Test. Why: Pushes reach the one phone each identity registered, saying only what the server can read (Section 14). How: This sends to Bob with a token and to Carol without one, through a stand-in that records each message.
+test( 'a push goes to the stored token with the group as its title, and nobody without a token is sent one', async () => { // What: Send Test. Why: Pushes reach the one phone each identity registered, saying only what the server can read (Section 14). How: This sends to Bob with a token and to Carol without one, through a stand-in that records each message, and checks only Bob's went out.
 
 
 	const senMesArr : unknown[] = []; // What: Sent Message Array. Why: The stand-in records what it was handed. How: This collects each message.

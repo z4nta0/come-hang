@@ -241,7 +241,7 @@ pagTesObj.beforeEach( async ( { page } ) => { // What: Page Hook. Why: The owner
 
 
 
-pagTesObj( 'a member plans an event every member reads, which its creator or the owner can change', async ( { page, secPagObj } ) => { // What: Plan Test. Why: Any member plans an event, encrypted, and only its creator or the owner changes it (Section 11.5). How: This plans an event as the member, lists it as the owner, changes it as both, and tries a member's change to the owner's event.
+pagTesObj( 'a member plans an event every member reads, which its creator or the owner can change', async ( { page, secPagObj } ) => { // What: Plan Test. Why: Any member plans an event, encrypted, and only its creator or the owner changes it (Section 11.5). How: This plans an event as the member, lists it as the owner, changes it as both, and tries a member's change to the owner's event, checking the tidied details, the deletion time, and the refusal.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( eveEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
@@ -308,7 +308,7 @@ pagTesObj( "an event's text and times outside their limits are refused before an
 
 
 
-pagTesObj( 'a bring-list item is claimed once, reassigned, relabeled, and follows its event', async ( { page, secPagObj } ) => { // What: Items Test. Why: A claim is a compare-and-swap, any member reassigns, and an item goes when its event does (Sections 7 and 11.5). How: This adds and claims items, tries a second claim, reassigns, relabels, moves the event's end, removes one, and relists with seeded items.
+pagTesObj( 'a bring-list item is claimed once, reassigned, relabeled, and follows its event', async ( { page, secPagObj } ) => { // What: Items Test. Why: A claim is a compare-and-swap, any member reassigns, and an item goes when its event does (Sections 7 and 11.5). How: This adds and claims items, tries a second claim, reassigns, relabels, moves the event's end, removes one, and relists with seeded items, checking each change and the list's order.
 
 
 	const { groIdeStr, uidMemStr, uidOwnStr } = await memSetFun( eveEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
@@ -352,7 +352,7 @@ pagTesObj( 'a bring-list item is claimed once, reassigned, relabeled, and follow
 
 
 
-pagTesObj( 'cancelling an event deletes its items, and unreadable, expired, and out-of-order events list safely', async ( { page, secPagObj } ) => { // What: Cancel And List Test. Why: A cancelled event takes its items, and the list stays safe with untrusted details (Section 11.11). How: This cancels as a member and as the owner, then seeds events with bad details, an expired one, and starts out of ID order.
+pagTesObj( 'cancelling an event deletes its items, and unreadable, expired, and out-of-order events list safely', async ( { page, secPagObj } ) => { // What: Cancel And List Test. Why: A cancelled event takes its items, and the list stays safe with untrusted details (Section 11.11). How: This cancels as a member and as the owner, then seeds events with bad details, an expired one, and starts out of ID order, checking the refusal, the deletions, and what the list shows.
 
 
 	const { groIdeStr } = await memSetFun( eveEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.

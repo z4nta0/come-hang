@@ -188,7 +188,7 @@ pagTesObj.beforeEach( async ( { page } ) => { // What: Page Hook. Why: The owner
 
 
 
-pagTesObj( 'a member shares their event-day position, which the group sees and watches, then arrives and stops', async ( { page, secPagObj } ) => { // What: Sharing Test. Why: A member shares for an event, and the group sees it live, with arrival (Section 10). How: This starts a session as the member while the owner watches, then moves a little, moves far, arrives, and stops.
+pagTesObj( 'a member shares their event-day position, which the group sees and watches, then arrives and stops', async ( { page, secPagObj } ) => { // What: Sharing Test. Why: A member shares for an event, and the group sees it live, with arrival (Section 10). How: This starts a session as the member while the owner watches, then moves a little, moves far, arrives, and stops, checking the expiry and waiting for the owner's view to follow each step.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( locEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
@@ -260,7 +260,7 @@ pagTesObj( 'a member shares their event-day position, which the group sees and w
 
 
 
-pagTesObj( 'sharing is refused outside its window or for a bad position, and expires with its event', async ( { page, secPagObj } ) => { // What: Limits Test. Why: Sharing runs only from 3 hours before an event until it ends, and only for a real position (Section 5). How: This shares for a far event, invalid positions, an ended event, and a missing one, then for one ending soon.
+pagTesObj( 'sharing is refused outside its window or for a bad position, and expires with its event', async ( { page, secPagObj } ) => { // What: Limits Test. Why: Sharing runs only from 3 hours before an event until it ends, and only for a real position (Section 5). How: This shares for a far event, invalid positions, an ended event, and a missing one, then for one ending soon, checking each refusal and that the last share expires at the event's end.
 
 
 	const { groIdeStr, uidMemStr } = await memSetFun( locEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
@@ -310,7 +310,7 @@ pagTesObj( 'sharing is refused outside its window or for a bad position, and exp
 
 
 
-pagTesObj( 'only valid, unexpired shares are listed, whatever another device wrote', async ( { page, secPagObj } ) => { // What: Untrusted Test. Why: Any member writes their own share, so the list checks each one (Section 11.11). How: This seeds shares with bad content and an expired one, then lists as the owner.
+pagTesObj( 'only valid, unexpired shares are listed, whatever another device wrote', async ( { page, secPagObj } ) => { // What: Untrusted Test. Why: Any member writes their own share, so the list checks each one (Section 11.11). How: This seeds shares with bad content and an expired one, then lists as the owner and checks only the good share comes back.
 
 
 	const { groIdeStr } = await memSetFun( locEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group. How: This sets one up.
@@ -364,7 +364,7 @@ pagTesObj( 'only valid, unexpired shares are listed, whatever another device wro
 
 
 
-pagTesObj( 'an update is due after 2 minutes or 100 meters, never within 15 seconds', async ( { page } ) => { // What: Throttle Test. Why: Updates are throttled by time and distance to save battery and data (Section 5). How: This asks the throttle about fixes at chosen times and distances.
+pagTesObj( 'an update is due after 2 minutes or 100 meters, never within 15 seconds', async ( { page } ) => { // What: Throttle Test. Why: Updates are throttled by time and distance to save battery and data (Section 5). How: This asks the throttle about fixes at chosen times and distances and checks each answer.
 
 
 	const thrResArr = await page.evaluate( async () => { // What: Throttle Result Array. Why: The throttle runs in the page. How: This asks it about each case.

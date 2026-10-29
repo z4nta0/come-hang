@@ -7,8 +7,8 @@ import { assertFails               } from '@firebase/rules-unit-testing'; // Wha
 import { assertSucceeds            } from '@firebase/rules-unit-testing'; // What: Assert Succeeds. Why: An allowed request must go through. How: This expects it to succeed.
 import { Bytes                     } from 'firebase/firestore';           // What: Bytes. Why: Keys, IVs, and ciphertext are stored as bytes. How: This builds byte values of a chosen size.
 import { collection                } from 'firebase/firestore';           // What: Collection. Why: Listing a collection is checked as its own request. How: This builds a collection reference.
-import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: A leave, removal, or transfer drops an entry from one of an account's group maps. How: This removes a field in an update.
 import { deleteDoc                 } from 'firebase/firestore';           // What: Delete Doc. Why: Deletion rules are checked. How: This deletes a document.
+import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: A leave, removal, or transfer drops an entry from one of an account's group maps. How: This removes a field in an update.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every request names a document. How: This builds a reference.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Fetch rules are checked. How: This reads one document.
 import { getDocs                   } from 'firebase/firestore';           // What: Get Docs. Why: List rules are checked. How: This reads a whole collection.
@@ -201,7 +201,7 @@ type StoConTyp = ReturnType< ReturnType< RulesTestEnvironment[ 'authenticatedCon
  *
  * @example
  * ```ts
- * groBatFun(aliStoObj, 'alice', { groObj : { memberCount : 2 } }) // => Promise<void>
+ * groBatFun(aliStoObj, 'alice', {...}) // => Promise<void>
  * ```
  *
 */
@@ -1128,7 +1128,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from e
 
 
 
-test( 'an identity starts its own empty account, and only it can read the account', async () => { // What: Account Owner Test. Why: Memberships and the paid flag are private. How: This starts Alice's account, then reads it as her and as Bob.
+test( 'an identity starts its own empty account, and only it can read the account', async () => { // What: Account Owner Test. Why: Memberships and the paid flag are private. How: This starts Alice's account, then reads it as her and as Bob, checking only she can.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the account. How: This acts as her.
@@ -1164,7 +1164,7 @@ test( "an account can't start paid, already in groups, or holding other fields, 
 
 
 
-test( 'an identity publishes its own key at the server time, which anyone signed in can fetch but not list', async () => { // What: User Publish Test. Why: An approving member needs a joiner's key, but nobody should browse every user. How: This publishes Alice's key, then fetches and lists as others.
+test( 'an identity publishes its own key at the server time, which anyone signed in can fetch but not list', async () => { // What: User Publish Test. Why: An approving member needs a joiner's key, but nobody should browse every user. How: This publishes Alice's key, then fetches and lists as others, checking a fetch passes and a list fails.
 
 
 	const aliStoObj = accStoFun( 'alice' );                           // What: Alice Store Object. Why: Alice publishes the key. How: This acts as her.
@@ -1182,7 +1182,7 @@ test( 'an identity publishes its own key at the server time, which anyone signed
 
 
 
-test( 'a user document is refused with a forged time, a wrong-sized or text key, an extra field, or another owner', async () => { // What: User Shape Test. Why: A document anyone may fetch must hold only a real key and time. How: This tries each forgery.
+test( 'a user document is refused with a forged time, a wrong-sized or text key, an extra field, or another owner', async () => { // What: User Shape Test. Why: A document anyone may fetch must hold only a real key and time. How: This tries each forgery and checks the rules refuse it.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice publishes the key. How: This acts as her.
@@ -1200,7 +1200,7 @@ test( 'a user document is refused with a forged time, a wrong-sized or text key,
 
 
 
-test( 'an identity stores, refreshes, and deletes its own push token, which nobody else reads or writes', async () => { // What: Push Token Test. Why: Pushes reach a phone through its one stored token, which is the owner's alone and expires unless refreshed (Section 14). How: This writes a valid token, then tries each fault, other identities, and a second token, then deletes it.
+test( 'an identity stores, refreshes, and deletes its own push token, which nobody else reads or writes', async () => { // What: Push Token Test. Why: Pushes reach a phone through its one stored token, which is the owner's alone and expires unless refreshed (Section 14). How: This writes a valid token, then tries each fault, other identities, and a second token, then deletes it, checking which the rules allow.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice registers her phone. How: This acts as her.
@@ -1229,7 +1229,7 @@ test( 'an identity stores, refreshes, and deletes its own push token, which nobo
 
 
 
-test( 'only the owner replaces its key, the creation time stays put, and nobody deletes it', async () => { // What: User Update Test. Why: A key moves with a linked identity to a new device, and nothing else changes. How: This seeds Alice's document, then changes it as her and as Bob.
+test( 'only the owner replaces its key, the creation time stays put, and nobody deletes it', async () => { // What: User Update Test. Why: A key moves with a linked identity to a new device, and nothing else changes. How: This seeds Alice's document, then changes it as her and as Bob, checking only her change passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the document. How: This acts as her.
@@ -1249,7 +1249,7 @@ test( 'only the owner replaces its key, the creation time stays put, and nobody 
 
 
 
-test( 'an identity creates a group in one batch, which only its members can read, while anyone signed in can fetch its invite', async () => { // What: Group Create Test. Why: The whole creation batch has to go through, and its documents have to stay with the right readers. How: This creates Alice's group, then reads its parts as Alice, Bob, and nobody.
+test( 'an identity creates a group in one batch, which only its members can read, while anyone signed in can fetch its invite', async () => { // What: Group Create Test. Why: The whole creation batch has to go through, and its documents have to stay with the right readers. How: This creates Alice's group, then reads its parts as Alice, Bob, and nobody, checking only Alice gets in.
 
 
 	const aliStoObj = accStoFun( 'alice' );                           // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
@@ -1273,7 +1273,7 @@ test( 'an identity creates a group in one batch, which only its members can read
 
 
 
-test( 'a group missing any part of its creation batch is refused', async () => { // What: Group Parts Test. Why: None of the four documents may exist without the others. How: This leaves out or changes one part at a time, then commits the whole batch.
+test( 'a group missing any part of its creation batch is refused', async () => { // What: Group Parts Test. Why: None of the four documents may exist without the others. How: This leaves out or changes one part at a time, then commits the whole batch, checking each partial batch fails and the whole one passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
@@ -1293,7 +1293,7 @@ test( 'a group missing any part of its creation batch is refused', async () => {
 
 
 
-test( 'a group starts with valid fields, one member, and nothing offered or blocked', async () => { // What: Group Fields Test. Why: A group's starting state and shape can't be forged. How: This changes one field at a time, then commits a valid batch.
+test( 'a group starts with valid fields, one member, and nothing offered or blocked', async () => { // What: Group Fields Test. Why: A group's starting state and shape can't be forged. How: This changes one field at a time, then commits a valid batch, checking each change fails and the valid batch passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
@@ -1319,7 +1319,7 @@ test( 'a group starts with valid fields, one member, and nothing offered or bloc
 
 
 
-test( 'group names allow letters, numbers, basic punctuation, and emoji, up to 50 characters, with single spaces', async () => { // What: Group Name Test. Why: The name is plaintext a stranger sees, so it keeps to readable characters (Section 11.10). How: This creates groups with allowed names, then tries refused ones.
+test( 'group names allow letters, numbers, basic punctuation, and emoji, up to 50 characters, with single spaces', async () => { // What: Group Name Test. Why: The name is plaintext a stranger sees, so it keeps to readable characters (Section 11.10). How: This creates groups with allowed names, then tries refused ones, checking which pass.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the groups. How: This acts as her.
@@ -1394,7 +1394,7 @@ test( "an invite keeps its token's form, its own group, and the group's real nam
 
 
 
-test( 'a member document holds a bounded wrapped key and an optional encrypted name with its IV', async () => { // What: Member Shape Test. Why: The membership's encrypted fields keep their sizes, and its times are real. How: This forges one part of the member document at a time, then commits one carrying a name.
+test( 'a member document holds a bounded wrapped key and an optional encrypted name with its IV', async () => { // What: Member Shape Test. Why: The membership's encrypted fields keep their sizes, and its times are real. How: This forges one part of the member document at a time, then commits one carrying a name, checking each forgery fails and the named one passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice creates the group. How: This acts as her.
@@ -1417,7 +1417,7 @@ test( 'a member document holds a bounded wrapped key and an optional encrypted n
 
 
 
-test( 'while the paywall is open, everyone owns up to 10 groups and belongs to up to 20', async () => { // What: Open Cap Test. Why: Until the paywall is switched on, the paid caps apply to everyone (Section 18). How: This seeds accounts just under and at each cap, then creates a group for each.
+test( 'while the paywall is open, everyone owns up to 10 groups and belongs to up to 20', async () => { // What: Open Cap Test. Why: Until the paywall is switched on, the paid caps apply to everyone (Section 18). How: This seeds accounts just under and at each cap, then creates a group for each, checking which the caps allow.
 
 
 	await seeDocFun( tesEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : groMapFun( 'own', 9 ) } );                     // What: Nine Owned Seed. Why: The tenth owned group is the last allowed. How: This gives Alice 9.
@@ -1435,7 +1435,7 @@ test( 'while the paywall is open, everyone owns up to 10 groups and belongs to u
 
 
 
-test( 'with the paywall locked, a free identity owns 1 group and belongs to 10, while a paid one gets the paid caps', async () => { // What: Locked Cap Test. Why: Once the paywall is on, the free caps apply until someone buys (Section 18). How: This seeds accounts in the locked project, then creates a group for each.
+test( 'with the paywall locked, a free identity owns 1 group and belongs to 10, while a paid one gets the paid caps', async () => { // What: Locked Cap Test. Why: Once the paywall is on, the free caps apply until someone buys (Section 18). How: This seeds accounts in the locked project, then creates a group for each, checking which the locked caps allow.
 
 
 	await seeDocFun( locEnvObj, 'accounts/alice', { memberGroups : {}, ownedGroups : {} } );                                 // What: Empty Free Seed. Why: A free identity's first owned group is allowed. How: This gives Alice none.
@@ -1477,7 +1477,7 @@ test( "an account's groups change only by one owned entry, as that group is crea
 
 
 
-test( 'nobody joins an existing group, or adds a second invite, by writing the documents themselves', async () => { // What: Self Join Test. Why: Every join waits for a member's approval (Section 17), and a group has one working invite. How: This creates Alice's group, then has Bob write his own membership and Alice slip in a second invite.
+test( 'nobody joins an existing group, or adds a second invite, by writing the documents themselves', async () => { // What: Self Join Test. Why: Every join waits for a member's approval (Section 17), and a group has one working invite. How: This creates Alice's group, then has Bob write his own membership and Alice slip in a second invite, checking both fail.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -1549,7 +1549,7 @@ test( "a join request is refused without a working invite, from a blocked, exist
 
 
 
-test( 'a join request keeps real times, its own fields, and the name and note limits', async () => { // What: Request Shape Test. Why: The name and note are plaintext members read, and the times have to be real (Section 11.10, Section 17). How: This files each allowed request and withdraws it, then tries each refused one.
+test( 'a join request keeps real times, its own fields, and the name and note limits', async () => { // What: Request Shape Test. Why: The name and note are plaintext members read, and the times have to be real (Section 11.10, Section 17). How: This files each allowed request and withdraws it, then tries each refused one, checking which pass.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob asks to join. How: This acts as him.
@@ -1644,7 +1644,7 @@ test( 'a join request keeps real times, its own fields, and the name and note li
 
 
 
-test( 'the joiner may withdraw and any member may decline, while nobody else deletes and nobody changes a request', async () => { // What: Request Delete Test. Why: A request ends by the joiner's withdrawal or a member's decline, and its text can't be edited after members have read it (Section 17). How: This files Bob's request, then changes and deletes it as each identity.
+test( 'the joiner may withdraw and any member may decline, while nobody else deletes and nobody changes a request', async () => { // What: Request Delete Test. Why: A request ends by the joiner's withdrawal or a member's decline, and its text can't be edited after members have read it (Section 17). How: This files Bob's request, then changes and deletes it as each identity, checking who the rules let through.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who may decline. How: This acts as her.
@@ -1666,7 +1666,7 @@ test( 'the joiner may withdraw and any member may decline, while nobody else del
 
 
 
-test( 'a member approves a request in one batch, and the joiner becomes a member', async () => { // What: Approval Test. Why: Any member can let a joiner in, and the joiner then reads the group as a member (Section 17). How: This approves Bob as Alice, then reads the group and his account as Bob.
+test( 'a member approves a request in one batch, and the joiner becomes a member', async () => { // What: Approval Test. Why: Any member can let a joiner in, and the joiner then reads the group as a member (Section 17). How: This approves Bob as Alice, then reads the group and his account as Bob, checking the approval and his access.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob is the joiner. How: This acts as him.
@@ -1683,7 +1683,7 @@ test( 'a member approves a request in one batch, and the joiner becomes a member
 
 
 
-test( 'an approval missing or changing any part of its batch is refused', async () => { // What: Approval Parts Test. Why: A membership can't exist without its account entry, count, and answered request, and the batch can't change anything else. How: This changes or leaves out one part at a time, then commits the whole batch.
+test( 'an approval missing or changing any part of its batch is refused', async () => { // What: Approval Parts Test. Why: A membership can't exist without its account entry, count, and answered request, and the batch can't change anything else. How: This changes or leaves out one part at a time, then commits the whole batch, checking each partial batch fails and the whole one passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice approves. How: This acts as her.
@@ -1711,7 +1711,7 @@ test( 'an approval missing or changing any part of its batch is refused', async 
 
 
 
-test( 'only a member approves, only a pending request, and never a blocked or capped joiner', async () => { // What: Approval Eligibility Test. Why: Letting someone in is a member's call, answers a real request, and respects the blocklist and the joiner's cap. How: This tries each disqualified approval.
+test( 'only a member approves, only a pending request, and never a blocked or capped joiner', async () => { // What: Approval Eligibility Test. Why: Letting someone in is a member's call, answers a real request, and respects the blocklist and the joiner's cap. How: This tries each disqualified approval and checks the rules refuse it.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member. How: This acts as her.
@@ -1764,7 +1764,7 @@ test( "approvals stop at the owner's member cap, 50 while the paywall is open, a
 
 
 
-test( 'a member may decline and block a pending requester, and change nothing else on the blocklist', async () => { // What: Block Test. Why: Declining and blocking keeps that identity out for good, but the blocklist can't be used to remove members or block at random (Sections 9 and 17). How: This tries each improper block, then blocks Bob.
+test( 'a member may decline and block a pending requester, and change nothing else on the blocklist', async () => { // What: Block Test. Why: Declining and blocking keeps that identity out for good, but the blocklist can't be used to remove members or block at random (Sections 9 and 17). How: This tries each improper block, then blocks Bob, checking the improper ones fail and the block passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who declines. How: This acts as her.
@@ -1787,7 +1787,7 @@ test( 'a member may decline and block a pending requester, and change nothing el
 
 
 
-test( 'a member writes only their own encrypted name and activity time', async () => { // What: Member Update Test. Why: A new member names themselves after joining, while the key and join time stay as granted (Section 17). How: This approves Bob, then changes his membership as him and as Alice.
+test( 'a member writes only their own encrypted name and activity time', async () => { // What: Member Update Test. Why: A new member names themselves after joining, while the key and join time stay as granted (Section 17). How: This approves Bob, then changes his membership as him and as Alice, checking which changes pass.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is another member. How: This acts as her.
@@ -1811,7 +1811,7 @@ test( 'a member writes only their own encrypted name and activity time', async (
 
 
 
-test( 'the member count moves only with a membership the same batch creates', async () => { // What: Count Test. Why: An inflated count could block every join, so it can't move on its own. How: This raises the count as Alice for an existing member and for nobody.
+test( 'the member count moves only with a membership the same batch creates', async () => { // What: Count Test. Why: An inflated count could block every join, so it can't move on its own. How: This raises the count as Alice for an existing member and for nobody, checking both fail.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member. How: This acts as her.
@@ -1876,7 +1876,7 @@ test( "a leave missing or changing any part is refused, and the owner can't leav
 
 
 
-test( 'the owner removes a member in one transaction that blocks them and rotates the invite', async () => { // What: Removal Test. Why: A removed member can't rejoin with the link they had or any later one (Section 9). How: This removes Bob as Alice, then tries the old and new links as Bob and Carol.
+test( 'the owner removes a member in one transaction that blocks them and rotates the invite', async () => { // What: Removal Test. Why: A removed member can't rejoin with the link they had or any later one (Section 9). How: This removes Bob as Alice, then tries the old and new links as Bob and Carol, checking only Carol's request through the new link passes.
 
 
 	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is removed. How: This acts as him.
@@ -1899,7 +1899,7 @@ test( 'the owner removes a member in one transaction that blocks them and rotate
 
 
 
-test( 'a removal missing any part is refused, and only the owner removes, never themselves', async () => { // What: Removal Parts Test. Why: A removal always blocks, rotates, and frees the slot, and it's the owner's action alone. How: This changes or leaves out one part at a time, then commits the whole transaction.
+test( 'a removal missing any part is refused, and only the owner removes, never themselves', async () => { // What: Removal Parts Test. Why: A removal always blocks, rotates, and frees the slot, and it's the owner's action alone. How: This changes or leaves out one part at a time, then commits the whole transaction, checking each partial one fails and the whole one passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -1926,7 +1926,7 @@ test( 'a removal missing any part is refused, and only the owner removes, never 
 
 
 
-test( 'the owner rotates the invite on its own, while nobody else rotates it or retires the current link', async () => { // What: Rotation Test. Why: The owner can revoke an over-shared link at any time, leaving exactly one working link (Section 9). How: This tries improper rotations and deletes, then rotates as Alice and tries both links as Carol.
+test( 'the owner rotates the invite on its own, while nobody else rotates it or retires the current link', async () => { // What: Rotation Test. Why: The owner can revoke an over-shared link at any time, leaving exactly one working link (Section 9). How: This tries improper rotations and deletes, then rotates as Alice and tries both links as Carol, checking only the new link works.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -1974,7 +1974,7 @@ test( 'the owner offers the group to a member, who accepts it in one batch, beco
 
 
 
-test( 'an offer comes only from the owner, to another member, stamped with the real time, and changes nothing else', async () => { // What: Offer Test. Why: An offer is the owner's to make, and its time decides when it lapses. How: This tries each improper offer, then makes a valid one.
+test( 'an offer comes only from the owner, to another member, stamped with the real time, and changes nothing else', async () => { // What: Offer Test. Why: An offer is the owner's to make, and its time decides when it lapses. How: This tries each improper offer, then makes a valid one, checking which pass.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -1998,7 +1998,7 @@ test( 'an offer comes only from the owner, to another member, stamped with the r
 
 
 
-test( 'an offer to a member with no free owned slot is refused the moment the owner makes it', async () => { // What: Full Slot Offer Test. Why: An offer that could never be accepted would leave the owner thinking the handover was done (Section 18). How: This fills Bob's owned slots, then tries the offer.
+test( 'an offer to a member with no free owned slot is refused the moment the owner makes it', async () => { // What: Full Slot Offer Test. Why: An offer that could never be accepted would leave the owner thinking the handover was done (Section 18). How: This fills Bob's owned slots, then tries the offer and checks it fails.
 
 
 	await seeTwoFun(); // What: Two Member Seed Call. Why: An offer needs a member to name. How: This approves Bob into the group.
@@ -2039,7 +2039,7 @@ test( 'only the owner withdraws an offer from the app, since the member offered 
 
 
 
-test( 'an acceptance missing or changing any part is refused, as is one by anyone but the member offered', async () => { // What: Accept Parts Test. Why: The group, both accounts, and the offer have to move together, or slots and ownership would drift apart. How: This changes or leaves out one part at a time, then commits the whole batch.
+test( 'an acceptance missing or changing any part is refused, as is one by anyone but the member offered', async () => { // What: Accept Parts Test. Why: The group, both accounts, and the offer have to move together, or slots and ownership would drift apart. How: This changes or leaves out one part at a time, then commits the whole batch, checking each partial batch fails and the whole one passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -2079,7 +2079,7 @@ test( 'an acceptance missing or changing any part is refused, as is one by anyon
 
 
 
-test( 'an offer is accepted within 7 days, by a member with a free owned slot who is still in the group', async () => { // What: Accept Window Test. Why: A forgotten offer mustn't be taken up long after the owner moved on, nor push anyone over a cap (Section 18). How: This tries an 8-day-old offer, a full slot, and a 6-day-old offer, then has Bob leave before accepting.
+test( 'an offer is accepted within 7 days, by a member with a free owned slot who is still in the group', async () => { // What: Accept Window Test. Why: A forgotten offer mustn't be taken up long after the owner moved on, nor push anyone over a cap (Section 18). How: This tries an 8-day-old offer, a full slot, and a 6-day-old offer, then has Bob leave before accepting, checking which acceptances pass.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob is offered the group. How: This acts as him.
@@ -2124,7 +2124,7 @@ test( "a member who left since the offer can't accept it", async () => { // What
 
 
 
-test( 'nobody deletes a group, and an account owner reads and dismisses only their own notices, which no client writes', async () => { // What: Deletion And Notice Test. Why: Deleting a group runs as a Cloud Function that clears its whole tree and leaves each member a notice, so clients can neither delete groups nor forge notices (Section 9). How: This tries a client delete, then reads, writes, and deletes a seeded notice as its owner and as someone else.
+test( 'nobody deletes a group, and an account owner reads and dismisses only their own notices, which no client writes', async () => { // What: Deletion And Notice Test. Why: Deleting a group runs as a Cloud Function that clears its whole tree and leaves each member a notice, so clients can neither delete groups nor forge notices (Section 9). How: This tries a client delete, then reads, writes, and deletes a seeded notice as its owner and as someone else, checking which the rules allow.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group and isn't the notice's owner. How: This acts as her.
@@ -2169,7 +2169,7 @@ test( "the owner renames the group with the invite's copy of the name in the sam
 
 
 
-test( 'only the owner changes the settings, to a valid name with the invite matching and a retention of 7 to 180 days, changing nothing else', async () => { // What: Settings Parts Test. Why: A forged name could mislead invitees, and the settings mustn't carry other changes along. How: This tries each improper change, then a valid rename.
+test( 'only the owner changes the settings, to a valid name with the invite matching and a retention of 7 to 180 days, changing nothing else', async () => { // What: Settings Parts Test. Why: A forged name could mislead invitees, and the settings mustn't carry other changes along. How: This tries each improper change, then a valid rename, checking which pass.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -2201,7 +2201,7 @@ test( 'only the owner changes the settings, to a valid name with the invite matc
 
 
 
-test( 'any member plans an event, which only members read, and only its creator or the owner edits or cancels it', async () => { // What: Event Test. Why: Events are the group's, and managing one is its creator's or the owner's (Section 11.5). How: This plans events as Bob, then tries reads, edits, and deletes as each person.
+test( 'any member plans an event, which only members read, and only its creator or the owner edits or cancels it', async () => { // What: Event Test. Why: Events are the group's, and managing one is its creator's or the owner's (Section 11.5). How: This plans events as Bob, then tries reads, edits, and deletes as each person, checking who the rules let through.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -2232,7 +2232,7 @@ test( 'any member plans an event, which only members read, and only its creator 
 
 
 
-test( 'an event keeps its fields, sizes, real times, and creator', async () => { // What: Event Shape Test. Why: Encrypted details can only be checked by size, and the times decide when the event is deleted (Sections 5 and 11.10). How: This plans an event with one fault at a time, then valid ones at the limits, and edits one into a bad shape.
+test( 'an event keeps its fields, sizes, real times, and creator', async () => { // What: Event Shape Test. Why: Encrypted details can only be checked by size, and the times decide when the event is deleted (Sections 5 and 11.10). How: This plans an event with one fault at a time, then valid ones at the limits, and edits one into a bad shape, checking which pass.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob plans the events. How: This acts as him.
@@ -2263,7 +2263,7 @@ test( 'an event keeps its fields, sizes, real times, and creator', async () => {
 
 
 
-test( 'a creator who left no longer manages their event, while the owner still can', async () => { // What: Left Creator Test. Why: The owner cleans up after a creator who's gone (Section 11.5). How: This has Bob plan an event and leave, then tries edits as Bob and Alice.
+test( 'a creator who left no longer manages their event, while the owner still can', async () => { // What: Left Creator Test. Why: The owner cleans up after a creator who's gone (Section 11.5). How: This has Bob plan an event and leave, then tries edits as Bob and Alice, checking only Alice's passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -2285,7 +2285,7 @@ test( 'a creator who left no longer manages their event, while the owner still c
 
 
 
-test( 'any member adds, claims, releases, reassigns, and removes items, each a valid item that expires with its event', async () => { // What: Item Test. Why: Who's bringing what is the whole group's to sort out, while an item keeps its shape and goes with its event (Sections 7 and 11.5). How: This works through an item's life as each member, then tries each improper item.
+test( 'any member adds, claims, releases, reassigns, and removes items, each a valid item that expires with its event', async () => { // What: Item Test. Why: Who's bringing what is the whole group's to sort out, while an item keeps its shape and goes with its event (Sections 7 and 11.5). How: This works through an item's life as each member, then tries each improper item, checking which the rules allow.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
@@ -2354,7 +2354,7 @@ test( "a removed member's claim stays until someone changes it, and an event tha
 
 
 
-test( 'a member shares their own location for an event, which only members read, and stops sharing by deleting it', async () => { // What: Location Test. Why: Location is shared with the group for one event at a time, and stopping has to take effect at once (Sections 5 and 10). How: This shares and updates Bob's location, tries reads and writes as each person, then deletes it.
+test( 'a member shares their own location for an event, which only members read, and stops sharing by deleting it', async () => { // What: Location Test. Why: Location is shared with the group for one event at a time, and stopping has to take effect at once (Sections 5 and 10). How: This shares and updates Bob's location, tries reads and writes as each person, then deletes it, checking who the rules let through.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member reading Bob's location. How: This acts as her.
@@ -2379,7 +2379,7 @@ test( 'a member shares their own location for an event, which only members read,
 
 
 
-test( 'a shared location keeps its fields and sizes, a real update time, its event window, and an expiry within an hour and before the event ends', async () => { // What: Location Shape Test. Why: An encrypted position can only be checked by size, and its times decide how long anyone sees it (Section 5). How: This shares with one fault at a time across events open, not yet open, ended, and about to end, then valid shares at the limits.
+test( 'a shared location keeps its fields and sizes, a real update time, its event window, and an expiry within an hour and before the event ends', async () => { // What: Location Shape Test. Why: An encrypted position can only be checked by size, and its times decide how long anyone sees it (Section 5). How: This shares with one fault at a time across events open, not yet open, ended, and about to end, then valid shares at the limits, checking which pass.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob shares his location. How: This acts as him.
@@ -2434,7 +2434,7 @@ test( "a member who left can't keep sharing but can still delete their location"
 
 
 
-test( 'a member asks once for chat history, which members read, and another member claims, releases, and fulfils it', async () => { // What: History Test. Why: Any member can help another get chat history back, one claimant at a time (Section 11.9). How: This files a recovery as Bob, then claims, releases, reclaims, and fulfils it as the others.
+test( 'a member asks once for chat history, which members read, and another member claims, releases, and fulfils it', async () => { // What: History Test. Why: Any member can help another get chat history back, one claimant at a time (Section 11.9). How: This files a recovery as Bob, then claims, releases, reclaims, and fulfils it as the others, checking each step passes.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice claims and then releases the request. How: This acts as her.
@@ -2471,7 +2471,7 @@ test( 'a member asks once for chat history, which members read, and another memb
 
 
 
-test( 'a history request is filed only by a member in their own name, starting pending, with a real time, a 7 to 14 day expiry, and a range that fits its kind', async () => { // What: History Shape Test. Why: Each request notifies the whole group, and a backlog's range decides how much older chat a newcomer is shown (Section 11.9). How: This files a request with one fault at a time, then valid ones.
+test( 'a history request is filed only by a member in their own name, starting pending, with a real time, a 7 to 14 day expiry, and a range that fits its kind', async () => { // What: History Shape Test. Why: Each request notifies the whole group, and a backlog's range decides how much older chat a newcomer is shown (Section 11.9). How: This files a request with one fault at a time, then valid ones, checking which pass.
 
 
 	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob asks for history. How: This acts as him.
@@ -2500,7 +2500,7 @@ test( 'a history request is filed only by a member in their own name, starting p
 
 
 
-test( 'a stalled claim frees after 30 minutes, nobody claims in another name or for an asker who left, and only a claimed request is fulfilled', async () => { // What: History Claim Test. Why: A request mustn't get stuck behind one claimant, and history goes only to someone still in the group (Section 11.9). How: This seeds requests in each state, then tries each claim, release, and fulfilment.
+test( 'a stalled claim frees after 30 minutes, nobody claims in another name or for an asker who left, and only a claimed request is fulfilled', async () => { // What: History Claim Test. Why: A request mustn't get stuck behind one claimant, and history goes only to someone still in the group (Section 11.9). How: This seeds requests in each state, then tries each claim, release, and fulfilment, checking which the rules allow.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is a member who tries the claims. How: This acts as her.
@@ -2577,7 +2577,7 @@ test( "a group's claim record is closed to its members, owner included", async (
 
 
 
-test( 'a document no rule covers is refused', async () => { // What: Uncovered Document Test. Why: Firestore must refuse anything no rule allows. How: This reads and writes a document in a collection no rule names, as a signed-in identity.
+test( 'a document no rule covers is refused', async () => { // What: Uncovered Document Test. Why: Firestore must refuse anything no rule allows. How: This reads and writes a document in a collection no rule names, as a signed-in identity, checking both fail.
 
 
 	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice is an ordinary signed-in identity. How: This acts as her.
