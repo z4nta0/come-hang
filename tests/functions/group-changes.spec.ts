@@ -7,12 +7,12 @@ import { deleteDoc                 } from 'firebase/firestore';           // Wha
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the right person was told, and nobody else. How: This asserts on what each read returns.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Notices and groups are read back. How: This reads one document.
-import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The removal and offer pushes are checked. How: This reads what reached a token. // What: Initialize Test Environment. Why: The tests write as the server would. How: This connects to the emulators.
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests write as the server would. How: This connects to the emulators.
+import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The removal and offer pushes are checked. How: This reads what reached a token.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed groups and memberships. How: This writes a document.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each kind of change is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';
-import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.           // What: Timestamp. Why: Join and offer times are Firestore timestamps. How: This builds them.
+import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: Join and offer times are Firestore timestamps. How: This builds them.
+import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.
 import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: Every change the trigger watches is a group update. How: This updates a document.
 
 

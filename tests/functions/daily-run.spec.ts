@@ -7,12 +7,12 @@ import { dayRunFun                 } from '../../functions/src/daily-run.ts'; //
 import { doc                       } from 'firebase/firestore';               // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';                 // What: Expect. Why: Each check passes only when the run left each group as it should. How: This asserts on each read and poll.
 import { getDoc                    } from 'firebase/firestore';               // What: Get Doc. Why: Groups, claim records, and notices are read back. How: This reads one document.
-import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
-import { pusLisFun                 } from '../support/pushes.ts';             // What: Push List Function. Why: The lapse and claim pushes are checked. How: This reads what reached a token.     // What: Initialize Test Environment. Why: The tests seed and read Firestore past its rules, as the server would. How: This connects to the emulator.
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';     // What: Initialize Test Environment. Why: The tests seed and read Firestore past its rules, as the server would. How: This connects to the emulator.
+import { pusLisFun                 } from '../support/pushes.ts';             // What: Push List Function. Why: The lapse and claim pushes are checked. How: This reads what reached a token.
 import { setDoc                    } from 'firebase/firestore';               // What: Set Doc. Why: The tests seed groups, members, accounts, and claim records. How: This writes a document.
 import { test                      } from '@playwright/test';                 // What: Test. Why: Each step of the run is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';
-import { tokSetFun                 } from '../support/pushes.ts';             // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.               // What: Timestamp. Why: Offer, join, and activity times are Firestore timestamps. How: This builds them.
+import { Timestamp                 } from 'firebase/firestore';               // What: Timestamp. Why: Offer, join, and activity times are Firestore timestamps. How: This builds them.
+import { tokSetFun                 } from '../support/pushes.ts';             // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.
 
 
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every seed and read goes through one. How: This types it.

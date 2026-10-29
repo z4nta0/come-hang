@@ -10,15 +10,15 @@ import { expect                    } from '@playwright/test';             // Wha
 import { get                       } from 'firebase/database';            // What: Get. Why: The group's Realtime Database data is read back. How: This reads a location once.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Documents are read back after the call. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests seed and read the emulators past their rules, as the server would. How: This connects to them.
-import { listAll                   } from 'firebase/storage';
-import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The deletion push is checked. How: This reads what reached a token.             // What: List All. Why: The group's history transfers are checked for. How: This lists a folder's files.
+import { listAll                   } from 'firebase/storage';             // What: List All. Why: The group's history transfers are checked for. How: This lists a folder's files.
+import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The deletion push is checked. How: This reads what reached a token.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Every Realtime Database read and write names a location. How: This builds a reference.
 import { set                       } from 'firebase/database';            // What: Set. Why: The tests seed the group's chat, presence, and mirror. How: This writes a location.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed the group's documents. How: This writes a document.
 import { ref as stoRefFun          } from 'firebase/storage';             // What: Storage Ref Function. Why: Storage's ref shares its name with the Realtime Database's. How: This imports it under its own name to build a file reference.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the deletion is its own test. How: This declares them.
-import { Timestamp                 } from 'firebase/firestore';
-import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
+import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
+import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.
 import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed a history transfer. How: This uploads a file.
 
 
