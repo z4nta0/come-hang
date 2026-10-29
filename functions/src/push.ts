@@ -50,9 +50,10 @@ import type { Message } from 'firebase-admin/messaging'; // What: Message. Why: 
  *
  * @summary
  * Each push kind mapped to the sentence its push shows beneath the group's
- * name. The notice kinds share their names with these keys, and offerMade
- * and claimMade push without a notice, since the person is there to see the
- * offer in the app.
+ * name. The notice kinds share their names with these keys, while offerMade,
+ * claimMade, and the activity kinds (a chat message, a history request, and
+ * a join request) push without a notice, since the person sees them in the
+ * app. A join push for several requests replaces its sentence with a count.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -61,8 +62,11 @@ import type { Message } from 'firebase-admin/messaging'; // What: Message. Why: 
 const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why: Every push of a kind reads the same. How: This maps each kind to its sentence.
 
 
+	chatMessage      : 'New messages.',
 	claimMade        : "This group's owner has been away, and you've been asked to take it over.",
 	groupDeleted     : 'The owner deleted this group.',
+	historyRequest   : 'A member is asking for chat history they missed.',
+	joinRequest      : 'Someone wants to join.',
 	offerAccepted    : 'The member you offered this group to accepted it.',
 	offerDeclined    : 'The member you offered this group to declined it.',
 	offerLapsed      : 'Your offer of this group ran out after 7 days.',
@@ -92,6 +96,8 @@ const DEF_SEN_FUN = process.env.FUNCTIONS_EMULATOR === 'true' // What: Default S
 
 // #region Helpers
 
+type PusOptTyp = { bodStr? : string, senValFun? : ( mesValObj : Message ) => Promise< void >, tagStr? : string }; // What: Push Options Type. Why: Some pushes carry their own sentence or replace earlier ones, and tests replace the sender. How: This types the optional settings pusSenFun takes.
+
 // #region pusSenFun
 
 /**
@@ -108,8 +114,11 @@ const DEF_SEN_FUN = process.env.FUNCTIONS_EMULATOR === 'true' // What: Default S
  * @param kinValStr - Kind Value String: Which push it is, picking its
  *                    sentence from {@link PUS_TEX_OBJ}.
  * @param groNamStr - Group Name String: The group's name, as the title.
- * @param senValFun - Send Value Function: What delivers the message, FCM
- *                    by default, or the outbox under the emulator.
+ * @param pusOptObj - Push Options Object: An optional sentence replacing
+ *                    the kind's, an optional tag that replaces an earlier
+ *                    push with the same one on the phone, and an optional
+ *                    sender, FCM by default, or the outbox under the
+ *                    emulator, which tests replace. Defaults to none.
  *
  * @returns A promise that settles once the push is sent or given up on,
  *          with no value.
@@ -121,7 +130,7 @@ const DEF_SEN_FUN = process.env.FUNCTIONS_EMULATOR === 'true' // What: Default S
  *
 */
 
-const pusSenFun = async ( uidValStr : string, kinValStr : string, groNamStr : string, senValFun : ( mesValObj : Message ) => Promise< void > = DEF_SEN_FUN ) : Promise< void > => { // What: Push Send Function. Why: Every push reaches its phone the same way. How: This reads the token, sends, and cleans up a dead token.
+const pusSenFun = async ( uidValStr : string, kinValStr : string, groNamStr : string, pusOptObj : PusOptTyp = {} ) : Promise< void > => { // What: Push Send Function. Why: Every push reaches its phone the same way. How: This reads the token, sends, and cleans up a dead token.
 
 
 	const tokSnaObj = await FIR_DAT_OBJ.doc( `accounts/${ uidValStr }/pushToken/current` ).get(); // What: Token Snapshot Object. Why: The push goes to the identity's one phone. How: This reads their stored token.
@@ -134,7 +143,16 @@ const pusSenFun = async ( uidValStr : string, kinValStr : string, groNamStr : st
 	try { // What: Send Attempt. Why: A send can fail for a dead token or for FCM itself. How: This sends and catches either.
 
 
-		await senValFun( { notification : { body : PUS_TEX_OBJ[ kinValStr ], title : groNamStr }, token : tokSnaObj.get( 'token' ) } ); // What: Send Call. Why: The phone shows the group's name over the kind's sentence. How: This sends the message to the stored token.
+		await ( pusOptObj.senValFun ?? DEF_SEN_FUN )({ // What: Send Call. Why: The phone shows the group's name over the kind's sentence. How: This sends the message to the stored token.
+
+
+			notification : { body : pusOptObj.bodStr ?? PUS_TEX_OBJ[ kinValStr ], title : groNamStr }, // What: Notification. Why: The phone shows the group's name over the sentence. How: This uses the given sentence, or the kind's.
+			token        : tokSnaObj.get( 'token' ),                                                   // What: Token. Why: The push goes to the identity's phone. How: This names its token.
+
+			...( pusOptObj.tagStr === undefined ? {} : { webpush : { notification : { tag : pusOptObj.tagStr } } } ) // What: Web Push Spread. Why: A tagged push replaces the phone's earlier one with the same tag, so activity shows as one notification. How: This adds the tag only when there is one, since the emulator's outbox can't store an empty field.
+
+
+		});
 
 
 	}
@@ -166,7 +184,7 @@ const pusSenFun = async ( uidValStr : string, kinValStr : string, groNamStr : st
 
 // #region Exports
 
-export { pusSenFun }; // What: Named Export. Why: Every function that tells someone something sends its push this way. How: This exports the helper.
+export { pusSenFun, type PusOptTyp }; // What: Named Exports. Why: Every function that tells someone something sends its push this way. How: This exports the helper and its options' type.
 
 // #endregion Exports
 

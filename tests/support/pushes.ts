@@ -45,15 +45,16 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  *
  * @summary
  * Reads every push the emulator kept for one token, with the rules off,
- * and returns each one's title and sentence.
+ * and returns each one's title, sentence, and collapse tag, which is
+ * undefined for a push that has none.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param envTesObj - Environment Test Object: The suite's environment.
  * @param tokValStr - Token Value String: The phone's token.
  *
- * @returns A promise that resolves with each push's title and sentence, in
- *          no set order.
+ * @returns A promise that resolves with each push's title, sentence, and
+ *          tag, in no set order.
  *
  * @example
  * ```ts
@@ -62,13 +63,13 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  *
 */
 
-const pusLisFun = async ( envTesObj : RulesTestEnvironment, tokValStr : string ) : Promise< { body : string, title : string }[] > => { // What: Push List Function. Why: A spec checks what reached a phone. How: This reads the emulator's kept pushes for one token.
+const pusLisFun = async ( envTesObj : RulesTestEnvironment, tokValStr : string ) : Promise< { body : string, tag? : string, title : string }[] > => { // What: Push List Function. Why: A spec checks what reached a phone. How: This reads the emulator's kept pushes for one token.
 
 
-	let pusLisArr : { body : string, title : string }[] = []; // What: Push List Array. Why: The read happens inside the rules-off callback. How: This carries its result out.
+	let pusLisArr : { body : string, tag? : string, title : string }[] = []; // What: Push List Array. Why: The read happens inside the rules-off callback. How: This carries its result out.
 
 
-	await envTesObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { pusLisArr = ( await getDocs( collection( cotAdmObj.firestore(), 'emulatorPushes' ) ) ).docs.filter( ( pusSnaObj ) => pusSnaObj.get( 'token' ) === tokValStr ).map( ( pusSnaObj ) => pusSnaObj.get( 'notification' ) ); } ); // What: Push Read Call. Why: No rule opens the collection. How: This reads it with the rules off and keeps the token's pushes.
+	await envTesObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { pusLisArr = ( await getDocs( collection( cotAdmObj.firestore(), 'emulatorPushes' ) ) ).docs.filter( ( pusSnaObj ) => pusSnaObj.get( 'token' ) === tokValStr ).map( ( pusSnaObj ) => ( { ...pusSnaObj.get( 'notification' ), tag : pusSnaObj.get( 'webpush.notification.tag' ) } ) ); } ); // What: Push Read Call. Why: No rule opens the collection. How: This reads it with the rules off and keeps the token's pushes.
 
 
 

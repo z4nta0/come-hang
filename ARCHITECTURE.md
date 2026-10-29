@@ -11,7 +11,9 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (location sharing in the app, its throttle, and
+Last updated: 2026-10-29 (the activity pushes, for chat, join requests,
+and history requests, in Sections 11.1, 11.7, 11.9, 14, and 17; location
+sharing in the app, its throttle, and
 the position's rounding, in Sections 5, 11.4, and 14; presence and history
 requests in the app, the
 history bundle's format, and coverage by join time, in Sections 11.9 and
@@ -805,7 +807,9 @@ pushes off.
 **Pushes** (decided 2026-10-28, `functions/src/push.ts`): each one carries
 the group's name as its title and a fixed sentence for its kind, never a
 message or a display name, since those are encrypted where the server
-can't read them. Sending is best effort: an identity with no token gets no
+can't read them. A push for ongoing activity carries a tag, so a newer push
+with the same tag replaces it on the phone rather than stacking (decided
+2026-10-29), and the join request push's sentence carries its count. Sending is best effort: an identity with no token gets no
 push, a failure is logged without undoing the notice beside it, and a
 token FCM rejects as no longer registered is deleted, unless the app has
 replaced it since. There's no FCM emulator, so under the Functions emulator
@@ -1009,6 +1013,12 @@ it was handed, and rereads after writing until the two reads agree.
   deletes their own entry, and any member deletes the entry of someone no
   longer in the group. Nothing else changes them.
 
+**Chat pushes** (decided 2026-10-29): a new message pushes each member on
+its waiting-on list who has no presence entry in the group (11.8), so
+anyone with the group open isn't pushed. The push says only "New messages"
+under the group's name, tagged by the chat so a busy chat shows as one
+notification that later pushes replace.
+
 **Deletion, still opportunistic and client-triggered** (no Cloud
 Function): whichever client is already reading a message deletes it once
 either is true, which the rules check: (a) its `waitingOn` is empty, or (b)
@@ -1069,7 +1079,7 @@ how many messages it holds or how long each is.
 
 | Path | Service | Notes |
 |---|---|---|
-| `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification fires whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
+| `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification goes to every member but the asker whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
 | `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle, the requested messages encrypted as one under the group key with its 12-byte IV first, keyed like the request it answers, written only by whoever currently holds the claim. One binary file of at most 25 MB (decided 2026-10-28), about 125,000 typical messages. |
 
 **Rules (decided 2026-10-28)**: a member files only their own request,
@@ -1611,9 +1621,9 @@ the Blaze change.
   deletion (Section 9), the group change trigger's removal and offer
   notices, the offer decline callable, the daily run (Section 18), and the
   push tokens with the pushes for every notice and for each new offer
-  (Section 11.1). Still to build, each with the feature it serves: the
-  history request alerts (Section 11.9), the grouped join request push
-  (Section 17), and chat pushes. The app's side, asking permission, calling
+  (Section 11.1). Built 2026-10-29 in `functions/src/activity-pushes.ts`:
+  the history request push (Section 11.9), the grouped join request push
+  (Section 17), and chat pushes (Section 11.7). The app's side, asking permission, calling
   FCM's `getToken()`, storing and refreshing the token, and showing a push
   through the service worker, comes with the app's Firebase wiring.
 - Environments, see Section 13.
@@ -1802,7 +1812,11 @@ request; declining and blocking adds the UID to `removedUids` as well.
 
 **Floods**:
 - Members get one grouped notification ("3 people want to join") rather
-  than one push per request, so a flood can't flood phones too.
+  than one push per request, so a flood can't flood phones too (decided
+  2026-10-29): each new request pushes every member the count of unexpired
+  requests waiting, tagged by the group so it replaces the group's earlier
+  join push on the phone. A flood still sends one push per request, which
+  App Check keeps scripts from causing.
 - The pending list offers "Decline all", and rotating the link (Section
   9) stops new requests at the source. Pending requests made with an old
   link stay until handled, since most are likely real people.

@@ -121,8 +121,8 @@ test( 'a push goes to the stored token with the group as its title, and nobody w
 
 	await tokSetFun( funEnvObj, 'bob', 'tok-bob' ); // What: Token Seed Call. Why: Bob's phone is registered. How: This stores its token.
 
-	await pusSenFun( 'bob', 'removed', 'Picnic', async ( mesValObj ) => { senMesArr.push( mesValObj ); } );   // What: Bob Send Call. Why: Bob has a token. How: This sends him a removal push through the recording stand-in.
-	await pusSenFun( 'carol', 'removed', 'Picnic', async ( mesValObj ) => { senMesArr.push( mesValObj ); } ); // What: Carol Send Call. Why: Carol has no token. How: This tries to send her one through the same stand-in.
+	await pusSenFun( 'bob', 'removed', 'Picnic', { senValFun : async ( mesValObj ) => { senMesArr.push( mesValObj ); } } );   // What: Bob Send Call. Why: Bob has a token. How: This sends him a removal push through the recording stand-in.
+	await pusSenFun( 'carol', 'removed', 'Picnic', { senValFun : async ( mesValObj ) => { senMesArr.push( mesValObj ); } } ); // What: Carol Send Call. Why: Carol has no token. How: This tries to send her one through the same stand-in.
 
 	expect( senMesArr ).toEqual( [ { notification : { body : 'You were removed from this group.', title : 'Picnic' }, token : 'tok-bob' } ] ); // What: One Message Sent. Why: Only Bob had a phone to reach, and the push carries only the group's name and the kind's sentence. How: This expects his message alone.
 
@@ -136,11 +136,11 @@ test( 'a token FCM rejects as dead is deleted, while any other failure or a toke
 
 	await tokSetFun( funEnvObj, 'bob', 'tok-bob' ); // What: Token Seed Call. Why: Bob's phone is registered. How: This stores its token.
 
-	await pusSenFun( 'bob', 'removed', 'Picnic', rejFunFun( 'messaging/internal-error' ) ); // What: Passing Failure Send. Why: FCM can fail for its own reasons. How: This sends through a stand-in rejecting with an internal error.
+	await pusSenFun( 'bob', 'removed', 'Picnic', { senValFun : rejFunFun( 'messaging/internal-error' ) } ); // What: Passing Failure Send. Why: FCM can fail for its own reasons. How: This sends through a stand-in rejecting with an internal error.
 
 	expect( await reaTokFun() ).toBe( 'tok-bob' ); // What: Token Kept. Why: The token itself isn't dead. How: This expects it still stored.
 
-	await pusSenFun( 'bob', 'removed', 'Picnic', async () => { // What: Replaced Token Send. Why: The app may store a new token while a push to the old one fails. How: This sends through a stand-in that replaces the token, then rejects the old one as dead.
+	await pusSenFun( 'bob', 'removed', 'Picnic', { senValFun : async () => { // What: Replaced Token Send. Why: The app may store a new token while a push to the old one fails. How: This sends through a stand-in that replaces the token, then rejects the old one as dead.
 
 
 		await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), 'accounts/bob/pushToken/current' ), { token : 'tok-new' } ) ); // What: Token Replace Call. Why: The app stored a new token mid-send. How: This writes it with the rules off.
@@ -148,11 +148,11 @@ test( 'a token FCM rejects as dead is deleted, while any other failure or a toke
 		await rejFunFun( 'messaging/registration-token-not-registered' )(); // What: Dead Rejection Call. Why: FCM rejects the old token. How: This rejects the way FCM does for an unregistered one.
 
 
-	} );
+	} } );
 
 	expect( await reaTokFun() ).toBe( 'tok-new' ); // What: New Token Kept. Why: The fresh token works. How: This expects it still stored.
 
-	await pusSenFun( 'bob', 'removed', 'Picnic', rejFunFun( 'messaging/registration-token-not-registered' ) ); // What: Dead Token Send. Why: FCM rejects a token that's no longer registered. How: This sends through a stand-in rejecting it that way.
+	await pusSenFun( 'bob', 'removed', 'Picnic', { senValFun : rejFunFun( 'messaging/registration-token-not-registered' ) } ); // What: Dead Token Send. Why: FCM rejects a token that's no longer registered. How: This sends through a stand-in rejecting it that way.
 
 	expect( await reaTokFun() ).toBeUndefined(); // What: Token Deleted. Why: A dead token would fail every push. How: This expects it gone.
 
