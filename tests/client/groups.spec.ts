@@ -215,13 +215,14 @@ test( 'creating a group writes the group, its owner with a wrapped key and encry
 
 	const accDatObj = await reaDocFun( `accounts/${ resValObj.uidValStr }` );                                                                       // What: Account Data Object. Why: The group takes an owned slot. How: This reads the account.
 	const groDatObj = await reaDocFun( `groups/${ resValObj.groIdeStr }` );                                                                         // What: Group Data Object. Why: The group itself. How: This reads it.
-	const memDatObj = await reaDocFun( `groups/${ resValObj.groIdeStr }/members/${ resValObj.uidValStr }` ) as Record< string, Bytes > | undefined; // What: Member Data Object. Why: The creator's membership. How: This reads it. // What: Type Assertion Note. Why: The fields checked here are all bytes. How: The as reads them as such.
+	const memDatObj = await reaDocFun( `groups/${ resValObj.groIdeStr }/members/${ resValObj.uidValStr }` ) as ( Record< string, Bytes > & { colorSlot : number } ) | undefined; // What: Member Data Object. Why: The creator's membership. How: This reads it. // What: Type Assertion Note. Why: The fields checked here are bytes, besides the color slot's number. How: The as reads them as such.
 	const invDatObj = await reaDocFun( `invites/${ groDatObj?.currentInviteToken }` );                                                              // What: Invite Data Object. Why: The group's first invite. How: This reads the one the group names.
 
 	expect( groDatObj ).toMatchObject( { chatTtlDays : 30, countedUid : resValObj.uidValStr, memberCount : 1, name : 'Beach Day 🏖️', ownerUid : resValObj.uidValStr, pendingOwnerUid : null, removedUids : {} } ); // What: Group Fields. Why: A new group starts with its creator as owner and only member. How: This expects its starting values.
 	expect( invDatObj ).toMatchObject( { groupId : resValObj.groIdeStr, groupName : 'Beach Day 🏖️' } ); // What: Invite Fields. Why: The link opens this group and shows its name. How: This expects both.
 	expect( accDatObj?.ownedGroups ).toEqual( { [ resValObj.groIdeStr ] : true } );                     // What: Owned Slot. Why: The group counts against the creator's caps. How: This expects it in the owned map alone.
 	expect( memDatObj?.wrappedGroupKey.toUint8Array().length ).toBe( 105 );                             // What: Wrap Length. Why: A wrap is the throwaway public key and the wrapped key. How: This expects 105 bytes.
+	expect( memDatObj?.colorSlot ).toBe( 0 );                                                           // What: Color Slot. Why: The creator wears the first member color. How: This expects slot 0.
 	expect( memDatObj?.iv.toUint8Array().length ).toBe( 12 );                                           // What: IV Length. Why: The name's IV is 12 bytes. How: This expects 12.
 	expect( await decNamFun( resValObj ) ).toBe( 'Ålice' );                                             // What: Name Decrypted. Why: The creator's name is stored encrypted and opens with the group key. How: This expects the name back.
 

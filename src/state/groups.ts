@@ -149,6 +149,7 @@ const groCreFun = async ( groNamStr : string, perNamStr : string ) : Promise< st
 	batWriObj.set( doc( fstDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), { // What: Member Set Call. Why: The creator is the first member. How: This writes their membership with the wrapped key and encrypted name.
 
 
+		colorSlot       : 0,
 		displayNameEnc  : Bytes.fromUint8Array( namEncObj.cipTexArr ),
 		iv              : Bytes.fromUint8Array( namEncObj.iniVecArr ),
 		joinedAt        : serverTimestamp(),

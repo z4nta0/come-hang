@@ -652,18 +652,19 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region valMemFun
 
-		function valMemFun () { // What: Valid Member Function. Why: A new member document holds the wrapped group key and real times, plus the optional encrypted name. How: This checks the incoming document's fields, types, and times.
+		function valMemFun () { // What: Valid Member Function. Why: A new member document holds the wrapped group key, real times, and a member color, plus the optional encrypted name. How: This checks the incoming document's fields, types, and times.
 
 
 			let memDatObj = request.resource.data; // What: Member Data Object. Why: Every check reads the incoming document. How: This names it once.
 
-			let fieOnlBoo = memDatObj.keys().hasOnly( [ 'displayNameEnc', 'iv', 'joinedAt', 'lastActiveAt', 'wrappedGroupKey' ] );                 // What: Fields Only Boolean. Why: A field the app doesn't write has no business in the document. How: This allows only the five named fields.
+			let colSloBoo = memDatObj.colorSlot is int && memDatObj.colorSlot >= 0 && memDatObj.colorSlot <= 49;                                   // What: Color Slot Boolean. Why: A member wears one of the 50 member colors (Section 11.3), and the range keeps the field from holding anything else. How: This checks the type, then the range, which the type check guards.
+			let fieOnlBoo = memDatObj.keys().hasOnly( [ 'colorSlot', 'displayNameEnc', 'iv', 'joinedAt', 'lastActiveAt', 'wrappedGroupKey' ] );    // What: Fields Only Boolean. Why: A field the app doesn't write has no business in the document. How: This allows only the six named fields.
 			let joiTimBoo = memDatObj.joinedAt == request.time;                                                                                    // What: Joined Time Boolean. Why: The join time gates which chat history a member sees (Section 11.7), so it has to be real. How: This requires the server's own time.
 			let lasTimBoo = memDatObj.lastActiveAt == request.time;                                                                                // What: Last Time Boolean. Why: A new member is active now. How: This requires the server's own time.
 			let namValBoo = valNamFun( memDatObj );                                                                                                // What: Name Valid Boolean. Why: The encrypted name keeps its shape. How: This checks it.
 			let wraKeyBoo = memDatObj.wrappedGroupKey is bytes && memDatObj.wrappedGroupKey.size() > 0 && memDatObj.wrappedGroupKey.size() <= 256; // What: Wrapped Key Boolean. Why: A wrapped key fits in 256 bytes (Section 6), and the cap stops the field holding anything else. How: This checks the type, then the size, which the type check guards.
 
-			let valMemBoo = fieOnlBoo && joiTimBoo && lasTimBoo && namValBoo && wraKeyBoo; // What: Valid Member Boolean. Why: Every check has to pass. How: This combines them.
+			let valMemBoo = colSloBoo && fieOnlBoo && joiTimBoo && lasTimBoo && namValBoo && wraKeyBoo; // What: Valid Member Boolean. Why: Every check has to pass. How: This combines them.
 
 
 
@@ -681,12 +682,13 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		function creMemFun ( groIdeStr, uidValStr ) { // What: Create Member Function. Why: For now a member document is created only for the owner, as the group is created. How: This is true for the requester's own valid membership in a group they're creating in the same batch.
 
 
+			let colFirBoo = request.resource.data.colorSlot == 0;                          // What: Color First Boolean. Why: The creator is the group's first member, so the lowest slot is theirs (Section 11.3). How: This requires slot 0.
 			let groNewBoo = !exists( groPatFun( groIdeStr ) );                             // What: Group New Boolean. Why: This path is the group's creation, before any member exists. How: This requires the group not to exist before the batch.
 			let groOwnBoo = getAfter( groPatFun( groIdeStr ) ).data.ownerUid == uidValStr; // What: Group Owner Boolean. Why: Only the creator becomes the first member. How: This requires the new group's owner to be this member.
 			let isaOwnBoo = isaOwnFun( uidValStr );                                        // What: Is-An Owner Boolean. Why: A creator writes only their own membership. How: This checks the requester is the member.
 			let valMemBoo = valMemFun();                                                   // What: Valid Member Boolean. Why: The document keeps its shape. How: This checks it.
 
-			let creAllBoo = groNewBoo && groOwnBoo && isaOwnBoo && valMemBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+			let creAllBoo = colFirBoo && groNewBoo && groOwnBoo && isaOwnBoo && valMemBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
 
 
 

@@ -66,7 +66,7 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: Activity is
 
 // #region Helpers
 
-type MemRecTyp = { joiTimNum : number, namTexStr : string, uidValStr : string }; // What: Member Record Type. Why: The member list shows each person's name and when they joined. How: This types one member as memLisFun lists them.
+type MemRecTyp = { colSloNum : number, joiTimNum : number, namTexStr : string, uidValStr : string }; // What: Member Record Type. Why: The member list shows each person's name, color, and when they joined. How: This types one member as memLisFun lists them.
 
 // #region memLisFun
 
@@ -75,7 +75,8 @@ type MemRecTyp = { joiTimNum : number, namTexStr : string, uidValStr : string };
  *
  * @summary
  * Resolves with a group's members, longest-standing first, each with their
- * name decrypted under the group key. A name that's missing or won't
+ * color slot and their name decrypted under the group key, a slot that isn't
+ * a whole number reading as 0. A name that's missing or won't
  * decrypt, such as one a member wrote under the wrong key, comes back
  * empty, so one bad name can't hide the rest.
  *
@@ -111,9 +112,10 @@ const memLisFun = async ( groIdeStr : string ) : Promise< MemRecTyp[] > => { // 
 		return { // What: Record Return. Why: Each membership becomes one record. How: This returns its fields.
 
 
-			joiTimNum : ( memDocObj.get( 'joinedAt', { serverTimestamps : 'estimate' } ) as Timestamp ).toMillis(), // What: Joined Time Number. Why: The list orders members by how long they've been in. How: This reads the join time, estimating one the server hasn't confirmed yet. // What: Type Assertion Note. Why: The rules store the time as a timestamp. How: The as reads it as one.
-			namTexStr,                                                                                              // What: Name Text String. Why: Members recognize each other by it. How: This holds the decrypted name, empty when there's none.
-			uidValStr : memDocObj.id                                                                                // What: UID Value String. Why: Removing a member names them. How: This reads the membership's ID, the member's UID.
+			colSloNum : Number.isInteger( memDocObj.get( 'colorSlot' ) ) ? memDocObj.get( 'colorSlot' ) as number : 0, // What: Color Slot Number. Why: Each member wears their own color (Section 11.3). How: This reads their slot, 0 when it isn't a whole number. // What: Type Assertion Note. Why: The check before it proves the slot is a whole number. How: The as reads it as one.
+			joiTimNum : ( memDocObj.get( 'joinedAt', { serverTimestamps : 'estimate' } ) as Timestamp ).toMillis(),    // What: Joined Time Number. Why: The list orders members by how long they've been in. How: This reads the join time, estimating one the server hasn't confirmed yet. // What: Type Assertion Note. Why: The rules store the time as a timestamp. How: The as reads it as one.
+			namTexStr,                                                                                                 // What: Name Text String. Why: Members recognize each other by it. How: This holds the decrypted name, empty when there's none.
+			uidValStr : memDocObj.id                                                                                   // What: UID Value String. Why: Removing a member names them. How: This reads the membership's ID, the member's UID.
 
 
 		};

@@ -379,12 +379,15 @@ const reqAppFun = async ( groIdeStr : string, joiUidStr : string ) : Promise< vo
 
 	const { fstDatObj } = firGetFun(); // What: Firestore Data Object. Why: The approval reads and writes Firestore. How: This reads the service.
 
-	const groKeyObj = await keyLoaFun( groIdeStr );                                                          // What: Group Key Object. Why: The joiner gets the group's own key. How: This loads it.
-	const useSnaObj = await getDoc( doc( fstDatObj, `users/${ joiUidStr }` ) );                              // What: User Snapshot Object. Why: The key is wrapped for the joiner's published public key. How: This reads it.
-	const joiRawArr = ( useSnaObj.get( 'publicKey' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >; // What: Joiner Raw Array. Why: A wrap is made from the raw key. How: This reads its bytes. // What: Type Assertion Note. Why: The rules store the key as bytes, and toUint8Array returns an array over a plain buffer. How: The two as read them as such.
-	const wraKeyArr = await wraKeyFun( groKeyObj, joiRawArr );                                               // What: Wrapped Key Array. Why: Only the joiner can open their wrap. How: This wraps the key for them.
-	const groRefObj = doc( fstDatObj, `groups/${ groIdeStr }` );                                             // What: Group Reference Object. Why: The count rises with the membership. How: This names the group.
-	const reqRefObj = doc( fstDatObj, `groups/${ groIdeStr }/joinRequests/${ joiUidStr }` );                 // What: Request Reference Object. Why: The request supplies the name and ends with the approval. How: This names it.
+	const groKeyObj = await keyLoaFun( groIdeStr );                                                                          // What: Group Key Object. Why: The joiner gets the group's own key. How: This loads it.
+	const useSnaObj = await getDoc( doc( fstDatObj, `users/${ joiUidStr }` ) );                                              // What: User Snapshot Object. Why: The key is wrapped for the joiner's published public key. How: This reads it.
+	const joiRawArr = ( useSnaObj.get( 'publicKey' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >;                 // What: Joiner Raw Array. Why: A wrap is made from the raw key. How: This reads its bytes. // What: Type Assertion Note. Why: The rules store the key as bytes, and toUint8Array returns an array over a plain buffer. How: The two as read them as such.
+	const wraKeyArr = await wraKeyFun( groKeyObj, joiRawArr );                                                               // What: Wrapped Key Array. Why: Only the joiner can open their wrap. How: This wraps the key for them.
+	const memSnaObj = await getDocs( collection( fstDatObj, `groups/${ groIdeStr }/members` ) );                             // What: Members Snapshot Object. Why: The joiner's color is the lowest slot no member holds (Section 11.3). How: This reads the memberships.
+	const useSloSet = new Set( memSnaObj.docs.map( ( memDocObj ) : unknown => memDocObj.get( 'colorSlot' ) ) );              // What: Used Slot Set. Why: A slot already worn isn't free. How: This collects every member's slot.
+	const colSloNum = [ ...Array( 50 ).keys() ].find( ( sloIndNum ) => !useSloSet.has( sloIndNum ) ) ?? memSnaObj.size % 50; // What: Color Slot Number. Why: Members should be told apart by color while the group has room, which the 50 member cap always leaves. How: This takes the lowest free slot, wrapping round by the member count should none be free.
+	const groRefObj = doc( fstDatObj, `groups/${ groIdeStr }` );                                                             // What: Group Reference Object. Why: The count rises with the membership. How: This names the group.
+	const reqRefObj = doc( fstDatObj, `groups/${ groIdeStr }/joinRequests/${ joiUidStr }` );                                 // What: Request Reference Object. Why: The request supplies the name and ends with the approval. How: This names it.
 
 
 	await runTransaction( fstDatObj, async ( traValObj ) => { // What: Approval Transaction. Why: Two approvals at once must not count the group to the same number. How: This reads the request and the count, then writes every change together, retrying on a conflict.
@@ -401,9 +404,10 @@ const reqAppFun = async ( groIdeStr : string, joiUidStr : string ) : Promise< vo
 		const namEncObj = await encTexFun( groKeyObj, reqSnaObj.get( 'nameText' ) as string ); // What: Name Encrypted Object. Why: The joiner's name starts as the one they asked with, encrypted, since the request holding it ends now (Section 17). How: This encrypts it under the group key. // What: Type Assertion Note. Why: The rules store the name as a string. How: The as reads it as one.
 
 
-		traValObj.set( doc( fstDatObj, `groups/${ groIdeStr }/members/${ joiUidStr }` ), { // What: Member Set Call. Why: The joiner becomes a member. How: This writes their membership with the wrapped key and encrypted name.
+		traValObj.set( doc( fstDatObj, `groups/${ groIdeStr }/members/${ joiUidStr }` ), { // What: Member Set Call. Why: The joiner becomes a member. How: This writes their membership with the wrapped key, encrypted name, and color slot.
 
 
+			colorSlot       : colSloNum,
 			displayNameEnc  : Bytes.fromUint8Array( namEncObj.cipTexArr ),
 			iv              : Bytes.fromUint8Array( namEncObj.iniVecArr ),
 			joinedAt        : serverTimestamp(),

@@ -237,7 +237,7 @@ const groBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : GbfOp
 
 
 
-	if ( optValObj.memObj !== null ) batWriObj.set( doc( stoConObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), { joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ), ...optValObj.memObj } ); // What: Member Write. Why: The creator is the first member. How: This adds their membership, with a 105-byte wrapped key, unless the test leaves it out.
+	if ( optValObj.memObj !== null ) batWriObj.set( doc( stoConObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), { colorSlot : 0, joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ), ...optValObj.memObj } ); // What: Member Write. Why: The creator is the first member. How: This adds their membership, in the first color slot with a 105-byte wrapped key, unless the test leaves it out.
 
 
 
@@ -412,7 +412,7 @@ const seeAppFun = async ( envTesObj : RulesTestEnvironment, memCouNum = 1, paiOw
 
 
 	await seeDocFun( envTesObj, 'groups/gro1', { chatTtlDays : 30, countedUid : 'alice', createdAt : Timestamp.fromMillis( 1000 ), currentInviteToken : TOK_ONE_STR, memberCount : memCouNum, name : GRO_NAM_STR, ownerUid : 'alice', pendingOfferedAt : null, pendingOwnerUid : null, removedUids : {} } ); // What: Group Seed. Why: The approval changes this group. How: This writes it at the chosen count.
-	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } ); // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
+	await seeDocFun( envTesObj, 'groups/gro1/members/alice', { colorSlot : 0, joinedAt : Timestamp.fromMillis( 1000 ), lastActiveAt : Timestamp.fromMillis( 1000 ), wrappedGroupKey : bytFilFun( 105 ) } ); // What: Owner Member Seed. Why: Alice approves as a member. How: This writes her membership.
 	await seeDocFun( envTesObj, 'accounts/alice', paiOwnBoo ? { memberGroups : {}, ownedGroups : { gro1 : true }, paid : true } : { memberGroups : {}, ownedGroups : { gro1 : true } } );    // What: Owner Account Seed. Why: The member cap follows the owner's paid status. How: This writes Alice's account, paid when asked.
 	await seeDocFun( envTesObj, `invites/${ TOK_ONE_STR }`, { createdAt : Timestamp.fromMillis( 1000 ), groupId : 'gro1', groupName : GRO_NAM_STR } );                                       // What: Invite Seed. Why: The group has its working invite. How: This writes it.
 
@@ -463,7 +463,7 @@ const appBatFun = ( stoConObj : StoConTyp, uidValStr : string, optValObj : AbfOp
 	const batWriObj = writeBatch( stoConObj ); // What: Batch Write Object. Why: The four writes have to land together. How: This starts the batch.
 
 
-	if ( optValObj.memObj !== null ) batWriObj.set( doc( stoConObj, `groups/gro1/members/${ uidValStr }` ), { joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ), ...optValObj.memObj } ); // What: Member Write. Why: The joiner becomes a member. How: This adds their membership unless the test leaves it out.
+	if ( optValObj.memObj !== null ) batWriObj.set( doc( stoConObj, `groups/gro1/members/${ uidValStr }` ), { colorSlot : 1, joinedAt : serverTimestamp(), lastActiveAt : serverTimestamp(), wrappedGroupKey : bytFilFun( 105 ), ...optValObj.memObj } ); // What: Member Write. Why: The joiner becomes a member. How: This adds their membership, in the second color slot, unless the test leaves it out.
 
 
 
@@ -1410,6 +1410,7 @@ test( 'a member document holds a bounded wrapped key and an optional encrypted n
 	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : { joinedAt : Timestamp.fromMillis( 1000 ) } } ) );                    // What: Backdated Join. Why: The join time gates chat history, so it has to be the server's. How: This expects a chosen time refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : { lastActiveAt : Timestamp.fromMillis( 1000 ) } } ) );                // What: Backdated Activity. Why: The last active time decides when ownership can be claimed, so it has to be the server's. How: This expects a chosen time refused.
 	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : { extra : true } } ) );                                               // What: Extra Field. Why: A membership holds only its own fields. How: This expects another refused.
+	await assertFails( groBatFun( aliStoObj, 'alice', { memObj : { colorSlot : 1 } } ) );                                              // What: Creator Later Slot. Why: The creator is the first member, so the first color is theirs. How: This expects slot 1 refused.
 	await assertSucceeds( groBatFun( aliStoObj, 'alice', { memObj : { displayNameEnc : bytFilFun( 136 ), iv : bytFilFun( 12 ) } } ) ); // What: Named Member. Why: The creator may write their name right away, and 136 bytes is the limit. How: This expects it allowed.
 
 
@@ -1703,6 +1704,10 @@ test( 'an approval missing or changing any part of its batch is refused', async 
 	await assertFails( appBatFun( aliStoObj, 'bob', { couNum : 2 } ) );                                           // What: Double Count. Why: One approval counts one member. How: This expects a rise of 2 refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { couStr : 'carol' } ) );                                     // What: Other Counted. Why: The count's change is for the joiner. How: This expects another UID refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { groObj : { name : 'New Name' } } ) );                       // What: Smuggled Rename. Why: An approval changes only the count. How: This expects a rename in the batch refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : { colorSlot : -1 } } ) );                          // What: Negative Slot. Why: The slots run from 0. How: This expects -1 refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : { colorSlot : 50 } } ) );                          // What: Slot Past Palette. Why: There are 50 member colors. How: This expects slot 50 refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : { colorSlot : 1.5 } } ) );                         // What: Fractional Slot. Why: A slot names one color. How: This expects 1.5 refused.
+	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : { colorSlot : '1' } } ) );                         // What: Text Slot. Why: A slot is a number. How: This expects text refused.
 	await assertFails( appBatFun( aliStoObj, 'bob', { memObj : { joinedAt : Timestamp.fromMillis( 1000 ) } } ) ); // What: Backdated Join. Why: The join time gates chat history. How: This expects a chosen time refused.
 	await assertSucceeds( appBatFun( aliStoObj, 'bob' ) );                                                        // What: Whole Approval. Why: The batches above failed only for their one part. How: This expects the whole batch allowed.
 
@@ -1803,6 +1808,7 @@ test( 'a member writes only their own encrypted name and activity time', async (
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { lastActiveAt : Timestamp.fromMillis( 9e12 ) } ) );               // What: Forged Activity. Why: The activity time decides when ownership can be claimed. How: This expects a chosen time refused.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { displayNameEnc : bytFilFun( 137 ) } ) );                         // What: Large Name. Why: A name encrypts to at most 136 bytes. How: This expects 137 refused.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { wrappedGroupKey : bytFilFun( 104 ) } ) );                        // What: Key Change. Why: The wrapped key is set by whoever let the member in. How: This expects a change refused.
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { colorSlot : 2 } ) );                                             // What: Color Change. Why: A member's color stays theirs for as long as they stay. How: This expects a change refused.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/members/bob' ), { joinedAt : serverTimestamp() } ) );                              // What: Join Time Change. Why: The join time gates chat history. How: This expects a change refused.
 	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1/members/bob' ), { displayNameEnc : bytFilFun( 40 ) } ) );                          // What: Other Name Write. Why: Only the member names themselves. How: This expects Alice refused.
 
