@@ -60,6 +60,7 @@ in `src/styles/styles.css`, with no placeholders left.
 ```
 npm run dev                  # Vite dev server, against the emulators
 npm run emulators            # the Emulator Suite the dev server uses
+npm run icons                # rebuild public/'s icons from design/brand
 npm run build                # type check, then production build to dist/
 npm run lint                 # ESLint across the repo
 npm run typecheck            # tsc -b, plus the Cloud Functions
@@ -70,6 +71,7 @@ npm run test:functions       # Cloud Functions, end to end in the emulators
 npm run test:interaction     # navigation and interaction feedback
 npm run test:rules           # Firestore, Realtime Database, and Storage rules
 npm run test:security        # headers policy, build secrets, npm audit
+npm run test:seo             # the head: icons, manifest, theme colors
 npm run test:worker          # the service worker, offline, in the build
 ```
 

@@ -20,6 +20,30 @@
 		<!-- #endregion Document -->
 
 
+		<!-- #region Web App -->
+
+		<link href='/manifest.webmanifest' rel='manifest' />                                <!-- What: Manifest Link. Why: Installing the app to a home screen reads its name, icons, and display mode from the manifest. How: This points at the hand-written manifest in public/. -->
+		<meta name='theme-color' content='#FFFFFF' media='(prefers-color-scheme: light)' /> <!-- What: Light Theme Color Meta. Why: Mobile browsers tint their bars around the page, and Discord edges its link previews in this color. How: This sets the header's white surface for a phone in light mode. -->
+		<meta name='theme-color' content='#1B1D38' media='(prefers-color-scheme: dark)' />  <!-- What: Dark Theme Color Meta. Why: The tinted bars should match the dark header too. How: This sets the header's navy surface for a phone in dark mode. -->
+
+		<!-- #endregion Web App -->
+
+
+		<!-- #region Icons -->
+
+		<link href='/favicon.svg' rel='icon' type='image/svg+xml' /> <!-- What: SVG Favicon Link. Why: Modern browsers draw a vector favicon sharp at every size. How: This points at the one-dot mark, rendered into public/ by npm run icons. -->
+		<link href='/favicon.ico' rel='icon' />                      <!-- What: ICO Favicon Link. Why: Browsers without SVG favicons fall back to the ICO, which also answers the /favicon.ico request browsers make on their own. How: This points at the ICO, holding the mark at 16, 32, and 48px. -->
+
+		<!-- #endregion Icons -->
+
+
+		<!-- #region Home Screen -->
+
+		<link href='/apple-touch-icon.png' rel='apple-touch-icon' sizes='180x180' /> <!-- What: Apple Touch Icon Link. Why: iOS draws the home screen icon, and some apps the icon beside a shared link, from this link. How: This points at the 180px icon on a square tile, which iOS rounds itself. -->
+
+		<!-- #endregion Home Screen -->
+
+
 	</head>
 
 

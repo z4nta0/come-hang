@@ -62,6 +62,7 @@ const SUI_NAM_ARR = [ // What: Suite Name Array. Why: Each suite lives in its ow
 	'accessibility', // What: Accessibility Suite. Why: The pre-commit accessibility scan runs from here. How: This names tests/accessibility.
 	'client',        // What: Client Suite. Why: The app's own code, its Firebase wiring and its encryption among it, is checked in each engine, since WebCrypto and IndexedDB differ between them. How: This names tests/client, which test:client runs in an emulator session of its own, with the Cloud Functions.
 	'interaction',   // What: Interaction Suite. Why: How moving between pages and using controls behaves is checked from here. How: This names tests/interaction.
+	'seo',           // What: SEO Suite. Why: What the head tells browsers, launchers, and link scrapers is checked from here. How: This names tests/seo.
 	'security',      // What: Security Suite. Why: The app's security policy, its build, and its dependencies are checked from here. How: This names tests/security.
 	'worker'         // What: Worker Suite. Why: The service worker runs only in a production build, which it caches so the app opens without a connection. How: This names tests/worker.
 
