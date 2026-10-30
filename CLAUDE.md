@@ -61,7 +61,7 @@ in `src/styles/styles.css`, with no placeholders left.
 npm run dev                  # Vite dev server, against the emulators
 npm run emulators            # the Emulator Suite the dev server uses
 npm run icons                # rebuild public/'s icons from design/brand
-npm run build                # type check, then production build to dist/
+npm run build                # type check what ships, then production build to dist/
 npm run lint                 # ESLint across the repo
 npm run og-image             # rebuild public/og-image.png from design/og-image
 npm run typecheck            # tsc -b, plus the Cloud Functions

@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "tsc -b && vite build",
+		"build": "tsc -b tsconfig.app.json tsconfig.node.json tsconfig.sw.json && vite build",
 		"dev": "vite",
 		"emulators": "npm --prefix functions run build && firebase emulators:start --only auth,functions,firestore,database,storage --project demo-come-hang",
 		"icons": "node design/icons/render.mts",
