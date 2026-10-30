@@ -63,6 +63,7 @@ npm run emulators            # the Emulator Suite the dev server uses
 npm run icons                # rebuild public/'s icons from design/brand
 npm run build                # type check, then production build to dist/
 npm run lint                 # ESLint across the repo
+npm run og-image             # rebuild public/og-image.png from design/og-image
 npm run typecheck            # tsc -b, plus the Cloud Functions
 npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
@@ -71,7 +72,7 @@ npm run test:functions       # Cloud Functions, end to end in the emulators
 npm run test:interaction     # navigation and interaction feedback
 npm run test:rules           # Firestore, Realtime Database, and Storage rules
 npm run test:security        # headers policy, build secrets, npm audit
-npm run test:seo             # the head: icons, manifest, theme colors
+npm run test:seo             # the head, its card and icons, the manifest, crawler files
 npm run test:worker          # the service worker, offline, in the build
 ```
 
@@ -121,7 +122,14 @@ emulators need Java, 21 installed.
   root, which a signed-out visitor meets as the landing, and the legal
   pages) are indexed; every screen behind identity or holding personal data
   carries `noindex`. Live URL: https://comehang.app (domain
-  registered 2026-10-22, not yet deployed).
+  registered 2026-10-22, not yet deployed). Since the app answers at one
+  address, `index.html` holds the one title, description, and canonical
+  (decided 2026-10-30): "Come Hang: plan get-togethers with your group",
+  described as "Plan get-togethers with your group in one place: chat, set
+  the date, see who's bringing what, and find each other on the day." The
+  sitemap lists the root, and the legal pages join it when they're written.
+  The social preview card is `public/og-image.png`, rendered from
+  `design/og-image/card.html` by `npm run og-image`.
 - **Support email**: support@comehang.app.
 - **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
   first file), and `vite-plugin-pwa`, building the app's one service

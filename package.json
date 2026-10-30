@@ -9,6 +9,7 @@
 		"emulators": "npm --prefix functions run build && firebase emulators:start --only auth,functions,firestore,database,storage --project demo-come-hang",
 		"icons": "node design/icons/render.mts",
 		"lint": "eslint .",
+		"og-image": "node design/og-image/render.mts",
 		"preview": "vite preview",
 		"test": "firebase emulators:exec --only firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'accessibility-*' --project 'interaction-*' --project 'security-*' --project 'seo-*' --project 'worker-*' --project rules\" && npm run test:client && npm run test:functions",
 		"test:accessibility": "playwright test --config tests/playwright.config.ts --project \"accessibility-*\"",

@@ -7,7 +7,8 @@ import { expect } from '@playwright/test'; // What: Expect. Why: Each check pass
 import { test   } from '@playwright/test'; // What: Test. Why: Each part of the head is its own test. How: This declares them.
 
 
-import type { APIRequestContext } from '@playwright/test'; // What: API Request Context. Why: The helper fetches files the way a browser or a scraper would. How: This types the request client.
+import type { APIRequestContext } from '@playwright/test'; // What: API Request Context. Why: The helpers fetch files the way a browser or a scraper would. How: This types the request client.
+import type { Page              } from '@playwright/test'; // What: Page. Why: A helper parses fetched HTML in a test's page. How: This types it.
 
 // #endregion Imports
 
@@ -17,11 +18,13 @@ import type { APIRequestContext } from '@playwright/test'; // What: API Request 
  * head.spec.ts = Head Spec
  *
  * @summary
- * Checks what the page's head tells browsers, launchers, and link scrapers,
- * in each engine: the icons it links and the web app manifest. Each linked
- * file is fetched from the server and checked as what the head says it is,
- * a PNG by its own stated width and height, so a stale or missing icon fails
- * here rather than on someone's home screen.
+ * Checks what the page's head tells browsers, launchers, search engines, and
+ * link scrapers, in each engine: its title and description as a scraper reads
+ * the raw file, its canonical address, the social preview tags and their card,
+ * the icons it links, the web app manifest, and the crawler files. Each linked
+ * file is fetched from the server and checked as what the head says it is, a
+ * PNG by its own stated width and height, so a stale or missing file fails
+ * here rather than in a search result, a shared link, or a home screen.
  *
  * Sections:
  *  - Helpers
@@ -83,11 +86,132 @@ async function pngSizFun ( reqCotObj : APIRequestContext, patValStr : string ) :
 
 // #endregion pngSizFun
 
+// #region rawHeaFun
+
+/**
+ * rawHeaFun = Raw Head Function
+ *
+ * @summary
+ * Fetches the page's HTML as a scraper would, without running its scripts,
+ * and resolves with what its head says: the title, every description, and
+ * the canonical address. The text is parsed in the page's own HTML parser.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param pagValObj - Page Value Object: The page whose parser reads the HTML.
+ * @param reqCotObj - Request Context Object: The client to fetch with.
+ *
+ * @returns A promise that resolves with the head's title, descriptions, and
+ *          canonical address.
+ *
+ * @example
+ * ```ts
+ * rawHeaFun(page, request) // => { canHreStr, desTexArr, titTexStr }
+ * ```
+ *
+*/
+
+async function rawHeaFun ( pagValObj : Page, reqCotObj : APIRequestContext ) : Promise< { canHreStr : string | null, desTexArr : string[], titTexStr : string } > {
+
+
+	const rawHtmStr = await ( await reqCotObj.get( '/' ) ).text(); // What: Raw HTML String. Why: Link checkers and many crawlers read the file and never run the app. How: This fetches it as text.
+
+
+
+	return pagValObj.evaluate( ( htmTexStr ) => { // What: Head Read Return. Why: The tags are read the way a parser sees them. How: This parses the text in the page and reads the tags.
+
+
+		const docValObj = new DOMParser().parseFromString( htmTexStr, 'text/html' ); // What: Document Value Object. Why: The raw text has to become a document to query. How: This parses it as HTML, running nothing.
+
+
+
+		return { // What: Head Fields Return. Why: The test checks each field. How: This returns them.
+
+
+			canHreStr : docValObj.querySelector( "link[rel='canonical']" )?.getAttribute( 'href' ) ?? null,                                                // What: Canonical Href String. Why: Search engines credit the page to this address. How: This reads it, or null when missing.
+			desTexArr : [ ...docValObj.querySelectorAll( "meta[name='description']" ) ].map( ( metCurEle ) => metCurEle.getAttribute( 'content' ) ?? '' ), // What: Description Text Array. Why: There should be exactly one description. How: This lists every one.
+			titTexStr : docValObj.title // What: Title Text String. Why: Scrapers show this title. How: This reads it.
+
+
+		};
+
+
+	}, rawHtmStr );
+
+
+}
+
+// #endregion rawHeaFun
+
 // #endregion Helpers
 
 
 
 // #region Module Init
+
+test( 'the raw page carries the full title, one description of 120 to 125 characters, and the canonical address', async ( { page, request } ) => { // What: Raw Head Test. Why: Link checkers and many crawlers read only the file, never what the app renders. How: This reads the raw page's head and checks the title, the description's count and length, and the canonical address.
+
+
+	await page.goto( '/' ); // What: Home Visit. Why: The raw HTML is parsed in a page. How: This opens the app.
+
+
+	const rawHeaObj = await rawHeaFun( page, request ); // What: Raw Head Object. Why: The checks read the head as a scraper does. How: This fetches and parses it.
+
+
+	expect( rawHeaObj.titTexStr ).toBe( 'Come Hang: plan get-togethers with your group' ); // What: Title Assertion. Why: Search results and cards name the app and what it's for. How: This reads the raw title.
+	expect( rawHeaObj.desTexArr.length ).toBe( 1 );                                        // What: One Description Assertion. Why: Two descriptions leave a scraper to guess. How: This counts them.
+	expect( rawHeaObj.desTexArr[ 0 ].length ).toBeGreaterThanOrEqual( 120 );               // What: Description Minimum Assertion. Why: Preview checkers flag a description under 120 characters as short. How: This checks its length.
+	expect( rawHeaObj.desTexArr[ 0 ].length ).toBeLessThanOrEqual( 125 );                  // What: Description Maximum Assertion. Why: Phone cards cut a summary off around 125 characters. How: This checks its length.
+	expect( rawHeaObj.canHreStr ).toBe( 'https://comehang.app/' );                         // What: Canonical Assertion. Why: Search engines credit the app to its live root. How: This reads the canonical address.
+
+
+} );
+
+
+
+test( 'the social preview tags are all present with absolute addresses, and the card is a 1,200x630 PNG under 300 KB', async ( { page, request } ) => { // What: Social Preview Test. Why: A shared link should show a proper card in every app. How: This reads every Open Graph and Twitter tag, checks the addresses are absolute, and fetches the card to check its type, size, and dimensions.
+
+
+	await page.goto( '/' ); // What: Home Visit. Why: The tags are read as the browser sees them. How: This opens the app.
+
+
+	const tagValObj = await page.evaluate( () => Object.fromEntries( [ ...document.querySelectorAll( "meta[property^='og:'], meta[name^='twitter:']" ) ].map( ( metCurEle ) => [ metCurEle.getAttribute( 'property' ) ?? metCurEle.getAttribute( 'name' ), metCurEle.getAttribute( 'content' ) ] ) ) ); // What: Tag Value Object. Why: Each tag is checked by its name. How: This maps every Open Graph and Twitter tag to its content.
+	const carResObj = await request.get( '/og-image.png' ); // What: Card Response Object. Why: The card has to be served. How: This fetches it from the server's root, where the live address points.
+
+
+	const carBytBuf = await carResObj.body(); // What: Card Bytes Buffer. Why: The card's size and dimensions are read from its bytes. How: This reads the body.
+
+
+	expect( Object.keys( tagValObj ).sort() ).toEqual( [ 'og:description', 'og:image', 'og:image:alt', 'og:image:height', 'og:image:type', 'og:image:width', 'og:locale', 'og:site_name', 'og:title', 'og:type', 'og:url', 'twitter:card', 'twitter:description', 'twitter:image', 'twitter:image:alt', 'twitter:title' ] ); // What: Tag Set Assertion. Why: Every app reads its own subset, so each one has to be there. How: This compares the names present with the full set.
+	expect( tagValObj[ 'og:image' ] ).toBe( 'https://comehang.app/og-image.png' );                                                          // What: Image Address Assertion. Why: Scrapers need an absolute address. How: This checks the card's address.
+	expect( tagValObj[ 'twitter:image' ] ).toBe( tagValObj[ 'og:image' ] );                                                                 // What: Same Image Assertion. Why: Every app should show the same card. How: This compares the two image tags.
+	expect( tagValObj[ 'og:url' ] ).toBe( 'https://comehang.app/' );                                                                        // What: URL Assertion. Why: The card credits the app's one address. How: This checks it.
+	expect( tagValObj[ 'twitter:card' ] ).toBe( 'summary_large_image' );                                                                    // What: Card Kind Assertion. Why: X shows the large image only when asked. How: This checks the card kind.
+	expect( carResObj.ok() ).toBe( true );                                                                                                  // What: Card Served Assertion. Why: A missing card leaves a bare link. How: This checks the request succeeded.
+	expect( carBytBuf.length ).toBeLessThan( 300 * 1024 );                                                                                  // What: Card Size Assertion. Why: WhatsApp drops a preview image of 300 KB or more. How: This checks the bytes.
+	expect( await pngSizFun( request, '/og-image.png' ) ).toBe( `${ tagValObj[ 'og:image:width' ] }x${ tagValObj[ 'og:image:height' ] }` ); // What: Card Dimensions Assertion. Why: The tags state the card's size, which apps lay out before it loads. How: This compares the PNG's own size with the tags.
+	expect( tagValObj[ 'og:image:width' ] ).toBe( '1200' );                                                                                 // What: Card Width Assertion. Why: Cards are 1,200 pixels wide. How: This reads the width tag.
+
+
+} );
+
+
+
+test( 'robots.txt lets crawlers in and names the sitemap, which lists the canonical root', async ( { request } ) => { // What: Crawler Files Test. Why: Search engines read these two files before the pages. How: This fetches both and checks what each says.
+
+
+	const robTexStr = await ( await request.get( '/robots.txt' ) ).text();  // What: Robots Text String. Why: Crawlers obey this file. How: This fetches it.
+	const sitTexStr = await ( await request.get( '/sitemap.xml' ) ).text(); // What: Sitemap Text String. Why: Crawlers find the indexed pages here. How: This fetches it.
+
+
+	expect( robTexStr ).toContain( 'Allow: /' );                                  // What: Allow Assertion. Why: The public addresses should be found. How: This checks the allow line.
+	expect( robTexStr ).toContain( 'Sitemap: https://comehang.app/sitemap.xml' ); // What: Sitemap Line Assertion. Why: Crawlers find the sitemap through robots.txt. How: This checks its absolute address.
+	expect( sitTexStr ).toContain( '<loc>https://comehang.app/</loc>' );          // What: Root Entry Assertion. Why: The sitemap lists the canonical root. How: This checks its entry.
+
+
+} );
+
+
 
 test( 'the head links the SVG and ICO favicons and the touch icon, each served as what it says it is', async ( { page, request } ) => { // What: Icon Links Test. Why: Browsers, iOS, and some link previews show these icons. How: This reads each icon link from the head and checks the file it points at.
 

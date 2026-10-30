@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'><!-- What: URL Set Element. Why: Search engines read the sitemap to find every page worth indexing. How: This holds one entry per indexable page, in the sitemaps.org format. -->
+
+
+	<url><!-- What: Root URL Element. Why: The app answers at its root, which a signed-out visitor meets as its landing. How: This lists it by its canonical address. -->
+
+
+		<loc>https://comehang.app/</loc><!-- What: Root Location Element. Why: The entry has to name the page's address. How: This gives the canonical address, matching the page's canonical link. -->
+
+
+	</url>
+
+
+</urlset>

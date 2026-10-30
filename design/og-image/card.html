@@ -1,0 +1,185 @@
+
+
+
+<!doctype html><!-- What: Document Type Declaration. Why: Browsers render the page in standards mode only with a doctype. How: This declares HTML5. -->
+
+
+
+<html lang='en'><!-- What: Root HTML Element. Why: The card is set in English text. How: This marks the document as English. -->
+
+
+	<head><!-- What: Document Head Element. Why: The card's fonts and layout load before it's captured. How: This holds them in the sections below. -->
+
+
+		<!-- #region Document -->
+
+		<meta charset='UTF-8' />                       <!-- What: Character Set Meta. Why: The card's text has to decode as UTF-8. How: This sits first in the head. -->
+		<title>Come Hang Social Preview Card</title> <!-- What: Page Title Element. Why: The file should say what it is when opened in a browser. How: This names the card. -->
+
+		<!-- #endregion Document -->
+
+
+		<!-- #region Card Styles -->
+
+		<style>/* What: Card Style Element. Why: The card is one fixed-size image, styled here from the app's own fonts and tokens. How: This imports the app's font faces and global stylesheet, then lays the card out on the app's scale, keeping literal pixels only for the image's fixed size and the avatars' places. */
+
+
+			@import url( '../../src/styles/fonts.css' );  /* What: App Fonts Import. Why: The card should be set in the app's own typefaces. How: This loads the app's font faces, whose file paths resolve from fonts.css itself. */
+			@import url( '../../src/styles/styles.css' ); /* What: App Styles Import. Why: The card should read the app's colors and scale rather than copies of them. How: This loads the app's global stylesheet, whose base element styles also make 1rem the app's 11px base. */
+
+
+
+			/* #region carBodBod */
+
+			.carBodBod { /* What: Card Body Body. Why: The card fills the whole 1,200x630 capture on the app's page color. How: This sizes it in literal pixels, the image's own fixed size, and centers its column both ways in a one-cell grid. */
+
+
+				background-color : var( --bac-pag-col ); /* Background Page Color = #F4F4FA */
+				display          : grid;
+				height           : 630px;
+				overflow         : hidden;
+				place-content    : center;
+				position         : relative;
+				width            : 1200px;
+
+
+			}
+
+
+			/* #region carColDiv */
+
+			.carColDiv { /* What: Card Column Div. Why: Some apps crop the card to its center square, so everything that matters sits inside the middle 630px. How: This stacks the mark, the name, and the tagline in named areas a tier 3 space apart, centered. */
+
+
+				display             : grid;
+				grid-template-areas : 'carMarIma' 'carNamHea' 'carTagPar';
+				justify-items       : center;
+				row-gap             : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+				text-align          : center;
+
+
+			}
+
+			.carMarIma { /* What: Card Mark Image. Why: The mark is what makes the card recognizable at a glance. How: This sets it square at a rhythm step tall enough to lead the card, in its own area at the top. */
+
+
+				grid-area : carMarIma;
+				height    : calc( var( --ver-rhy-p09 ) * 1rem ); /* Vertical Rhythm Base Plus 9 ~= 182.570px */
+				width     : calc( var( --ver-rhy-p09 ) * 1rem ); /* Vertical Rhythm Base Plus 9 ~= 182.570px */
+
+
+			}
+
+			.carNamHea { /* What: Card Name Heading. Why: The app's name is the card's main line, large enough to read at thumbnail size. How: This sets it as the wordmark, the brand font's extra bold, slightly tightened, in its own area. */
+
+
+				color          : var( --tex-mai-col );                    /* Text Main Color = #1D1E33 */
+				font-family    : var( --fon-fam-bra );                    /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+				font-size      : var( --fon-siz-p08 );                    /* Font Size Base Plus 8 ~= 104.323px */
+				font-weight    : 800;
+				grid-area      : carNamHea;
+				letter-spacing : calc( var( --cdn-pow-014-rec ) * -1em ); /* Core-Design-Number to the Power of 14 Reciprocal ~= -0.020em */
+
+
+			}
+
+			.carTagPar { /* What: Card Tagline Paragraph. Why: The tagline says what the app is for, still readable at thumbnail size. How: This sets it in the muted text color, semibold, on two lines in its own area below the name. */
+
+
+				color       : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+				font-size   : var( --fon-siz-p05 ); /* Font Size Base Plus 5 ~= 44.876px */
+				font-weight : 600;
+				grid-area   : carTagPar;
+				line-height : var( --ver-rhy-bas ); /* Vertical Rhythm Base ~= 1.325 */
+
+
+			}
+
+			/* #endregion carColDiv */
+
+
+
+			.carAvaSpa { /* What: Card Avatar Span. Why: Members' own pastel avatars give the card the app's playful touch, kept to the edges outside the center square. How: This draws a circle with initials in the member text color, each placed and colored by its own style. */
+
+
+				border-radius : 50%;
+				color         : var( --mem-tex-col ); /* Member Text Color = #221F1B */
+				display       : grid;
+				font-size     : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+				font-weight   : 700;
+				place-items   : center;
+				position      : absolute;
+
+
+			}
+
+			/* #endregion carBodBod */
+
+
+		</style>
+
+		<!-- #endregion Card Styles -->
+
+
+	</head>
+
+
+
+	<body class='carBodBod'><!-- What: Card Body Body Element. Why: The card is the whole page. How: This fills the 1,200x630 capture. -->
+
+
+		<div class='carColDiv'><!-- What: Card Column Div Element. Why: The mark, name, and tagline sit together in the center square. How: This stacks them. -->
+
+
+			<img
+				class='carMarIma'
+
+				src='../brand/icon.svg'
+
+				alt=''
+			/><!-- What: Card Mark Image Element. Why: The mark leads the card. How: This shows the app icon's source artwork, its alt empty since the card's own alt text describes the whole image. -->
+
+			<h1 class='carNamHea'>Come Hang</h1><!-- What: Card Name Heading Element. Why: The app's name is the main line. How: This sets it as the wordmark. -->
+
+			<p class='carTagPar'>Plan get-togethers<br />with your group</p><!-- What: Card Tagline Paragraph Element. Why: The tagline says what the app is for. How: This breaks it into two short lines that fit the center square. -->
+
+
+		</div>
+
+		<span
+			class='carAvaSpa'
+			style='background-color : var( --mem-001-col ); height : 120px; left : 80px; top : 70px; width : 120px'
+		>DL</span><!-- What: Card Avatar Span Element. Why: A member's avatar near the top left. How: This draws it in the first member color. -->
+
+		<span
+			class='carAvaSpa'
+			style='background-color : var( --mem-002-col ); height : 96px; left : 190px; top : 280px; width : 96px'
+		>SR</span><!-- What: Card Avatar Span Element. Why: A member's avatar at the left. How: This draws it in the second member color. -->
+
+		<span
+			class='carAvaSpa'
+			style='background-color : var( --mem-003-col ); height : 132px; left : 60px; top : 440px; width : 132px'
+		>PK</span><!-- What: Card Avatar Span Element. Why: A member's avatar near the bottom left. How: This draws it in the third member color. -->
+
+		<span
+			class='carAvaSpa'
+			style='background-color : var( --mem-004-col ); height : 132px; left : 1000px; top : 60px; width : 132px'
+		>JM</span><!-- What: Card Avatar Span Element. Why: A member's avatar near the top right. How: This draws it in the fourth member color. -->
+
+		<span
+			class='carAvaSpa'
+			style='background-color : var( --mem-005-col ); height : 96px; left : 920px; top : 290px; width : 96px'
+		>AN</span><!-- What: Card Avatar Span Element. Why: A member's avatar at the right. How: This draws it in the fifth member color. -->
+
+		<span
+			class='carAvaSpa'
+			style='background-color : var( --mem-006-col ); height : 120px; left : 1010px; top : 450px; width : 120px'
+		>TB</span><!-- What: Card Avatar Span Element. Why: A member's avatar near the bottom right. How: This draws it in the sixth member color. -->
+
+
+	</body>
+
+
+</html>
+
+

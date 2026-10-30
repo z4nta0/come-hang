@@ -1,23 +1,32 @@
 
 
 
-<!doctype html><!-- What: Document Type Declaration. Why: Browsers render the page in standards mode only with a doctype. How: This declares HTML5. -->
+<!doctype html> <!-- What: Document Type Declaration. Why: Browsers render the page in standards mode only with a doctype. How: This declares HTML5. -->
 
 
 
-<html lang='en'><!-- What: Root HTML Element. Why: Screen readers and translation tools need the page's language. How: This marks the document as English. -->
+<html lang='en'> <!-- What: Root HTML Element. Why: Screen readers and translation tools need the page's language. How: This marks the document as English. -->
 
 
-	<head><!-- What: Document Head Element. Why: The page's metadata loads before the body paints. How: This holds it in the section below. -->
+	<head> <!-- What: Document Head Element. Why: The page's metadata loads before the body paints. How: This holds it in the section below. -->
 
 
 		<!-- #region Document -->
 
 		<meta charset='UTF-8' />                                                 <!-- What: Character Set Meta. Why: The browser has to decode the page as UTF-8 before it reads anything else. How: This sits first in the head, inside the first 1,024 bytes the browser checks. -->
 		<meta name='viewport' content='width=device-width, initial-scale=1.0' /> <!-- What: Viewport Meta. Why: Phones should lay the app out at device width instead of a zoomed-out desktop width. How: This sets the layout width to the device's and starts at no zoom. -->
-		<title>Come Hang</title>                                                 <!-- What: Page Title Element. Why: The tab and bookmarks name the app by its title, and link checkers that never run the app's script read only this file. How: This names the app; the SEO pass gives it its full title. -->
+		<title>Come Hang: plan get-togethers with your group</title>             <!-- What: Page Title Element. Why: The tab, bookmarks, and search results name the app by its title, and link checkers that never run the app's script read only this file. How: This names the app and what it's for, under 60 characters. -->
 
 		<!-- #endregion Document -->
+
+
+		<!-- #region Search -->
+
+		<meta name='author' content='Come Hang' />            <!-- What: Author Meta. Why: Search engines and link tools can credit who made the app. How: This names the app itself, as a real product. -->
+		<meta name='description' content="Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day." /> <!-- What: Description Meta. Why: Search results and link checkers show this summary, and many read only this file. How: This says what the app does in 125 characters, the most a phone's card shows. -->
+		<link href='https://comehang.app/' rel='canonical' /> <!-- What: Canonical Link. Why: The app answers at one address, so search engines should credit every way of reaching it to that address. How: This names the live root. -->
+
+		<!-- #endregion Search -->
 
 
 		<!-- #region Web App -->
@@ -44,14 +53,42 @@
 		<!-- #endregion Home Screen -->
 
 
+		<!-- #region Open Graph -->
+
+		<meta property='og:description'  content="Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day." /> <!-- What: Open Graph Description Meta. Why: Shared links show a summary under the title. How: This repeats the page's description. -->
+		<meta property='og:image'        content='https://comehang.app/og-image.png' />             <!-- What: Open Graph Image Meta. Why: A shared link shows a card image. How: This points at the 1,200x630 card rendered by npm run og-image. -->
+		<meta property='og:image:alt'    content='The Come Hang mark, a map pin tipped over into a chat bubble, above the words Come Hang: plan get-togethers with your group.' /> <!-- What: Open Graph Image Alt Meta. Why: Screen readers in the apps that show the card read its text. How: This describes the card's mark and words. -->
+		<meta property='og:image:height' content='630' />                                           <!-- What: Open Graph Image Height Meta. Why: Apps lay the card out before it loads. How: This gives its height in pixels. -->
+		<meta property='og:image:type'   content='image/png' />                                     <!-- What: Open Graph Image Type Meta. Why: Some apps check the image's type before fetching it. How: This names it a PNG. -->
+		<meta property='og:image:width'  content='1200' />                                          <!-- What: Open Graph Image Width Meta. Why: Apps lay the card out before it loads. How: This gives its width in pixels. -->
+		<meta property='og:locale'       content='en_US' />                                         <!-- What: Open Graph Locale Meta. Why: The card's text is US English. How: This names the locale in Open Graph's form. -->
+		<meta property='og:site_name'    content='Come Hang' />                                     <!-- What: Open Graph Site Name Meta. Why: Some apps show the site's name above the title. How: This names the app. -->
+		<meta property='og:title'        content='Come Hang: plan get-togethers with your group' /> <!-- What: Open Graph Title Meta. Why: A shared link shows a title. How: This repeats the page's title. -->
+		<meta property='og:type'         content='website' />                                       <!-- What: Open Graph Type Meta. Why: Open Graph needs the kind of page. How: This marks it a website. -->
+		<meta property='og:url'          content='https://comehang.app/' />                         <!-- What: Open Graph URL Meta. Why: A shared card should credit the app's one address. How: This names the live root. -->
+
+		<!-- #endregion Open Graph -->
+
+
+		<!-- #region Twitter Card -->
+
+		<meta name='twitter:card'        content='summary_large_image' /> <!-- What: Twitter Card Meta. Why: X and apps reading its tags show a large image card only when asked. How: This asks for the large image card. -->
+		<meta name='twitter:description' content="Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day." /> <!-- What: Twitter Description Meta. Why: X shows a summary under the title. How: This repeats the page's description. -->
+		<meta name='twitter:image'       content='https://comehang.app/og-image.png' />                                                                                             <!-- What: Twitter Image Meta. Why: X shows the card image. How: This points at the same card as Open Graph. -->
+		<meta name='twitter:image:alt'   content='The Come Hang mark, a map pin tipped over into a chat bubble, above the words Come Hang: plan get-togethers with your group.' />  <!-- What: Twitter Image Alt Meta. Why: X reads the card's text to screen readers. How: This describes the card's mark and words. -->
+		<meta name='twitter:title'       content='Come Hang: plan get-togethers with your group' />                                                                                 <!-- What: Twitter Title Meta. Why: X shows a title. How: This repeats the page's title. -->
+
+		<!-- #endregion Twitter Card -->
+
+
 	</head>
 
 
 
-	<body><!-- What: Document Body Element. Why: This holds the app's mount point and the entry script. How: The mount point stays empty until React renders the app into it. -->
+	<body> <!-- What: Document Body Element. Why: This holds the app's mount point and the entry script. How: The mount point stays empty until React renders the app into it. -->
 
 
-		<div id='appMouDiv'></div><!-- What: App Mount Div Element. Why: React needs one element to render the app into. How: main.tsx renders the app into this id. -->
+		<div id='appMouDiv'></div> <!-- What: App Mount Div Element. Why: React needs one element to render the app into. How: main.tsx renders the app into this id. -->
 
 		<script
 			src='/src/main.tsx'
