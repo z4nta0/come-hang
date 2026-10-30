@@ -44,7 +44,7 @@
 .homNotPar { /* What: Home Note Paragraph. Why: The note is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area below the heading. */
 
 
-	color     : var( --tex-mut-col ); /* Text Muted Color = #59636e */
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
 	grid-area : homNotPar;
 	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
 

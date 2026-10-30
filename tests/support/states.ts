@@ -35,10 +35,11 @@ import type { Page } from '@playwright/test'; // What: Page. Why: Opening and se
 type StaRecTyp = { // What: State Record Type. Why: Every check reads the same description of a state. How: This names a state, its path, and its viewport.
 
 
-	heiNum : number, // What: Height Number. Why: The viewport's height decides what's on screen. How: This is the viewport height in CSS pixels.
-	ideStr : string, // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
-	patStr : string, // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
-	widNum : number  // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
+	heiNum  : number,           // What: Height Number. Why: The viewport's height decides what's on screen. How: This is the viewport height in CSS pixels.
+	ideStr  : string,           // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
+	patStr  : string,           // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
+	schStr? : 'dark' | 'light', // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
+	widNum  : number            // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
 };
@@ -56,14 +57,17 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  *
  * @summary
  * Every state the checks visit: each page at a phone width and a desktop
- * width. Every row shares the {@link StaRecTyp} shape, so its fields carry
- * no comments of their own:
+ * width, in light mode and again in dark. Every row shares the {@link
+ * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
  *
  * - `ideStr` (String): Identifier String, the state's name in test titles.
  *
  * - `patStr` (String): Path String, the route loaded from the suite's server.
+ *
+ * - `schStr` (String, optional): Scheme String, the phone's color scheme,
+ *   light when left out.
  *
  * - `widNum` (Number): Width Number, the viewport width in CSS pixels.
  *
@@ -74,8 +78,10 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every check walks the same list of states, so a new state is added in one place. How: Each row names a state, its path, and its viewport.
 
 
-	{ heiNum : 900, ideStr : 'home-desktop', patStr : '/', widNum : 1440 }, // What: Home Desktop State. Why: The home page is checked at a desktop width. How: This loads the home page at 1,440px.
-	{ heiNum : 844, ideStr : 'home-phone',   patStr : '/', widNum : 390  }  // What: Home Phone State. Why: The home page is checked at a phone width. How: This loads the home page at 390px.
+	{ heiNum : 900, ideStr : 'home-desktop',      patStr : '/', widNum : 1440                  }, // What: Home Desktop State. Why: The home page is checked at a desktop width. How: This loads the home page at 1,440px.
+	{ heiNum : 844, ideStr : 'home-phone',        patStr : '/', widNum : 390                   }, // What: Home Phone State. Why: The home page is checked at a phone width. How: This loads the home page at 390px.
+	{ heiNum : 900, ideStr : 'home-desktop-dark', patStr : '/', widNum : 1440, schStr : 'dark' }, // What: Home Desktop Dark State. Why: Dark mode is checked at a desktop width. How: This loads the home page at 1,440px with the phone set to dark.
+	{ heiNum : 844, ideStr : 'home-phone-dark',   patStr : '/', widNum : 390,  schStr : 'dark' }  // What: Home Phone Dark State. Why: Dark mode is checked at a phone width. How: This loads the home page at 390px with the phone set to dark.
 
 
 ];
@@ -154,10 +160,10 @@ async function waiSetFun ( curPagObj : Page ) : Promise< void > {
  * opeStaFun = Open State Function
  *
  * @summary
- * Opens one state on a page and waits until it's settled: sizes the
- * viewport, loads the path, waits for the web fonts, then waits until the
- * page stays still ({@link waiSetFun}), so a check never measures a heading
- * halfway through an entrance fade.
+ * Opens one state on a page and waits until it's settled: sets the phone's
+ * color scheme, sizes the viewport, loads the path, waits for the web fonts,
+ * then waits until the page stays still ({@link waiSetFun}), so a check never
+ * measures a heading halfway through an entrance fade.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -176,6 +182,8 @@ async function waiSetFun ( curPagObj : Page ) : Promise< void > {
 
 async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< void > {
 
+
+	await curPagObj.emulateMedia( { colorScheme : staRecObj.schStr ?? 'light' } ); // What: Color Scheme Call. Why: The state's colors depend on the phone's light or dark setting. How: This sets the page's preference before it loads, light unless the state names dark.
 
 	await curPagObj.setViewportSize( { height : staRecObj.heiNum, width : staRecObj.widNum } ); // What: Viewport Size Call. Why: The state's layout depends on its width. How: This sizes the page before it loads, so breakpoints apply from the first paint.
 

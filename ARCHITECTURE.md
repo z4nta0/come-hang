@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -917,6 +917,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 | `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
 | `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Written with the membership itself: the creator's as the group is created, and a joiner's by the approving member, who encrypts the name from the join request (Section 17). The rules also accept a membership without one, and the member may change it at any time. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
+| `colorSlot` | plaintext number, 0 to 49 | Which of the 50 member colors this member wears (decided 2026-10-29, not built yet): written with the membership, as the lowest slot no current member holds, so no two members share a color while the group has room, and kept for as long as they stay, so their color never changes. The creator's is 0. Two approvals at the same moment could pick the same slot, which only means two members share a color, so the rules check the range and not uniqueness. It reveals nothing beyond the order people joined in, which `joinedAt` already shows. |
 | `keyRequestedAt` | plaintext, absent unless asking | Set by the member alone, to the server's time, when the wrap won't open on a phone they were recovered onto, and removed by the member who answers by replacing `wrappedGroupKey` (Section 6). |
 
 A subcollection, not a map field on the group doc, specifically so many
@@ -1525,6 +1526,17 @@ the Blaze change.
     as a sheet with its details and bring-list.
   - **On the day of an event** the group leads with it: the pinned event
     offers the map, "I'm on my way", and "I've arrived" (Section 10).
+- Look (decided 2026-10-29): a periwinkle accent with a coral spark on a
+  cool off-white page, set in Bricolage Grotesque for headings and Figtree
+  for text, both self-hosted, so the app loads nothing from another origin.
+  Every member wears their own color from a palette of 50 (their
+  `colorSlot`, Section 11.3) on their avatar, their claims, and their status
+  lines.
+- Light and dark (decided 2026-10-29, built 2026-10-30 in
+  `src/platform/color-mode.ts`): every color holds a light and a dark value,
+  and the app follows the phone's setting unless someone picks light or dark,
+  which is kept on the device and applied as the app starts. Settings will
+  offer the choice.
 - Routing (decided 2026-10-25): the app answers at one address, its root,
   since it's an app rather than a website with pages to land on:
   - An address the app doesn't use is replaced with the root, so the address

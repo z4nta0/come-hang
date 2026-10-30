@@ -8,14 +8,17 @@
  * The app's one global stylesheet, holding only what belongs to the whole
  * app rather than to one component. Its Tokens region defines every design
  * token the modules read, the core design numbers first and then the rest,
- * such as the colors, which are placeholders until the visual design is
- * chosen. Its Base Elements region holds the reset and the bare element
- * styles, such as the focus ring every link and button shares. Each
- * component's own styles live in its CSS module instead.
+ * such as the colors, each holding its light and its dark value. Its Base
+ * Elements region holds the reset and the bare element styles, such as the
+ * focus ring every link and button shares. Its Body State region holds what
+ * the root element's attributes switch, such as a light or dark choice that
+ * overrides the phone's. Each component's own styles live in its CSS module
+ * instead.
  *
  * Sections:
  *  - Tokens
  *  - Base Elements
+ *  - Body State
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -139,31 +142,32 @@
 
 	/* CTRL+ALT+C to toggle color swatches on and off *Requires Extension Toggle by Peng Lv */
 
-	--acc-mai-col : #1f5bc4;              /* What: Accent Main Color. Why: This is the main accent, for actions and selection; it's a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #1f5bc4. */
-	--acc-sec-col : ;                     /* What: Accent Secondary Color. Why: The standard role set includes a second accent. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--acc-tin-col : ;                     /* What: Accent Tint Color. Why: The standard role set includes a pale tint of the main accent. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--att-rin-col : ;                     /* What: Attention Ring Color. Why: The standard role set includes an attention ring. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--bac-hov-col : ;                     /* What: Background Hover Color. Why: The standard role set includes a hover overlay. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--bac-inv-col : ;                     /* What: Background Inverse Color. Why: The standard role set includes a dark surface. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--bac-pag-col : #ffffff;              /* What: Background Page Color. Why: This is the page background; it's a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #ffffff. */
-	--bac-sur-col : ;                     /* What: Background Surface Color. Why: The standard role set includes a card and panel surface. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--bor-mai-col : ;                     /* What: Border Main Color. Why: The standard role set includes borders and dividers. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--err-dar-col : ;                     /* What: Error Dark Color. Why: The standard role set includes the error family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--err-mai-col : ;                     /* What: Error Main Color. Why: The standard role set includes the error family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--err-tin-col : ;                     /* What: Error Tint Color. Why: The standard role set includes the error family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--foc-rin-col : var( --acc-mai-col ); /* What: Focus Ring Color. Why: Keyboard focus rings need 3:1 against the page. How: This reads the main accent, which reaches about 6.3:1 on the white page. */
-	--scr-mai-col : ;                     /* What: Scrim Main Color. Why: The standard role set includes the scrim behind modals. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--sha-mai-col : ;                     /* What: Shadow Main Color. Why: The standard role set includes the color shadows cast. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--suc-dar-col : ;                     /* What: Success Dark Color. Why: The standard role set includes the success family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--suc-mai-col : ;                     /* What: Success Main Color. Why: The standard role set includes the success family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--suc-tin-col : ;                     /* What: Success Tint Color. Why: The standard role set includes the success family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--tex-acc-col : #ffffff;              /* What: Text Accent Color. Why: Text on the main accent has to reach 4.5:1, which white does at about 6.3:1; this is a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #ffffff. */
-	--tex-mai-col : #1f2328;              /* What: Text Main Color. Why: This is the main text color, which needs strong contrast on the page; it's a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #1f2328. */
-	--tex-mut-col : #59636e;              /* What: Text Muted Color. Why: Quieter text still has to reach 4.5:1 on the page, which this does at about 6.1:1; this is a neutral placeholder until the visual design is chosen. How: This is set to a fixed hex color, = #59636e. */
-	--tex-sec-col : ;                     /* What: Text Secondary Color. Why: The standard role set includes secondary text. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--war-dar-col : ;                     /* What: Warning Dark Color. Why: The standard role set includes the warning family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--war-mai-col : ;                     /* What: Warning Main Color. Why: The standard role set includes the warning family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
-	--war-tin-col : ;                     /* What: Warning Tint Color. Why: The standard role set includes the warning family. How: The visual design hasn't been chosen, so it stays empty until the design pass. */
+	--acc-mai-col : light-dark( #4A4FC9, #A2A6FF ); /* What: Accent Main Color. Why: This is the main accent, the brand's periwinkle, for actions and selection. How: This sets periwinkle in light mode and a lighter periwinkle in dark mode, each at least 5.8:1 on the page. */
+	--acc-sec-col : light-dark( #DD6248, #FF9A84 ); /* What: Accent Secondary Color. Why: This is the coral spark, for small live and attention details. How: This sets coral in light mode and a lighter coral in dark mode, each at least 3:1 on the page. */
+	--acc-tin-col : light-dark( #E7E8FA, #282B55 ); /* What: Accent Tint Color. Why: This is a pale tint of the main accent, behind accent text and selected items. How: This sets a pale periwinkle in light mode and a deep one in dark mode. */
+	--att-rin-col : light-dark( #DD6248, #FF9A84 ); /* What: Attention Ring Color. Why: This is the attention ring, the pulse that calls the eye to something. How: This sets the same coral as the second accent, kept as its own role so it can change apart. */
+	--bac-hov-col : light-dark( #ECEDF7, #24274A ); /* What: Background Hover Color. Why: This is the background a hovered row or plain control takes. How: This sets a shade just off the page in each mode. */
+	--bac-inv-col : light-dark( #1D1E33, #E9E9F7 ); /* What: Background Inverse Color. Why: This is the background of a surface set against the page, such as a short notice. How: This sets the main text color of each mode, so the surface reads opposite to the page. */
+	--bac-pag-col : light-dark( #F4F4FA, #12132A ); /* What: Background Page Color. Why: This is the page background. How: This sets a cool off-white in light mode and a deep navy in dark mode. */
+	--bac-sur-col : light-dark( #FFFFFF, #1B1D38 ); /* What: Background Surface Color. Why: This is the card and panel surface, a step off the page. How: This sets white in light mode and a raised navy in dark mode. */
+	--bor-mai-col : light-dark( #E0E1EF, #2D3058 ); /* What: Border Main Color. Why: This is the soft border for dividers and card edges, which separate rather than outline. How: This sets a line just off the page in each mode. */
+	--bor-str-col : light-dark( #83869F, #646896 ); /* What: Border Strong Color. Why: A field's border is often its only outline, so it needs 3:1 against the page. How: This sets a stronger line in each mode, at least 3:1 on the page. */
+	--err-dar-col : light-dark( #A12A2A, #FFB3B3 ); /* What: Error Dark Color. Why: This is the error family's text shade, readable on the page and on its tint. How: This sets a deep red in light mode and a pale red in dark mode, each at least 6:1 on the error tint. */
+	--err-mai-col : light-dark( #D14343, #FF7B7B ); /* What: Error Main Color. Why: This is the error family's main color, for badges, borders, and outlines. How: This sets a red in each mode, at least 4:1 on the page. */
+	--err-tin-col : light-dark( #FBE9E9, #3A1E2A ); /* What: Error Tint Color. Why: This is the error family's pale tint, behind an error badge or message. How: This sets a faint red in light mode and a deep one in dark mode. */
+	--foc-rin-col : var( --acc-mai-col );           /* What: Focus Ring Color. Why: Keyboard focus rings need 3:1 against the page. How: This reads the main accent, at least 5.8:1 on the page in both modes. */
+	--scr-mai-col : light-dark( #1D1E33, #000000 ); /* What: Scrim Main Color. Why: This is the scrim behind sheets and modals, which a use reads at an alpha. How: This sets the main text navy in light mode and black in dark mode. */
+	--sha-mai-col : light-dark( #1D1E33, #000000 ); /* What: Shadow Main Color. Why: This is the color every shadow casts, which each layer reads at its own alpha. How: This sets the main text navy in light mode and black in dark mode. */
+	--suc-dar-col : light-dark( #1D6B46, #A6EBC6 ); /* What: Success Dark Color. Why: This is the success family's text shade, readable on the page and on its tint. How: This sets a deep green in light mode and a pale green in dark mode, each at least 5.7:1 on the success tint. */
+	--suc-mai-col : light-dark( #2E9E6A, #5FD39B ); /* What: Success Main Color. Why: This is the success family's main color, for badges, borders, and outlines. How: This sets a green in each mode, at least 3:1 on the page. */
+	--suc-tin-col : light-dark( #E3F5EC, #183A2D ); /* What: Success Tint Color. Why: This is the success family's pale tint, behind a success badge or message. How: This sets a faint green in light mode and a deep one in dark mode. */
+	--tex-acc-col : light-dark( #FFFFFF, #15163A ); /* What: Text Accent Color. Why: Text on the main accent has to reach 4.5:1. How: This sets white in light mode and deep navy in dark mode, each at least 6.4:1 on the accent. */
+	--tex-mai-col : light-dark( #1D1E33, #E9E9F7 ); /* What: Text Main Color. Why: This is the main text color, which needs strong contrast on the page. How: This sets a deep navy in light mode and a soft white in dark mode, each at least 13:1 on the page and surface. */
+	--tex-mut-col : light-dark( #5A5D7E, #A3A6C9 ); /* What: Text Muted Color. Why: Quieter text, such as times and hints, still has to reach 4.5:1. How: This sets a muted slate in each mode, at least 5.4:1 on the page, surface, and hover background. */
+	--tex-sec-col : ;                               /* What: Text Secondary Color. Why: The standard role set includes secondary text. How: The design uses muted text instead, so it stays empty. */
+	--war-dar-col : light-dark( #7F5200, #F7D98C ); /* What: Warning Dark Color. Why: This is the warning family's text shade, readable on the page and on its tint. How: This sets a deep amber in light mode and a pale amber in dark mode, each at least 6:1 on the warning tint. */
+	--war-mai-col : light-dark( #B97700, #F2C14E ); /* What: Warning Main Color. Why: This is the warning family's main color, for badges, borders, and outlines. How: This sets an amber in each mode, at least 3:1 on the page. */
+	--war-tin-col : light-dark( #FBF1DC, #3A2F14 ); /* What: Warning Tint Color. Why: This is the warning family's pale tint, behind a warning badge or message. How: This sets a faint amber in light mode and a deep one in dark mode. */
 
 	/* #endregion Color Tokens */
 
@@ -284,6 +288,87 @@
 
 
 
+	/* #region Member Color Tokens */
+
+	/**
+	 * styles.css = Member Color Tokens
+	 *
+	 * @summary
+	 * Every member of a group gets their own color, carried by their avatar,
+	 * their claims on a bring-list, and their status lines in the chat. A
+	 * group holds up to 50 members, so the palette has 50 colors, enough for
+	 * every member of a group to have one of their own. Each color's hue turns
+	 * by the golden angle, about 137.5 degrees, from the one before it, so
+	 * neighboring colors always sit far apart on the color wheel, and each set
+	 * of ten shifts its lightness and strength a little from the set before,
+	 * so a later hue that lands near an earlier one still differs from it.
+	 * Each is a pastel in light mode and a deep shade in dark mode, computed
+	 * in OKLCH and brought inside sRGB by lowering its strength only as far as
+	 * needed.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	*/
+
+
+
+	--mem-001-col : light-dark( #FFC8C6, #723A3B ); /* What: Member 1 Color. Why: This is the member palette's color 1 of 50. How: This sets hue 20.0 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-002-col : light-dark( #AFE7C4, #1F5A3C ); /* What: Member 2 Color. Why: This is the member palette's color 2 of 50. How: This sets hue 157.5 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-003-col : light-dark( #DAD0FF, #504374 ); /* What: Member 3 Color. Why: This is the member palette's color 3 of 50. How: This sets hue 295.0 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-004-col : light-dark( #F7D0A1, #674511 ); /* What: Member 4 Color. Why: This is the member palette's color 4 of 50. How: This sets hue 72.5 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-005-col : light-dark( #9CE6F3, #005763 ); /* What: Member 5 Color. Why: This is the member palette's color 5 of 50. How: This sets hue 210.0 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-006-col : light-dark( #FEC4E1, #6C3A55 ); /* What: Member 6 Color. Why: This is the member palette's color 6 of 50. How: This sets hue 347.5 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-007-col : light-dark( #CCE1AB, #435420 ); /* What: Member 7 Color. Why: This is the member palette's color 7 of 50. How: This sets hue 125.0 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-008-col : light-dark( #C3D8FF, #354C79 ); /* What: Member 8 Color. Why: This is the member palette's color 8 of 50. How: This sets hue 262.6 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-009-col : light-dark( #FFCAB7, #713D2A ); /* What: Member 9 Color. Why: This is the member palette's color 9 of 50. How: This sets hue 40.1 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-010-col : light-dark( #A1E8D7, #005B4D ); /* What: Member 10 Color. Why: This is the member palette's color 10 of 50. How: This sets hue 177.6 in the palette's first set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-011-col : light-dark( #E1B9F3, #543263 ); /* What: Member 11 Color. Why: This is the member palette's color 11 of 50. How: This sets hue 315.1 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-012-col : light-dark( #DFCA86, #514100 ); /* What: Member 12 Color. Why: This is the member palette's color 12 of 50. How: This sets hue 92.6 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-013-col : light-dark( #8BD6FA, #004963 ); /* What: Member 13 Color. Why: This is the member palette's color 13 of 50. How: This sets hue 230.1 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-014-col : light-dark( #FEB2C0, #692B39 ); /* What: Member 14 Color. Why: This is the member palette's color 14 of 50. How: This sets hue 7.6 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-015-col : light-dark( #A6DBA7, #1E4E22 ); /* What: Member 15 Color. Why: This is the member palette's color 15 of 50. How: This sets hue 145.1 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-016-col : light-dark( #C2C4FF, #3C3A70 ); /* What: Member 16 Color. Why: This is the member palette's color 16 of 50. How: This sets hue 282.6 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-017-col : light-dark( #F7BD8F, #643500 ); /* What: Member 17 Color. Why: This is the member palette's color 17 of 50. How: This sets hue 60.1 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-018-col : light-dark( #7EDDDF, #004D4F ); /* What: Member 18 Color. Why: This is the member palette's color 18 of 50. How: This sets hue 197.6 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-019-col : light-dark( #F0B5E2, #5F2E55 ); /* What: Member 19 Color. Why: This is the member palette's color 19 of 50. How: This sets hue 335.1 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-020-col : light-dark( #CBD18C, #434600 ); /* What: Member 20 Color. Why: This is the member palette's color 20 of 50. How: This sets hue 112.7 in the palette's second set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-021-col : light-dark( #D1E7FF, #395B7E ); /* What: Member 21 Color. Why: This is the member palette's color 21 of 50. How: This sets hue 250.2 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-022-col : light-dark( #FFDBD6, #7A4842 ); /* What: Member 22 Color. Why: This is the member palette's color 22 of 50. How: This sets hue 27.7 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-023-col : light-dark( #C0F2DB, #2C644E ); /* What: Member 23 Color. Why: This is the member palette's color 23 of 50. How: This sets hue 165.2 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-024-col : light-dark( #EADEFF, #604E78 ); /* What: Member 24 Color. Why: This is the member palette's color 24 of 50. How: This sets hue 302.7 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-025-col : light-dark( #FAE1B8, #6C5327 ); /* What: Member 25 Color. Why: This is the member palette's color 25 of 50. How: This sets hue 80.2 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-026-col : light-dark( #B9EFFF, #1F6172 ); /* What: Member 26 Color. Why: This is the member palette's color 26 of 50. How: This sets hue 217.7 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-027-col : light-dark( #FFD9E6, #77475A ); /* What: Member 27 Color. Why: This is the member palette's color 27 of 50. How: This sets hue 355.2 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-028-col : light-dark( #D5EEC5, #496037 ); /* What: Member 28 Color. Why: This is the member palette's color 28 of 50. How: This sets hue 132.7 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-029-col : light-dark( #DBE4FF, #49567F ); /* What: Member 29 Color. Why: This is the member palette's color 29 of 50. How: This sets hue 270.2 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-030-col : light-dark( #FFDCCB, #784C35 ); /* What: Member 30 Color. Why: This is the member palette's color 30 of 50. How: This sets hue 47.7 in the palette's third set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-031-col : light-dark( #7EE7DA, #00544D ); /* What: Member 31 Color. Why: This is the member palette's color 31 of 50. How: This sets hue 185.2 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-032-col : light-dark( #F1BBF8, #5F3465 ); /* What: Member 32 Color. Why: This is the member palette's color 32 of 50. How: This sets hue 322.7 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-033-col : light-dark( #E0D385, #524800 ); /* What: Member 33 Color. Why: This is the member palette's color 33 of 50. How: This sets hue 100.3 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-034-col : light-dark( #A0D9FF, #004D71 ); /* What: Member 34 Color. Why: This is the member palette's color 34 of 50. How: This sets hue 237.8 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-035-col : light-dark( #FFBDC1, #722F37 ); /* What: Member 35 Color. Why: This is the member palette's color 35 of 50. How: This sets hue 15.3 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-036-col : light-dark( #9EE4B2, #0F562D ); /* What: Member 36 Color. Why: This is the member palette's color 36 of 50. How: This sets hue 152.8 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-037-col : light-dark( #D0C9FF, #483D77 ); /* What: Member 37 Color. Why: This is the member palette's color 37 of 50. How: This sets hue 290.3 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-038-col : light-dark( #FDC589, #663D00 ); /* What: Member 38 Color. Why: This is the member palette's color 38 of 50. How: This sets hue 67.8 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-039-col : light-dark( #7AE4F0, #005259 ); /* What: Member 39 Color. Why: This is the member palette's color 39 of 50. How: This sets hue 205.3 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-040-col : light-dark( #FFB8E2, #693055 ); /* What: Member 40 Color. Why: This is the member palette's color 40 of 50. How: This sets hue 342.8 in the palette's fourth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-041-col : light-dark( #D8E5B5, #4D5926 ); /* What: Member 41 Color. Why: This is the member palette's color 41 of 50. How: This sets hue 120.3 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-042-col : light-dark( #CAE0FF, #38537C ); /* What: Member 42 Color. Why: This is the member palette's color 42 of 50. How: This sets hue 257.8 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-043-col : light-dark( #FFD2C6, #764335 ); /* What: Member 43 Color. Why: This is the member palette's color 43 of 50. How: This sets hue 35.3 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-044-col : light-dark( #B2EDDA, #18604E ); /* What: Member 44 Color. Why: This is the member palette's color 44 of 50. How: This sets hue 172.8 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-045-col : light-dark( #ECD3FF, #5F4671 ); /* What: Member 45 Color. Why: This is the member palette's color 45 of 50. How: This sets hue 310.4 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-046-col : light-dark( #F0DCAD, #64501A ); /* What: Member 46 Color. Why: This is the member palette's color 46 of 50. How: This sets hue 87.9 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-047-col : light-dark( #B0E8FF, #165B72 ); /* What: Member 47 Color. Why: This is the member palette's color 47 of 50. How: This sets hue 225.4 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-048-col : light-dark( #FFCFDA, #75404F ); /* What: Member 48 Color. Why: This is the member palette's color 48 of 50. How: This sets hue 2.9 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-049-col : light-dark( #C8E9C1, #3B5D34 ); /* What: Member 49 Color. Why: This is the member palette's color 49 of 50. How: This sets hue 140.4 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+	--mem-050-col : light-dark( #D6DCFF, #494E7B ); /* What: Member 50 Color. Why: This is the member palette's color 50 of 50. How: This sets hue 277.9 in the palette's fifth set of ten, a pastel in light mode and a deep shade in dark mode. */
+
+	--mem-tex-col : light-dark( #221F1B, #F6F2EC ); /* What: Member Text Color. Why: Text on a member color has to reach 4.5:1 on every one of them. How: This sets near black in light mode and near white in dark mode, at least 9.6:1 and 6.1:1 on the palette's colors. */
+
+	/* #endregion Member Color Tokens */
+
+
+
 	/* #region Radius Tokens */
 
 	--rad-bor-xsm : calc( var( --ver-rhy-m05 ) * 1rem ); /* What: Radius Border Extra Small ~= 3.572px. Why: This is the border radius scale's smallest step. How: This multiplies the m05 rhythm step by 1rem. */
@@ -401,10 +486,11 @@
 
 }
 
-html { /* What: Page Root. Why: The type scale's base is 11px, and jumps within the page should glide. How: This sets the root to 68.75% of the browser's own default size, 11px at the usual 16px while still following a size the visitor chose, and turns on smooth scrolling. */
+html { /* What: Page Root. Why: The type scale's base is 11px, the colors follow the phone's light or dark setting, and jumps within the page should glide. How: This sets the root to 68.75% of the browser's own default size, 11px at the usual 16px while still following a size the visitor chose, offers both color schemes, and turns on smooth scrolling. */
 
 
-	font-size       : 68.75%; /* What: Root Font Size. Why: 1rem has to be the 11px base, scaled with the visitor's own setting. How: 11 divided by the default 16 is 68.75%. */
+	color-scheme    : light dark; /* What: Color Scheme. Why: Each color token holds a light and a dark value, and light-dark() picks between them by the scheme in use. How: Offering both lets the page follow the phone's setting. */
+	font-size       : 68.75%;     /* What: Root Font Size. Why: 1rem has to be the 11px base, scaled with the visitor's own setting. How: 11 divided by the default 16 is 68.75%. */
 	scroll-behavior : smooth;
 
 
@@ -426,8 +512,8 @@ html { /* What: Page Root. Why: The type scale's base is 11px, and jumps within 
 body { /* What: Page Body. Why: Every page shares one font, color, and background. How: This sets the main font at Base Plus 1 in the main text color on the page background, with airy lines. */
 
 
-	background-color : var( --bac-pag-col ); /* Background Page Color = #ffffff */
-	color            : var( --tex-mai-col ); /* Text Main Color = #1f2328 */
+	background-color : var( --bac-pag-col ); /* Background Page Color = #F4F4FA */
+	color            : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
 	font-family      : var( --fon-fam-mai ); /* Font Family Main = 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif */
 	font-size        : var( --fon-siz-p01 ); /* Font Size Base Plus 1 ~= 14.572px */
 	line-height      : var( --ver-rhy-p01 ); /* Vertical Rhythm Base Plus 1 ~= 1.755 */
@@ -479,7 +565,7 @@ a,
 button { /* What: Focus Ring Controls. Why: Keyboard focus should ease in rather than snap. How: This gives every link and button a zero-width outline in the focus ring color, held a little away from it, and eases the ring's width and offset when focus arrives. */
 
 
-	outline        : 0 solid var( --foc-rin-col );                                                                                      /* Focus Ring Color = #1f5bc4 */ /* What: Zero Width Outline. Why: A zero width stays invisible, even in forced colors mode, until something is focused. How: The focused rule below grows it. */
+	outline        : 0 solid var( --foc-rin-col );                                                                                      /* Focus Ring Color = #4A4FC9 */ /* What: Zero Width Outline. Why: A zero width stays invisible, even in forced colors mode, until something is focused. How: The focused rule below grows it. */
 	outline-offset : calc( var( --ver-rhy-m03 ) * 1rem );                                                                               /* Vertical Rhythm Base Minus 3 ~= 6.268px */
 	transition     : outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
 
@@ -510,5 +596,27 @@ button:focus-visible { /* What: Focused Focus Ring Controls. Why: A keyboard use
 }
 
 /* #endregion Base Elements */
+
+
+
+/* #region Body State */
+
+html[data-color-mode-choice='dark'] { /* What: Dark Choice Page Root. Why: Someone can choose dark mode whatever the phone's setting. How: This holds the root's color scheme to dark, which every light-dark() color token follows. */
+
+
+	color-scheme : dark;
+
+
+}
+
+html[data-color-mode-choice='light'] { /* What: Light Choice Page Root. Why: Someone can choose light mode whatever the phone's setting. How: This holds the root's color scheme to light, which every light-dark() color token follows. */
+
+
+	color-scheme : light;
+
+
+}
+
+/* #endregion Body State */
 
 

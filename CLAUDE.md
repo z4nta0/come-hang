@@ -52,11 +52,9 @@ screens using them yet, since screens wait for the design pass. Its one
 service worker opens the app offline and shows pushes. Next steps are in
 ARCHITECTURE.md's Section 14.
 
-**Placeholders to replace in the design pass**: the colors and the main
-font in `src/styles/styles.css` (neutral stand-ins, marked as such), and the
-text width tokens, which need re-measuring once the main font is
-chosen. The design they're replaced with is chosen (see "Visual design"
-below) and goes in next.
+**Placeholders to replace in the design pass**: the text width tokens in
+`src/styles/styles.css`, which need re-measuring for Figtree. The colors and
+fonts are in.
 
 ## Commands
 
@@ -173,10 +171,14 @@ emulators need Java, 21 installed.
   tabs, and the next event pinned above the chat, which leads on the day of
   an event.
 - **Visual design** (decided 2026-10-29, from the design pass's canvas):
-  Dusk's colors, a periwinkle main accent (`#4A4FC9`) with a coral spark
-  (`#E9735D`) on cool off-white, with a dark mode; every member gets their
-  own pastel, carried by their avatar, their claims, and their status lines;
-  Bricolage Grotesque for headings and Figtree for text.
+  Dusk's colors, a periwinkle main accent (`#4A4FC9`) with a coral spark on
+  cool off-white (`#DD6248` in light mode, deepened from the canvas's
+  `#E9735D` to reach 3:1 on the page); every member gets their own color,
+  `--mem-001-col` to `--mem-050-col`, carried by their avatar, their claims,
+  and their status lines; Bricolage Grotesque for headings and Figtree for
+  text, self-hosted in `src/assets/fonts/`. Every color token holds its light
+  and dark values in one `light-dark()`, and `src/platform/color-mode.ts`
+  keeps a light or dark choice that overrides the phone's setting.
 - **Brand artwork** (decided 2026-10-29): the source files live in
   `design/brand/`. The mark is a map pin tilted 35 degrees so its point reads
   as a speech bubble's tail, with a subtle inward cut just above the tip and

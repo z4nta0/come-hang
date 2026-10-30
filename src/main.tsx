@@ -3,10 +3,11 @@
 
 // #region Imports
 
-import { AppRooCom     } from './app.tsx';        // What: App Root Component. Why: This is the single component the whole app renders as. How: This is rendered inside the router below.
-import { BrowserRouter } from 'react-router';     // What: Browser Router. Why: The routes read the real URL path. How: This wraps AppRooCom so every Route inside it can match against the address bar.
-import { createRoot    } from 'react-dom/client'; // What: Create Root. Why: This is React's API for creating the root the app renders into. How: This is called once against index.html's appMouDiv element.
-import { StrictMode    } from 'react';            // What: Strict Mode. Why: Development builds should flag unsafe patterns early. How: This wraps the whole tree below.
+import { AppRooCom     } from './app.tsx';                // What: App Root Component. Why: This is the single component the whole app renders as. How: This is rendered inside the router below.
+import { BrowserRouter } from 'react-router';             // What: Browser Router. Why: The routes read the real URL path. How: This wraps AppRooCom so every Route inside it can match against the address bar.
+import { colModAppFun  } from './platform/color-mode.ts'; // What: Color Mode Apply Function. Why: A kept light or dark choice should hold from the first render. How: This is called once before the render below.
+import { createRoot    } from 'react-dom/client';         // What: Create Root. Why: This is React's API for creating the root the app renders into. How: This is called once against index.html's appMouDiv element.
+import { StrictMode    } from 'react';                    // What: Strict Mode. Why: Development builds should flag unsafe patterns early. How: This wraps the whole tree below.
 
 
 import './styles/fonts.css';  // What: Fonts Stylesheet Import. Why: The app's stylesheets assume the self-hosted font faces are already registered. How: This is imported before styles.css, purely for its side effect, so its @font-face rules register first.
@@ -21,15 +22,18 @@ import './styles/styles.css'; // What: Styles Stylesheet Import. Why: This is th
  *
  * @summary
  * The app's entry point, loaded by index.html's module script and imported
- * nowhere else. It creates the single React root on index.html's appMouDiv
- * element and renders AppRooCom into it, wrapped in StrictMode for development
- * checks and BrowserRouter for the URL-based routing between the pages.
+ * nowhere else. It applies the light or dark choice kept on this device, then
+ * creates the single React root on index.html's appMouDiv element and renders
+ * AppRooCom into it, wrapped in StrictMode for development checks and
+ * BrowserRouter for the URL-based routing between the pages.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
 
 
+
+colModAppFun(); // What: Color Mode Apply Call. Why: The page should open in the chosen light or dark mode rather than switch after it renders. How: This sets the root's attribute from the kept choice before the render below.
 
 createRoot( document.getElementById( 'appMouDiv' )! ).render( // What: Root Render Call. Why: This is the app's only mount, rendering the whole app into index.html's mount element. How: This creates a React root on appMouDiv and renders AppRooCom inside StrictMode and the router. // What: Non-Null Note. Why: getElementById's return type allows null. How: index.html always ships the appMouDiv element, so the lookup can't come back empty.
 
