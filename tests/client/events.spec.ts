@@ -352,6 +352,68 @@ pagTesObj( 'a bring-list item is claimed once, reassigned, relabeled, and follow
 
 
 
+pagTesObj( "a watched bring-list follows each item's addition, claim, and removal, until the watch stops", async ( { page, secPagObj } ) => { // What: Item Watch Test. Why: A claim or a new item shows to every member at once. How: This watches as the member while the owner adds, claims, and removes items, then stops the watch and checks a later item never reaches it.
+
+
+	const { groIdeStr, uidOwnStr } = await memSetFun( eveEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group with a member. How: This sets them up.
+
+	const staTimNum = Date.now() + DAY_MIL_NUM; // What: Start Time Number. Why: The event starts tomorrow. How: This is a day from now.
+
+	const eveIdeStr = await runPagFun( page, EVE_MOD_STR, 'eveCreFun', groIdeStr, { desTexStr : '', endTimNum : staTimNum + 3600000, locTexStr : '', staTimNum, titTexStr : 'Picnic' } ) as string; // What: Event Identifier String. Why: Items belong to an event. How: This plans one as the owner. // What: Type Assertion Note. Why: eveCreFun resolves with the ID. How: The as reads it as a string.
+
+
+	await secPagObj.evaluate( async ( [ modPatStr, watGroStr, watEveStr ] ) => { // What: Watch Call. Why: The member's page watches the list the owner changes. How: This starts the watch and keeps the latest report and its stop on the page's global object.
+
+
+		const iteModObj = await import( /* @vite-ignore */ modPatStr ); // What: Items Module Object. Why: The page runs the real module. How: This imports it.
+
+
+
+		Reflect.set( globalThis, 'iteStoFun', iteModObj.iteWatFun( watGroStr, watEveStr, ( iteRecArr : unknown ) => Reflect.set( globalThis, 'iteLisArr', iteRecArr ) ) ); // What: Watch Start Call. Why: Each check reads the latest report, and the test stops the watch later. How: This starts it, keeping each report and the stop.
+
+
+	}, [ ITE_MOD_STR, groIdeStr, eveIdeStr ] );
+
+
+
+	const repGetFun = () => secPagObj.evaluate( () => Reflect.get( globalThis, 'iteLisArr' ) ); // What: Report Get Function. Why: Each check polls the latest report. How: This reads it from the page.
+
+
+	await expect.poll( repGetFun ).toEqual( [] ); // What: Empty List Assertion. Why: A new event has nothing on its list. How: This waits for the first, empty report.
+
+
+	const pieIteStr = await runPagFun( page, ITE_MOD_STR, 'iteAddFun', groIdeStr, eveIdeStr, 'Pie', null ) as string;   // What: Pie Item String. Why: An addition shows at once. How: This adds an open item as the owner. // What: Type Assertion Note. Why: iteAddFun resolves with the ID. How: The as reads it as a string.
+	const bunIteStr = await runPagFun( page, ITE_MOD_STR, 'iteAddFun', groIdeStr, eveIdeStr, 'Buns', null ) as string;  // What: Buns Item String. Why: A second item checks the order. How: This adds it as the owner. // What: Type Assertion Note. Why: iteAddFun resolves with the ID. How: The as reads it as a string.
+
+
+	await expect.poll( repGetFun ).toEqual( [ { asgUidStr : null, iteIdeStr : bunIteStr, labTexStr : 'Buns' }, { asgUidStr : null, iteIdeStr : pieIteStr, labTexStr : 'Pie' } ] ); // What: Added List Assertion. Why: Both items show, open, in label order. How: This waits for the report with both.
+
+
+	await runPagFun( page, ITE_MOD_STR, 'iteClaFun', groIdeStr, eveIdeStr, pieIteStr ); // What: Claim Call. Why: A claim shows at once. How: This claims the pie as the owner.
+
+
+	await expect.poll( repGetFun ).toEqual( [ { asgUidStr : null, iteIdeStr : bunIteStr, labTexStr : 'Buns' }, { asgUidStr : uidOwnStr, iteIdeStr : pieIteStr, labTexStr : 'Pie' } ] ); // What: Claimed List Assertion. Why: The pie now names the owner. How: This waits for the report with the claim.
+
+
+	await runPagFun( page, ITE_MOD_STR, 'iteDelFun', groIdeStr, eveIdeStr, bunIteStr ); // What: Remove Call. Why: A removal shows at once. How: This removes the buns as the owner.
+
+
+	await expect.poll( repGetFun ).toEqual( [ { asgUidStr : uidOwnStr, iteIdeStr : pieIteStr, labTexStr : 'Pie' } ] ); // What: Removed List Assertion. Why: The buns drop out. How: This waits for the report with the pie alone.
+
+
+	await secPagObj.evaluate( () => ( Reflect.get( globalThis, 'iteStoFun' ) as () => void )() ); // What: Watch Stop Call. Why: A closed bring-list stops listening. How: This calls the watch's stop. // What: Type Assertion Note. Why: The page's global holds the stop the watch returned. How: The as reads it as a function.
+
+	await runPagFun( page, ITE_MOD_STR, 'iteAddFun', groIdeStr, eveIdeStr, 'Salad', null ); // What: Late Item Call. Why: A stopped watch hears nothing more. How: This adds an item after the stop.
+
+
+	expect( await runPagFun( secPagObj, ITE_MOD_STR, 'iteLisFun', groIdeStr, eveIdeStr ) ).toHaveLength( 2 );       // What: Late Item Landed. Why: The check below means something only if the item was written. How: This expects the pie and the salad listed.
+	expect( await repGetFun() ).toEqual( [ { asgUidStr : uidOwnStr, iteIdeStr : pieIteStr, labTexStr : 'Pie' } ] ); // What: Stopped Report Kept. Why: A stopped watch reports nothing new. How: This expects the last report unchanged.
+
+
+} );
+
+
+
 pagTesObj( 'cancelling an event deletes its items, and unreadable, expired, and out-of-order events list safely', async ( { page, secPagObj } ) => { // What: Cancel And List Test. Why: A cancelled event takes its items, and the list stays safe with untrusted details (Section 11.11). How: This cancels as a member and as the owner, then seeds events with bad details, an expired one, and starts out of ID order, checking the refusal, the deletions, and what the list shows.
 
 

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the bring-list's watch and the event panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1519,7 +1519,9 @@ the Blaze change.
 - Layout (decided 2026-10-29, from the wireframes of the design pass):
   - **Wide screens**: a rail of every group down the left, then the open
     group's sections (chat, events, map, people, settings), its content,
-    and a panel with the next event and its bring-list.
+    and a panel with the next event and its bring-list, from 1,100px wide
+    (decided 2026-10-30); between 720px and 1,100px the rail shows and the
+    next event stays pinned above the chat, as on a phone.
   - **Phones**: the group's name at the top opens a sheet of every group,
     with joining and creating one; the group's sections are tabs along the
     bottom; and the group's next event is pinned above its chat, opening
@@ -1650,7 +1652,9 @@ the Blaze change.
   deletion time, which also brings an item that fell out of step back in
   line, and refuses an item for a cancelled event. A claim is the
   compare-and-swap Section 7 describes, refusing with "Someone already
-  claimed that" when the item names an assignee.
+  claimed that" when the item names an assignee. A watch follows the list
+  as it changes, reporting only the newest change once its labels decrypt,
+  so a claim or a new item shows to every member at once.
 - `src/state/chat.ts` is the group's chat (Sections 5 and 11.7). A message is
   tidied, checked as visible text, encrypted, and sent waiting on every other
   member, and the sender's device keeps a copy once the server accepts it,
