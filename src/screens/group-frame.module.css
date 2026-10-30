@@ -20,13 +20,13 @@
 
 /* #region fraRooDiv */
 
-.fraRooDiv { /* What: Frame Root Div. Why: The bar, content, and rail share one layout that fills the screen. How: This stacks the bar above the content in named areas, at least as tall as the screen. */
+.fraRooDiv { /* What: Frame Root Div. Why: The bar, content, and rail share one layout that is exactly the screen's height, so the chat scrolls inside it while the bar and composer stay put. How: This stacks the bar above the content in named areas, the content's row taking the room left, at the height of the screen as it's shown. */
 
 
 	display             : grid;
 	grid-template-areas : 'fraBarHed' 'fraConMai';
-	grid-template-rows  : auto 1fr;
-	min-height          : 100vh;
+	grid-template-rows  : auto minmax( 0, 1fr );
+	height              : 100dvh;
 
 
 }
@@ -58,7 +58,7 @@
 @container app ( min-width : 720px ) { /* What: Wide Frame Rail Nav. Why: A wide screen shows every group at once. How: This applies from 720px wide and up. */
 
 
-	.fraRaiNav { /* What: Shown Frame Rail Nav. Why: The rail sets the groups apart from the open group's content. How: This stacks the tiles down a tinted column, centered, a tier 4 space apart, with a border on its right, in its own area. */
+	.fraRaiNav { /* What: Shown Frame Rail Nav. Why: The rail sets the groups apart from the open group's content. How: This stacks the tiles down a tinted column, centered, a tier 4 space apart, with a border on its right, scrolling when the groups outgrow it, in its own area. */
 
 
 		align-content    : start;
@@ -67,6 +67,7 @@
 		display          : grid;
 		grid-area        : fraRaiNav;
 		justify-items    : center;
+		overflow-y       : auto;
 		padding          : var( --tie-ver-003 ) var( --tie-hor-004 );       /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 4, about 8.304px - 11px */
 		row-gap          : var( --tie-ver-004 );                            /* Tier Vertical 4 ~= 8.304px */
 
@@ -350,37 +351,15 @@
 
 
 
-/* #region fraConMai */
-
-.fraConMai { /* What: Frame Content Main. Why: The group's content sits below the bar with the frame's space around it. How: This stacks it from the top a tier 3 space apart, with the frame tier above and below and the gutter at the sides, in its own area. */
+.fraConMai { /* What: Frame Content Main. Why: The group's content fills the rest of the screen below the bar, and its own parts scroll inside it. How: This makes it a one-cell grid in its own area, allowed to shrink below its content. */
 
 
-	align-content : start;
-	display       : grid;
-	grid-area     : fraConMai;
-	padding       : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
-	row-gap       : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
+	display    : grid;
+	grid-area  : fraConMai;
+	min-height : 0;
 
 
 }
-
-.chaTitHea { /* What: Chat Title Heading. Why: The heading names the open part of the group. How: This sets it at Base Plus 3. */
-
-
-	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
-
-
-}
-
-.chaEmpPar { /* What: Chat Empty Paragraph. Why: The empty note is secondary to the heading. How: This sets it in the muted text color. */
-
-
-	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
-
-
-}
-
-/* #endregion fraConMai */
 
 
 

@@ -7,8 +7,9 @@
  * @summary
  * The app's line icons, drawn inline so they take the color of the text
  * around them and load nothing. Each icon is one path in a 24 unit drawing
- * space, stroked in the current color with round ends, and hidden from
- * screen readers, since the control holding it carries the name.
+ * space, stroked in the current color with round ends, hidden from screen
+ * readers, since the control holding it carries the name, and left out of
+ * hit testing, so a press lands on the control itself.
  *
  * Sections:
  *  - Constants
@@ -41,7 +42,8 @@ const ICO_PAT_OBJ = { // What: Icon Path Object. Why: Every icon is drawn the sa
 	back  : 'M15 5l-7 7 7 7',
 	close : 'M6 6l12 12M18 6L6 18',
 	down  : 'M6 9l6 6 6-6',
-	plus  : 'M12 5v14M5 12h14'
+	plus  : 'M12 5v14M5 12h14',
+	send  : 'M4 12l16-8-6 16-2-7z'
 
 
 };
@@ -91,8 +93,9 @@ function IcoSvgCom ( { icoNamStr, sizSteStr } : IcoProTyp ) : React.JSX.Element 
 
 		<svg
 			style={{
-				height : sizValStr,
-				width  : sizValStr
+				height        : sizValStr,
+				pointerEvents : 'none', // What: Pointer Events Note. Why: A press scales its button, sliding the icon's lines out from under the pointer, and WebKit then drops the button's pressed look. How: This leaves the icon out of hit testing, so the button itself is what's pressed.
+				width         : sizValStr
 			}}
 
 			fill='none'

@@ -51,10 +51,11 @@ const ENG_NAM_ARR = [ // What: Engine Name Array. Why: Every suite runs in all t
 
 ] as const;
 
-const PRE_SUI_ARR = [ 'security', 'worker' ];                          // What: Preview Suite Array. Why: The security suite loads the production build, since the dev server injects inline scripts the security policy would block, and the service worker runs only in a production build. How: This names the suites that open the preview server.
-const PRE_URL_STR = 'http://localhost:5201';                           // What: Preview URL String. Why: Some suites check what ships. How: This is the address the preview server answers on and those suites' baseURL.
-const ROO_DIR_STR = fileURLToPath( new URL( '..', import.meta.url ) ); // What: Root Directory String. Why: Both servers must run from the repo root, where vite.config.ts lives. How: This resolves the folder above tests/.
-const SER_URL_STR = 'http://localhost:5200';                           // What: Server URL String. Why: Every other suite opens the app from the same dev server. How: This is the address Playwright waits on and every other suite's baseURL.
+const FIR_PRE_OBJ = { 'dom.storageManager.prompt.testing' : true, 'dom.storageManager.prompt.testing.allow' : true }; // What: Firefox Preferences Object. Why: The app asks the browser to keep its storage once an identity exists, which Firefox answers with a permission prompt over the page. How: These are Firefox's own testing switches, which answer that prompt with an allow at once.
+const PRE_SUI_ARR = [ 'security', 'worker' ];                                                                         // What: Preview Suite Array. Why: The security suite loads the production build, since the dev server injects inline scripts the security policy would block, and the service worker runs only in a production build. How: This names the suites that open the preview server.
+const PRE_URL_STR = 'http://localhost:5201';                                                                          // What: Preview URL String. Why: Some suites check what ships. How: This is the address the preview server answers on and those suites' baseURL.
+const ROO_DIR_STR = fileURLToPath( new URL( '..', import.meta.url ) );                                                // What: Root Directory String. Why: Both servers must run from the repo root, where vite.config.ts lives. How: This resolves the folder above tests/.
+const SER_URL_STR = 'http://localhost:5200';                                                                          // What: Server URL String. Why: Every other suite opens the app from the same dev server. How: This is the address Playwright waits on and every other suite's baseURL.
 
 const SUI_NAM_ARR = [ // What: Suite Name Array. Why: Each suite lives in its own folder and runs as its own projects. How: Each entry names a folder under tests/, crossed with each engine into one project apiece.
 
@@ -89,9 +90,10 @@ const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playw
 			use : { // What: Use. Why: The project has to launch its own engine, and the suites that check what ships their own server. How: This sets the browser it runs in, which build of it, and the server its pages open from.
 
 
-				baseURL     : PRE_SUI_ARR.includes( suiNamStr ) ? PRE_URL_STR : SER_URL_STR, // What: Base URL. Why: The security and worker suites check the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
-				browserName : engNamStr,                                                     // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
-				channel     : engNamStr === 'chromium' ? 'chromium' : undefined              // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
+				baseURL       : PRE_SUI_ARR.includes( suiNamStr ) ? PRE_URL_STR : SER_URL_STR,           // What: Base URL. Why: The security and worker suites check the production build, while every other suite checks the dev server. How: This points each project's page.goto at its server.
+				browserName   : engNamStr,                                                               // What: Browser Name. Why: Each project runs in one engine. How: This names that engine's Playwright browser.
+				channel       : engNamStr === 'chromium' ? 'chromium' : undefined,                       // What: Channel. Why: Chromium's default headless shell sometimes opened a modified click's new tab without Playwright ever reporting it, failing about 1 run in 10 in reese-roofing. How: This runs Chromium as Chrome's full headless mode instead, and leaves Firefox and WebKit on their only builds.
+				launchOptions : engNamStr === 'firefox' ? { firefoxUserPrefs : FIR_PRE_OBJ } : undefined // What: Launch Options. Why: Firefox asks before keeping a site's storage, and its prompt, drawn over the page outside the document, leaves the controls under it unable to hover. How: This answers the prompt for Firefox through its preferences, leaving the other engines as they are.
 
 
 			}

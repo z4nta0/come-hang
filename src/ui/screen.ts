@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { useCallback } from 'react';        // What: Use Callback. Why: An effect that opens a screen depends on the opener, which shouldn't change on every render. How: This keeps the same function between renders.
 import { useLocation } from 'react-router'; // What: Use Location. Why: The open screen is recorded in the history entry's state. How: This reads the current entry.
 import { useNavigate } from 'react-router'; // What: Use Navigate. Why: Moving between screens adds or replaces history entries. How: This returns the router's navigate function.
 
@@ -172,7 +173,7 @@ const useScrOpeFun = () : ( ( scrStaObj : ScrStaTyp, repValBoo? : boolean ) => v
 
 
 
-	return ( scrStaObj, repValBoo = false ) => void navRouFun( '/', { replace : repValBoo, state : scrStaObj } ); // What: Screen Open Return. Why: The address stays the root while the entry records the screen. How: This navigates to the root with the screen as its state, replacing the entry when asked.
+	return useCallback( ( scrStaObj : ScrStaTyp, repValBoo = false ) => void navRouFun( '/', { replace : repValBoo, state : scrStaObj } ), [ navRouFun ] ); // What: Screen Open Return. Why: The address stays the root while the entry records the screen. How: This navigates to the root with the screen as its state, replacing the entry when asked, as one function for as long as the router's navigate stays the same, so an effect can depend on it.
 
 
 };

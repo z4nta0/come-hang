@@ -46,8 +46,9 @@ activity, leaving, removal, link rotation, and settings), and ownership offers
 and notices, events with their bring-lists, chat with its on-device history,
 presence, history requests, location sharing, push notifications, Google
 linking and recovery with the group keys shared again, and buying the upgrade.
-The first screens are built: the welcome, the form for starting a group, and
-the group frame with its rail, its switcher and sheet, and an empty chat area.
+The first screens are built: the welcome, the form for starting a group, the
+group frame with its rail, its switcher and sheet, and the group chat with
+its pinned next event.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 
@@ -78,14 +79,17 @@ npm run test:worker          # the service worker, offline, in the build
 The suites start their own dev server on port 5200, and the security and
 worker suites a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
-`npm test`, `npm run test:rules`, and the accessibility and interaction
-suites run inside `firebase emulators:exec`, which starts the Firestore
-emulator on 8200 (ease-my-life's uses 8080), the Realtime Database emulator
-on 8210, and the Storage emulator on 8220, under the `demo-come-hang`
-project, which can't reach a real one, plus the Auth emulator on 8240 for the
-browser suites, whose states reach a group by creating one through the app
-(`steRunFun` in `tests/support/states.ts`). The security suite's policy check
-skips those states, since its production build has no Firebase project.
+`npm test`, `npm run test:rules`, and the accessibility and interaction suites
+run inside `firebase emulators:exec`, which starts the Firestore emulator on
+8200 (ease-my-life's uses 8080), the Realtime Database emulator on 8210, and
+the Storage emulator on 8220, under the `demo-come-hang` project, which can't
+reach a real one. The browser suites add the Auth emulator on 8240 and the
+Functions emulator on 8230, built first, since their states reach a group by
+creating one through the app (`steRunFun` in `tests/support/states.ts`) and its
+chat needs the membership mirror a function writes; the rules suite runs in a
+session of its own, so no trigger reacts to its seeds. The security suite's
+policy check skips the states with a group, since its production build has no
+Firebase project.
 `npm run test:client` builds the functions and runs in its own session,
 with the Auth emulator on 8240 and the Functions emulator on 8230 beside
 Firestore, the Realtime Database, and Storage, since the app calls callables and the

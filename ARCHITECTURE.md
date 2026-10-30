@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1592,9 +1592,18 @@ the Blaze change.
   it, and announces a failed creation; a created group replaces the form's
   entry and takes focus on its heading. The group frame has the rail from
   720px wide and the bar's switcher, which opens the group sheet, below it;
-  its content is an empty chat area until the chat is built. On iOS the
-  welcome will lead through the install screen first (Section 16), built with
-  that screen.
+  its content is the group's chat. The chat pins the group's next event that
+  hasn't ended at its top, opens with the history kept on the device, then
+  watches the chat, starting the watch again a second later while the rules
+  refuse it, as they do until the membership mirror holds a new member, and
+  says so when the group's key is still waiting to be shared. Each message
+  from another member shows their avatar in their own color, their name, and
+  its time, and the member's own messages sit at the other side in the accent;
+  Enter sends, Shift+Enter starts a new line, and a refused or failed send is
+  announced and keeps its text. The pinned event opening a sheet with its
+  bring-list, the status lines, and the wide screen's event panel come next.
+  On iOS the welcome will lead through the install screen first (Section 16),
+  built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
   name and note, the joiner's view of where it stands, withdrawing it, and
@@ -1642,17 +1651,19 @@ the Blaze change.
   line, and refuses an item for a cancelled event. A claim is the
   compare-and-swap Section 7 describes, refusing with "Someone already
   claimed that" when the item names an assignee.
-- `src/state/chat.ts` is the group's chat (Sections 5 and 11.7). A message
-  is tidied, checked as visible text, encrypted, and sent waiting on every
-  other member, and the sender's device keeps a copy. A member reads from
-  their own join time, by a one-time sync or by watching, and each message
-  read is kept on the device, acknowledged, cleared of departed members'
-  entries (after rereading the members, so a new member isn't taken for
-  gone), and deleted once nobody waits on it or it's past the retention.
-  The device's history lives in `src/platform/chat-store.ts`, beside the
-  keys in the app's one IndexedDB database, which
-  `src/platform/local-db.ts` opens at version 2, creating whichever stores
-  are missing.
+- `src/state/chat.ts` is the group's chat (Sections 5 and 11.7). A message is
+  tidied, checked as visible text, encrypted, and sent waiting on every other
+  member, and the sender's device keeps a copy once the server accepts it,
+  while its own watch skips the message until then, so a refused send is never
+  shown or kept (built 2026-10-30); a message nobody waits on, in a group of
+  one, is deleted as soon as it's accepted. A member reads from their own join
+  time, by a one-time sync or by watching, and each message read is kept on
+  the device, acknowledged, cleared of departed members' entries (after
+  rereading the members, so a new member isn't taken for gone), and deleted
+  once nobody waits on it or it's past the retention. The device's history
+  lives in `src/platform/chat-store.ts`, beside the keys in the app's one
+  IndexedDB database, which `src/platform/local-db.ts` opens at version 2,
+  creating whichever stores are missing.
 - `src/state/presence.ts` marks a member online with an entry the server
   clears if the device drops, clears it on going offline, and watches who's
   online (Section 11.8). `src/state/history.ts` is peer-assisted history
@@ -1696,13 +1707,14 @@ the Blaze change.
 **App structure, still open**:
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
-- Scroll behavior per screen, decided as each data screen is built. The
-  app's scroll hook (`src/ui/scroll-top.ts`) restores a back, forward, or
-  reload position right after the page renders, so a screen whose Firebase
-  data arrives later can land short of where the person left it, and such a
-  screen re-applies the position once its content is in. Screens like the
-  chat will likely scroll inside their own container rather than the whole
-  window and open at the newest message, which the hook doesn't cover.
+- Scroll behavior per screen, decided as each data screen is built. The app's
+  scroll hook (`src/ui/scroll-top.ts`) restores a back, forward, or reload
+  position once the fonts have loaded and the screen host says its screen is
+  ready (built 2026-10-30). A screen whose own data arrives later than that,
+  such as an event list, re-applies its position once its content is in. The
+  chat scrolls inside its own log rather than the whole window, opening at its
+  newest message and following new ones while someone reads at the end (built
+  2026-10-30), which the hook doesn't need to cover.
 
 **Infrastructure, decided 2026-10-22**:
 - Firebase Blaze plan with the cost protections in Section 15.

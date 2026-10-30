@@ -1,0 +1,466 @@
+
+
+
+/**
+ * group-chat.module.css = Group Chat Module
+ *
+ * @summary
+ * Styles for GroChaCom: the chat fills the content area as a column, the
+ * pinned event a raised card at the top, the log scrolling between, its
+ * messages settling at the bottom while they're few, and the composer on a
+ * surface at the bottom. Another member's message shows their colored
+ * avatar beside their name, time, and a tinted bubble, a run of their
+ * messages sitting closer and showing the avatar once, while the member's
+ * own messages sit at the end in the accent.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region chaRooDiv */
+
+.chaRooDiv { /* What: Chat Root Div. Why: The pinned event and the composer stay put while the log scrolls between them. How: This stacks them in named areas, the log's row taking the room left and allowed to shrink below its content. */
+
+
+	display             : grid;
+	grid-template-areas : 'pinEveSec' 'chaLogDiv' 'chaComFor';
+	grid-template-rows  : auto minmax( 0, 1fr ) auto;
+	height              : 100%;
+	min-height          : 0;
+
+
+}
+
+.chaTitHea { /* What: Chat Title Heading. Why: The heading is for screen readers, while sight has the screen itself. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+
+/* #region pinEveSec */
+
+.pinEveSec { /* What: Pinned Event Section. Why: The next event stays in view, raised above the chat. How: This lays the date block beside the title and line in named areas on a bordered surface card, a tier 3 space from the bar and the gutter from the sides. */
+
+
+	align-items           : center;
+	background-color      : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border                : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	border-radius         : var( --rad-bor-lar );                            /* Radius Border Large ~= 14.572px */
+	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-area             : pinEveSec;
+	grid-template-areas   : 'pinDatPar pinTitHea' 'pinDatPar pinLinPar';
+	grid-template-columns : auto 1fr;
+	margin                : var( --tie-ver-003 ) var( --gut-sid-pad ) 0;     /* Tier Vertical 3 ~= 14.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	padding               : var( --tie-ver-004 ) var( --tie-hor-004 );       /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	row-gap               : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+
+/* #region pinDatPar */
+
+.pinDatPar { /* What: Pinned Date Paragraph. Why: The date reads first, set apart on a tint. How: This stacks its two lines centered in a rounded square of the accent tint, in its own area. */
+
+
+	align-content    : center;
+	background-color : var( --acc-tin-col );                /* Accent Tint Color = #E7E8FA */
+	border-radius    : var( --rad-bor-med );                /* Radius Border Medium = 11px */
+	color            : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	display          : grid;
+	grid-area        : pinDatPar;
+	justify-items    : center;
+	min-height       : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+	min-width        : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+	padding          : var( --spa-ver-m04 );                /* Spacing Vertical Base Minus 4 ~= 4.732px */
+
+
+}
+
+.datTopSpa { /* What: Date Top Span. Why: The month, or "Today", labels the block. How: This sets it small, extra bold, and uppercase. */
+
+
+	font-size      : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	font-weight    : 800;
+	text-transform : uppercase;
+
+
+}
+
+.datBotSpa { /* What: Date Bottom Span. Why: The day, or today's hour, is the block's main figure. How: This sets it large and bold in the brand font, as tall as its text. */
+
+
+	font-family : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size   : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	font-weight : 700;
+	line-height : var( --ver-rhy-m01 ); /* Vertical Rhythm Base Minus 1 = 1 */
+
+
+}
+
+/* #endregion pinDatPar */
+
+
+.pinTitHea { /* What: Pinned Title Heading. Why: The event's title is the card's heading. How: This sets it at Base Plus 2, resting on its row's bottom edge, in its own area. */
+
+
+	align-self : end;
+	font-size  : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area  : pinTitHea;
+
+
+}
+
+.pinLinPar { /* What: Pinned Line Paragraph. Why: The hours and place are secondary to the title. How: This sets them small in the muted text color, hanging from its row's top edge, in its own area. */
+
+
+	align-self : start;
+	color      : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size  : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area  : pinLinPar;
+
+
+}
+
+/* #endregion pinEveSec */
+
+
+
+/* #region chaLogDiv */
+
+.chaLogDiv { /* What: Chat Log Div. Why: The messages scroll on their own, settling at the bottom while they're few, and a keyboard user scrolling them needs to see the log has focus. How: This scrolls its one row, at least the log's height, with a tier 3 space above and below and the gutter at the sides, and eases its inset focus ring. */
+
+
+	display        : grid;
+	grid-area      : chaLogDiv;
+	grid-auto-rows : minmax( 100%, max-content );               /* What: Fill Row. Why: Few messages should sit at the bottom, and many should scroll. How: The row is at least the log's height and grows with its content. */
+	outline        : 0 solid var( --foc-rin-col );              /* Focus Ring Color = #4A4FC9 */
+	outline-offset : calc( var( --bor-wid-lar ) * -1 );         /* Border Width Large ~= -2.035px */
+	overflow-y     : auto;
+	padding        : var( --tie-ver-003 ) var( --gut-sid-pad ); /* Tier Vertical 3 ~= 14.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	transition     : outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.chaLogDiv:focus-visible { /* What: Focused Chat Log Div. Why: A keyboard user has to see the log has focus. How: This grows its ring inside its edges, where the content area can't clip it. */
+
+
+	outline-width : var( --bor-wid-lar ); /* Border Width Large ~= 2.035px */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Chat Log Div. Why: Someone who asked for less motion should see the ring appear at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.chaLogDiv { /* What: Motionless Chat Log Div. Why: The ring should simply appear. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.chaEmpPar { /* What: Chat Empty Paragraph. Why: An empty chat's note sits where the first message will. How: This sets it in the muted text color, centered, at the bottom of the log. */
+
+
+	align-self : end;
+	color      : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	text-align : center;
+
+
+}
+
+
+/* #region chaMesOrd */
+
+.chaMesOrd { /* What: Chat Messages Ordered List. Why: The messages read as one list, settling at the bottom while they're few. How: This stacks them a tier 4 space apart with no numbers, at the bottom of the log's row. */
+
+
+	align-self : end;
+	display    : grid;
+	list-style : none;
+	row-gap    : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+
+/* #region chaMesIte */
+
+.chaMesIte { /* What: Chat Message Item. Why: Another member's message shows their avatar beside who, when, and what. How: This lays the avatar beside the meta line and the bubble in named areas, a tier 4 space apart, at the start of the row. */
+
+
+	column-gap            : var( --tie-hor-004 );                        /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-areas   : 'mesAvaSpa mesMetPar' 'mesAvaSpa mesTexPar';
+	grid-template-columns : calc( var( --ver-rhy-p03 ) * 1rem ) 1fr;     /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	justify-items         : start;
+	row-gap               : var( --tie-ver-005 );                        /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+.chaMesIte--run { /* What: Chat Message Item Run. Why: A sender's messages close together read as one run. How: This pulls it up to a tier 5 space below the one before it. */
+
+
+	margin-top : calc( var( --tie-ver-005 ) - var( --tie-ver-004 ) ); /* Tier Vertical 5 ~= 4.732px, Tier Vertical 4 ~= 8.304px */
+
+
+}
+.chaMesIte--own { /* What: Chat Message Item Own. Why: The member's own messages sit at the end, with no avatar. How: This drops the avatar's column and moves the bubble to the end of the row. */
+
+
+	grid-template-areas   : 'mesMetPar' 'mesTexPar';
+	grid-template-columns : 1fr;
+	justify-items         : end;
+
+
+}
+
+.mesAvaSpa { /* What: Message Avatar Span. Why: An avatar in the sender's color tells members apart at a glance, plain for someone who left. How: This draws a circle in the border color, which the member's own color replaces, with their initials small and bold, at the top of its area. */
+
+
+	align-self       : start;
+	background-color : var( --bor-mai-col );                /* Border Main Color = #E0E1EF */
+	border-radius    : 50%;
+	color            : var( --mem-tex-col );                /* Member Text Color = #221F1B */
+	display          : grid;
+	font-size        : var( --fon-siz-bas );                /* Font Size Base = 11px */
+	font-weight      : 700;
+	grid-area        : mesAvaSpa;
+	height           : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	place-items      : center;
+	width            : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+
+
+/* #region mesMetPar */
+
+.mesMetPar { /* What: Message Meta Paragraph. Why: The sender and time head the message. How: This sets them in one row a tier 4 space apart, sharing a baseline, in its own area. */
+
+
+	align-items    : baseline;
+	column-gap     : var( --tie-hor-004 ); /* Tier Horizontal 4, about 8.304px - 11px */
+	display        : grid;
+	grid-area      : mesMetPar;
+	grid-auto-flow : column;
+
+
+}
+.chaMesIte--run .mesMetPar,
+.chaMesIte--own .mesMetPar { /* What: Hidden Message Meta Paragraph. Why: A run names its sender once, and the member knows their own, while a screen reader still reads who sent each message and when. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.mesNamSpa { /* What: Message Name Span. Why: The sender's name leads the meta line. How: This sets it bold. */
+
+
+	font-weight : 700;
+
+
+}
+
+.mesTimSpa { /* What: Message Time Span. Why: The time is secondary to the name. How: This sets it small in the muted text color. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+
+
+}
+
+/* #endregion mesMetPar */
+
+
+.mesTexPar { /* What: Message Text Paragraph. Why: Another member's words sit in a tinted bubble, its corner nearest the avatar squared, keeping the line breaks they typed and staying a comfortable width. How: This draws the bubble in the hover color, wraps long words anywhere, and caps it at the base text width, in its own area. */
+
+
+	background-color : var( --bac-hov-col );                                                                /* Background Hover Color = #ECEDF7 */
+	border-radius    : var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xsm ); /* Radius Border Extra Large ~= 19.304px, Radius Border Extra Small ~= 3.572px */
+	grid-area        : mesTexPar;
+	max-width        : var( --tex-wid-bas );                                                                /* Text Width Base ~= 29.207em */
+	overflow-wrap    : anywhere;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );                                           /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */
+	white-space      : pre-wrap;
+
+
+}
+.chaMesIte--own .mesTexPar { /* What: Own Message Text Paragraph. Why: The member's own words stand out in the accent, the bubble's squared corner at its end. How: This fills it with the main accent in the accent's text color. */
+
+
+	background-color : var( --acc-mai-col );                                                                /* Accent Main Color = #4A4FC9 */
+	border-radius    : var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xsm ) var( --rad-bor-xla ); /* Radius Border Extra Large ~= 19.304px, Radius Border Extra Small ~= 3.572px */
+	color            : var( --tex-acc-col );                                                                /* Text Accent Color = #FFFFFF */
+
+
+}
+
+/* #endregion chaMesIte */
+
+/* #endregion chaMesOrd */
+
+/* #endregion chaLogDiv */
+
+
+
+/* #region chaComFor */
+
+.chaComFor { /* What: Chat Composer Form. Why: The composer sits at the bottom on its own surface. How: This lays the box beside the send button in named areas a tier 4 space apart, the alert below them, on the surface color with a border above, a tier 4 space above and below and the gutter at the sides. */
+
+
+	align-items           : end;
+	background-color      : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border-top            : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-area             : chaComFor;
+	grid-template-areas   : 'comTexTex comSenBut' 'comErrPar comErrPar';
+	grid-template-columns : 1fr auto;
+	padding               : var( --tie-ver-004 ) var( --gut-sid-pad );       /* Tier Vertical 4 ~= 8.304px, Gutter Side Padding, about 19.304px - 44.876px */
+
+
+}
+
+.comLabLab { /* What: Composer Label Label. Why: The label is for screen readers, while sight has the box's hint. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.comTexTex { /* What: Composer Text Textarea. Why: The box should grow with a longer message up to a point, and its boundary be easy to see. How: This draws a rounded box with a strong border on the page color, at least a touch target tall, growing with its text where the browser can up to Base Plus 8 tall, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-pag-col );                            /* Background Page Color = #F4F4FA */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-xla );                            /* Radius Border Extra Large ~= 19.304px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	field-sizing     : content;
+	font             : inherit;
+	grid-area        : comTexTex;
+	max-height       : calc( var( --ver-rhy-p08 ) * 1rem );             /* Vertical Rhythm Base Plus 8 ~= 138.204px */
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	resize           : none;
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.comTexTex:hover { /* What: Hovered Composer Text Textarea. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Composer Text Textarea. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.comTexTex { /* What: Motionless Composer Text Textarea. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.comSenBut { /* What: Composer Send Button. Why: Sending is the composer's one action, round and easy to hit. How: This draws a circle in the main accent at the touch target size, its plane in the accent's text color, in its own area, and eases its hover color, hover lift, press scale, and focus ring. */
+
+
+	background-color : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	border           : 0;
+	border-radius    : 50%;
+	color            : var( --tex-acc-col );                /* Text Accent Color = #FFFFFF */
+	display          : grid;
+	grid-area        : comSenBut;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.comSenBut:hover { /* What: Hovered Composer Send Button. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the circle 2px. */
+
+
+	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+	transform        : translateY( calc( var( --spa-ver-m07 ) * -1 ) );         /* Spacing Vertical Base Minus 7 ~= -2.035px */
+
+
+}
+.comSenBut:active { /* What: Pressed Composer Send Button. Why: A press should register before the message goes. How: This presses the circle in slightly, which also undoes its hover lift. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Composer Send Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.comSenBut { /* What: Motionless Composer Send Button. Why: The hover, press, and focus looks should switch at once, the lift and press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.comErrPar { /* What: Composer Error Paragraph. Why: A refused or failed send should be clear below the box. How: This sets it bold in the dark error color, spanning the row, in its own area. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+	grid-area   : comErrPar;
+
+
+}
+.comErrPar:not( :empty ) { /* What: Shown Composer Error Paragraph. Why: The message needs room from the box above it, while the empty alert takes none. How: This adds a tier 5 space above it. */
+
+
+	margin-top : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+/* #endregion chaComFor */
+
+/* #endregion chaRooDiv */
+
+

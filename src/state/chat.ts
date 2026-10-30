@@ -25,6 +25,7 @@ import { query           } from 'firebase/database';         // What: Query. Why
 import { ref             } from 'firebase/database';         // What: Ref. Why: Messages and their entries are named by path. How: This builds a reference.
 import { remove          } from 'firebase/database';         // What: Remove. Why: Waiting-on entries and delivered messages are deleted. How: This deletes one.
 import { serverTimestamp } from 'firebase/database';         // What: Server Timestamp. Why: The rules require a message's time to be the server's. How: This asks the server to fill it in.
+import { set             } from 'firebase/database';         // What: Set. Why: A message is written under an ID drawn first. How: This writes it there.
 import { startAt         } from 'firebase/database';         // What: Start At. Why: The rules let a member read from their own join time exactly. How: This starts the query there.
 
 
@@ -53,6 +54,7 @@ import type { Timestamp    } from 'firebase/firestore';        // What: Timestam
  * Sections:
  *  - Types
  *  - Constants
+ *  - Module State
  *  - Helpers
  *  - Exports
  *
@@ -75,6 +77,14 @@ type ChaCtxTyp = { groIdeStr : string, groKeyObj : CryptoKey, joiTimNum : number
 const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: Chat retention is counted in days. How: This is one day in milliseconds.
 
 // #endregion Constants
+
+
+
+// #region Module State
+
+const senPenSet = new Set< string >(); // What: Send Pending Set. Why: The database tells this device's listeners of its own write at once, before the server accepts or refuses it, and a refused message mustn't be shown or kept. How: This holds the IDs of messages this device is sending until the server answers.
+
+// #endregion Module State
 
 
 
@@ -183,6 +193,10 @@ const chaCtxFun = async ( groIdeStr : string ) : Promise< ChaCtxTyp > => { // Wh
 const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Promise< MesRecTyp | null > => { // What: Message Handle Function. Why: Every message read is kept, acknowledged, and cleaned up the same way (Section 11.7). How: This runs each step for one message.
 
 
+	if ( senPenSet.has( mesSnaObj.key! ) ) return null; // What: Pending Guard. Why: This device's own message, heard before the server answered, may yet be refused, and the sender keeps its own copy once it's accepted. How: This skips it. // What: Non-Null Note. Why: A message under the chat always has a key. How: The ! reads it as present.
+
+
+
 	const mesValObj = mesSnaObj.val() as { ciphertext : string, iv : string, senderUid : string, sentAt : number, waitingOn? : Record< string, true > };                                     // What: Message Value Object. Why: Each field is read once. How: This reads the message. // What: Type Assertion Note. Why: The rules allow exactly these fields. How: The as reads them as such.
 	const texValStr = await decTexFun( chaCtxObj.groKeyObj, b64DecFun( mesValObj.ciphertext ), b64DecFun( mesValObj.iv ) ).catch( () => null );                                              // What: Text Value String. Why: Another member wrote the message, so it may not decrypt. How: This decrypts it, null when it won't.
 	const waiUidArr = Object.keys( mesValObj.waitingOn ?? {} ); // What: Waiting UID Array. Why: Whoever is still waiting decides when the message goes. How: This lists them.
@@ -235,7 +249,10 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  * @summary
  * Sends a message to a group's chat, tidied and checked as visible text,
  * encrypted under the group key, stamped with the server's time, and
- * waiting on every other member. The sender's device keeps its own copy.
+ * waiting on every other member. While the server decides on it, this
+ * device's own watch skips it, so a refused message is never shown or kept.
+ * Once it's accepted, the sender's device keeps its own copy, and a message
+ * nobody waits on, in a group of one, is deleted from the server.
  * Resolves with the message's ID. A message outside its limits rejects with
  * a RangeError before anything is sent.
  *
@@ -268,24 +285,45 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 	const mesEncObj = await encTexFun( await keyLoaFun( groIdeStr ), mesNorStr );                             // What: Message Encrypted Object. Why: Firebase only ever sees ciphertext. How: This encrypts it under the group key.
 	const othUidArr = [ ...await memUidFun( groIdeStr ) ].filter( ( memUidStr ) => memUidStr !== uidValStr ); // What: Other UID Array. Why: The message waits on every other member. How: This lists them.
 
-	const mesRefObj = await push( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ), { // What: Message Reference Object. Why: The message is sent under a new time-ordered ID. How: This writes it with every field the rules expect.
+	const mesRefObj = push( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ) ); // What: Message Reference Object. Why: The message is sent under a new time-ordered ID, known before it's written. How: This draws the ID without writing.
+	const mesKeyStr = mesRefObj.key!;                                                        // What: Message Key String. Why: The watch skips the message while the server decides on it. How: This reads its ID. // What: Non-Null Note. Why: A pushed reference always has a key. How: The ! reads it as present.
 
 
-		ciphertext : b64EncFun( mesEncObj.cipTexArr ),                                           // What: Ciphertext. Why: The rules check it as base64. How: This encodes it.
-		iv         : b64EncFun( mesEncObj.iniVecArr ),                                           // What: IV. Why: The message decrypts with it. How: This encodes it.
-		senderUid  : uidValStr,                                                                  // What: Sender UID. Why: The rules require the sender's own UID. How: This names them.
-		sentAt     : serverTimestamp(),                                                          // What: Sent At. Why: The rules require the server's time. How: This asks the server to fill it in.
-		waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ) // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
+	senPenSet.add( mesKeyStr ); // What: Pending Add Call. Why: This device's own watch hears the write before the server answers. How: This marks the message as being sent.
 
 
-	} );
+
+	try { // What: Write Try. Why: The pending mark has to go whether the server accepts or refuses the message. How: This writes it and clears the mark either way.
+
+
+		await set( mesRefObj, { // What: Message Write Call. Why: The message is sent. How: This writes it with every field the rules expect, rejecting when the rules refuse it.
+
+
+			ciphertext : b64EncFun( mesEncObj.cipTexArr ),                                           // What: Ciphertext. Why: The rules check it as base64. How: This encodes it.
+			iv         : b64EncFun( mesEncObj.iniVecArr ),                                           // What: IV. Why: The message decrypts with it. How: This encodes it.
+			senderUid  : uidValStr,                                                                  // What: Sender UID. Why: The rules require the sender's own UID. How: This names them.
+			sentAt     : serverTimestamp(),                                                          // What: Sent At. Why: The rules require the server's time. How: This asks the server to fill it in.
+			waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ) // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
+
+
+		} );
+
+
+	}
+
+	finally { senPenSet.delete( mesKeyStr ); } // What: Pending Clear. Why: The server has answered. How: This removes the mark.
+
+
+
+	if ( othUidArr.length === 0 ) await remove( mesRefObj ).catch( () => undefined ); // What: Unwaited Delete Call. Why: A message nobody waits on has no reason to stay on the server, and this device's watch skipped it. How: This deletes it, skipping a deletion another device already made.
+
 
 
 	await mesPutFun({ // What: Store Call. Why: The sender keeps their own message. How: This stores it, timed by the server's clock as the device estimates it.
 
 
 		groIdeStr,                     // What: Group Identifier String. Why: The message is kept under its group. How: This names it.
-		mesIdeStr : mesRefObj.key!,    // What: Message Identifier String. Why: A later sync of the same message replaces this copy. How: This uses the server's ID. // What: Non-Null Note. Why: A pushed reference always has a key. How: The ! reads it as present.
+		mesIdeStr : mesKeyStr,         // What: Message Identifier String. Why: A later sync of the same message replaces this copy. How: This uses the server's ID.
 		senUidStr : uidValStr,         // What: Sender UID String. Why: The chat shows who sent it. How: This names this identity.
 		sntTimNum : await srvTimFun(), // What: Sent Time Number. Why: The history is ordered by time. How: This uses the device's clock corrected by its offset from the server's, since a phone's clock can be minutes off.
 		texValStr : mesNorStr          // What: Text Value String. Why: The history shows the text. How: This keeps the tidied message.
@@ -295,7 +333,7 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 
 
-	return mesRefObj.key!; // What: Message Return. Why: The app can find the message. How: This returns its ID. // What: Non-Null Note. Why: A pushed reference always has a key. How: The ! reads it as present.
+	return mesKeyStr; // What: Message Return. Why: The app can find the message. How: This returns its ID.
 
 
 };
@@ -365,13 +403,17 @@ const chaSynFun = async ( groIdeStr : string ) : Promise< number > => { // What:
  * @summary
  * Watches a group's chat from this member's join time, handling each
  * message as it arrives, those already waiting first, and handing each
- * readable one to the callback. Resolves with the function that stops
- * watching.
+ * readable one to the callback. A read the rules refuse, such as one made
+ * before the membership mirror holds this member, ends the watch and calls
+ * onErrFun, when given, so the caller can start it again. Resolves with the
+ * function that stops watching.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param groIdeStr - Group Identifier String: The group's ID.
- * @param onMesFun - On Message Function: Called with each kept message.
+ * @param onMesFun  - On Message Function: Called with each kept message.
+ * @param onErrFun  - On Error Function: Called with the error if the watch
+ *                    is refused, nothing by default.
  *
  * @returns A promise that resolves with the function that stops watching.
  *
@@ -382,7 +424,7 @@ const chaSynFun = async ( groIdeStr : string ) : Promise< number > => { // What:
  *
 */
 
-const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp ) => void ) : Promise< () => void > => { // What: Chat Watch Function. Why: An open chat shows messages as they're sent. How: This listens from the join time and handles each new one.
+const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp ) => void, onErrFun : ( errCatObj : Error ) => void = () => {} ) : Promise< () => void > => { // What: Chat Watch Function. Why: An open chat shows messages as they're sent. How: This listens from the join time and handles each new one.
 
 
 	const chaCtxObj = await chaCtxFun( groIdeStr ); // What: Chat Context Object. Why: Every message is handled with the same facts. How: This loads them.
@@ -406,7 +448,7 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 		} );
 
 
-	} );
+	}, onErrFun ); // What: Cancel Callback. Why: A refused read ends the listener, which the caller should hear about. How: This hands the error to onErrFun.
 
 
 };

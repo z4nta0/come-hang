@@ -7,6 +7,7 @@ import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Wh
 
 
 import { ButBasCom    } from '../ui/button.tsx';    // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
+import { GroChaCom    } from './group-chat.tsx';    // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
 import { IcoSvgCom    } from '../ui/icon.tsx';      // What: Icon SVG Component. Why: The switcher, the sheet's close button, and the rail's new group button show icons. How: This draws them.
 import { iniTexFun    } from '../utils/text.ts';    // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
 import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
@@ -27,12 +28,12 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  *
  * @summary
  * The frame around an open group. Below 720px wide it has a bar with the
- * group's name, which opens a sheet listing every group and offering to
- * start one; from 720px up, a rail of every group, by initials, sits down the
- * left beside the bar, the name there plain text, and the rail holds the
- * button that starts a group. The group's content fills the main area below
- * the bar. Choosing a group or starting one opens it as a new history entry,
- * and a group just created takes focus on its heading.
+ * group's name, which opens a sheet listing every group and offering to start
+ * one; from 720px up, a rail of every group, by initials, sits down the left
+ * beside the bar, the name there plain text, and the rail holds the button
+ * that starts a group. The group's content fills the main area below the bar,
+ * its chat for now. Choosing a group or starting one opens it as a new history
+ * entry, and a group just created takes focus on its heading.
  *
  * Sections:
  *  - Components
@@ -59,7 +60,8 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  * a modal dialog that slides up from the bottom. The sheet closes on its
  * close button, on Escape, on a tap of the dimmed page, or once a group is
  * chosen, sliding back down first. When focBoo is true, the heading takes
- * focus once drawn.
+ * focus once drawn, and the history entry is replaced with one that no longer
+ * asks, so a reload doesn't take focus again.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -88,13 +90,19 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 
 
 
-	useEffect( () => { // What: Heading Focus Effect. Why: A group just created replaces the form that made it, so focus should land on what replaced it. How: This focuses the heading when asked.
+	useEffect( () => { // What: Heading Focus Effect. Why: A group just created replaces the form that made it, so focus should land on what replaced it. How: This focuses the heading when asked, then clears the request from the history entry.
 
 
-		if ( focBoo ) heaEleRef.current?.focus(); // What: Focus Call. Why: The new group is announced and the next Tab starts from it. How: This focuses the heading.
+		if ( !focBoo ) return; // What: No Request Guard. Why: Only a group just created takes focus. How: This returns otherwise.
 
 
-	}, [ curGroObj.ideStr, focBoo ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curGroObj.ideStr changes when another group opens, and focBoo when the request to focus does.
+
+		heaEleRef.current?.focus(); // What: Focus Call. Why: The new group is announced and the next Tab starts from it. How: This focuses the heading.
+
+		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of creation, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
+
+
+	}, [ curGroObj.ideStr, focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curGroObj.ideStr changes when another group opens, focBoo when the request to focus does, and scrOpeFun only if the router's navigate does.
 
 
 
@@ -220,12 +228,15 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 
 
 
-			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open group's content is the screen's main content. How: This holds its chat below the bar. */ }
+			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open group's content is the screen's main content. How: This holds its chat below the bar, filling the rest of the screen. */ }
 
 
-				<h2 className={ cssModObj.chaTitHea }>Chat</h2>{ /* What: Chat Title Heading Element. Why: The content says which part of the group is open. How: This names the chat. */ }
+				<GroChaCom
+					key={ curGroObj.ideStr } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages. How: This remounts the chat for each group.
 
-				<p className={ cssModObj.chaEmpPar }>No messages yet.</p>{ /* What: Chat Empty Paragraph Element. Why: An empty chat should say so. How: This tells that nothing has been said yet. */ }
+					groIdeStr={ curGroObj.ideStr }
+					groNamStr={ curGroObj.namStr }
+				/>{ /* What: Group Chat Component. Why: The chat is the group's first part. How: This shows the open group's chat. */ }
 
 
 			</MaiAreCom>
