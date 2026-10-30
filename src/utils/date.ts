@@ -122,7 +122,8 @@ const eveBloFun = ( staTimNum : number, nowTimNum : number ) : { botStr : string
 
 
 
-const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { hour : 'numeric', minute : '2-digit', weekday : 'short' } ).formatRange( staTimNum, endTimNum ); // What: Event Range Function. Why: An event's line says the day and the hours it runs. How: This formats the start and end as one range, which repeats the day only when it changes.
+const eveDatFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { day : 'numeric', hour : 'numeric', minute : '2-digit', month : 'long', weekday : 'long' } ).formatRange( staTimNum, endTimNum ); // What: Event Date Function. Why: An event's details give its full date and hours. How: This formats the start and end as one range, with the weekday and month spelled out, repeating the date only when it changes.
+const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { hour : 'numeric', minute : '2-digit', weekday : 'short' } ).formatRange( staTimNum, endTimNum );                                 // What: Event Range Function. Why: An event's line says the day and the hours it runs. How: This formats the start and end as one range, which repeats the day only when it changes.
 
 // #endregion Helpers
 
@@ -130,7 +131,7 @@ const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Int
 
 // #region Exports
 
-export { eveBloFun, eveRanFun, mesTimFun }; // What: Named Exports. Why: The chat labels its messages and its pinned event with these. How: This exports the three helpers.
+export { eveBloFun, eveDatFun, eveRanFun, mesTimFun }; // What: Named Exports. Why: The chat and the event details label messages and events with these. How: This exports the helpers.
 
 // #endregion Exports
 

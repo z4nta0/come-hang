@@ -14,13 +14,15 @@ import { getDocs        } from 'firebase/firestore';      // What: Get Docs. Why
 import { ideEnsFun      } from './identity.ts';           // What: Identity Ensure Function. Why: A claim names this identity. How: This reads it.
 import { iteLabFun      } from '../core/text-limits.ts';  // What: Item Label Function. Why: A label is checked by the app alone. How: This applies the limits.
 import { keyLoaFun      } from './groups.ts';             // What: Key Load Function. Why: Labels are encrypted with the group key. How: This loads it.
+import { onSnapshot     } from 'firebase/firestore';      // What: On Snapshot. Why: The bring-list follows claims and new items as they land. How: This listens to the items.
 import { runTransaction } from 'firebase/firestore';      // What: Run Transaction. Why: Each item write reads its event's deletion time, and a claim reads the item it takes. How: This runs the reads and writes together.
 import { texNorFun      } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: A label is tidied before it's checked. How: This normalizes it.
 
 
-import type { DocumentReference } from 'firebase/firestore'; // What: Document Reference. Why: The expiry helper reads an event by reference. How: This types it.
-import type { Timestamp         } from 'firebase/firestore'; // What: Timestamp. Why: An event's deletion time comes back as a timestamp. How: This types it.
-import type { Transaction       } from 'firebase/firestore'; // What: Transaction. Why: The expiry helper reads inside a caller's transaction. How: This types it.
+import type { DocumentReference     } from 'firebase/firestore'; // What: Document Reference. Why: The expiry helper reads an event by reference. How: This types it.
+import type { QueryDocumentSnapshot } from 'firebase/firestore'; // What: Query Document Snapshot. Why: The list and the watch read each item from a listed document. How: This types it.
+import type { Timestamp             } from 'firebase/firestore'; // What: Timestamp. Why: An event's deletion time comes back as a timestamp. How: This types it.
+import type { Transaction           } from 'firebase/firestore'; // What: Transaction. Why: The expiry helper reads inside a caller's transaction. How: This types it.
 
 // #endregion Imports
 
@@ -39,16 +41,25 @@ import type { Transaction       } from 'firebase/firestore'; // What: Transactio
  * write reads the event in its transaction and stamps the item with the
  * event's deletion time, as the rules require, which also brings an item
  * left out of step back in line, and a write to an item whose event is gone
- * rejects. Any member lists the items with their labels decrypted, where a
- * label that won't decrypt comes back empty.
+ * rejects. Any member lists or watches the items with their labels
+ * decrypted, where a label that won't decrypt comes back empty.
  *
  * Sections:
+ *  - Types
  *  - Helpers
  *  - Exports
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
+
+
+
+// #region Types
+
+type IteRecTyp = { asgUidStr : string | null, iteIdeStr : string, labTexStr : string }; // What: Item Record Type. Why: The bring-list shows each item's label and who's bringing it. How: This types one item as iteLisFun and iteWatFun list it.
+
+// #endregion Types
 
 
 
@@ -354,7 +365,27 @@ const iteDelFun = ( groIdeStr : string, eveIdeStr : string, iteIdeStr : string )
 
 
 
-type IteRecTyp = { asgUidStr : string | null, iteIdeStr : string, labTexStr : string }; // What: Item Record Type. Why: The bring-list shows each item's label and who's bringing it. How: This types one item as iteLisFun lists it.
+const iteRecFun = async ( groKeyObj : CryptoKey, iteDocObj : QueryDocumentSnapshot ) : Promise< IteRecTyp > => { // What: Item Record Function. Why: The list and the watch read an item the same way. How: This reads its fields, decrypting its label.
+
+
+	return { // What: Record Return. Why: Each item becomes one record. How: This returns its fields.
+
+
+		asgUidStr : iteDocObj.get( 'assignedUid' ) as string | null, // What: Assigned UID String. Why: The list shows who's bringing it. How: This reads the assignee, null when it's open. // What: Type Assertion Note. Why: The rules store a UID or null. How: The as reads it as either.
+		iteIdeStr : iteDocObj.id,                                    // What: Item Identifier String. Why: An item is claimed and changed by ID. How: This reads it.
+		labTexStr : await decTexFun( groKeyObj, ( iteDocObj.get( 'labelEnc' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >, ( iteDocObj.get( 'iv' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer > ).catch( () => '' ) // What: Label Text String. Why: The label says what to bring. How: This decrypts it, empty when it won't. // What: Type Assertion Note. Why: The rules store both as bytes, and toUint8Array returns an array over a plain buffer. How: The as read them as such.
+
+
+	};
+
+
+};
+
+
+
+const iteSorFun = ( iteRecArr : IteRecTyp[] ) : IteRecTyp[] => iteRecArr.sort( ( recOneObj, recTwoObj ) => recOneObj.labTexStr.localeCompare( recTwoObj.labTexStr ) ); // What: Item Sort Function. Why: A list in label order is easy to scan. How: This sorts the records by label.
+
+
 
 // #region iteLisFun
 
@@ -389,25 +420,8 @@ const iteLisFun = async ( groIdeStr : string, eveIdeStr : string ) : Promise< It
 	const iteSnaObj = await getDocs( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/events/${ eveIdeStr }/assignments` ) ); // What: Items Snapshot Object. Why: Every item is in the event's collection. How: This reads it.
 
 
-	const iteRecArr = await Promise.all( iteSnaObj.docs.map( async ( iteDocObj ) : Promise< IteRecTyp > => { // What: Item Record Array. Why: The list shows each item. How: This reads each one into a record, decrypting its label.
 
-
-		return { // What: Record Return. Why: Each item becomes one record. How: This returns its fields.
-
-
-			asgUidStr : iteDocObj.get( 'assignedUid' ) as string | null, // What: Assigned UID String. Why: The list shows who's bringing it. How: This reads the assignee, null when it's open. // What: Type Assertion Note. Why: The rules store a UID or null. How: The as reads it as either.
-			iteIdeStr : iteDocObj.id,                                    // What: Item Identifier String. Why: An item is claimed and changed by ID. How: This reads it.
-			labTexStr : await decTexFun( groKeyObj, ( iteDocObj.get( 'labelEnc' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >, ( iteDocObj.get( 'iv' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer > ).catch( () => '' ) // What: Label Text String. Why: The label says what to bring. How: This decrypts it, empty when it won't. // What: Type Assertion Note. Why: The rules store both as bytes, and toUint8Array returns an array over a plain buffer. How: The as read them as such.
-
-
-		};
-
-
-	} ) );
-
-
-
-	return iteRecArr.sort( ( recOneObj, recTwoObj ) => recOneObj.labTexStr.localeCompare( recTwoObj.labTexStr ) ); // What: Items Return. Why: A list in label order is easy to scan. How: This returns the records sorted by label.
+	return iteSorFun( await Promise.all( iteSnaObj.docs.map( ( iteDocObj ) => iteRecFun( groKeyObj, iteDocObj ) ) ) ); // What: Items Return. Why: The list shows each item in label order. How: This reads every item into a record and returns them sorted.
 
 
 };
@@ -466,13 +480,100 @@ const iteRenFun = async ( groIdeStr : string, eveIdeStr : string, iteIdeStr : st
 
 // #endregion iteRenFun
 
+
+// #region iteWatFun
+
+/**
+ * iteWatFun = Item Watch Function
+ *
+ * @summary
+ * Watches an event's bring-list, calling back with every item, by label, as
+ * iteLisFun lists them, at first and after each change, such as a claim or
+ * a new item. A change that lands while the last one is still decrypting
+ * replaces it, so the callback never goes back to an older list. A key that
+ * won't load or a refused watch calls the error callback, and the watch
+ * stops. The returned function stops the watch.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param eveIdeStr - Event Identifier String: The event's ID.
+ * @param onIteFun  - On Items Function: Called with the items.
+ * @param onErrFun  - On Error Function: Called when the watch fails, by
+ *                    default nothing.
+ *
+ * @returns A function that stops the watch.
+ *
+ * @example
+ * ```ts
+ * iteWatFun('Xk3...', 'Ev7...', setIteArr) // => () => void
+ * ```
+ *
+*/
+
+const iteWatFun = ( groIdeStr : string, eveIdeStr : string, onIteFun : ( iteRecArr : IteRecTyp[] ) => void, onErrFun : ( errValObj : Error ) => void = () => {} ) : () => void => { // What: Item Watch Function. Why: A claim or a new item shows to everyone at once. How: This listens to the event's items and reports them decrypted.
+
+
+	let runNum = 0;     // What: Run Number. Why: Only the newest change's list is reported. How: This counts the changes.
+	let stoBoo = false; // What: Stopped Boolean. Why: The watch can stop while the key is still loading. How: This marks it stopped.
+
+	let stoFun : () => void = () => {}; // What: Stop Function. Why: The listener starts once the key loads. How: This holds its stop, a no-op until then.
+
+
+
+	keyLoaFun( groIdeStr ).then( ( groKeyObj ) => { // What: Key Load Call. Why: The labels open with the group key. How: This loads it, then listens.
+
+
+
+		if ( stoBoo ) return;
+
+
+
+		stoFun = onSnapshot( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/events/${ eveIdeStr }/assignments` ), async ( iteSnaObj ) => { // What: Items Watch Call. Why: Every change to the list reaches the watcher. How: This listens to the event's items.
+
+
+			const curRunNum = ++runNum; // What: Current Run Number. Why: A later change may land while this one decrypts. How: This numbers this change.
+
+			const iteRecArr = await Promise.all( iteSnaObj.docs.map( ( iteDocObj ) => iteRecFun( groKeyObj, iteDocObj ) ) ); // What: Item Record Array. Why: The callback takes readable items. How: This reads every item into a record.
+
+
+
+			if ( stoBoo || curRunNum !== runNum ) return;
+
+
+
+			onIteFun( iteSorFun( iteRecArr ) ); // What: Items Report Call. Why: The bring-list shows the change. How: This reports the records in label order.
+
+
+		}, onErrFun );
+
+
+	} ).catch( onErrFun ); // What: Key Error Catch. Why: A group key that won't load leaves nothing to show. How: This reports the failure.
+
+
+
+	return () => { // What: Stop Return. Why: The bring-list stops listening when it closes. How: This marks the watch stopped and ends the listener.
+
+
+		stoBoo = true; // What: Stopped Assignment. Why: A key still loading mustn't start a listener. How: This marks the watch stopped.
+
+		stoFun(); // What: Listener Stop Call. Why: An open listener keeps reading. How: This ends it.
+
+
+	};
+
+
+};
+
+// #endregion iteWatFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { iteAddFun, iteAsgFun, iteClaFun, iteDelFun, iteLisFun, type IteRecTyp, iteRenFun }; // What: Named Exports. Why: The bring-list drives every item change through these. How: This exports the functions and the item record's type.
+export { iteAddFun, iteAsgFun, iteClaFun, iteDelFun, iteLisFun, type IteRecTyp, iteRenFun, iteWatFun }; // What: Named Exports. Why: The bring-list drives every item change and its watch through these. How: This exports the functions and the item record's type.
 
 // #endregion Exports
 

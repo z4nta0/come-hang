@@ -8,16 +8,17 @@ import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Wh
 
 import { ButBasCom    } from '../ui/button.tsx';    // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
 import { GroChaCom    } from './group-chat.tsx';    // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
-import { IcoSvgCom    } from '../ui/icon.tsx';      // What: Icon SVG Component. Why: The switcher, the sheet's close button, and the rail's new group button show icons. How: This draws them.
+import { IcoSvgCom    } from '../ui/icon.tsx';      // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
 import { iniTexFun    } from '../utils/text.ts';    // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
 import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
+import { SheDiaCom    } from '../ui/sheet.tsx';     // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
 import { useEffect    } from 'react';               // What: Use Effect. Why: A group just created takes focus on its heading. How: This moves focus once it's drawn.
-import { useRef       } from 'react';               // What: Use Reference. Why: The heading takes focus and the sheet opens and closes as an element. How: This holds both elements.
+import { useRef       } from 'react';               // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
 import { useScrOpeFun } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This returns the function that opens one.
-import { useState     } from 'react';               // What: Use State. Why: The sheet plays its closing slide before it closes. How: This holds whether it's closing.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
+import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type. Why: The frame opens and closes the group sheet. How: This types its handle.
 
 // #endregion Imports
 
@@ -57,7 +58,7 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  * @summary
  * Renders the frame around the open group: the rail, the bar with the
  * group's name as the screen's one h1, the main area, and the group sheet,
- * a modal dialog that slides up from the bottom. The sheet closes on its
+ * a modal sheet that slides up from the bottom. The sheet closes on its
  * close button, on Escape, on a tap of the dimmed page, or once a group is
  * chosen, sliding back down first. When focBoo is true, the heading takes
  * focus once drawn, and the history entry is replaced with one that no longer
@@ -82,11 +83,9 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
 function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.Element {
 
 
-	const diaEleRef = useRef< HTMLDialogElement >( null );  // What: Dialog Element Reference. Why: The sheet opens and closes as a modal dialog. How: This holds its element.
 	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group just created takes focus on its heading. How: This holds the heading.
 	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This reads the function that opens one.
-
-	const [ cloSheBoo, setCloSheBoo ] = useState( false ); // What: Closing Sheet Boolean And Setter. Why: The sheet slides down before it closes. How: This is true while it's sliding.
+	const sheHanRef = useRef< SheHanTyp >( null );          // What: Sheet Handle Reference. Why: The switcher opens the group sheet and a choice closes it. How: This holds the sheet's handle.
 
 
 
@@ -109,7 +108,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 	const groOpeFun = ( groIdeStr : string ) : void => { // What: Group Open Function. Why: A group chosen from the rail or the sheet opens. How: This closes the sheet if it's open and opens the group's screen.
 
 
-		if ( diaEleRef.current?.open ) setCloSheBoo( true ); // What: Sheet Close Call. Why: The sheet shouldn't stay over the group just chosen. How: This starts its closing slide.
+		sheHanRef.current?.cloFun(); // What: Sheet Close Call. Why: The sheet shouldn't stay over the group just chosen. How: This starts its closing slide, when it's open.
 
 		scrOpeFun( { groStr : groIdeStr, scrStr : 'group' } ); // What: Screen Open Call. Why: Each group is its own history entry. How: This opens the group's screen.
 
@@ -204,7 +203,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 
 						aria-haspopup='dialog'
 
-						onClick={ () => diaEleRef.current?.showModal() } // What: Switcher Click Handler. Why: The sheet holds the page while it's open. How: This opens the dialog as a modal, which makes everything behind it inert.
+						onClick={ () => sheHanRef.current?.opeFun() } // What: Switcher Click Handler. Why: The sheet holds the page while it's open. How: This opens the group sheet as a modal, which makes everything behind it inert.
 					>{ /* What: Frame Switcher Button Element. Why: On a phone the group's name is how someone reaches their other groups. How: This opens the group sheet, below 720px wide. */ }
 
 
@@ -243,120 +242,52 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 
 
 
-			<dialog
-				ref={ diaEleRef }
+			<SheDiaCom
+				ref={ sheHanRef }
 
-				className={ cssModObj.groSheDia }
-
-				data-sheet-closing={ cloSheBoo || undefined }
-
-				aria-labelledby='sheTitHea'
-
-				onCancel={ ( canEveObj ) => { canEveObj.preventDefault(); setCloSheBoo( true ); } } // What: Cancel Handler. Why: Escape should slide the sheet down like every other way of closing it. How: This stops the dialog closing at once and starts its closing slide.
-			>{ /* What: Group Sheet Dialog Element. Why: On a phone, every group and starting a new one sit in a sheet over the page. How: This holds the dimmed page and the sheet, modal while open, sliding down as it closes. */ }
+				ideStr='groSheHea'
+				titStr='Your groups'
+			>{ /* What: Group Sheet Dialog Component. Why: On a phone, every group and starting a new one sit in a sheet over the page. How: This holds the group list and the start button. */ }
 
 
-				<div
-					className={ cssModObj.sheScrDiv }
-
-					onClick={ () => setCloSheBoo( true ) } // What: Scrim Click Handler. Why: A tap outside the sheet should close it. How: This starts its closing slide.
-				/>{ /* What: Sheet Scrim Div Element. Why: The page behind the sheet dims, and a tap on it closes the sheet. How: This covers the screen behind the sheet. */ }
+				<ul className={ cssModObj.sheGroUno }>{ /* What: Sheet Group Unordered List Element. Why: Every group is listed by name. How: This stacks a button for each. */ }
 
 
-
-				<div
-					className={ cssModObj.shePanDiv }
-
-					onAnimationEnd={ ( aniEveObj ) => { // What: Panel Animation End Handler. Why: The sheet closes once its slide down finishes, which still ends under reduced motion. How: This closes the dialog after the panel's own closing animation.
+					{ groRecArr.map( ( groRecObj ) => ( // What: Sheet Group Map. Why: Each group gets its own row. How: This renders one per group.
 
 
-						if ( aniEveObj.target !== aniEveObj.currentTarget || !cloSheBoo ) return; // What: Closing Guard. Why: Only the panel's own closing slide should close the dialog, not its opening slide or an animation inside it. How: This returns for any other end.
+						<li key={ groRecObj.ideStr }>{ /* What: Sheet Group Item Element. Why: Each group is one entry in the list. How: This holds its button. */ }
 
 
+							<button
+								className={ cssModObj.sheGroBut }
 
-						diaEleRef.current?.close(); // What: Dialog Close Call. Why: The slide has finished. How: This closes the dialog, which returns focus to the button that opened it.
+								type='button'
 
-						setCloSheBoo( false ); // What: Closing Clear Call. Why: The next opening should slide up again. How: This marks the sheet as no longer closing.
+								aria-current={ groRecObj.ideStr === curGroObj.ideStr ? 'true' : undefined } // What: Sheet Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's row.
 
-
-					} }
-				>{ /* What: Sheet Panel Div Element. Why: The sheet's content sits on a surface rising from the bottom. How: This holds the bar, the group list, and the start button. */ }
-
-
-					<div className={ cssModObj.sheBarDiv }>{ /* What: Sheet Bar Div Element. Why: The sheet's title sits beside its close button. How: This lays them out in one row. */ }
+								onClick={ () => groOpeFun( groRecObj.ideStr ) }
+							>{ groRecObj.namStr }</button>{ /* What: Sheet Group Button Element. Why: A group is chosen by its name. How: This opens the group and closes the sheet. */ }
 
 
-						<h2
-							id='sheTitHea'
-
-							className={ cssModObj.sheTitHea }
-						>Your groups</h2>{ /* What: Sheet Title Heading Element. Why: The sheet is named for what it lists, and the dialog takes its name from it. How: This names the sheet. */ }
-
-						<button
-							className={ cssModObj.sheCloBut }
-
-							type='button'
-
-							aria-label='Close'
-
-							onClick={ () => setCloSheBoo( true ) }
-						>{ /* What: Sheet Close Button Element. Why: The sheet needs a visible way out. How: This starts its closing slide. */ }
+						</li>
 
 
-							<IcoSvgCom
-								icoNamStr='close'
-								sizSteStr='p01'
-							/>{ /* What: Close Icon SVG Component. Why: A cross says the button closes the sheet. How: This draws it at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
+					) ) }
 
 
-						</button>
-
-
-					</div>
+				</ul>
 
 
 
-					<ul className={ cssModObj.sheGroUno }>{ /* What: Sheet Group Unordered List Element. Why: Every group is listed by name. How: This stacks a button for each. */ }
+				<ButBasCom
+					className={ cssModObj.sheNewBut }
+
+					onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
+				>Start a group</ButBasCom>{ /* What: Sheet New Button Component. Why: Starting another group is offered beside the list. How: This opens the screen for starting one. */ }
 
 
-						{ groRecArr.map( ( groRecObj ) => ( // What: Sheet Group Map. Why: Each group gets its own row. How: This renders one per group.
-
-
-							<li key={ groRecObj.ideStr }>{ /* What: Sheet Group Item Element. Why: Each group is one entry in the list. How: This holds its button. */ }
-
-
-								<button
-									className={ cssModObj.sheGroBut }
-
-									type='button'
-
-									aria-current={ groRecObj.ideStr === curGroObj.ideStr ? 'true' : undefined } // What: Sheet Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's row.
-
-									onClick={ () => groOpeFun( groRecObj.ideStr ) }
-								>{ groRecObj.namStr }</button>{ /* What: Sheet Group Button Element. Why: A group is chosen by its name. How: This opens the group and closes the sheet. */ }
-
-
-							</li>
-
-
-						) ) }
-
-
-					</ul>
-
-
-
-					<ButBasCom
-						className={ cssModObj.sheNewBut }
-
-						onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
-					>Start a group</ButBasCom>{ /* What: Sheet New Button Component. Why: Starting another group is offered beside the list. How: This opens the screen for starting one. */ }
-
-
-				</div>
-
-
-			</dialog>
+			</SheDiaCom>
 
 
 		</div>

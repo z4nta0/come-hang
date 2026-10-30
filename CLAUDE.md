@@ -48,7 +48,8 @@ presence, history requests, location sharing, push notifications, Google
 linking and recovery with the group keys shared again, and buying the upgrade.
 The first screens are built: the welcome, the form for starting a group, the
 group frame with its rail, its switcher and sheet, and the group chat with
-its pinned next event.
+its next event, pinned as a card that opens a sheet below 1,100px and shown in
+a panel beside the chat from 1,100px, each with the live bring-list.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 
@@ -183,8 +184,10 @@ emulators need Java, 21 installed.
   group frame it's the open group's content, past the rail and the bar, and
   it stays past the tab bar once that joins.
 - **Breakpoints** (per the breakpoint rule): 720px, where the group frame
-  switches from the phone's bar and sheet to the wide screen's rail. Layout
-  queries measure the app container, `appRooDiv` in `src/app.module.css`.
+  switches from the phone's bar and sheet to the wide screen's rail, and
+  1100px (decided 2026-10-30), where the next-event panel joins beside the
+  chat, replacing the event pinned above it. Layout queries measure the app
+  container, `appRooDiv` in `src/app.module.css`.
 - **Scroll restoring** (an addition to the scroll position rule, decided
   2026-10-30): a screen renders once the app has checked for groups, a
   moment after load, so a reload's restore waits for the screen host's ready
