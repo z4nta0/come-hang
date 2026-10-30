@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (the bring-list's watch and the event panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1602,8 +1602,16 @@ the Blaze change.
   from another member shows their avatar in their own color, their name, and
   its time, and the member's own messages sit at the other side in the accent;
   Enter sends, Shift+Enter starts a new line, and a refused or failed send is
-  announced and keeps its text. The pinned event opening a sheet with its
-  bring-list, the status lines, and the wide screen's event panel come next.
+  announced and keeps its text. Below 1,100px wide the pinned event is a
+  card that opens a sheet with its details and bring-list; from 1,100px a
+  panel beside the chat shows them instead (built 2026-10-30). Both share one
+  sheet and one details component: the date, place, and notes, then each item
+  with who's bringing it in their color, or "Open", offering "I'll bring it"
+  on an open item, "Let go" on the member's own, and removal on any, with a
+  box to add an open item. The list follows every member's changes as they
+  land, each change is announced, and a failure says why. Relabeling and
+  reassigning in the screens, planning events, and the status lines come
+  next.
   On iOS the welcome will lead through the install screen first (Section 16),
   built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite

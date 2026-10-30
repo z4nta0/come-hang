@@ -183,8 +183,8 @@ test( 'the composer sends on Enter, keeps a Shift+Enter line break, and clears i
 	expect( await curPagObj.getByRole( 'log' ).getByRole( 'listitem' ).count() ).toBe( 1 );                                               // What: Single Copy Assertion. Why: The sender's copy and the watch's copy are one message. How: This expects one entry once both have arrived.
 	expect( await curPagObj.getByRole( 'log' ).getByRole( 'listitem' ).locator( 'p' ).last().textContent() ).toBe( 'Line one\nLine two' ); // What: Line Break Assertion. Why: The message keeps the line break typed into it. How: This reads the message's text.
 
-	await expect( texBoxObj ).toHaveValue( '' );                                               // What: Cleared Box Assertion. Why: A sent message leaves the box empty. How: This reads the box.
-	await expect( curPagObj.getByRole( 'region', { name : 'Next event' } ) ).toHaveCount( 0 ); // What: No Pin Assertion. Why: A group with no events pins nothing. How: This expects no pinned event.
+	await expect( texBoxObj ).toHaveValue( '' );                           // What: Cleared Box Assertion. Why: A sent message leaves the box empty. How: This reads the box.
+	await expect( curPagObj.getByRole( 'complementary' ) ).toHaveCount( 0 ); // What: No Event Assertion. Why: A group with no events shows no event panel. How: This expects none at the test's desktop width.
 
 
 } );
@@ -214,8 +214,10 @@ test( 'a message with characters the chat refuses is announced and kept', async 
 
 
 
-test( "the group's next event is pinned above the chat", async ( { page : curPagObj } ) => { // What: Pinned Event Test. Why: The group's next event stays in view above the chat (Section 14). How: This plans an event and checks its card.
+test( "the group's next event is pinned above the chat on a phone", async ( { page : curPagObj } ) => { // What: Pinned Event Test. Why: The group's next event stays in view above the chat (Section 14). How: This plans an event and checks its card at a phone width.
 
+
+	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: The card pins the event below 1,100px wide. How: This sizes the page as a phone.
 
 	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
 
@@ -229,11 +231,11 @@ test( "the group's next event is pinned above the chat", async ( { page : curPag
 	await curPagObj.goto( '/' ); // What: App Open Call. Why: The chat shows the event. How: This opens the app on the group.
 
 
-	const pinSecObj = curPagObj.getByRole( 'region', { name : 'Next event' } ); // What: Pinned Section Object. Why: The checks read the card. How: This finds it.
+	const pinButObj = curPagObj.getByRole( 'button', { name : /Picnic/ } ); // What: Pinned Button Object. Why: The checks read the card. How: This finds it by the event's title.
 
 
-	await expect( pinSecObj.getByRole( 'heading', { name : 'Picnic' } ) ).toBeVisible(); // What: Title Assertion. Why: The card names the event. How: This waits for its heading.
-	await expect( pinSecObj ).toContainText( 'Central Park' );                           // What: Place Assertion. Why: The card says where it is. How: This reads its line.
+	await expect( pinButObj ).toBeVisible();                   // What: Card Assertion. Why: The card names the event. How: This waits for it.
+	await expect( pinButObj ).toContainText( 'Central Park' ); // What: Place Assertion. Why: The card says where it is. How: This reads its line.
 
 
 } );

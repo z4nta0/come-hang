@@ -10,6 +10,7 @@ import { chaMesFun       } from '../core/text-limits.ts';    // What: Chat Messa
 import { chaSenFun       } from '../state/chat.ts';          // What: Chat Send Function. Why: The composer sends messages. How: This encrypts and sends one.
 import { chaWatFun       } from '../state/chat.ts';          // What: Chat Watch Function. Why: Messages show as they're sent. How: This watches the group's chat.
 import { eveBloFun       } from '../utils/date.ts';          // What: Event Block Function. Why: The pinned event leads with when it is. How: This gives its date block's lines.
+import { EveDetCom       } from './event-details.tsx';       // What: Event Details Component. Why: The next event's sheet and panel show its details and bring-list. How: This draws them.
 import { eveLisFun       } from '../state/events.ts';        // What: Event List Function. Why: The group's next event is pinned above the chat. How: This lists the events, soonest first.
 import { eveRanFun       } from '../utils/date.ts';          // What: Event Range Function. Why: The pinned event says the hours it runs. How: This formats its range.
 import { IcoSvgCom       } from '../ui/icon.tsx';            // What: Icon SVG Component. Why: The send button shows a paper plane. How: This draws it.
@@ -20,6 +21,8 @@ import { linNorFun       } from '../core/text-limits.ts';    // What: Lines Norm
 import { memLisFun       } from '../state/members.ts';       // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
 import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
 import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
+import { SheDiaCom       } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
+import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar wears their color. How: This names it.
 import { useEffect       } from 'react';                     // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
 import { useLayoutEffect } from 'react';                     // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
 import { useRef          } from 'react';                     // What: Use Reference. Why: The log's element and whether it sits at its bottom are read outside rendering. How: This holds both.
@@ -29,6 +32,7 @@ import { useState        } from 'react';                     // What: Use State.
 import type { EveRecTyp } from '../state/events.ts';        // What: Event Record Type. Why: The pinned event is one of the group's events. How: This types it.
 import type { MemRecTyp } from '../state/members.ts';       // What: Member Record Type. Why: Senders are looked up among the members. How: This types each.
 import type { MesRecTyp } from '../platform/chat-store.ts'; // What: Message Record Type. Why: The log shows stored messages. How: This types each.
+import type { SheHanTyp } from '../ui/sheet.tsx';           // What: Sheet Handle Type. Why: The pinned event opens its sheet. How: This types the sheet's handle.
 
 // #endregion Imports
 
@@ -83,7 +87,6 @@ const RET_MIL_NUM = 1000;                                                       
 // #region Helpers
 
 const mesMerFun = ( preRecArr : MesRecTyp[], mesRecObj : MesRecTyp ) : MesRecTyp[] => [ ...preRecArr.filter( ( preRecObj ) => preRecObj.mesIdeStr !== mesRecObj.mesIdeStr ), mesRecObj ].sort( ( recOneObj, recTwoObj ) => recOneObj.sntTimNum - recTwoObj.sntTimNum ); // What: Message Merge Function. Why: A message can arrive twice, once as sent and again from the watch with the server's time. How: This replaces any copy by ID and keeps the list in time order.
-const sloColFun = ( colSloNum : number ) : string => `var( --mem-${ String( colSloNum + 1 ).padStart( 3, '0' ) }-col )`; // What: Slot Color Function. Why: A member's slot picks one of the 50 member color tokens. How: This names the token for a slot, slot 0 being --mem-001-col.
 
 // #endregion Helpers
 
@@ -246,7 +249,7 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 
 // #region Components
 
-type PecProTyp = { eveRecObj : EveRecTyp }; // What: Pinned Event Component Props Type. Why: The card shows one event. How: This types PinEveCom's one prop.
+type PecProTyp = { eveRecObj : EveRecTyp, onOpeFun : () => void }; // What: Pinned Event Component Props Type. Why: The card shows one event and opens its details. How: This types PinEveCom's props.
 
 // #region PinEveCom
 
@@ -256,40 +259,47 @@ type PecProTyp = { eveRecObj : EveRecTyp }; // What: Pinned Event Component Prop
  * @summary
  * Renders the group's next event as a card above the chat: a date block with
  * its month and day, or "Today" and its start hour, beside its title and a
- * line with its hours and, when it has one, its place.
+ * line with its hours and, when it has one, its place. The card is a button
+ * that opens the event's sheet. From 1,100px wide it hides, since the event
+ * panel beside the chat shows the event instead.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param props.eveRecObj - Event Record Object: The event to pin.
+ * @param props.onOpeFun  - On Open Function: Opens the event's sheet.
  *
- * @returns The pinned event's section.
+ * @returns The pinned event's button.
  *
  * @example
  * ```tsx
- * PinEveCom({ eveRecObj }) // => <PinEveCom />
+ * PinEveCom({ eveRecObj, onOpeFun }) // => <PinEveCom />
  * ```
  *
 */
 
-function PinEveCom ( { eveRecObj } : PecProTyp ) : React.JSX.Element {
+function PinEveCom ( { eveRecObj, onOpeFun } : PecProTyp ) : React.JSX.Element {
 
 
-	const eveBloObj = eveBloFun( eveRecObj.staTimNum, Date.now() );                                                                   // What: Event Block Object. Why: The card leads with when the event is. How: This gives the block's two lines.
-	const eveLinStr = [ eveRanFun( eveRecObj.staTimNum, eveRecObj.endTimNum ), eveRecObj.locTexStr ].filter( Boolean ).join( ' · ' ); // What: Event Line String. Why: The hours and the place fit on one line. How: This joins them with a dot, leaving out an empty place.
+	const eveBloObj = eveBloFun( eveRecObj.staTimNum, Date.now() );          // What: Event Block Object. Why: The card leads with when the event is. How: This gives the block's two lines.
+	const eveRanStr = eveRanFun( eveRecObj.staTimNum, eveRecObj.endTimNum ); // What: Event Range String. Why: The line leads with the hours. How: This formats them.
 
 
 
 	return (
 
 
-		<section
-			className={ cssModObj.pinEveSec }
+		<button
+			className={ cssModObj.pinEveBut }
 
-			aria-label='Next event'
-		>{ /* What: Pinned Event Section Element. Why: The next event stays in view above the chat. How: This lays the date block beside the title and line, on a raised card. */ }
+			type='button'
+
+			aria-haspopup='dialog'
+
+			onClick={ onOpeFun }
+		>{ /* What: Pinned Event Button Element. Why: The next event stays in view above the chat, and opens its details and bring-list. How: This lays the date block beside the title and line, on a raised card, below 1,100px wide. */ }
 
 
-			<p className={ cssModObj.pinDatPar }>{ /* What: Pinned Date Paragraph Element. Why: The date is the first thing read. How: This stacks the block's small and large lines on a tint. */ }
+			<span className={ cssModObj.pinDatSpa }>{ /* What: Pinned Date Span Element. Why: The date is the first thing read. How: This stacks the block's small and large lines on a tint. */ }
 
 
 				<span className={ cssModObj.datTopSpa }>{ eveBloObj.topStr }</span>{ /* What: Date Top Span Element. Why: The month, or "Today", tops the block. How: This shows the small line. */ }
@@ -297,14 +307,14 @@ function PinEveCom ( { eveRecObj } : PecProTyp ) : React.JSX.Element {
 				<span className={ cssModObj.datBotSpa }>{ eveBloObj.botStr }</span>{ /* What: Date Bottom Span Element. Why: The day, or today's start hour, is the block's large line. How: This shows it. */ }
 
 
-			</p>
+			</span>
 
-			<h3 className={ cssModObj.pinTitHea }>{ eveRecObj.titTexStr }</h3>{ /* What: Pinned Title Heading Element. Why: The event is known by its title. How: This shows it. */ }
+			<span className={ cssModObj.pinTitSpa }>{ eveRecObj.titTexStr }</span>{ /* What: Pinned Title Span Element. Why: The event is known by its title. How: This shows it. */ }
 
-			<p className={ cssModObj.pinLinPar }>{ eveLinStr }</p>{ /* What: Pinned Line Paragraph Element. Why: The hours and place say when and where. How: This shows them on one line. */ }
+			<span className={ cssModObj.pinLinSpa }>{ eveRanStr }{ eveRecObj.locTexStr !== '' && <><span aria-hidden='true'> · </span><span className={ cssModObj.pinHidSpa }>, </span>{ eveRecObj.locTexStr }</> }</span>{ /* What: Pinned Line Span Element. Why: The hours and place say when and where, and a screen reader should hear a comma where sight sees a dot. How: This shows the hours, then the place after a dot hidden from screen readers and a comma hidden from sight, when there is a place. */ }
 
 
-		</section>
+		</button>
 
 
 	);
@@ -353,6 +363,7 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 
 	const logBotRef = useRef( true );                   // What: Log Bottom Reference. Why: The log follows new messages only while someone reads at its end. How: This holds whether it sits at its bottom.
 	const logEleRef = useRef< HTMLDivElement >( null ); // What: Log Element Reference. Why: The log scrolls itself. How: This holds its element.
+	const sheHanRef = useRef< SheHanTyp >( null );      // What: Sheet Handle Reference. Why: The pinned event opens its sheet. How: This holds the sheet's handle.
 
 	const [ senErrStr, setSenErrStr ] = useState( '' );    // What: Send Error String And Setter. Why: A refused or failed send is announced. How: This holds the message, empty when there's none.
 	const [ senReqBoo, setSenReqBoo ] = useState( false ); // What: Send Request Boolean And Setter. Why: A second send while the first is out would send twice. How: This is true while one is out.
@@ -462,7 +473,19 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 
 			<h2 className={ cssModObj.chaTitHea }>Chat</h2>{ /* What: Chat Title Heading Element. Why: The open part of the group needs a heading a screen reader can find. How: This names the chat, hidden from sight. */ }
 
-			{ eveNexObj && <PinEveCom eveRecObj={ eveNexObj } /> }{ /* What: Pinned Event Check. Why: The next event is pinned only when one is planned. How: This shows its card when there is one. */ }
+
+
+			{ eveNexObj && ( // What: Pinned Event Check. Why: The next event is pinned only when one is planned. How: This shows its card when there is one.
+
+
+				<PinEveCom
+					eveRecObj={ eveNexObj }
+
+					onOpeFun={ () => sheHanRef.current?.opeFun() } // What: Open Handler. Why: The card opens the event's details over the chat. How: This opens the event's sheet as a modal.
+				/> // What: Pinned Event Component. Why: The next event stays in view above the chat below 1,100px wide. How: This shows its card.
+
+
+			) }
 
 
 
@@ -619,6 +642,71 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 
 
 			</form>
+
+
+
+			{ eveNexObj && ( // What: Event Panel Check. Why: The panel and the sheet show the next event only when one is planned. How: This adds both when there is one.
+
+
+				<>
+
+
+					<aside
+						className={ cssModObj.eveNexAsi }
+
+						aria-labelledby='eveNexHea'
+					>{ /* What: Event Next Aside Element. Why: A wide screen has room for the next event beside the chat. How: This holds its title and details, from 1,100px wide, and hides below that. */ }
+
+
+						<h2
+							id='eveNexHea'
+
+							className={ cssModObj.nexTitHea }
+						>{ eveNexObj.titTexStr }</h2>{ /* What: Next Title Heading Element. Why: The panel is named for its event. How: This shows the event's title. */ }
+
+
+
+						<EveDetCom
+							key={ eveNexObj.eveIdeStr } // What: Details Key. Why: Another event's list has to start afresh. How: This remounts the details for each event.
+
+							eveRecObj={ eveNexObj }
+							groIdeStr={ groIdeStr }
+							memRecMap={ memRecMap }
+							uidValStr={ uidValStr }
+							varStr='pan'
+						/>{ /* What: Event Details Component. Why: The panel shows the event's details and bring-list. How: This draws them. */ }
+
+
+					</aside>
+
+
+
+					<SheDiaCom
+						ref={ sheHanRef }
+
+						ideStr='eveSheHea'
+						titStr={ eveNexObj.titTexStr }
+					>{ /* What: Event Sheet Dialog Component. Why: Below 1,100px wide, the pinned card opens the event's details over the chat. How: This holds them in a sheet titled with the event. */ }
+
+
+						<EveDetCom
+							key={ eveNexObj.eveIdeStr } // What: Details Key. Why: Another event's list has to start afresh. How: This remounts the details for each event.
+
+							eveRecObj={ eveNexObj }
+							groIdeStr={ groIdeStr }
+							memRecMap={ memRecMap }
+							uidValStr={ uidValStr }
+							varStr='she'
+						/>{ /* What: Event Details Component. Why: The sheet shows the event's details and bring-list. How: This draws them. */ }
+
+
+					</SheDiaCom>
+
+
+				</>
+
+
+			) }
 
 
 		</div>
