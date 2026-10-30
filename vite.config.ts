@@ -85,7 +85,7 @@ const minHtmFun = () : Plugin => ({ // What: Minify HTML Function. Why: index.ht
 		handler : ( htmTexStr ) => { // What: Handler. Why: This is the plugin's actual work. How: This strips comments, then drops indentation and blank lines.
 
 
-			return htmTexStr                                                                               // What: Compacted Page Return. Why: Vite writes whatever this returns as the shipped page. How: This chains each compaction over the page's text.
+			return htmTexStr                                                                            // What: Compacted Page Return. Why: Vite writes whatever this returns as the shipped page. How: This chains each compaction over the page's text.
 				.replace( /(<script\b[^>]*\bsrc=[^>]*>)\s*(?:\/\*[\s\S]*?\*\/\s*)+(<\/script>)/g, '$1$2' ) // What: External Script Comment Strip. Why: An external script's only content is its comment. How: This empties the tag.
 				.replace( /<!--[\s\S]*?-->/g, '' )                                                         // What: HTML Comment Strip. Why: Comments mean nothing to the browser. How: This removes every HTML comment.
 				.split( '\n' )                                                                             // What: Line Split. Why: Indentation and blank lines are dropped line by line. How: This splits the page into lines.
@@ -118,11 +118,12 @@ const VIT_CON_OBJ = defineConfig({ // What: Vite Config Object. Why: Vite reads 
 		VitePWA({ // What: Vite PWA Call. Why: Workbox's caching and FCM's push handling share one worker, since a scope holds one (ARCHITECTURE.md Section 14). How: This builds the hand-written worker rather than generating one.
 
 
-			filename       : 'service-worker.ts', // What: Filename. Why: The worker is written in TypeScript beside the app. How: This names it, built to service-worker.js.
-			injectRegister : 'script-defer',      // What: Inject Register. Why: The worker should register on every load without holding up the page. How: This adds a deferred script that registers it.
-			manifest       : false,               // What: Manifest. Why: The web app manifest is hand-written static JSON. How: This keeps the plugin from writing one.
-			srcDir         : 'src',               // What: Source Directory. Why: The worker is compiled like the app's own code. How: This looks for it in src.
-			strategies     : 'injectManifest'     // What: Strategies. Why: The worker is hand-written, with the build's file list written into it. How: This injects the list rather than generating a worker.
+			filename       : 'service-worker.ts',                               // What: Filename. Why: The worker is written in TypeScript beside the app. How: This names it, built to service-worker.js.
+			injectManifest : { globPatterns : [ '**/*.{css,html,js,woff2}' ] }, // What: Inject Manifest. Why: The app should open offline in its own fonts, which Workbox's default file list leaves out. How: This precaches the build's stylesheets, pages, scripts, and font files.
+			injectRegister : 'script-defer',                                    // What: Inject Register. Why: The worker should register on every load without holding up the page. How: This adds a deferred script that registers it.
+			manifest       : false,                                             // What: Manifest. Why: The web app manifest is hand-written static JSON. How: This keeps the plugin from writing one.
+			srcDir         : 'src',                                             // What: Source Directory. Why: The worker is compiled like the app's own code. How: This looks for it in src.
+			strategies     : 'injectManifest'                                   // What: Strategies. Why: The worker is hand-written, with the build's file list written into it. How: This injects the list rather than generating a worker.
 
 
 		}),
