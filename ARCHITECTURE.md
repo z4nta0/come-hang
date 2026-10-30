@@ -11,10 +11,57 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-24 (pre-implementation planning phase; data model
-approved, Firebase plan changed to Blaze, see Section 15; earlier passages
-brought in line with Sections 11.7 and 17; scroll behavior per screen added
-to Section 14's open items; routing decided in Section 14 on 2026-10-25).
+Last updated: 2026-10-30 (the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
+identity exists, in Section 14; the purchase's checkout and webhook functions,
+their delivery records, and the app's side of buying, in Sections 4, 14,
+and 18; Google linking and recovery in the app, the
+group key shared again with a recovered member, and the newest phone's
+key standing, in Sections 6, 8, 11.1, 11.3, 12, and 14; push notifications in the app, its one service
+worker, and offline opening, in Sections 2, 11.1, and 14; the activity pushes, for chat, join requests,
+and history requests, in Sections 11.1, 11.7, 11.9, 14, and 17; location
+sharing in the app, its throttle, and
+the position's rounding, in Sections 5, 11.4, and 14; presence and history
+requests in the app, the
+history bundle's format, and coverage by join time, in Sections 11.9 and
+14; chat in the app, its allowed characters, and the
+emulator's shared database instance, in Sections 11.10 and 14; events and
+their bring-lists in the app, and a description's blank lines, in Sections
+11.10 and 14); 2026-10-28 (group
+deletion in the app, in Section 14;
+ownership offers and notices in the app, in Section 14; members, leaving, removal, link rotation, and
+group settings in the app, in Section 14; joining a group in the app, with the approver
+encrypting the joiner's name, in Sections 11.3, 13, 14, and 17; group creation in the app and emoji listed by code
+point in the rules, in Sections 11.10 and 14; the group key wrapping scheme and extractable
+group keys, in Sections 6 and 14; the app's Firebase services and identity
+bootstrap, in Sections 8 and 14; push tokens, their rules, and the pushes for
+notices and offers, in Sections 4, 9, 11.1, and 14; the daily run, its server-only claim record, and
+the lapse and claim notices, in Sections 4, 11.1, 14, and 18; declines through a callable and the removal and
+offer notices built, in Sections 9, 11.1, 14, and 18; group deletion built as
+a callable and notice IDs,
+in Sections 9, 11.1, and 14; every service in us-central1, the Cloud
+Functions' layout, and the membership mirror's functions, in Sections 11.7
+and 14; the Storage rules for history transfers, their
+25 MB cap, and the bucket's 15-day cleanup, in Sections 11.9 and 14; chat's waiting-on list, the membership mirror,
+and the Realtime Database rules for chat and presence, in Sections 4, 5,
+11.7, 11.8, 11.10, and 14; history requests keyed by the asker's UID, with
+their rules, in Section 11.9, completing the Firestore rules noted in
+Section 14; location sharing's window, expiry, encrypted
+arrived flag, and rules in Sections 5, 10, and 11.4); 2026-10-27 (events as one encrypted bundle with time bounds,
+and items expiring on their own, in Section 11.5, with their text limits in
+Section 11.10; the owner renames the group with its invite in
+one batch, in Sections 11.2 and 11.6, and who edits events and their items
+in Section 11.5); 2026-10-26 (ownership offers, acceptance, lapsing, and claims
+in Section 18, notices in Sections 4 and 11.1, removal notices and group
+deletion in Section 9, the group's `pendingOfferedAt` in Section 11.2, and
+the functions they need in Section 14; the account's groups split into
+owned and member maps in Sections 11.1 and 18; leaving, removal, and
+rotation batches in Section 9; the group's `countedUid` in Section 11.2; untrusted text and paths in Section 11.11;
+text limits in Section 11.10 and binary formats in Section 6; the private
+`/accounts/{uid}` doc, the group's `memberCount`, and the paywall's switch
+decided for the caps' enforcement, Sections 4, 9, 11.1, 11.2, 17, and 18;
+the emulator harness for the security rules noted in Section 14; routing
+decided in Section 14).
 
 ---
 
@@ -82,8 +129,9 @@ model like Firestore's.
 **Pros**
 - Standard, well-documented, widely-supported tooling; easy to hire for
   or find help with later.
-- `vite-plugin-pwa` gives install/offline-shell caching for free without
-  hand-rolling a service worker.
+- `vite-plugin-pwa` writes the build's file list into the app's one
+  service worker, so caching the app for offline use is a few lines of
+  Workbox, beside the push handling the worker also does.
 - TypeScript catches a real class of bugs early, especially valuable
   given the amount of cross-service data shuffling (Firestore, RTDB,
   WebCrypto) this app involves.
@@ -187,14 +235,21 @@ from Spark's 100 to 200,000.
 | Data | Service | Shape |
 |---|---|---|
 | Group metadata (creator, name, etc.) | Firestore | `/groups/{groupId}` |
-| Group membership | Firestore | Map or subcollection under `/groups/{groupId}` |
+| User identity (public key) | Firestore | `/users/{uid}`, fetchable by UID by anyone signed in |
+| User account (memberships, paid flag) | Firestore | `/accounts/{uid}`, readable only by its owner |
+| Notices (what happened while away) | Firestore | `/accounts/{uid}/notices/{noticeId}`, readable and dismissable only by its owner, written only by Cloud Functions |
+| Group membership | Firestore | Subcollection `/groups/{groupId}/members/{uid}` |
 | Removed-member blocklist | Firestore | `/groups/{groupId}.removedUids` (or subcollection) |
 | Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
 | Events | Firestore | Under the owning group |
 | Notes / task-assignments | Firestore | Under the owning event; single-owner field per claimable item |
-| Chat messages | RTDB | Under the owning group; ack-map pattern, see Section 5 |
+| Chat messages | RTDB | Under the owning conversation, each with a waiting-on list of who hasn't received it yet; see Sections 5 and 11.7 |
+| Membership mirror | RTDB | `/mirrors/{conversationId}`, written only by a Cloud Function, so the RTDB rules can check membership; see Section 11.7 |
 | Live location | Firestore | One doc per user per group, TTL-expired; see Section 11.4 for why this moved off RTDB |
 | Presence | RTDB | Standard `onDisconnect()` pattern |
+| Push token | Firestore | `/accounts/{uid}/pushToken/current`, the identity's one phone, written and read only by its owner; see Section 11.1 |
+| Ownership claim record | Firestore | `/groups/{groupId}/ownerClaim/current`, read and written only by Cloud Functions; see Section 18 |
+| Handled payment deliveries | Firestore | `/polarEvents/{webhookId}`, read and written only by the purchase webhook, expiring a day later; see Section 18 |
 
 **Full field-level schema is in Section 11.**
 
@@ -226,11 +281,17 @@ from Spark's 100 to 200,000.
 
 ### Location
 - Not an append-only log: each update **overwrites** the previous value.
-- Deleted on an inactivity timer.
+- Deleted on an inactivity timer: an hour after its last update (decided
+  2026-10-28), which covers a drive with the phone locked and a fresh
+  update on arrival.
 - Always deleted at event-end, regardless of timer state.
+- Sharing opens 3 hours before an event starts (decided 2026-10-28), for
+  getting ready and the trip there, and never earlier.
 - Throttled client-side by time-since-last-update **and** distance moved
   (whichever threshold is hit first), not a fixed-interval ping, to keep
-  bandwidth/battery cost down.
+  bandwidth/battery cost down: an update every 2 minutes or every 100
+  meters, and never more than every 15 seconds (decided 2026-10-29). Opening
+  the app and arriving always send a fresh fix.
 
 **Pros**: minimal storage footprint, minimal privacy exposure (no
 location history ever accumulates server-side), simple mental model with
@@ -264,21 +325,22 @@ out to be too short for a given group, once it's gone, it's gone.
 
 ### Chat
 Strictly sync-based, not time-based, with these refinements:
-- A message's "has everyone received this" check is evaluated against
-  the recipients snapshot taken at send time (`recipientUids`, Section
-  11.7), so a member who joins later is never waited on. A member who
-  leaves or is removed is dropped from the pending-ack list, so they
-  can't block cleanup after they're gone.
+- A message's "has everyone received this" check reads its waiting-on
+  list (`waitingOn`, Section 11.7), filled at send time with every other
+  member, so a member who joins later is never waited on. Each member
+  takes themselves off the list once their device has the message, and a
+  member who leaves or is removed is taken off by anyone, so they can't
+  block cleanup after they're gone.
 - **Multi-device is explicitly out of scope** (see Section 8): the app
   is single-device per user, so "delivered" means delivered to that one
   device, no cross-device history backfill is attempted.
 - A safety-valve max-retention TTL exists as a backstop for a message
   stuck waiting on a member whose device never comes back online
   (uninstalled, abandoned). **Resolved**: defaults to 30 days, and is a
-  per-group setting the creator can adjust between a 7-day floor and a
+  per-group setting the owner can adjust between a 7-day floor and a
   180-day ceiling, rather than one fixed global number. Stored as
   `chatTtlDays` on `/groups/{groupId}` (Section 11.2), checked by every
-  client's own opportunistic ack/TTL sweep (Section 11.7) against that
+  client's own opportunistic cleanup sweep (Section 11.7) against that
   group's configured value instead of a hardcoded constant. Changing it
   only affects future enforcement, it doesn't retroactively rescue
   anything already deleted under a prior value.
@@ -316,7 +378,7 @@ moment they leave) and a long-term recurring user (their own device
 keeps full history); avoids per-operation cost blowup by not keeping a
 permanent server-side archive at all.
 **Cons**: meaningfully more implementation complexity than a simple
-time-based expiry (ack-tracking, live-membership checks, transaction-safe
+time-based expiry (delivery tracking, a membership mirror, transaction-safe
 deletion); an inactive-but-still-a-member device can delay cleanup of a
 message until the TTL backstop kicks in; a user who loses their device
 without linking a recovery credential loses their entire local history
@@ -344,6 +406,39 @@ member or full metadata privacy.
   never sees an unwrapped key either.
 - Only routing metadata (sender UID, timestamps, group ID) stays
   plaintext, since Firestore/RTDB need it to route/query.
+- **Formats (decided 2026-10-25)**: the ECDH curve is P-256, and every
+  binary value (a public key, an IV, ciphertext, a wrapped key) is stored
+  as Firestore bytes rather than text, so the security rules can check its
+  exact size. A public key is the raw 65-byte point WebCrypto exports. A
+  wrapped group key is one opaque bytes field of at most 256 bytes. An
+  AES-GCM IV is 12 bytes.
+- **Wrapping a group key** (decided 2026-10-28, `src/platform/crypto.ts`):
+  each wrap uses a one-time key. The wrapper makes a throwaway ECDH P-256
+  pair, derives a key-wrapping key from its private half and the member's
+  published public key through HKDF-SHA-256, bound to both public keys,
+  and wraps the group key with AES-KW. The member document stores the
+  throwaway public key followed by the wrapped key, 105 bytes. Unwrapping
+  needs only the member's own private key, so a wrap keeps working whoever
+  made it and whatever later happens to their key. The group key itself is
+  AES-GCM, 256 bits, with a fresh random IV for every encryption.
+- **A recovered member gets each key shared again** (decided 2026-10-29,
+  `src/state/key-share.ts`): a member recovered onto a new phone (Section
+  8) has a new key pair, so the wrap made for the old phone won't open.
+  Loading the group's key then stamps a key request on their membership
+  (`keyRequestedAt`), which pushes every other member, and any member
+  holding the key answers it the way an approval wraps one: they wrap the
+  key for the member's newly published public key, replacing the old wrap
+  and ending the request in one write. The rules let a member file only
+  their own request, at the server's time, and let only another member
+  answer it, with a new wrap, and only while it stands, so nobody can spoil
+  a wrap that works. A member who's the only one in a group has nobody to
+  ask (Section 12).
+- **Group keys stay extractable** (decided 2026-10-28): any member may
+  approve a join and wrap the group key for the joiner (Section 17), and
+  WebCrypto only wraps an extractable key, so a member's copy of a group
+  key can be read by script on their device. The identity's ECDH private
+  key, which every wrap for this member depends on, is the one key kept
+  non-extractable.
 
 **Pros**
 - Firebase itself can never read actual content, satisfying "not sent in
@@ -386,7 +481,7 @@ decision should be revisited.
 **Removed-member handling for existing claims**: if a member who claimed
 something is later removed from the group, their claim is **left in
 place**, not auto-cleared, attributed to something like "removed user"
-in place of their name. The group can manually reassign it if needed.
+in place of their name. Any member can reassign or release it (Section 11.5).
 
 **Pros**
 - Prevents real, silent data loss (two people stomping the same claim)
@@ -411,7 +506,8 @@ in place of their name. The group can manually reassign it if needed.
 
 - **No signup required.** Firebase Anonymous Authentication
   (`signInAnonymously()`) generates a random UID per device with no
-  user-provided credential.
+  user-provided credential, at the first group action rather than on page
+  load (Section 16), together with the device's key pair (Section 14).
 - **Single-device by design**: no multi-device sync is attempted or
   promised. The anonymous identity lives entirely in that browser's
   local storage; it's not portable on its own.
@@ -424,6 +520,20 @@ in place of their name. The group can manually reassign it if needed.
   or a Google/Apple sign-in) to the existing anonymous UID. This
   preserves the same UID and all group memberships on a new device, using
   Firebase's supported linking mechanism, no custom backend required.
+  - **How recovery runs** (decided 2026-10-29, `src/state/identity.ts`):
+    linking and recovery each start from the person's tap and go through
+    Google's sign-in popup. On the new phone, signing in with Google brings
+    the identity back, then the bootstrap makes that phone's key pair and
+    publishes it, and each group's key waits for a member to share it
+    (Section 6). Recovery refuses, before signing in, on a phone whose own
+    identity already belongs to a group, since those groups would be
+    stranded. A Google account linked to no identity simply becomes a new
+    identity, linked from the start. The bootstrap publishes only a key
+    pair it has just made, so an old phone still signed in to the
+    identity never takes the published key back from the newer one. A
+    Google account linked to one identity can't be linked to another.
+    Whether the popup works in an installed iOS app, or recovery there has
+    to use a redirect instead, is checked on a real phone against staging.
   - Raw credential/token export (e.g. a backup file containing the
     Firebase refresh token) was explicitly rejected: not a supported
     recovery path, relies on undocumented internals, and creates a
@@ -496,13 +606,21 @@ in place of their name. The group can manually reassign it if needed.
 - The link is open-ended (multi-redeem, valid until revoked), not
   single-use.
 - The creator can revoke/regenerate the link at any time, independent of
-  any removal action, for cases like the link being over-shared.
+  any removal action, for cases like the link being over-shared. A
+  rotation is one batch (decided 2026-10-26): the group names a new token,
+  the new invite is created, and the old one is deleted. Only the creator
+  may delete an invite, and never the one the group currently names, so a
+  group always has exactly one working link.
 - **Throughout this doc, "creator" means the group's current owner**
   (`ownerUid`), which starts as the person who created it and can change
   through an ownership transfer (Section 18).
 - **The creator can remove any individual member at any time**, gated by
-  a security rule restricting this action to the group creator. Every
-  member can always remove themselves (leave).
+  a security rule restricting this action to the group creator, but never
+  themselves. Every other member can always remove themselves (leave), in
+  one batch that deletes their membership, drops the group from their
+  `/accounts/{uid}` member map, and lowers `memberCount` with `countedUid` set to
+  them (decided 2026-10-26). The creator leaves only by transferring the
+  group first (Section 18).
 - **Removal always rotates the invite link** (decided over the
   simpler "only rotate if you want to" alternative, accepting the added
   friction deliberately): the creator is shown a warning before
@@ -516,10 +634,39 @@ in place of their name. The group can manually reassign it if needed.
   the case where the new link reaches them through some indirect route
   (e.g. someone else re-shares it into a channel the removed person still
   sees).
-- The full removal operation (remove from members, add to
-  `removedUids`, deactivate old invite doc, create new invite doc) is
-  bundled as a **single Firestore transaction**, so a partial failure
+- The full removal operation (remove from members, drop the group from
+  the removed member's `/accounts/{uid}` member map, lower `memberCount` by one
+  with `countedUid` set to the removed member,
+  add to `removedUids`, deactivate old invite doc, create new invite doc)
+  is bundled as a **single Firestore transaction**, so a partial failure
   can't leave the group in an inconsistent state.
+- **The removed member is told** (decided 2026-10-26): a Cloud Function
+  watching group updates sees a UID join `removedUids` as the count falls
+  for that same UID, which only a removal does, and leaves the removed
+  member a notice (Section 11.1) plus a push, so the group doesn't just
+  vanish from their list. A member who leaves on their own gets neither.
+  Built 2026-10-28 as `groChaFun` in `functions/src/group-changes.ts`, a
+  trigger on every group update that also handles the end of an ownership
+  offer (Section 18), and sends the push once the notice has landed.
+- **Deleting a group** (decided 2026-10-26): only the owner can, after a
+  confirmation naming the group, through a callable Cloud Function rather
+  than a client batch, since a big group's documents won't fit one batch.
+  The function deletes the group, its member docs, events, join requests,
+  chat, and invite, drops it from every member's `/accounts/{uid}` maps,
+  and leaves every other member a notice saying the owner deleted it, with
+  a push. No client rule allows deleting a group document. The function
+  works in batches and finishes the job if it's retried, so a failure
+  partway is completed rather than left half done, and the group stops
+  being readable to anyone as soon as its first batch lands. Built
+  2026-10-28 as `delGroFun` in `functions/src/group-deletion.ts`, called
+  with `{ groupId }`: it refuses a caller with no sign-in, an ID that isn't
+  in Firestore's own ID form (so it can't name another path), and anyone
+  but the owner, and does nothing once the group document is gone. Its
+  first batch deletes every member doc, frees every account's slot, writes
+  the notices, and deletes the working invite. Then go the group's other
+  collections, its chat, presence, and mirror, and its history transfers,
+  and the group document goes last, so a retry still passes the owner
+  check. Each member's push goes out once the first batch has landed.
 - **Known, accepted limitation**: a removed user can bypass the
   `removedUids` block by clearing local app data (or opening the link in
   a different browser), which mints a brand-new anonymous UID never on
@@ -582,7 +729,17 @@ in place of their name. The group can manually reassign it if needed.
     the app periodically updates location with no extra action needed.
   - An explicit "I've arrived" action: a one-shot location fix plus a
     distinct status flag (e.g. an "Arrived" badge), separate from the
-    ambient live-location display.
+    ambient live-location display. The flag is encrypted with the position
+    (decided 2026-10-28), so Firebase can't tell who has arrived.
+  - **Leaving and arriving post to the chat** (decided 2026-10-29): an
+    "I'm on my way" button and the "I've arrived" action each post a short
+    status line to the group's chat ("Sam is on the way", "Dana arrived"),
+    so the group sees it without opening the map. Only those two do: the
+    ambient position updates never post, so the chat isn't flooded. Leaving
+    is a tap, never detected, since the app can't watch a phone's position
+    in the background (above). A status post is an ordinary chat message
+    whose kind is marked inside its encryption (Section 11.7), so Firebase
+    can't tell it from any other message.
   - Every displayed location shows a staleness timestamp ("updated 6 min
     ago") so an old ping is never presented as if it were live.
   - Users are told plainly, at the point they enable sharing, that
@@ -625,14 +782,103 @@ A field with no `Enc` suffix is intentionally plaintext, either because
 it's routing/query metadata (Section 6's principle) or because it's
 inherently public (a public key).
 
-### 11.1 Firestore: `/users/{uid}`
+### 11.1 Firestore: `/users/{uid}` and `/accounts/{uid}`
 
-One doc per anonymous identity, created on first sign-in.
+Two docs per anonymous identity, both created on first sign-in. They're
+split by who may read them (decided 2026-10-25): an approving member has
+to fetch a joiner's public key, but nobody but its owner should see which
+groups a person belongs to or whether they've paid.
+
+`/users/{uid}`, the public half. Anyone signed in may fetch one doc by its
+UID (`get`), never list the collection, and only its owner may write it.
 
 | Field | Type | Notes |
 |---|---|---|
-| `publicKey` | plaintext | This user's ECDH public key, used by others to wrap a group key for them on join. Can't be encrypted: there is nothing to encrypt it with yet. |
+| `publicKey` | plaintext bytes | This user's ECDH P-256 public key, the raw 65-byte point (Section 6), used by others to wrap a group key for them on join. Can't be encrypted: there is nothing to encrypt it with yet. |
 | `createdAt` | plaintext | Timestamp. |
+
+`/accounts/{uid}`, the private half, readable only by its owner. The rules
+read it to enforce Section 18's caps (a rule's own lookups ignore read
+permissions), and a client can update one entry of a map without
+reading the doc first, which is how an approver adds a joiner's group.
+The groups sit in two maps, owned and member, rather than one map of
+roles (decided 2026-10-26), so a change of role moves a key from one map
+to the other, which the rules can name and check, where a changed value
+in one map can't be traced to its group.
+
+| Field | Type | Notes |
+|---|---|---|
+| `ownedGroups` | plaintext map `{ groupId: true }` | Every group this user owns. Changed in the same batch as every create and transfer (Section 18). |
+| `memberGroups` | plaintext map `{ groupId: true }` | Every group this user belongs to without owning it, so a group sits in one map or the other, never both. Changed in the same batch as every join, leave, removal, and transfer (Section 18). |
+| `paid` | plaintext boolean, absent until bought | Written only by the Polar webhook's Cloud Function, never by a client (Section 18). |
+
+`/accounts/{uid}/notices/{noticeId}` (decided 2026-10-26) holds what
+happened to someone while they were away, so a group never just vanishes
+or changes hands silently: the app shows each waiting notice as a message
+when it next opens, alongside the push that went out when it happened,
+and the owner dismisses it by deleting it. Only Cloud Functions write
+notices, which the rules enforce by allowing clients no writes, so a
+member can't forge one telling someone a group was deleted. Kinds: a group
+deleted (`groupDeleted`), a removal (`removed`), an ownership offer
+accepted (`offerAccepted`), declined (`offerDeclined`), lapsed
+(`offerLapsed`), or ended by the person offered leaving (`offerLeft`), and
+ownership claimed from an inactive owner (`ownershipClaimed`). A notice's
+ID is its kind and group, `<kind>-<groupId>` (decided 2026-10-28), so a
+retried function writes it once, and a later notice of the same kind about
+the same group replaces the earlier one.
+
+| Field | Type | Notes |
+|---|---|---|
+| `kind` | plaintext | Which of the kinds above this is, picking the message the app shows, such as `groupDeleted`. |
+| `groupId` | plaintext | The group it's about, which may no longer exist. |
+| `groupName` | plaintext | The group's name when it happened, so a deleted group can still be named. |
+| `otherUid` | plaintext, absent when there's none | The other person involved, such as who declined an offer, named in the app from the group's member docs while they're still readable. |
+| `createdAt` | plaintext | Timestamp. |
+| `expireAt` | plaintext | Firestore TTL field, 30 days out, so a notice never seen doesn't linger. |
+
+`/accounts/{uid}/pushToken/current` (decided 2026-10-28) holds the token FCM
+gives the identity's one phone, since the app is one device per person
+(Section 8): a new phone's token replaces the old one, and the pushes follow
+it. Only the owner reads, writes, or deletes it, and deleting it turns
+pushes off.
+
+**The app's side** (decided 2026-10-29, `src/state/push.ts` and
+`src/platform/messaging.ts`): notifications are turned on from a tap,
+since a browser shows its permission prompt only then, and only where the
+browser can show pushes, which on iOS means once the app is installed
+(Section 16). Once permission is granted the app stores the token and
+keeps the choice on the device, so each open refreshes a token that's on
+and restores one the server dropped, while turning notifications off in
+the app deletes the token, retires it with FCM, and forgets the choice, so
+no open turns them back on. When the person withdraws the permission in
+the browser's settings, the next open deletes the token and turns
+notifications off. FCM gets the token through the app's one service
+worker (Section 14), with the project's public web push (VAPID) key, which
+Netlify sets as `VITE_FIREBASE_VAPID_KEY`. There's no FCM emulator, so
+development stores a stand-in token of the same form, and the Functions
+emulator records what would be pushed to it. A push that arrives while
+the app is open and in front goes to the page rather than the phone's
+notifications, and the app doesn't show it, since the screens will show
+the same activity as it happens. A tap on a push brings the app forward,
+opening it at its root when it isn't open.
+
+| Field | Type | Notes |
+|---|---|---|
+| `token` | plaintext | FCM's registration token, letters, digits, colons, hyphens, and underscores, at most 4,096 characters. |
+| `updatedAt` | plaintext | The server's time of the last refresh. The app rewrites the document as it opens, at most once a day, or at once when FCM's token has changed or the document is gone. |
+| `expireAt` | plaintext, TTL field | 60 days after the last refresh, as Firebase advises for a token, so a phone that stopped opening the app is dropped. The app sets it by its own clock, so the rules accept 50 to 70 days out. |
+
+**Pushes** (decided 2026-10-28, `functions/src/push.ts`): each one carries
+the group's name as its title and a fixed sentence for its kind, never a
+message or a display name, since those are encrypted where the server
+can't read them. A push for ongoing activity carries a tag, so a newer push
+with the same tag replaces it on the phone rather than stacking (decided
+2026-10-29), and the join request push's sentence carries its count. Sending is best effort: an identity with no token gets no
+push, a failure is logged without undoing the notice beside it, and a
+token FCM rejects as no longer registered is deleted, unless the app has
+replaced it since. There's no FCM emulator, so under the Functions emulator
+each push is written to an `emulatorPushes` collection instead, which the
+functions suite reads, and which no rule opens.
 
 Global `displayName` deliberately **not** included here. **Resolved**:
 display names are per-group, not global, encrypted per membership, see
@@ -643,13 +889,16 @@ different names.
 
 | Field | Type | Notes |
 |---|---|---|
-| `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
-| `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept or the offer is withdrawn (Section 18). |
-| `name` | plaintext | The group's own name. Deliberately not encrypted, see below. |
+| `ownerUid` | plaintext | The group's current owner, starting as its creator. Used by security rules for owner-only actions (remove member, revoke/rotate link, rename, chat TTL, transfer). Renamed from `creatorUid` on 2026-10-22, since ownership can now be transferred (Section 18). |
+| `pendingOwnerUid` | plaintext, nullable | A member the owner has offered ownership to, until they accept, decline, or the offer is withdrawn or lapses (Section 18). |
+| `pendingOfferedAt` | plaintext, nullable | When the standing offer was made, stamped with the server's time, null with no offer. An offer lapses 7 days after it (Section 18). |
+| `name` | plaintext | The group's own name. Deliberately not encrypted, see below. At most 50 characters, emoji allowed (Section 11.10). Only the owner renames it (decided 2026-10-27), since it's what invitees see on the invite screen, in one batch that also updates the current invite's copy. |
 | `createdAt` | plaintext | Timestamp. |
 | `currentInviteToken` | plaintext | Denormalized copy of whichever `/invites/{token}` doc is currently active, so the UI can show/copy the link without a separate query. |
 | `removedUids` | plaintext map `{ uid: true }` | Checked by security rules to block redemption by a specific identity; low write-frequency, so a map field (not a subcollection) is fine here. |
-| `chatTtlDays` | plaintext, creator-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic ack/TTL check (11.7) for this group's chat instead of a hardcoded constant. |
+| `memberCount` | plaintext number | How many member docs the group has, since rules can't count documents. Moves by exactly one in the same batch as each join, leave, and removal, and the rules check it against the member cap (Section 18). |
+| `countedUid` | plaintext | The UID whose join, leave, or removal the last `memberCount` change counted, starting as the creator (decided 2026-10-25). Rules can't see which member doc a batch creates or deletes, so the count may change only when the member doc for this UID is created or deleted in the same batch. Without it, any member could raise the count to the cap and block every join. |
+| `chatTtlDays` | plaintext, owner-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic cleanup check (11.7), through the membership mirror there for this group's chat instead of a hardcoded constant. |
 
 **Exception to "encrypt all content"**: the group's own name is the one
 piece of content proposed to stay plaintext, not encrypted like
@@ -664,10 +913,12 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 
 | Field | Type | Notes |
 |---|---|---|
-| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, see 11.7. |
-| `wrappedGroupKey` | ciphertext | The group's AES-GCM key, wrapped for this member's public key via ECDH. Decrypting this is how a member gets the group key at all. |
-| `displayNameEnc` / `iv` | ciphertext | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. |
-| `lastActiveAt` | plaintext | Updated at most once a day on app open. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
+| `joinedAt` | plaintext | Used both for display and to gate chat backlog visibility, through the membership mirror, see 11.7. |
+| `wrappedGroupKey` | ciphertext bytes | The group's AES-GCM key, wrapped for this member's public key via ECDH, at most 256 bytes (Section 6). Decrypting this is how a member gets the group key at all. |
+| `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Written with the membership itself: the creator's as the group is created, and a joiner's by the approving member, who encrypts the name from the join request (Section 17). The rules also accept a membership without one, and the member may change it at any time. |
+| `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
+| `colorSlot` | plaintext number, 0 to 49 | Which of the 50 member colors this member wears (decided 2026-10-29, built 2026-10-30): written with the membership, as the lowest slot no current member holds, so no two members share a color while the group has room, and kept for as long as they stay, so their color never changes. The creator's is 0. Two approvals at the same moment could pick the same slot, which only means two members share a color, so the rules check the range, a whole number from 0 to 49, and not uniqueness, and refuse any change to it. It reveals nothing beyond the order people joined in, which `joinedAt` already shows. |
+| `keyRequestedAt` | plaintext, absent unless asking | Set by the member alone, to the server's time, when the wrap won't open on a phone they were recovered onto, and removed by the member who answers by replacing `wrappedGroupKey` (Section 6). |
 
 A subcollection, not a map field on the group doc, specifically so many
 members can update their own entry (or be added) without contending on
@@ -703,10 +954,17 @@ alongside chat): moved to Firestore. Reasoning:
 
 | Field | Type | Notes |
 |---|---|---|
-| `ciphertext` / `iv` | ciphertext | The actual lat/lng. Safe to encrypt since nothing server-side ever queries into it, all distance/proximity math happens client-side after each member decrypts everyone's current location. |
-| `updatedAt` | plaintext | Timestamp, for staleness display in the UI. |
-| `expireAt` | plaintext, TTL field | Refreshed to `now + inactivityWindow` on every update; set to the event's end time if that's sooner. Firestore's TTL policy targets this field. A manual "stop sharing" action deletes the doc directly rather than waiting on TTL. |
-| `eventId` | plaintext | Which event this share-session belongs to. |
+| `locationEnc` / `iv` | ciphertext bytes | The lat/lng, rounded to 6 decimal places (about 0.1 meters), its accuracy in whole meters, and the "I've arrived" flag, encrypted together as JSON. Safe to encrypt since nothing server-side ever queries into it, all distance/proximity math happens client-side after each member decrypts everyone's current location. The rules cap the ciphertext at 128 bytes, and the IV is 12. |
+| `updatedAt` | plaintext | Timestamp, for staleness display in the UI, always the server's own time. |
+| `expireAt` | plaintext, TTL field | Refreshed to an hour after each update, or the event's end time if that's sooner. Firestore's TTL policy targets this field. The phone sets it by its own clock, which can't match the server's exactly, so the rules accept any expiry after the server's time, no later than the event's end, and no more than 65 minutes out, an hour plus 5 minutes of allowance for a clock running ahead. A manual "stop sharing" action deletes the doc directly rather than waiting on TTL. |
+| `eventId` | plaintext | Which event this share-session belongs to. The rules allow a share only from 3 hours before that event starts until it ends. |
+
+Rules (decided 2026-10-28): a member writes only their own document, keyed
+by their UID, so each update overwrites the last and no history builds up.
+Members read every shared location. Only the sharer deletes theirs, even
+after leaving the group, while a member who has left can no longer update
+it. A removed or departed member's last share stays readable to the group
+until its own expiry, at most an hour.
 
 **Pros**: automatic, free, zero-infrastructure expiry; real-time reads
 work the same as RTDB via `onSnapshot`; no loss of functionality versus
@@ -720,17 +978,31 @@ everything else, now including location, is Firestore).
 
 | Field | Type | Notes |
 |---|---|---|
-| `titleEnc` / `descriptionEnc` / `locationTextEnc` (+ `iv`s) | ciphertext | Event details. |
-| `startAt`, `endAt` | plaintext | Must stay plaintext: the deletion-grace-period query (Section 5) needs to filter/sort on real timestamps, which isn't possible against an opaque ciphertext blob. Same routing-metadata tradeoff already accepted for chat's `sentAt`. |
-| `createdByUid` | plaintext | Permission checks. |
-| `expireAt` | plaintext, TTL field | `endAt` + 48 hours (Section 5). Same native-TTL mechanism as location, no Cloud Function needed here either. |
+| `detailsEnc` / `iv` | ciphertext bytes | The title, description, and location text encrypted together as one bundle (decided 2026-10-27), so Firebase can't see which parts are filled in or how long each one is. The bundle is the three as JSON, `{"t":"…","d":"…","l":"…"}`, and the rules cap its ciphertext at 2,148 bytes: the 700 characters Section 11.10 allows at 3 bytes each, 32 for the JSON around them, and the 16-byte tag. The IV is 12 bytes. |
+| `startAt`, `endAt` | plaintext | Must stay plaintext: the deletion-grace-period query (Section 5) needs to filter/sort on real timestamps, which isn't possible against an opaque ciphertext blob. Same routing-metadata tradeoff already accepted for chat's `sentAt`. An event ends after it starts, lasts at most 7 days, starts at most a year ahead, and can only be created or edited while it hasn't ended yet (decided 2026-10-27), so nothing sits stored for years and a finished event stays as it was for its review window. |
+| `createdByUid` | plaintext | Permission checks: any member creates an event, and only its creator or the group's owner edits or deletes it (decided 2026-10-27), so the owner can clean up after a creator who left. |
+| `expireAt` | plaintext, TTL field | Exactly `endAt` + 48 hours (Section 5), which the rules check. Same native-TTL mechanism as location, no Cloud Function needed here either. |
+
+Firestore's TTL deletes only the expired document, never its subcollections
+(by Firestore's own TTL documentation), so an event's items carry the same
+`expireAt` and expire on their own. That also covers an event deleted
+without its items: they stay behind, read-only since their event is gone,
+until their own TTL removes them.
 
 #### `/groups/{groupId}/events/{eventId}/assignments/{assignmentId}` (subcollection)
 
 | Field | Type | Notes |
 |---|---|---|
-| `labelEnc` / `iv` | ciphertext | "Bring dessert," etc. |
+| `labelEnc` / `iv` | ciphertext bytes | "Bring dessert," etc. At most 50 characters (Section 11.10), so the rules cap the ciphertext at 166 bytes, and the IV is 12. |
 | `assignedUid` | plaintext, nullable | The compare-and-swap target for the claim transaction (Section 7). Left as-is (not cleared) if that member is later removed; the client resolves "removed user" by checking current membership (11.3), not by storing a name snapshot here. |
+
+| `expireAt` | plaintext, TTL field | The event's own `expireAt`, which the rules check against the event as each write leaves it. When an event's end moves, the same batch moves every item's `expireAt`, and any member can bring an item that fell out of step back in line. |
+
+Any member adds or removes an item, claims an open one, and reassigns or
+releases anyone's claim (decided 2026-10-27), which is how the group
+reassigns a removed member's claims (Section 7). A new assignee has to be a
+current member, while an edit that leaves the claim alone keeps a removed
+member's claim in place.
 
 ### 11.6 Firestore: `/invites/{token}`
 
@@ -758,8 +1030,10 @@ one doc whose token you already hold) and never `list` or queries, so
 the collection can't be enumerated. Rules can't see a token unless it's
 in the path, so the invite screen can't be allowed to read
 `/groups/{groupId}` by token. Instead the invite doc carries its own
-plaintext copy of the group name, updated whenever the name changes, and
-`/groups/{groupId}` stays readable by members only.
+plaintext copy of the group name, updated in the same batch as every
+rename, and `/groups/{groupId}` stays readable by members only. The rules
+let only the owner change that copy, only on the invite the group names,
+and only to the group's name as the batch leaves it.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -773,39 +1047,75 @@ only kind of conversation is a group's own chat.
 
 | Field | Type | Notes |
 |---|---|---|
-| `senderUid` | plaintext | Routing metadata. |
-| `sentAt` | plaintext | Ordering, and the TTL-safety-valve check below. |
-| `ciphertext` / `iv` | ciphertext | Message content. |
-| `recipientUids` | plaintext array, snapshot at send time | Who needs to ack this. Fixes a gap the original "check against current membership" wording glossed over: without a send-time snapshot, a member who joins *after* a message was sent would either need it backfilled (which conflicts with the join-time cutoff below) or get stuck as a phantom entry in some ambiguous "current membership" check. A snapshot avoids both: new joiners are simply never added to it. |
-| `ackedBy` | plaintext map `{ uid: true }` | Each recipient merges their own UID in via a targeted field-path update on sync. |
+| `senderUid` | plaintext | Routing metadata. Always the sender's own UID. |
+| `sentAt` | plaintext number | The server's time when it was sent (milliseconds), for ordering, the join-time cutoff, and the TTL safety valve below. |
+| `ciphertext` / `iv` | base64 strings | Message content, AES-GCM under the group key. A status post (leaving or arriving, Section 10) marks its kind inside the encrypted content, so the stored fields look the same for every message (decided 2026-10-29, not built yet). The IV is 12 bytes (16 base64 characters), and the ciphertext holds 1 to 2,000 characters (Section 11.10) at 3 bytes each plus the 16-byte tag, so at most 8,024 base64 characters. |
+| `waitingOn` | plaintext map `{ uid: true }` | Who hasn't received the message yet (decided 2026-10-28, replacing a recipients snapshot plus an acknowledgement map): the sender lists every other member, so a member who joins later is never on it, and each member deletes their own entry once their device has the message. RTDB drops an empty map, so a message no one is waiting on has no `waitingOn` at all. |
+
+**The membership mirror** (decided 2026-10-28): RTDB's rules can't read
+Firestore, so a Cloud Function copies each group's membership into
+`/mirrors/{conversationId}` whenever it changes: `members`, a map of each
+member's UID to their `joinedAt` in milliseconds, and the group's
+`chatTtlDays`. Clients can't read or write it. A group's chat uses the group
+ID as its conversation ID, so presence (11.8) reads the same mirror. A
+member who has just joined or left may meet the old membership for the
+moment the function takes to run. Built 2026-10-28 as two triggers in
+`functions/src/mirror.ts`, one on group documents and one on member
+documents. Since Firebase may deliver triggers late, out of order, or more
+than once, each reads the document's current state rather than the change
+it was handed, and rereads after writing until the two reads agree.
+
+**Rules** (`database.rules.json`, decided 2026-10-28):
+- **Sending**: a member creates a message with all four fields above and
+  nothing else, as themselves, stamped with the server's time. Messages are
+  never edited.
+- **Reading**: a member reads only through a query ordered by `sentAt` that
+  starts exactly at their own `joinedAt` from the mirror, so nobody reads
+  chat from before they joined. The rules can only compare where a query
+  starts for equality (measured in the emulator, which refused every
+  ordering comparison), so the client starts its query at its join time
+  rather than anywhere later.
+- **Waiting-on entries**: each one is `true` for a current member. A member
+  deletes their own entry, and any member deletes the entry of someone no
+  longer in the group. Nothing else changes them.
+
+**Chat pushes** (decided 2026-10-29): a new message pushes each member on
+its waiting-on list who has no presence entry in the group (11.8), so
+anyone with the group open isn't pushed. The push says only "New messages"
+under the group's name, tagged by the chat so a busy chat shows as one
+notification that later pushes replace.
 
 **Deletion, still opportunistic and client-triggered** (no Cloud
-Function, matching the rest of the design): whichever client is already
-reading/acking a message checks two conditions and deletes if either is
-true: (a) `recipientUids` minus anyone since removed from the group
-minus `ackedBy` is empty, or (b) `sentAt` is older than that group's own
-`chatTtlDays` (Section 5, default 30, creator-adjustable 7-180, stored on
-`/groups/{groupId}`, Section 11.2). RTDB has no native TTL, so this
-reuses the same ack-checking codepath rather than needing separate
-infrastructure for the safety valve.
+Function): whichever client is already reading a message deletes it once
+either is true, which the rules check: (a) its `waitingOn` is empty, or (b)
+its `sentAt` is older than the group's own `chatTtlDays` (Section 5, default
+30, owner-adjustable 7-180), read from the mirror. RTDB has no native TTL,
+so this reuses the same cleanup codepath rather than needing separate
+infrastructure for the safety valve. The rules can't check that a sender
+listed every other member, so a sender who leaves someone off only shortens
+how long that message waits, and the history requests in 11.9 cover anyone
+who missed it.
 
 **Resolved** (originally an open question, settled via 11.9): a member
 who joins after a message was sent does **not** automatically see it,
-the client only queries/subscribes to messages with
-`sentAt >= their own joinedAt`. Keeps chat consistent with "not a
-permanent archive" rather than showing new joiners a partial, arbitrary
-slice of not-yet-deleted backlog. This does NOT apply to events/notes,
-those are persistent Firestore documents a new joiner should see in
-full, matching your original description of new members "syncing
-whatever information was already there for that group." A new joiner
-who specifically wants older chat context can request it explicitly,
-see 11.9.
+since the read rule above only lets them query from their own `joinedAt`.
+Keeps chat consistent with "not a permanent archive" rather than showing
+new joiners a partial, arbitrary slice of not-yet-deleted backlog. This
+does NOT apply to events/notes, those are persistent Firestore documents a
+new joiner should see in full, matching your original description of new
+members "syncing whatever information was already there for that group." A
+new joiner who specifically wants older chat context can request it
+explicitly, see 11.9.
 
 ### 11.8 RTDB: `/presence/{groupId}/{uid}`
 
 | Field | Type | Notes |
 |---|---|---|
 | `online` | plaintext boolean | Set `true` on connect; `onDisconnect()` clears it automatically. Standard RTDB presence pattern, no Firestore equivalent exists for this, which is why presence is the one thing staying in RTDB alongside chat. |
+
+**Rules** (decided 2026-10-28): members of the group, by the membership
+mirror (11.7), read its presence, and each member writes only their own
+entry, holding nothing but `online`.
 
 ### 11.9 Peer-Assisted History Sync Requests
 
@@ -826,15 +1136,37 @@ fulfill.
 
 No new cryptography is needed: the fulfiller already holds the group's
 symmetric key (from their own `wrappedGroupKey`), and so does the
-requester, so the fulfiller forwards the original cached ciphertext
-envelopes (`senderUid`, `sentAt`, `ciphertext`, `iv`) as-is. Firebase
-relaying the bundle still never sees plaintext, same guarantee as live
-chat.
+requester. A device keeps its chat history decrypted (Section 5), so the
+fulfiller encrypts the requested messages (each one's ID, sender, time, and
+text) as one bundle under the group key, with a fresh IV (decided
+2026-10-29). Firebase relaying the bundle still never sees plaintext, same
+guarantee as live chat, and Storage sees only the bundle's total size, not
+how many messages it holds or how long each is.
 
 | Path | Service | Notes |
 |---|---|---|
-| `/groups/{groupId}/historyRequests/{requestId}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`. Visible to all current members; an FCM notification fires whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field, 7-14 days out, so an unfulfilled request quietly disappears instead of lingering forever. |
-| `groupHistoryTransfers/{groupId}/{requestId}` | Storage | The uploaded bundle of cached ciphertext envelopes, written only by whoever currently holds the claim. |
+| `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification goes to every member but the asker whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
+| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle, the requested messages encrypted as one under the group key with its 12-byte IV first, keyed like the request it answers, written only by whoever currently holds the claim. One binary file of at most 25 MB (decided 2026-10-28), about 125,000 typical messages. |
+
+**Rules (decided 2026-10-28)**: a member files only their own request,
+pending and unclaimed, at the server's time. Any other member claims a
+pending one in their own name, at the server's time, but only while the
+asker is still in the group, since history goes only to a current member.
+The claimant releases their claim at any time, and any member may release
+it once it's 30 minutes old. Only the asker marks a claimed request
+fulfilled or deletes their request, and a fulfilled one can't be reopened.
+
+**Storage rules (`storage.rules`, decided 2026-10-28)**: they read the
+request and the group's members from Firestore. Only the member holding a
+standing claim uploads the bundle, or replaces a failed attempt, and only
+while both they and the asker are still in the group. A bundle is one file
+typed as generic binary (`application/octet-stream`), 1 byte to 25 MB, with
+no custom metadata, since metadata would sit beside it unencrypted. Only the
+asker downloads it, while still a member. The asker deletes it, and the
+claimant may withdraw it while their claim stands. Nobody lists the folder.
+A bundle nobody collects is deleted by the bucket's own lifecycle setting
+15 days after upload, after its request has expired (decided 2026-10-28), so
+no Cloud Function is needed for it.
 
 **`kind` distinguishes the two cases, and the requester, not the
 fulfiller, sets the scope**:
@@ -918,7 +1250,7 @@ because this feature exists.
 - Reuses two patterns that already exist elsewhere in this design
   instead of inventing new ones: the claim transaction (Section 7) and
   the transient relay-then-delete lifecycle (used everywhere else).
-- No new cryptography, re-encryption, or key exchange, reuses the
+- No new cryptography or key exchange: the bundle is encrypted under the
   already-shared group key.
 
 **Cons**
@@ -942,9 +1274,14 @@ because this feature exists.
   they can simply ask again.
 
 **Locked in, not deferred**: a member is only offered the claim option
-for a `backlog` request if their own local cache actually covers it,
-specifically, their earliest cached message for that group's chat is at
-or before the request's `rangeStart`. This is a purely local check
+for a request if their own local cache actually covers it, specifically,
+their earliest cached message for that group's chat is at or before the
+start of the request's range (the `rangeStart` of a `backlog`, the asker's
+`joinedAt` for a `recovery`). A member who joined at or before that start
+and holds history counts as covering it too (decided 2026-10-29), since a
+chat that began after the start has no message that early, and without
+this nobody could ever answer a request for a group whose chat began
+later. This is a purely local check
 (their own IndexedDB, no network round trip, no new infrastructure) and
 is deliberately based on actual cached coverage rather than `joinedAt`
 alone, `joinedAt` only approximates "could plausibly have it," actual
@@ -987,6 +1324,76 @@ once one person claims it matters.
   interrupting modal, consistent with minimizing popup fatigue generally,
   not just at the dismissal step.
 
+### 11.10 Text Limits
+
+Decided 2026-10-25. Every field a person types has a length and a set of
+characters it allows, so names stay readable and recognizable, and nobody
+can disguise one with invisible or direction-reversing characters. Lengths
+count the way JavaScript's `.length` and the rules' `size()` both do (UTF-16
+units, measured in the emulator), so a form field's `maxLength` and the rule
+always agree. An emoji counts 2 or more.
+
+| Field | Length | Allowed |
+|---|---|---|
+| Group name | 1 to 50 | Letters in any language with their accents, numbers, spaces, basic punctuation (`. , ' ’ - & ! ? ( ) : # / +`), and emoji, as Discord's display names allow by its own help center. |
+| Person name (the join request's name, then the per-group display name) | 1 to 40 | Letters in any language with their accents, spaces, apostrophes, hyphens, and periods. No numbers, symbols, or emoji: it's a real name the approver has to recognize (Section 17), and decoration only makes look-alike names easier. |
+| Join request note | 0 to 150 | Letters, numbers, spaces, and basic punctuation, no emoji. |
+| Event title | 1 to 50 | The group name's set: letters, numbers, basic punctuation, and emoji. |
+| Event description | 0 to 500 | The title's set, plus line breaks. |
+| Event location text | 0 to 150 | The title's set. |
+| Item label (who's bringing what) | 1 to 50 | The title's set. |
+
+**The rules' Unicode is old** (measured 2026-10-28): the rules' `\p{...}`
+classes follow Unicode 6.0, so `\p{So}` misses every emoji added since,
+even 😀. Emoji are therefore allowed by code point, their blocks listed in
+the rules' pattern and the app's alike, and the rules suite proves recent
+ones pass. A letter added to Unicode after 6.0 still fails the rules'
+`\p{L}`, a rare enough case to accept.
+
+Every field refuses leading or trailing spaces and runs of two or more
+spaces (an event description's line breaks aside), and the app trims,
+collapses spaces, and normalizes text (Unicode NFC) before saving, so what a
+person types usually passes. A description is tidied line by line and keeps
+at most one blank line between paragraphs (decided 2026-10-29). The rules check every plaintext field
+directly. The display name, events, and items are encrypted, so the app
+checks them before encrypting and the rules can only cap each ciphertext's
+size, at 3 bytes per character plus the 16-byte tag (Sections 11.3 and
+11.5). The event and item rows were decided 2026-10-27. A chat message holds
+1 to 2,000 characters (decided 2026-10-28), which the rules cap at its
+ciphertext's size (Section 11.7). It allows any visible text (decided
+2026-10-29): letters, numbers, punctuation, symbols, emoji, spaces, and line
+breaks, refusing only control, format, private-use, and unassigned
+characters and the line and paragraph separators, so nothing invisible or
+direction-reversing can disguise a message. The zero-width joiner and
+non-joiner and the emoji tag characters stay allowed, since emoji, flags,
+and scripts such as Persian need them. It's tidied line by line, like a
+description.
+
+### 11.11 Untrusted Text And Paths
+
+Decided 2026-10-25. Firestore has no query language that strings are
+pasted into, and the SDK sends every value typed, so text can't become a
+database command the way SQL injection works. Two neighbours of it are
+real, and the app is built against both:
+
+- **Paths**: a value that becomes part of a document path could point
+  somewhere else. The app builds every path from separate segments
+  (`doc( db, 'invites', tokStr )`) and every map key with `FieldPath`,
+  never by joining strings, and checks a value from outside (an invite
+  link's token) against its form before using it. The security rules
+  cross-check every lookup they build from request data, so a path-shaped
+  value is refused there too, which the rules suite tests.
+- **Display**: most text is encrypted, so only the clients ever see it,
+  and a modified client can skip the app's own checks before encrypting.
+  So every client treats text from another member, decrypted or plaintext,
+  as untrusted: it renders it only as text (React's escaping, never
+  `innerHTML` or `dangerouslySetInnerHTML`), isolates its direction
+  (`<bdi>` or `unicode-bidi : isolate`) so a direction override can't flip
+  the interface around it, applies Section 11.10's limits again when
+  showing it, and only links an address it has checked is `https:`. The
+  security suite's untrusted input checks cover each screen that shows such
+  text, as the screens are built.
+
 ---
 
 ## 12. Known Limitations & Accepted Tradeoffs
@@ -1010,6 +1417,10 @@ once one person claims it matters.
 - Data already delivered to a device (chat history, notes, event
   details) cannot be retroactively revoked if that member is later
   removed from the group.
+- A member recovered onto a new phone reads a group again only once
+  another member shares its key (Section 6), so a group whose other
+  members never come back stays closed to them, and a group they're the
+  only member of can't be opened again at all.
 - The group's symmetric key is never rotated when a member is removed.
   They still hold a local copy of it, but rotation is skipped: security
   rules already cut off their access to any *future* ciphertext, so a
@@ -1039,7 +1450,14 @@ once one person claims it matters.
 - **Partly resolved (2026-10-22): carrying an invite across an iOS
   install.** A "Paste invite link" option is built in regardless, see
   Section 16; the real-iPhone test of the invite address still decides
-  whether it's the main path or only the backup.
+  whether it's the main path or only the backup. Also still open, for
+  the invite screen's design: whether the invite page shown in Safari
+  before the install names the group. Reading an invite needs a sign-in,
+  and the app's invite read runs the identity bootstrap, which would leave
+  an identity in Safari's storage that the installed app can't use
+  (Section 16). The page could skip the name there, or sign in
+  anonymously without the rest of the bootstrap, at the cost of one
+  never-used Auth account per visitor.
 - **Resolved (2026-10-22): environments.** Decided: the Emulator Suite
   for daily development and every automated test, plus two real Firebase
   projects, live and staging, the staging one backing Netlify deploy
@@ -1083,16 +1501,42 @@ the Blaze change.
   the build tooling and the Cloud Functions runtime, not an app server.
 - Local storage: raw IndexedDB, as in ease-my-life, with no wrapper
   library. It covers everything the client keeps:
-  - The ECDH private key and unwrapped group keys, stored as
-    non-extractable `CryptoKey` objects, which IndexedDB can hold
-    directly (localStorage can't), so the raw key bytes are never
-    readable by script.
+  - The ECDH private key and unwrapped group keys, stored as `CryptoKey`
+    objects, which IndexedDB can hold directly (localStorage can't). The
+    private key is non-extractable, so its bytes are never readable by
+    script, while group keys stay extractable so any member can wrap one
+    for a joiner (Section 6).
   - The decrypted chat history. RTDB's web SDK keeps no offline copy on
     disk, so this cache is ours to keep, as Section 5 already assumes.
   - Firestore's own offline cache uses IndexedDB too, managed by its SDK.
-  - The app calls `navigator.storage.persist()` on every launch, so the
-    browser treats its storage as worth keeping.
+  - The app asks the browser to keep its storage (`navigator.storage.persist()`,
+    `src/platform/persist.ts`) on each launch once the identity exists, as
+    the bootstrap finishes at the first group action, and not when the
+    browser already keeps it (decided 2026-10-29). Never before a group
+    action, so a visitor who hasn't acted isn't prompted (Firefox may ask),
+    and nothing runs on iOS before the app is installed (Section 16).
 - UI: no component library; every component is built in-house.
+- Layout (decided 2026-10-29, from the wireframes of the design pass):
+  - **Wide screens**: a rail of every group down the left, then the open
+    group's sections (chat, events, map, people, settings), its content,
+    and a panel with the next event and its bring-list.
+  - **Phones**: the group's name at the top opens a sheet of every group,
+    with joining and creating one; the group's sections are tabs along the
+    bottom; and the group's next event is pinned above its chat, opening
+    as a sheet with its details and bring-list.
+  - **On the day of an event** the group leads with it: the pinned event
+    offers the map, "I'm on my way", and "I've arrived" (Section 10).
+- Look (decided 2026-10-29): a periwinkle accent with a coral spark on a
+  cool off-white page, set in Bricolage Grotesque for headings and Figtree
+  for text, both self-hosted, so the app loads nothing from another origin.
+  Every member wears their own color from a palette of 50 (their
+  `colorSlot`, Section 11.3) on their avatar, their claims, and their status
+  lines.
+- Light and dark (decided 2026-10-29, built 2026-10-30 in
+  `src/platform/color-mode.ts`): every color holds a light and a dark value,
+  and the app follows the phone's setting unless someone picks light or dark,
+  which is kept on the device and applied as the app starts. Settings will
+  offer the choice.
 - Routing (decided 2026-10-25): the app answers at one address, its root,
   since it's an app rather than a website with pages to land on:
   - An address the app doesn't use is replaced with the root, so the address
@@ -1110,16 +1554,167 @@ the Blaze change.
     fixed addresses, outside the app, since Google's sign-in verification
     and app listings link to them.
 
+**App's Firebase wiring, built 2026-10-28**:
+- `src/platform/firebase.ts` creates the services the first time something
+  asks, never on page load, so a visitor who hasn't acted makes no
+  connection. The dev server always runs against the Emulator Suite under
+  the demo project (`npm run emulators` starts it beside `npm run dev`). A
+  production build reads its web config, public by design, from the
+  `VITE_FIREBASE_CONFIG` environment variable Netlify sets per environment,
+  and fails with a clear error without it. Firestore keeps its offline cache
+  in IndexedDB, shared between tabs.
+- `src/state/identity.ts` is the identity bootstrap (Section 8), run at the
+  first group action rather than on load (Section 16): an anonymous
+  sign-in, an ECDH P-256 key pair in IndexedDB (`src/platform/key-store.ts`)
+  whose private key script can't export, the raw public key published to
+  `/users/{uid}`, and an empty `/accounts/{uid}`. Each step writes only
+  what's missing, and a key pair lost while the sign-in survives is
+  replaced and republished, while a phone that kept its pair never
+  republishes it over a newer one.
+- `src/state/groups.ts` creates a group (Sections 9 and 11) once both
+  names are tidied and checked (`src/core/text-limits.ts`): the identity
+  bootstrap, a new group key and invite token, then one batch with the
+  group, the creator's membership holding the key wrapped for them and
+  their encrypted display name, the first invite, and the owned slot. The
+  key is kept on the device as `group:{groupId}`, and a key missing there
+  is recovered from the member's own wrap. The group list watches the
+  account's two maps and each group they name, reporting the groups sorted
+  by name once every one has been read, and on a device with no identity yet
+  it reports none without starting Firebase, so a first visit still makes no
+  connection (built 2026-10-30).
+- The first screens (built 2026-10-30): the screen host
+  (`src/screens/screen-host.tsx`) picks the screen from the history entry and
+  the group list, showing a waiting screen while the groups load, whose loader
+  of bouncing typing dots appears only after 300ms, then the welcome to
+  someone in no group, the form for starting a group when the entry asks for
+  it, and otherwise the group the entry names, or the first by name. The form
+  tidies and checks both names, says what's wrong beside a field and focuses
+  it, and announces a failed creation; a created group replaces the form's
+  entry and takes focus on its heading. The group frame has the rail from
+  720px wide and the bar's switcher, which opens the group sheet, below it;
+  its content is the group's chat. The chat pins the group's next event that
+  hasn't ended at its top, opens with the history kept on the device, then
+  watches the chat, starting the watch again a second later while the rules
+  refuse it, as they do until the membership mirror holds a new member, and
+  says so when the group's key is still waiting to be shared. Each message
+  from another member shows their avatar in their own color, their name, and
+  its time, and the member's own messages sit at the other side in the accent;
+  Enter sends, Shift+Enter starts a new line, and a refused or failed send is
+  announced and keeps its text. The pinned event opening a sheet with its
+  bring-list, the status lines, and the wide screen's event panel come next.
+  On iOS the welcome will lead through the install screen first (Section 16),
+  built with that screen.
+- `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
+  for its group's name, filing a join request with a tidied and checked
+  name and note, the joiner's view of where it stands, withdrawing it, and
+  for members, listing the unexpired requests oldest first, approving one,
+  declining one, and declining and blocking its sender. An approval is one
+  transaction that rereads the request and the count, wraps the group key
+  for the joiner's published public key, encrypts the requested name, and
+  writes the membership, the account entry, the count, and the request's
+  end together. Once in, the joiner loads the key from their own wrap the
+  same way a lost key is recovered.
+- `src/state/members.ts` is the membership (Sections 9, 11.3, and 18): the
+  member list, oldest first, with each name decrypted, where a missing or
+  unreadable name shows as none rather than failing the list; a member
+  renaming themselves; the activity mark, which the app makes for each
+  group as it opens, writing only when the last mark is a day old or more;
+  leaving, one batch that ends the membership, its account entry, and its
+  count, then deletes the group's key from the device; and the owner's
+  removal, one transaction that also blocks the member and rotates the
+  invite, returning the new link to share. `src/state/groups.ts` adds the
+  owner's link rotation and settings (the name and chat retention), each one
+  transaction that keeps the working invite in step, and the owner's
+  deletion of the group through `delGroFun`, after which the device deletes
+  the group's key.
+- `src/state/ownership.ts` is the handover (Section 18): the owner offers
+  the group to a member and can withdraw the offer, the member accepts in
+  one transaction that rereads the offer, refuses one that's lapsed or names
+  someone else, and swaps the group between both accounts' maps, or
+  declines through `decOffFun`. An offer refused for a full owned slot
+  rejects with Firestore's permission-denied, which the offer screen
+  explains. `src/state/notices.ts` lists the unexpired notices newest
+  first and dismisses them. The client suite runs with the Functions
+  emulator, so a decline and the notices it leaves are checked end to end.
+- `src/state/events.ts` is the group's events (Sections 5 and 11.5): any
+  member plans one, and its creator or the owner changes or cancels it. The
+  title, description, and location are tidied, checked, and encrypted as
+  one bundle, and the times are checked as the rules check them. Moving an
+  event's end moves every item's deletion time in the same batch, and
+  cancelling an event deletes its items with it. The list leaves out events
+  past their deletion time and reads untrusted details safely, showing a
+  bundle that won't decrypt or parse, or a part that isn't text, as empty.
+  `src/state/items.ts` is the bring-list (Section 7): adding, relabeling,
+  claiming, reassigning, releasing, and removing items. Each write reads
+  the event in its transaction and stamps the item with the event's
+  deletion time, which also brings an item that fell out of step back in
+  line, and refuses an item for a cancelled event. A claim is the
+  compare-and-swap Section 7 describes, refusing with "Someone already
+  claimed that" when the item names an assignee.
+- `src/state/chat.ts` is the group's chat (Sections 5 and 11.7). A message is
+  tidied, checked as visible text, encrypted, and sent waiting on every other
+  member, and the sender's device keeps a copy once the server accepts it,
+  while its own watch skips the message until then, so a refused send is never
+  shown or kept (built 2026-10-30); a message nobody waits on, in a group of
+  one, is deleted as soon as it's accepted. A member reads from their own join
+  time, by a one-time sync or by watching, and each message read is kept on
+  the device, acknowledged, cleared of departed members' entries (after
+  rereading the members, so a new member isn't taken for gone), and deleted
+  once nobody waits on it or it's past the retention. The device's history
+  lives in `src/platform/chat-store.ts`, beside the keys in the app's one
+  IndexedDB database, which `src/platform/local-db.ts` opens at version 2,
+  creating whichever stores are missing.
+- `src/state/presence.ts` marks a member online with an entry the server
+  clears if the device drops, clears it on going offline, and watches who's
+  online (Section 11.8). `src/state/history.ts` is peer-assisted history
+  (Section 11.9): asking for a recovery or a backlog, listing open
+  requests, checking this device's coverage, claiming as a compare-and-swap,
+  releasing, sending the range as one encrypted bundle, collecting it while
+  keeping only well-formed messages inside the range, and withdrawing.
+- `src/state/location.ts` is location sharing (Sections 5, 10, and 11.4):
+  sharing a position for an event, inside its window and expiring an hour on
+  or at the event's end, stopping, listing and watching the valid unexpired
+  shares, and a sharing session that sends a fix on start, as the device
+  moves while the app is open, on each return to the app, and on arrival,
+  throttled as Section 5 says. `src/platform/geolocation.ts` wraps the
+  browser's position calls, and `public/_headers` allows geolocation to the
+  app's own origin alone.
+- Under the emulator, the app, the Cloud Functions, and the tests share the
+  Realtime Database's default instance, `demo-come-hang-default-rtdb`, where
+  the emulator loads `database.rules.json`, as production's app and
+  functions share the project's default instance. The Functions emulator
+  otherwise hands the Admin SDK a namespace named after the bare project ID,
+  so `functions/src/setup.ts` names the instance there (found 2026-10-29,
+  when the mirror the chat rules read sat in a different namespace from the
+  app's chat).
+- `src/state/identity.ts` links the identity to Google and recovers it on
+  a new phone (Section 8), and `src/state/key-share.ts` lists a group's key
+  requests and answers one by wrapping the key for the member's new public
+  key (Section 6), whose push comes from `keyPusFun` in
+  `functions/src/activity-pushes.ts`. The client suite drives the Auth
+  emulator's own Google popup to recover a member on a fresh browser
+  context and has the owner share the key.
+- `src/state/purchase.ts` starts a purchase through `cheCreFun` and reads
+  the paid flag (Section 18). The functions suite checks the checkout and
+  webhook in a Node process of their own
+  (`tests/support/purchase-child.ts`), since Playwright's loader can't link
+  the HTTP functions' module, with Polar's API stood in and webhooks signed
+  the way Polar signs them.
+- The browser suite in `tests/client/` (`npm run test:client`) checks
+  this in Chromium, Firefox, and WebKit against the emulators, since
+  WebCrypto and IndexedDB differ between engines.
+
 **App structure, still open**:
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
-- Scroll behavior per screen, decided as each data screen is built. The
-  app's scroll hook (`src/ui/scroll-top.ts`) restores a back, forward, or
-  reload position right after the page renders, so a screen whose Firebase
-  data arrives later can land short of where the person left it, and such a
-  screen re-applies the position once its content is in. Screens like the
-  chat will likely scroll inside their own container rather than the whole
-  window and open at the newest message, which the hook doesn't cover.
+- Scroll behavior per screen, decided as each data screen is built. The app's
+  scroll hook (`src/ui/scroll-top.ts`) restores a back, forward, or reload
+  position once the fonts have loaded and the screen host says its screen is
+  ready (built 2026-10-30). A screen whose own data arrives later than that,
+  such as an event list, re-applies its position once its content is in. The
+  chat scrolls inside its own log rather than the whole window, opening at its
+  newest message and following new ones while someone reads at the end (built
+  2026-10-30), which the hook doesn't need to cover.
 
 **Infrastructure, decided 2026-10-22**:
 - Firebase Blaze plan with the cost protections in Section 15.
@@ -1133,19 +1728,57 @@ the Blaze change.
   sign-in), and Firebase's addresses in the CSP's `connect-src`.
 - App Check moves from "later" to launch, given the concern about bots
   and abuse (Section 15).
+- Location (decided 2026-10-28): every service in us-central1, so Cloud
+  Functions sit beside the databases they react to and Firestore has its
+  cheapest pricing. The Realtime Database offers only three locations, and
+  Firestore's can never change once the project is created.
+- Cloud Functions layout (decided 2026-10-28): Firebase's standard
+  `functions/` folder with its own `package.json` and `tsconfig.json`, so a
+  deploy uploads only server dependencies. TypeScript compiles to the
+  git-ignored `functions/lib` before each deploy and test run, on Node 24,
+  and `functions/src/main.ts` exports every function Firebase deploys.
+  Every function runs in us-central1 with at most 10 instances. The
+  functions suite in `tests/functions/` (`npm run test:functions`) checks
+  them end to end in the Functions emulator, apart from the other suites,
+  since the functions write data those suites clear. The security suite's
+  dependency audit covers the functions' lockfile too.
 
 **Infrastructure, still open**:
-- Security rules for Firestore, RTDB, and Storage, written and tested
-  against the emulator (the biggest remaining task). The user wants a
-  walkthrough of each rule as it's written.
+- The security rules are complete as of 2026-10-28: `firestore.rules`
+  covers every collection in Section 11, `database.rules.json` covers chat
+  and presence, and `storage.rules` covers history transfers, proven by the
+  rules suite in `tests/rules/` (`npm run test:rules`), which runs against
+  the Firestore, Realtime Database, and Storage emulators that
+  `firebase.json` sets up (2026-10-25). Every check in them was confirmed to
+  fail a test when dropped, except the chat read rule's ordering check,
+  which the emulator can't exercise, since it refuses an unindexed query
+  that the live database would answer.
+- Built 2026-10-28: the membership mirror's functions (Section 11.7), group
+  deletion (Section 9), the group change trigger's removal and offer
+  notices, the offer decline callable, the daily run (Section 18), and the
+  push tokens with the pushes for every notice and for each new offer
+  (Section 11.1). Built 2026-10-29 in `functions/src/activity-pushes.ts`:
+  the history request push (Section 11.9), the grouped join request push
+  (Section 17), and chat pushes (Section 11.7). Built 2026-10-29: the
+  app's side, asking permission, getting and storing the token, and
+  keeping it fresh (Section 11.1), checked in the client suite, which also
+  follows a stored token to the push a removal sends.
 - Environments, see Section 13.
-- Combining the service workers: a PWA gets one service worker per
-  scope, but `vite-plugin-pwa` generates one for offline caching and FCM
-  by default registers its own `firebase-messaging-sw.js` for background
-  push. Plan: `vite-plugin-pwa`'s `injectManifest` mode with one
-  hand-written worker that does both (Workbox precaching plus Firebase
-  Messaging's background handler), and that worker's registration passed
-  to FCM's `getToken()` so it never registers a second one.
+- One service worker (decided 2026-10-28, built 2026-10-29,
+  `src/service-worker.ts`): a PWA gets one service worker per scope, while
+  `vite-plugin-pwa` would generate one for offline caching and FCM would
+  register its own `firebase-messaging-sw.js` for background push. So the
+  plugin's `injectManifest` mode builds one hand-written worker that does
+  both: Workbox caches the build's files and answers every navigation but
+  the legal pages with the app's page, so the app opens without a
+  connection, and in a production build Firebase Messaging's handler shows
+  each push. The app hands that worker's registration to FCM's
+  `getToken()`, so FCM never registers a second one. A deferred script the
+  plugin adds registers it on every load. The worker runs only in a
+  production build, so the worker suite in `tests/worker/` checks it
+  against the preview server, opening the app offline at its root and at
+  an address with no file of its own. The web app manifest stays
+  hand-written, so the plugin writes none.
 
 **Setup checklist (don't skip)**:
 - [ ] **Turn Firebase/Google Analytics OFF** when creating each Firebase
@@ -1153,10 +1786,30 @@ the Blaze change.
       it would cut against this app's privacy stance.
 - [ ] Budget alerts and the automatic billing cutoff (Section 15), set up
       the same day Blaze is enabled, on every project.
-- [ ] Cloud Functions capped with `maxInstances`.
+- [x] Cloud Functions capped with `maxInstances`: 10 each, set in
+      `functions/src/setup.ts`.
+- [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
+      after upload (Section 11.9).
 - [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
+- [ ] Firestore TTL policies on the `expireAt` field of every collection
+      group that has one (`liveLocations`, `events`, `assignments`,
+      `historyRequests`, `notices`, `pushToken`, `polarEvents`), since a
+      TTL policy is set per collection group in the console, not by the
+      rules.
 - [ ] Authorized domains, API key restrictions, and CSP, per the hosting
-      bullet above.
+      bullet above, the CSP's `connect-src` including FCM's token
+      addresses (`fcmregistrations.googleapis.com` and
+      `firebaseinstallations.googleapis.com`).
+- [ ] Polar: the upgrade's product made in the sandbox (staging) and live
+      (live), each project's `POLAR_ACCESS_TOKEN` and
+      `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,
+      its `functions/.env.<projectId>` giving `POLAR_PRODUCT_ID`,
+      `POLAR_API_URL` (`https://api.polar.sh` for live), and
+      `POLAR_SUCCESS_URL`, and Polar's webhook pointed at the project's
+      `polWebFun` address for `order.paid` and `order.refunded`.
+- [ ] The web push (VAPID) key pair generated in each project's Cloud
+      Messaging settings, its public key set as `VITE_FIREBASE_VAPID_KEY`
+      in Netlify for that environment.
 - [ ] The privacy policy and terms written and published at `/privacy` and
       `/terms`, before Google sign-in is set up (its verification asks for
       both URLs).
@@ -1280,7 +1933,11 @@ history requests). Declining is open to any member too.
   such as two members who share a name or a name the approver doesn't
   know.
 - The name becomes the joiner's starting per-group display name (Section
-  11.3), so they're not asked twice.
+  11.3), so they're not asked twice: the approving member encrypts it
+  under the group key into the new membership (decided 2026-10-28), since
+  the request holding it ends with the approval. The new member is never
+  shown without a name, and the joiner's device doesn't have to keep what
+  they typed while they wait. The joiner can change it afterwards.
 - A typed name is only a claim. Anyone holding the link can type any
   name, including a real member's, so the approval screen says to
   approve only people you recognize, and to check with them outside the
@@ -1291,23 +1948,33 @@ history requests). Declining is open to any member too.
 
 | Field | Type | Notes |
 |---|---|---|
-| `nameText` | plaintext | The joiner's entered name. Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
-| `noteText` | plaintext, optional | The note to the group, same treatment. |
-| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group) and that the UID isn't in `removedUids`. |
+| `nameText` | plaintext | The joiner's entered name, under the person name limits (Section 11.10). Can't be encrypted with the group key, since the joiner doesn't have it yet. Deleted on approval or decline, after which the name lives only in the encrypted `displayNameEnc`. Same narrow exception as the group name. |
+| `noteText` | plaintext, optional | The note to the group, same treatment, under the note limits (Section 11.10). |
+| `inviteToken` | plaintext | The token used. The rule checks it against `/invites/{inviteToken}` (still active, for this group), that the UID isn't in `removedUids` and isn't already a member, that the joiner has published a public key (11.1), and that they have a free slot under their belong cap, which the approval checks again (Section 18). |
 | `requestedAt` | plaintext | Timestamp. |
-| `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. |
+| `expireAt` | plaintext, TTL field | 7 days out, so ignored requests clear themselves. The client sets it from its own clock, so the rules accept anything from 6 to 8 days after the server's time. |
 
 The doc ID is the joiner's UID, so one identity can have only one request
-per group. **Approval** is one transaction by the approving member: read
+per group. The joiner and the members can read a request; it can't be
+edited once filed, and it ends when the joiner withdraws it or any member
+declines or approves it. **Approval** is one transaction by the approving member: read
 the joiner's `publicKey` from `/users/{uid}`, create
-`/members/{uid}` with the group key wrapped for it, and delete the
-request. The joiner's listener sees the membership appear, unwraps the
-key, and writes their encrypted display name. **Declining** deletes the
+`/members/{uid}` with the group key wrapped for it, add the group to the
+joiner's `/accounts/{uid}` member map, raise the group's `memberCount` by one and
+set its `countedUid` to the joiner, and delete the request. The rules let a member change another person's
+account only that way: adding this one group, alongside creating their
+member doc, within the joiner's and the group's caps (Section 18). The member doc carries the
+joiner's name from the request, encrypted. The joiner's app sees the membership appear and
+unwraps the key from it. **Declining** deletes the
 request; declining and blocking adds the UID to `removedUids` as well.
 
 **Floods**:
 - Members get one grouped notification ("3 people want to join") rather
-  than one push per request, so a flood can't flood phones too.
+  than one push per request, so a flood can't flood phones too (decided
+  2026-10-29): each new request pushes every member the count of unexpired
+  requests waiting, tagged by the group so it replaces the group's earlier
+  join push on the phone. A flood still sends one push per request, which
+  App Check keeps scripts from causing.
 - The pending list offers "Decline all", and rotating the link (Section
   9) stops new requests at the source. Pending requests made with an old
   link stay until handled, since most are likely real people.
@@ -1349,7 +2016,7 @@ paywall is switched on before launch.
   meets the paywall just for being invited; one who does sees why when
   the join is blocked.
 - **A group's member cap follows its owner's status**: 50 if the owner is
-  paid, 20 otherwise. The chat recipient list and ack map (Section 11.7)
+  paid, 20 otherwise. Each message's waiting-on list (Section 11.7)
   grow with the group, and every joiner needs the key wrapped for them,
   so smaller groups are cheaper too.
 - **Caps start conservative** because raising one later is one number in
@@ -1365,17 +2032,70 @@ paywall is switched on before launch.
   without a recoverable sign-in would be a support problem. ease-my-life
   reached the same conclusion for its paid accounts.
 - Polar takes the payment, as in ease-my-life. Its webhook, a Cloud
-  Function here, writes a permanent paid flag the rules read. A refund
+  Function here, writes a permanent `paid` flag on `/accounts/{uid}`
+  (Section 11.1), which the rules read and no client can write. A refund
   clears the flag, and the "over a limit" rule above applies.
+- **How it runs** (decided 2026-10-29, `functions/src/purchase.ts` and
+  `src/state/purchase.ts`): the app calls `cheCreFun`, which refuses an
+  identity not linked to Google or already paid, and creates a Polar
+  checkout tagged with the UID (as the customer's external ID and in the
+  order's metadata) and prefilled with the Google email, returning its
+  address for the app to open. Polar sends the buyer back to a fixed
+  address per project, the app's root with `?purchase=done`, so the
+  function can't be made to redirect anywhere else. `polWebFun` takes
+  Polar's webhook: it checks the Standard Webhooks signature and refuses
+  one unsigned, mis-signed, or more than five minutes old, then sets the
+  flag for a paid order of the product and removes it for a fully refunded
+  one. Each delivery's ID is recorded in `/polarEvents`, in the same
+  transaction as the flag, so a replayed event never acts twice while a
+  failed write leaves Polar free to retry. An order for another product,
+  another kind of event, or an order naming no account is logged and
+  acknowledged. Each project gives its own settings: the token and webhook
+  secret in Secret Manager, and the product, the API's address (the
+  sandbox for staging, live Polar for live), and the return address in its
+  `functions/.env.<projectId>`. A project without a product sells and
+  grants nothing. The price, $9.99, lives in the Polar product, and the
+  screens will show it.
 
 **Ownership transfer (decided 2026-10-22)**:
 - **Offer, then accept.** The owner offers ownership to a current member
-  (`pendingOwnerUid`), and it moves only when that member accepts, so
-  nobody is handed a group, and a slot of theirs, without agreeing.
+  (`pendingOwnerUid`, with `pendingOfferedAt`), and it moves only when that
+  member accepts, so nobody is handed a group, and a slot of theirs,
+  without agreeing. The owner can withdraw the offer and the member can
+  decline it, and a new offer replaces a standing one.
 - **The new owner needs a free slot**: a free user who already owns a
   group, or a paid user who owns 10, can't accept until they delete or
-  hand off one of their own (or, for a free user, buy). The app explains
-  this rather than just refusing.
+  hand off one of their own (or, for a free user, buy).
+- **The owner learns at once whether an offer can land** (decided
+  2026-10-26): the rules refuse an offer to a member with no free owned
+  slot as it's made, so the owner's tap fails on the spot, and the app
+  explains that this member can't take a group right now and to pick
+  someone else, without revealing more of their account. An offer is never
+  left hanging where the owner might think the handover was done.
+- **Every offer ends in a notice to the owner** (decided 2026-10-26): if
+  the member accepts, declines, leaves the group, or lets 7 days pass, a
+  Cloud Function leaves the owner a notice (Section 11.1) and a push, and
+  the member offered the group gets a push when it's offered. A decline
+  goes through a callable Cloud Function, `decOffFun` in
+  `functions/src/offer-decline.ts` (decided 2026-10-28), which knows its
+  caller, clears the offer in a transaction, and leaves the owner the
+  notice, while the rules let only the owner end an offer from the app, so
+  a decline can't skip the notice. The plan before was a trigger telling a
+  decline from a withdrawal by who wrote it, but a trigger learns its
+  writer only in production, never in the emulator, so that could never be
+  tested. If the member offered the group leaves or is removed, the group
+  change trigger clears the offer, which nobody could accept any more, and
+  tells the owner of a leave, since the owner made a removal themselves.
+  The rules refuse an acceptance after 7 days, so a forgotten offer can't
+  be taken up long after the owner moved on, and the daily function clears
+  a lapsed one. The group's settings show a standing offer and when it
+  lapses, so the owner can always see where the handover stands.
+- **Accepting is one batch** (decided 2026-10-26): the member offered the
+  group makes themselves owner and clears the offer, moves the group from
+  their member map to their owned map within their caps, and moves it the
+  other way in the old owner's account, which the new owner writes since
+  the old owner may be away. The rules check each write against the
+  others. The old owner stays a member and can leave like anyone else.
 - **The member cap may drop**: transferring a 35-member group from a paid
   owner to a free one is allowed, since blocking it could strand a group
   whose owner needs to leave. All 35 stay; new approvals pause until the
@@ -1384,12 +2104,24 @@ paywall is switched on before launch.
 - **An owner can't simply leave.** Leaving requires transferring
   ownership first or deleting the group, so no group is ever left without
   an owner by choice.
-- **Enforcement in the rules**: rules can't count documents, so each
-  user's own doc keeps a map of their memberships and which they own,
-  updated in the same batch as every join, leave, create, removal, and
-  transfer. The rules check the resulting map, plus the owner's paid flag
-  for member counts (kept as a member count on the group doc, updated the
-  same way), against the caps.
+- **Enforcement in the rules** (decided 2026-10-25): rules can't count
+  documents, so each user's private `/accounts/{uid}` keeps two maps of
+  their groups, the ones they own and the ones they only belong to, and
+  each group keeps a `memberCount`, both
+  updated in the same batch as every create, join, leave, removal, and
+  transfer (Section 11.1 and 11.2). The rules check the resulting maps and
+  count against the caps, reading the paid flag of the user (for groups
+  owned and belonged to) or of the group's owner (for members). Since a
+  join is approved by someone else, the approver's batch writes the
+  joiner's member map entry, and the rules allow exactly that one change.
+- **The paywall's switch** (decided 2026-10-25): while it's unlocked, one
+  rules function reports every user as paid, so the paid caps apply to
+  everyone. The real checks are written and tested under both answers from
+  the start (the rules suite loads the paywall-on version into a second
+  emulator project), and switching the paywall on before launch changes
+  that one function, together with `PAY_LOC_BOO` in
+  `functions/src/daily-run.ts`, which mirrors it so the daily run only
+  offers a group to someone the rules would let accept it.
 
 **Decided (2026-10-22): an owner who disappears.** If the owner stops using the app
 without transferring (a lost phone with no linked sign-in, an
@@ -1398,8 +2130,39 @@ settings again; chat, events, and approvals keep working, since any
 member can do those. So once the owner has been inactive for **30
 days**, the longest-standing member can claim ownership, and the old owner
 is notified if they ever return. The same slot and member-cap rules as a
-transfer apply to the claimant. 30 days is a starting point: events are
-mostly near term, so it may come down later. This adds a plaintext
+transfer apply to the claimant. How it runs (decided 2026-10-26): a daily
+scheduled Cloud Function finds groups whose owner hasn't been active for
+30 days and offers each one, as an ordinary offer with its 7-day window,
+to the longest-standing member who has been active in that time and has a
+free owned slot. That member accepts through the same batch as any
+transfer, so the rules need nothing extra, and if they decline or let it
+lapse, the next run offers it to the next member in line. The old owner
+gets a notice that the group was claimed. 30 days is a starting point:
+events are mostly near term, so it may come down later.
+
+**Built (2026-10-28)** as `dayRunFun` in `functions/src/daily-run.ts`, run
+every day at 08:00 UTC, late night across the US:
+- **Offers lapse** once they've stood 7 days. The owner of an offer they
+  made gets an `offerLapsed` notice.
+- **The claim record** (decided 2026-10-28) is a server-only document,
+  `/groups/{groupId}/ownerClaim/current`, which no rule opens to clients,
+  so members never learn who turned the group down. It holds who the claim
+  offer went to (`offeredUid`), who has passed (`passedUids`), and when
+  everyone eligible had passed (`exhaustedAt`).
+- **The absent owner is told only of a claim** (decided 2026-10-28): a
+  claim offer that's declined, lapses, or whose member leaves records a
+  pass and tells nobody, since the owner has nothing to act on. When the
+  member accepts, the old owner gets `ownershipClaimed` instead of
+  `offerAccepted`, and the record is deleted.
+- **When everyone has passed** (decided 2026-10-28), the record says so,
+  and 30 days later it clears and the run asks again from the top, so a
+  group isn't stranded for good if people change their minds.
+- **An owner who comes back** ends the claim: the run deletes the record
+  and withdraws a claim offer still standing.
+- **A free owned slot** is judged as the rules judge it, so the run never
+  offers a group to someone whose acceptance the rules would refuse.
+- The emulator can't fire a v2 schedule, so the functions suite calls the
+  schedule's handler directly through its `run` method. This adds a plaintext
 `lastActiveAt` timestamp to each membership doc (Section 11.3), updated at
 most once a day when the member opens the app, to keep writes low.
 
@@ -1415,7 +2178,7 @@ designed properly rather than rushed. It isn't a big architectural change,
 since it reuses chat:
 - **Built now**: chat is keyed by a conversation ID rather than the group
   ID (`/chats/{conversationId}`), with a group's own chat as one kind of
-  conversation. Everything in Section 11.7 (ack map, cleanup, TTL) then
+  conversation. Everything in Section 11.7 (waiting-on list, cleanup, TTL) then
   works for a two-person conversation unchanged, and adding private
   messages later needs no change to how group chat is stored.
 - **Encryption needs no new exchange**: each user already publishes an

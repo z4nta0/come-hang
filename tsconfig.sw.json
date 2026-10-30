@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"erasableSyntaxOnly": true,
+		"lib": [
+			"ES2022",
+			"WebWorker"
+		],
+		"module": "ESNext",
+		"moduleDetection": "force",
+		"moduleResolution": "bundler",
+		"noEmit": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedSideEffectImports": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ES2022",
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.sw.tsbuildinfo",
+		"types": [
+			"vite/client"
+		],
+		"verbatimModuleSyntax": true
+	},
+	"include": [
+		"src/service-worker.ts",
+		"src/vite-env.d.ts"
+	]
+}

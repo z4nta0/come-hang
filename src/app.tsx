@@ -3,15 +3,15 @@
 
 // #region Imports
 
-import cssModObj from './app.module.css'; // What: CSS Module Object. Why: The main element is styled in the app's own module, whose class names Vite hashes. How: The main element reads its class from this object.
+import cssModObj from './app.module.css'; // What: CSS Module Object. Why: The screen's container is styled in the app's own module, whose class names Vite hashes. How: The container reads its class from this object.
 
 
-import { HomPagCom    } from './pages/home/home.tsx'; // What: Home Page Component. Why: The app's root address is its home page. How: The home route renders it.
-import { Navigate     } from 'react-router';          // What: Navigate. Why: An address the app doesn't use should give way to the root. How: The catch-all route renders it to replace the address.
-import { Route        } from 'react-router';          // What: Route. Why: Each path the app answers is matched to what it renders. How: This declares one route per path.
-import { Routes       } from 'react-router';          // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
-import { SkiLinCom    } from './ui/skip-link.tsx';    // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the main element.
-import { useScrTopFun } from './ui/scroll-top.ts';    // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
+import { Navigate     } from 'react-router';                // What: Navigate. Why: An address the app doesn't use should give way to the root. How: The catch-all route renders it to replace the address.
+import { Route        } from 'react-router';                // What: Route. Why: Each path the app answers is matched to what it renders. How: This declares one route per path.
+import { Routes       } from 'react-router';                // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
+import { ScrHosCom    } from './screens/screen-host.tsx';   // What: Screen Host Component. Why: The app's root address shows whichever screen the visit is on. How: The root route renders it.
+import { SkiLinCom    } from './ui/skip-link.tsx';          // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the screen.
+import { useScrTopFun } from './ui/scroll-top.ts';          // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
 
 // #endregion Imports
 
@@ -22,12 +22,12 @@ import { useScrTopFun } from './ui/scroll-top.ts';    // What: Use Scroll Top Fu
  *
  * @summary
  * The app's root component, mounted by main.tsx inside the router: the skip
- * link every screen opens with, then the main landmark holding the home page,
- * in a one-cell grid at least as tall as the screen. The app answers at one
- * address, its root: any other path is replaced with the root, so the home
- * page renders and the address bar never keeps a path the app doesn't use. It
- * also opens each page at its top after a navigation and at the earlier
- * position on back, forward, and a reload.
+ * link every screen opens with, then the screen host in the container every
+ * screen's layout measures. The app answers at one address, its root: any
+ * other path is replaced with the root, so the screen host renders and the
+ * address bar never keeps a path the app doesn't use. It also opens each
+ * screen at its top after a navigation and at the earlier position on back,
+ * forward, and a reload.
  *
  * Sections:
  *  - Components
@@ -47,21 +47,20 @@ import { useScrTopFun } from './ui/scroll-top.ts';    // What: Use Scroll Top Fu
  * AppRooCom = App Root Component
  *
  * @summary
- * The top of the component tree: renders the skip link first, then the home
- * page inside the main landmark, a one-cell grid at least as tall as the
- * screen that stretches the page to fill it, so a short page can center itself
- * in it. An address the app doesn't use renders a redirect to the root
- * instead, which replaces the address rather than adding a history entry. The
- * main element is the skip link's target, so it carries the main id and can
- * take focus without joining the Tab order. It calls useScrTopFun once, so
- * every navigation opens the new page at its top, and back, forward, and a
- * reload return to the earlier position.
+ * The top of the component tree: renders the skip link first, then the
+ * screen host inside the app's container, a one-cell grid that every
+ * screen's layout measures its width against. An address the app doesn't use
+ * renders a redirect to the root instead, which replaces the address rather
+ * than adding a history entry. Each screen holds its own main element, the
+ * skip link's target. It calls useScrTopFun once, so every navigation opens
+ * the new screen at its top, and back, forward, and a reload return to the
+ * earlier position.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param props - This component does not use any props.
  *
- * @returns The skip link and the app's main element.
+ * @returns The skip link and the app's container.
  *
  * @example
  * ```tsx
@@ -80,29 +79,23 @@ function AppRooCom () : React.JSX.Element {
 	return (
 
 
-		<>{ /* What: App Root Fragment. Why: The skip link and the main element render side by side, the skip link first so it's every screen's first stop. How: This groups them without adding a wrapper element. */ }
+		<>{ /* What: App Root Fragment. Why: The skip link and the screen render side by side, the skip link first so it's every screen's first stop. How: This groups them without adding a wrapper element. */ }
 
 
 			<SkiLinCom />{ /* What: Skip Link Component. Why: A keyboard user should be able to jump straight to the content. How: This renders the skip link, which focuses the main element below. */ }
 
 
 
-			<main
-				id='main' // What: Main Identifier. Why: The skip link's #main names this element, and as a navigation target its id keeps its plain name. How: This gives the main element the id the skip link points at.
-
-				className={ cssModObj.appConMai }
-
-				tabIndex={ -1 } // What: Main Tab Index. Why: The skip link moves focus here, but the main element isn't a control. How: This lets it take focus from a script without joining the Tab order.
-			>{ /* What: App Content Main Element. Why: Each page's content is the main landmark, and it should fill the screen. How: This holds whichever page the address matches in a one-cell grid at least as tall as the screen, whose single row stretches the page to fill it, so the page needs no named area. */ }
+			<div className={ cssModObj.appRooDiv }>{ /* What: App Root Div Element. Why: Every screen lays out by the room the app has, and fills the screen. How: This holds whichever screen the address matches in a one-cell grid that names itself the app container. */ }
 
 
 				<Routes>{ /* What: Page Routes. Why: Only one page should render for any path. How: This renders the single route below that best matches the path. */ }
 
 
 					<Route
-						element={ <HomPagCom /> }
+						element={ <ScrHosCom /> }
 						path='/'
-					/>{ /* What: Home Route. Why: The app's root address is its home page. How: This renders HomPagCom at the root path. */ }
+					/>{ /* What: Root Route. Why: The app's one address shows its screens. How: This renders ScrHosCom at the root path. */ }
 
 
 
@@ -113,7 +106,7 @@ function AppRooCom () : React.JSX.Element {
 							<Navigate
 								replace
 								to='/'
-							/> // What: Root Redirect Navigate. Why: The unknown address should give way to the root without leaving a history entry behind it. How: This replaces the address with the root, which the home route then renders.
+							/> // What: Root Redirect Navigate. Why: The unknown address should give way to the root without leaving a history entry behind it. How: This replaces the address with the root, which the root route then renders.
 
 
 						) }
@@ -124,7 +117,7 @@ function AppRooCom () : React.JSX.Element {
 				</Routes>
 
 
-			</main>
+			</div>
 
 
 		</>

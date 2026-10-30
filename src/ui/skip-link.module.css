@@ -19,9 +19,9 @@
 .skiLinAnc { /* What: Skip Link Anchor. Why: A keyboard user should be able to jump to the content, and the link shouldn't show until it's needed. How: This draws a pill in the main accent with bold text, fixed just above the screen's top edge at the side gutter, and eases its slide back out on the accelerating curve, along with its hover color, hover lift, press scale, and focus ring. */
 
 
-	background-color : var( --acc-mai-col );                                   /* Accent Main Color = #1f5bc4 */
+	background-color : var( --acc-mai-col );                                   /* Accent Main Color = #4A4FC9 */
 	border-radius    : 999px;
-	color            : var( --tex-acc-col );                                   /* Text Accent Color = #ffffff */
+	color            : var( --tex-acc-col );                                   /* Text Accent Color = #FFFFFF */
 	font-weight      : 700;
 	left             : var( --gut-sid-pad );                                   /* Gutter Side Padding, about 19.304px - 44.876px */
 	padding          : var( --spa-ver-bas ) clamp( calc( var( --ver-rhy-p01 ) * 1rem ), var( --hor-rhy-013 ), calc( var( --ver-rhy-p03 ) * 1rem ) ); /* Spacing Vertical Base ~= 14.572px, Vertical Rhythm Base Plus 1 ~= 19.304px, Horizontal Rhythm 13 ~= 37.460px @ 1,920px width, Vertical Rhythm Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing and rhythm steps directly, outside the tiers, its sides holding horizontal rhythm step 13 between the vertical rhythm's p01 and p03 steps. */
@@ -44,7 +44,7 @@
 .skiLinAnc:hover { /* What: Hovered Skip Link Anchor. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the pill 2px. */
 
 
-	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #1f5bc4, darkened by 0.08 lightness */
+	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
 	transform        : translateY( calc( var( --spa-ver-m07 ) * -1 ) );         /* Spacing Vertical Base Minus 7 ~= -2.035px */
 
 

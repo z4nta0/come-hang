@@ -6,7 +6,7 @@
 import { expect      } from '@playwright/test';      // What: Expect. Why: Each check passes only when the policy is enforced and the page breaks none of its rules. How: This asserts on what each check collects from the page.
 import { heaAllFun   } from '../support/headers.ts'; // What: Headers All Function. Why: The pages are loaded under the policy Netlify really sends. How: This reads the /* block of public/_headers.
 import { opeStaFun   } from '../support/states.ts';  // What: Open State Function. Why: Each state is opened the way every suite opens it. How: This loads the state and waits until it's settled.
-import { STA_REC_ARR } from '../support/states.ts';  // What: State Record Array. Why: The policy has to hold in every state the suites visit. How: This is the list of states to load.
+import { STA_REC_ARR } from '../support/states.ts';  // What: State Record Array. Why: The policy has to hold in the states the suites visit. How: This is the list the checked states are taken from.
 import { test        } from '@playwright/test';      // What: Test. Why: Each state is its own test. How: This declares them.
 
 
@@ -27,15 +27,26 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The policy set
  * so every response is given its headers here. First a check proves the policy
  * is live, by injecting an inline script and seeing it refused and reported.
  * Then every state the suites visit is checked for policy violations and
- * checked to close off every new tab link.
+ * checked to close off every new tab link, except the states that reach a
+ * group: the production build has no Firebase project to make one in, so
+ * those wait until the policy opens to Firebase's addresses.
  *
  * Sections:
+ *  - Constants
  *  - Helpers
  *  - Module Init
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
+
+
+
+// #region Constants
+
+const POL_STA_ARR = STA_REC_ARR.filter( ( staRecObj ) => ![ 'chat', 'group', 'sheet' ].includes( staRecObj.steStr ?? '' ) ); // What: Policy State Array. Why: A state that reaches a group needs Firebase, which the production build here has no project for. How: This keeps every state that needs no group.
+
+// #endregion Constants
 
 
 
@@ -183,7 +194,7 @@ test( 'the policy refuses an injected inline script', async ( { page : curPagObj
 
 
 
-for ( const staRecObj of STA_REC_ARR ) { // What: State Loop. Why: Every state the suites visit has to work under the policy. How: This declares one test per state.
+for ( const staRecObj of POL_STA_ARR ) { // What: State Loop. Why: Every state the suites visit without a group has to work under the policy. How: This declares one test per state.
 
 
 	test( `${ staRecObj.ideStr } breaks no rule of the security policy and closes off every new tab link`, async ( { page : curPagObj } ) => { // What: State Policy Test. Why: A blocked resource, such as a font, would break the page once deployed, and the policy can't be loosened to hide it. How: This opens the state under the policy and checks nothing was refused and every new tab link is closed off.

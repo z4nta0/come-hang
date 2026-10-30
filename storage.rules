@@ -1,0 +1,208 @@
+
+
+
+// #region Rules Version
+
+rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules read Firestore documents. How: This selects it.
+
+// #endregion Rules Version
+
+
+
+/**
+ * storage.rules = Storage Security Rules
+ *
+ * @summary
+ * Decides who may read and write the app's Cloud Storage files. Storage
+ * refuses any request no rule allows, and the only files the app keeps are
+ * chat history transfers, so these rules open nothing else, and the tests in
+ * tests/rules prove them in the local emulator.
+ *
+ * A history transfer is the encrypted bundle a member uploads for a history
+ * request (ARCHITECTURE.md Section 11.9), stored under the group's ID and the
+ * asker's UID, the same keys as the request it answers. The rules read that
+ * request and the group's members from Firestore. Only the member holding
+ * the request's claim uploads a bundle, and only while both they and the
+ * asker are still in the group, as one opaque file of at most 25 MB with no
+ * custom metadata. Only the asker downloads it, while still a member, and
+ * the asker or the claimant deletes it. A bundle nobody collects is deleted
+ * by the bucket's own lifecycle setting 15 days after upload.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+// #region Storage Service
+
+service firebase.storage { // What: Storage Service. Why: These rules cover the project's Cloud Storage. How: This scopes them to it.
+
+
+	match /b/{bucket}/o { // What: Bucket Match. Why: Every rule applies inside the project's bucket. How: This matches its files.
+
+
+		// #region Identity Checks
+
+		// #region isaOwnFun
+
+		function isaOwnFun ( uidValStr ) { // What: Is-An Owner Function. Why: A transfer belongs to the member who asked for it. How: This is true for an identity whose UID matches the one given.
+
+
+			return request.auth.uid == uidValStr; // What: Owner Return. Why: The UID names whose transfer it is. How: This compares it with the requester's UID, and a signed-out request has none to compare, which the rules treat as a refusal.
+
+
+		}
+
+		// #endregion isaOwnFun
+
+		// #endregion Identity Checks
+
+
+
+		// #region Document Paths
+
+		// #region hisPatFun
+
+		function hisPatFun ( groIdeStr, uidValStr ) { // What: History Path Function. Why: A transfer's rules look up the request it answers. How: This returns the history request document's path.
+
+
+			return /databases/(default)/documents/groups/$(groIdeStr)/historyRequests/$(uidValStr); // What: History Path Return. Why: A Firestore lookup needs the full path. How: This builds it from the group ID and the asker's UID.
+
+
+		}
+
+		// #endregion hisPatFun
+
+
+
+		// #region memPatFun
+
+		function memPatFun ( groIdeStr, uidValStr ) { // What: Member Path Function. Why: A transfer's rules check who is still in the group. How: This returns the member document's path.
+
+
+			return /databases/(default)/documents/groups/$(groIdeStr)/members/$(uidValStr); // What: Member Path Return. Why: A Firestore lookup needs the full path. How: This builds it from the group ID and the UID.
+
+
+		}
+
+		// #endregion memPatFun
+
+		// #endregion Document Paths
+
+
+
+		// #region Transfer Rules
+
+		// #region valTraFun
+
+		function valTraFun () { // What: Valid Transfer Function. Why: A bundle is one opaque, encrypted file of bounded size, and custom metadata would sit beside it unencrypted. How: This checks the incoming file's size, type, and metadata.
+
+
+			let traFilObj = request.resource; // What: Transfer File Object. Why: Every check reads the incoming file. How: This names it once.
+
+			let conTypBoo = traFilObj.contentType == 'application/octet-stream';          // What: Content Type Boolean. Why: A bundle is encrypted bytes, never a page or an image a browser would render. How: This requires the generic binary type.
+			let metNulBoo = traFilObj.metadata == null || traFilObj.metadata.size() == 0; // What: Metadata Null Boolean. Why: Custom metadata is stored in plain text beside the encrypted bundle. How: This refuses any.
+			let sizValBoo = traFilObj.size > 0 && traFilObj.size <= 25 * 1024 * 1024;     // What: Size Valid Boolean. Why: A bundle holds at least one message and at most 25 MB, about 125,000 typical messages (Section 11.9). How: This bounds its size in bytes.
+
+			let valTraBoo = conTypBoo && metNulBoo && sizValBoo; // What: Valid Transfer Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valTraBoo; // What: Valid Transfer Return. Why: The upload rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valTraFun
+
+
+
+		// #region getTraFun
+
+		function getTraFun ( groIdeStr, uidValStr ) { // What: Get Transfer Function. Why: A bundle is for the member who asked for it, and history goes only to a current member. How: This is true for the asker while they're in the group.
+
+
+			let isaOwnBoo = isaOwnFun( uidValStr );                                // What: Is-An Owner Boolean. Why: Only the asker downloads their bundle. How: This requires the transfer's UID to be theirs.
+			let reqMemBoo = firestore.exists( memPatFun( groIdeStr, uidValStr ) ); // What: Requester Member Boolean. Why: History goes only to a current member. How: This requires the asker's member document.
+
+			let getAllBoo = isaOwnBoo && reqMemBoo; // What: Get Allowed Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return getAllBoo; // What: Get Allowed Return. Why: The download rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion getTraFun
+
+
+
+		// #region claTraFun
+
+		function claTraFun ( groIdeStr, uidValStr ) { // What: Claimant Transfer Function. Why: Only the member who won the request's claim works on its bundle, and only while the claim stands. How: This is true when the request is claimed in the requester's name.
+
+
+			let hisDatObj = firestore.get( hisPatFun( groIdeStr, uidValStr ) ).data; // What: History Data Object. Why: The claim lives on the request. How: This reads the request the transfer answers.
+
+			let claUidBoo = hisDatObj.claimedByUid == request.auth.uid; // What: Claimant UID Boolean. Why: Only the claimant uploads. How: This requires the request to name the signed-in identity as its claimant.
+			let staClaBoo = hisDatObj.status == 'claimed';              // What: Status Claimed Boolean. Why: A fulfilled request is finished. How: This requires the claim to still stand.
+
+			let claAllBoo = claUidBoo && staClaBoo; // What: Claimant Allowed Boolean. Why: Both checks have to pass. How: This combines them.
+
+
+
+			return claAllBoo; // What: Claimant Allowed Return. Why: The upload and delete rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion claTraFun
+
+
+
+		// #region uplTraFun
+
+		function uplTraFun ( groIdeStr, uidValStr ) { // What: Upload Transfer Function. Why: The claimant uploads, or retries, the bundle for an asker still in the group. How: This is true for a valid file from the claimant while both are members.
+
+
+			let claTraBoo = claTraFun( groIdeStr, uidValStr );                            // What: Claimant Transfer Boolean. Why: Only the claimant uploads. How: This checks the claim.
+			let claMemBoo = firestore.exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Claimant Member Boolean. Why: Someone who has left shares nothing more. How: This requires the claimant's member document.
+			let reqMemBoo = firestore.exists( memPatFun( groIdeStr, uidValStr ) );        // What: Requester Member Boolean. Why: History goes only to a current member. How: This requires the asker's member document.
+			let valTraBoo = valTraFun();                                                  // What: Valid Transfer Boolean. Why: The file keeps its form. How: This checks it.
+
+			let uplAllBoo = claTraBoo && claMemBoo && reqMemBoo && valTraBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return uplAllBoo; // What: Upload Allowed Return. Why: The upload rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion uplTraFun
+
+		// #endregion Transfer Rules
+
+
+
+		match /groupHistoryTransfers/{groIdeStr}/{uidValStr} { // What: History Transfer Match. Why: Each history request's bundle sits under its group and asker (Section 11.9). How: This matches one transfer by the group ID and the asker's UID.
+
+
+			allow get            : if getTraFun( groIdeStr, uidValStr );                           // What: Transfer Get Rule. Why: The asker downloads their bundle. How: This allows it when getTraFun passes, while listing stays closed.
+			allow create, update : if uplTraFun( groIdeStr, uidValStr );                           // What: Transfer Upload Rule. Why: The claimant uploads the bundle, or replaces a failed attempt. How: This allows it when uplTraFun passes.
+			allow delete         : if isaOwnFun( uidValStr ) || claTraFun( groIdeStr, uidValStr ); // What: Transfer Delete Rule. Why: The asker deletes the bundle once it's merged, and the claimant may withdraw theirs. How: This allows the asker always and the claimant while the claim stands.
+
+
+		}
+
+
+	}
+
+
+}
+
+// #endregion Storage Service
+
+

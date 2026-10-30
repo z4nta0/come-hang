@@ -1,0 +1,32 @@
+{
+	"id": "/",
+	"name": "Come Hang",
+	"short_name": "Come Hang",
+	"description": "Plan get-togethers with your group: chat, events, who's bringing what, and where everyone is on the day.",
+	"lang": "en",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#F4F4FA",
+	"theme_color": "#FFFFFF",
+	"icons": [
+		{
+			"src": "/favicon-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/favicon-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/favicon-maskable-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	]
+}

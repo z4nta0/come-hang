@@ -1,0 +1,8 @@
+# What: All Crawlers Group. Why: Come Hang is a real app whose public addresses should be found, while everything personal sits behind the app's identity rather than at an address. How: This allows the whole site to any crawler.
+User-agent: *
+Allow: /
+
+
+
+# What: Sitemap Location. Why: Crawlers find the pages to index faster from a sitemap. How: This points them at the sitemap's absolute address.
+Sitemap: https://comehang.app/sitemap.xml

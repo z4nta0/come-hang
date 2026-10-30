@@ -1,0 +1,64 @@
+
+
+
+/**
+ * button.module.css = Button Module
+ *
+ * @summary
+ * Styles for ButBasCom: a periwinkle pill with bold text, at least a touch
+ * target tall, that darkens and lifts 2px on hover, presses in slightly, and
+ * grows its focus ring in.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+.butBasBut { /* What: Button Base Button. Why: A screen's leading action has to stand out and be easy to hit. How: This draws a pill in the main accent with bold centered text, at least a touch target tall, and eases its hover color, hover lift, press scale, and focus ring. */
+
+
+	background-color : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                /* Text Accent Color = #FFFFFF */
+	display          : inline-grid;
+	font-size        : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) clamp( calc( var( --ver-rhy-p01 ) * 1rem ), var( --hor-rhy-013 ), calc( var( --ver-rhy-p03 ) * 1rem ) ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Vertical Rhythm Base Plus 1 ~= 19.304px, Horizontal Rhythm 13 ~= 37.460px @ 1,920px width, Vertical Rhythm Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing and rhythm steps directly, outside the tiers, its sides holding horizontal rhythm step 13 between the vertical rhythm's p01 and p03 steps. */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.butBasBut:hover { /* What: Hovered Button Base Button. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the pill 2px. */
+
+
+	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+	transform        : translateY( calc( var( --spa-ver-m07 ) * -1 ) );         /* Spacing Vertical Base Minus 7 ~= -2.035px */
+
+
+}
+.butBasBut:active { /* What: Pressed Button Base Button. Why: A press should register before anything else happens. How: This presses the pill in slightly, which also undoes its hover lift. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Button Base Button. Why: Someone who asked for less motion shouldn't see the button slide. How: This applies only when the reduced-motion preference is set. */
+
+
+	.butBasBut { /* What: Motionless Button Base Button. Why: The hover, press, and focus looks should switch at once, the lift and press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+

@@ -1,0 +1,180 @@
+
+
+
+/**
+ * loading.module.css = Loading Module
+ *
+ * @summary
+ * Styles for LoaScrCom: a main area filling the screen with its loader
+ * centered, a visually hidden heading and status message, and three dots in
+ * a row that fade in, then bounce one after another in a steady loop, the
+ * middle one coral.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region loaScrMai */
+
+.loaScrMai { /* What: Loading Screen Main. Why: The loader should sit in the middle of the screen. How: This fills the screen as a one-cell grid and centers its content both ways. */
+
+
+	display       : grid;
+	min-height    : 100vh;
+	place-content : center;
+
+
+}
+
+.loaTitHea,
+.loaStaPar { /* What: Hidden Loading Text. Why: The heading and the status are for screen readers, while sight gets the dots. How: This hides both from view with the standard clip, keeping them in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+
+/* #region loaDotDiv */
+
+.loaDotDiv { /* What: Loading Dots Div. Why: The dots read as one loader, arriving gently rather than popping in. How: This lays them out in a row a tier 5 space apart and fades them in on the decelerating curve. */
+
+
+	animation      : loaDotEnterFadeIn var( --dur-ani-p02 ) var( --mot-dec-eas ); /* Duration Animation Base Plus 2 ~= 277.0ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	column-gap     : var( --tie-hor-005 );                                        /* Tier Horizontal 5, about 4.732px - 6.268px */
+	display        : grid;
+	grid-auto-flow : column;
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Loading Dots Div. Why: Someone who asked for less motion shouldn't see the dots fade. How: This applies only when the reduced-motion preference is set. */
+
+
+	.loaDotDiv { /* What: Motionless Loading Dots Div. Why: The dots should simply appear. How: This turns the animation off. */
+
+
+		animation : none;
+
+
+	}
+
+
+}
+@keyframes loaDotEnterFadeIn { /* What: Loading Dots Enter Fade In. Why: The loader fades in as it appears. How: This runs its opacity from clear to full. */
+
+
+	from {
+
+
+		opacity : 0;
+
+
+	}
+
+	to {
+
+
+		opacity : 1;
+
+
+	}
+
+
+}
+
+.loaDotSpa { /* What: Loading Dot Span. Why: Each dot echoes the mark's typing dots, bouncing in turn like someone typing. How: This draws a periwinkle circle at the base rhythm step and bounces it in a steady loop. */
+
+
+	animation        : loaDotWaitBounce var( --dur-ani-p06 ) var( --mot-sta-eas ) infinite; /* Duration Animation Base Plus 6 ~= 853.0ms, Motion Standard Easing = ease */
+	background-color : var( --acc-mai-col );                                                /* Accent Main Color = #4A4FC9 */
+	border-radius    : 50%;
+	height           : calc( var( --ver-rhy-bas ) * 1rem );                                 /* Vertical Rhythm Base ~= 14.572px */
+	width            : calc( var( --ver-rhy-bas ) * 1rem );                                 /* Vertical Rhythm Base ~= 14.572px */
+
+
+}
+.loaDotSpa:nth-child( 2 ) { /* What: Second Loading Dot Span. Why: The dots bounce one after another. How: This starts the second dot's loop a sixth of a loop late. */
+
+
+	animation-delay : calc( var( --dur-ani-p06 ) / 6 ); /* Duration Animation Base Plus 6 ~= 142.2ms */
+
+
+}
+.loaDotSpa:nth-child( 3 ) { /* What: Third Loading Dot Span. Why: The dots bounce one after another. How: This starts the third dot's loop a third of a loop late. */
+
+
+	animation-delay : calc( var( --dur-ani-p06 ) / 3 ); /* Duration Animation Base Plus 6 ~= 284.3ms */
+
+
+}
+.loaDotSpa--spark { /* What: Loading Dot Span Spark. Why: The middle dot carries the brand's coral, as in the mark. How: This fills it with the second accent. */
+
+
+	background-color : var( --acc-sec-col ); /* Accent Secondary Color = #DD6248 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Loading Dot Span. Why: Someone who asked for less motion shouldn't see the dots bounce. How: This applies only when the reduced-motion preference is set. */
+
+
+	.loaDotSpa { /* What: Motionless Loading Dot Span. Why: The dots should rest in their row, still saying the app is loading. How: This turns the bounce off. */
+
+
+		animation : none;
+
+
+	}
+
+
+}
+@keyframes loaDotWaitBounce { /* What: Loading Dot Wait Bounce. Why: A dot rising and settling reads as someone typing. How: This lifts it a little a third of the way through each loop and settles it by two thirds, resting for the rest. */
+
+
+	0% {
+
+
+		transform : translateY( 0 );
+
+
+	}
+
+	30% {
+
+
+		transform : translateY( calc( var( --spa-ver-m03 ) * -1 ) ); /* Spacing Vertical Base Minus 3 ~= -6.268px */
+
+
+	}
+
+	60% {
+
+
+		transform : translateY( 0 );
+
+
+	}
+
+	100% {
+
+
+		transform : translateY( 0 );
+
+
+	}
+
+
+}
+
+/* #endregion loaDotDiv */
+
+/* #endregion loaScrMai */
+
+
