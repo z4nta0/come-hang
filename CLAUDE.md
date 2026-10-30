@@ -41,8 +41,9 @@ notices, the offer decline, the daily run, and the pushes, with the push
 token rules, including the activity pushes for chat, join requests, history
 requests, and key requests, and the purchase's Polar checkout and
 webhook. The app has its Firebase services, created on first use, the
-identity bootstrap, the group key encryption, group creation, joining
-through an invite with a member's approval, the membership changes
+identity bootstrap, the group key encryption, group creation and the
+group list, joining through an invite with a member's approval, the
+membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
 ownership offers and notices, events with their bring-lists, chat
 with its on-device history, presence, history requests, location

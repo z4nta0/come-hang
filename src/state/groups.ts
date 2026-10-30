@@ -17,6 +17,7 @@ import { ideEnsFun       } from './identity.ts';            // What: Identity En
 import { keyDelFun       } from '../platform/key-store.ts'; // What: Key Delete Function. Why: A deleted group's key has no use on the device. How: This deletes it.
 import { keyGetFun       } from '../platform/key-store.ts'; // What: Key Get Function. Why: A group key is kept on the device. How: This reads it.
 import { keyPutFun       } from '../platform/key-store.ts'; // What: Key Put Function. Why: A group key is kept on the device. How: This stores it.
+import { onSnapshot      } from 'firebase/firestore';       // What: On Snapshot. Why: The group list follows the account and each group as they change. How: This listens to a document.
 import { perNamFun       } from '../core/text-limits.ts';   // What: Person Name Function. Why: The encrypted display name is checked by the app alone. How: This applies the limits.
 import { runTransaction  } from 'firebase/firestore';       // What: Run Transaction. Why: A rotation and a settings change read the group they change. How: This runs the reads and writes together.
 import { serverTimestamp } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules require the server's time on every new document. How: This asks the server to fill it in.
@@ -48,7 +49,8 @@ import { writeBatch      } from 'firebase/firestore';       // What: Write Batch
  * the group to share the key instead. The owner rotates the invite link, and
  * renames the group or changes its chat retention, each in one transaction
  * that keeps the invite in step, and deletes the group through a Cloud
- * Function.
+ * Function. The group list watches the account and each group in it, but
+ * only on a device that already holds an identity.
  *
  * Sections:
  *  - Constants
@@ -288,6 +290,187 @@ const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : nu
 
 
 
+type GroRecTyp = { ideStr : string, namStr : string, ownBoo : boolean }; // What: Group Record Type. Why: The group list shows each group by name and marks the ones this identity owns. How: This types each entry groWatFun reports.
+
+// #region groWatFun
+
+/**
+ * groWatFun = Group Watch Function
+ *
+ * @summary
+ * Watches the groups this identity belongs to, owned or not, and reports
+ * them sorted by name each time one is added, renamed, or lost, once every
+ * group in the account has been read. A device with no identity yet reports
+ * none and connects to nothing, so a first visit makes no connection
+ * (Section 16). A group whose read is refused, such as one just left or
+ * deleted, drops out of the list. Resolves with the function that stops
+ * watching.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param onGroFun - On Groups Function: Called with the sorted groups each
+ *                   time they change.
+ *
+ * @returns A promise that resolves with the function that stops watching.
+ *
+ * @example
+ * ```ts
+ * groWatFun(setGroRecArr) // => () => void
+ * ```
+ *
+*/
+
+const groWatFun = async ( onGroFun : ( groRecArr : GroRecTyp[] ) => void ) : Promise< () => void > => { // What: Group Watch Function. Why: The group list and rail follow the account as groups come and go. How: This watches the account and each group in it.
+
+
+	const stoRecAny = await keyGetFun( 'identity' ); // What: Stored Record Any. Why: Only a device that has acted holds an identity, and reading it locally makes no connection. How: This reads the identity record.
+
+
+	if ( stoRecAny === undefined ) { // What: No Identity Block. Why: A first visit has no groups, and connecting would create the Firebase services on page load. How: This reports none and returns a stop that does nothing.
+
+
+		onGroFun( [] ); // What: Empty Report Call. Why: The app shows its welcome. How: This reports no groups.
+
+
+
+		return () => {}; // What: Empty Stop Return. Why: Nothing was watched. How: This returns a stop that does nothing.
+
+
+	}
+
+
+
+	const { autValObj, fstDatObj } = firGetFun(); // What: Firebase Services. Why: The account and groups are read through Auth and Firestore. How: This reads both.
+
+
+	await autValObj.authStateReady(); // What: Auth Ready Call. Why: The signed-in identity is restored from storage asynchronously. How: This waits until Auth knows it.
+
+
+
+	const uidValStr = autValObj.currentUser?.uid; // What: UID Value String. Why: The account is under the signed-in UID. How: This reads it, undefined when nobody is signed in.
+
+
+	if ( uidValStr === undefined ) { // What: Signed Out Block. Why: An identity whose sign-in was lost has no account to read. How: This reports none and returns a stop that does nothing.
+
+
+		onGroFun( [] ); // What: Empty Report Call. Why: The app shows its welcome. How: This reports no groups.
+
+
+
+		return () => {}; // What: Empty Stop Return. Why: Nothing was watched. How: This returns a stop that does nothing.
+
+
+	}
+
+
+
+	const groRecMap = new Map< string, GroRecTyp >();  // What: Group Record Map. Why: Each group's entry is updated as its document changes. How: This holds the read entries by group ID.
+	const groStoMap = new Map< string, () => void >(); // What: Group Stop Map. Why: A group that leaves the account stops being watched. How: This holds each group's stop by ID.
+	const penIdeSet = new Set< string >();             // What: Pending Identifier Set. Why: A list missing some names would flash in partly read. How: This holds the groups not read yet.
+
+	const emiGroFun = () : void => { if ( penIdeSet.size === 0 ) onGroFun( [ ...groRecMap.values() ].sort( ( groOneObj, groTwoObj ) => groOneObj.namStr.localeCompare( groTwoObj.namStr ) ) ); }; // What: Emit Groups Function. Why: The list is reported whole and in a steady order. How: This reports the entries sorted by name once none are pending.
+
+
+
+	const groLisFun = ( groIdeStr : string ) : void => { // What: Group Listen Function. Why: Each group's name and owner can change while it's shown. How: This watches one group's document.
+
+
+		const groDonFun = () : void => { // What: Group Done Function. Why: A group counts as read whether its read worked or was refused. How: This clears it from the pending set and reports.
+
+
+			penIdeSet.delete( groIdeStr ); // What: Pending Clear Call. Why: The group has been read. How: This removes it from the pending set.
+
+			emiGroFun(); // What: Emit Call. Why: The list may now be whole. How: This reports it.
+
+
+		};
+
+
+
+		penIdeSet.add( groIdeStr ); // What: Pending Add Call. Why: The list waits for this group's first read. How: This marks it pending.
+
+
+		groStoMap.set( groIdeStr, onSnapshot( doc( fstDatObj, `groups/${ groIdeStr }` ), ( groSnaObj ) => { // What: Group Watch Call. Why: A rename or a change of owner shows at once. How: This listens to the group's document and keeps its entry.
+
+
+			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr } ); // What: Entry Set Call. Why: The list shows the group by name and marks it when owned. How: This keeps the entry from the document. // What: Type Assertion Note. Why: The rules store the name as a string. How: The as reads it as one.
+
+			else groRecMap.delete( groIdeStr ); // What: Entry Delete Call. Why: A deleted group shouldn't stay listed. How: This drops its entry.
+
+
+
+			groDonFun(); // What: Done Call. Why: The group has been read. How: This clears it and reports.
+
+
+		}, () => { // What: Group Error Handler. Why: The rules refuse a group this identity just left or was removed from. How: This drops its entry and counts it as read.
+
+
+			groRecMap.delete( groIdeStr ); // What: Entry Delete Call. Why: A group that can't be read can't be shown. How: This drops its entry.
+
+			groDonFun(); // What: Done Call. Why: The refusal is its answer. How: This clears it and reports.
+
+
+		} ) );
+
+
+	};
+
+
+
+	const accStoFun = onSnapshot( doc( fstDatObj, `accounts/${ uidValStr }` ), ( accSnaObj ) => { // What: Account Stop Function. Why: The account lists the groups, and changes as groups are created, joined, and left. How: This listens to it and watches the groups it names.
+
+
+		const groIdeSet = new Set( [ ...Object.keys( accSnaObj.get( 'ownedGroups' ) ?? {} ), ...Object.keys( accSnaObj.get( 'memberGroups' ) ?? {} ) ] ); // What: Group Identifier Set. Why: A group sits in one of the two maps. How: This joins their keys.
+
+
+		for ( const [ groIdeStr, groStoFun ] of groStoMap ) { // What: Gone Group Loop. Why: A group no longer in the account stops being watched and listed. How: This walks the watched groups.
+
+
+			if ( groIdeSet.has( groIdeStr ) ) continue; // What: Kept Guard. Why: A group still in the account stays. How: This skips it.
+
+
+
+			groStoFun(); // What: Group Stop Call. Why: The group isn't shown any more. How: This stops watching it.
+
+			groStoMap.delete( groIdeStr ); // What: Stop Delete Call. Why: The group is no longer watched. How: This forgets its stop.
+
+			groRecMap.delete( groIdeStr ); // What: Entry Delete Call. Why: The group isn't listed any more. How: This drops its entry.
+
+			penIdeSet.delete( groIdeStr ); // What: Pending Clear Call. Why: A group dropped before its first read shouldn't hold the list back. How: This clears it.
+
+
+		}
+
+
+
+		for ( const groIdeStr of groIdeSet ) if ( !groStoMap.has( groIdeStr ) ) groLisFun( groIdeStr ); // What: New Group Loop. Why: A group created or joined is watched from now on. How: This starts watching each one not watched yet.
+
+
+
+		emiGroFun(); // What: Emit Call. Why: A group dropped, or an account with no groups, changes the list at once. How: This reports it once nothing is pending.
+
+
+	}, () => onGroFun( [] ) ); // What: Account Error Handler. Why: An account that can't be read lists no groups. How: This reports none.
+
+
+
+	return () => { // What: Stop Return. Why: The caller stops watching when the list is no longer shown. How: This returns the function that stops every listener.
+
+
+		accStoFun(); // What: Account Stop Call. Why: The account stops being watched. How: This stops its listener.
+
+		for ( const groStoFun of groStoMap.values() ) groStoFun(); // What: Group Stop Loop. Why: Every group stops being watched. How: This stops each listener.
+
+
+	};
+
+
+};
+
+// #endregion groWatFun
+
+
+
 // #region invRotFun
 
 /**
@@ -423,7 +606,7 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 
 // #region Exports
 
-export { groCreFun, groDelFun, groSetFun, invRotFun, KEY_WAI_STR, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, change their settings and link, and read their keys, and tell a key that's waiting to be shared. How: This exports the functions and the waiting message.
+export { groCreFun, groDelFun, type GroRecTyp, groSetFun, groWatFun, invRotFun, KEY_WAI_STR, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, list them, change their settings and link, and read their keys, and tell a key that's waiting to be shared. How: This exports the functions, the list entry's type, and the waiting message.
 
 // #endregion Exports
 

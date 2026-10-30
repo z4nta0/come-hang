@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1577,9 +1577,12 @@ the Blaze change.
   group, the creator's membership holding the key wrapped for them and
   their encrypted display name, the first invite, and the owned slot. The
   key is kept on the device as `group:{groupId}`, and a key missing there
-  is recovered from the member's own wrap. Screens come after the design
-  pass (decided 2026-10-28), so each feature is built and tested as app
-  code first.
+  is recovered from the member's own wrap. The group list watches the
+  account's two maps and each group they name, reporting the groups sorted
+  by name once every one has been read, and on a device with no identity yet
+  it reports none without starting Firebase, so a first visit still makes no
+  connection (built 2026-10-30). Screens come after the design pass (decided
+  2026-10-28), so each feature is built and tested as app code first.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
   name and note, the joiner's view of where it stands, withdrawing it, and

@@ -7,6 +7,7 @@ import { doc                       } from 'firebase/firestore';           // Wha
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the group was created as it should be. How: This asserts on what the page and the emulator return.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: The created documents are read back. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read what the page wrote, past the rules. How: This connects to the emulator.
+import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Renaming and deleting run as the page's identity. How: This calls a module's function in the page.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of creating a group is its own test. How: This declares them.
 
 
@@ -312,6 +313,84 @@ test( 'names are tidied before saving, and a name outside its limits is refused 
 	expect( ( await reaDocFun( `groups/${ resValObj.groIdeStr }` ) )?.name ).toBe( 'Beach Day' );                                              // What: Group Name Tidied. Why: The rules refuse a name with extra spaces, so they go first. How: This expects the single-spaced name.
 	expect( refValArr ).toEqual( [ 'RangeError', 'RangeError' ] );                                                                             // What: Bad Names Refused. Why: A group name with symbols and a display name with a number are outside their limits. How: This expects both refused as out of range.
 	expect( Object.keys( ( await reaDocFun( `accounts/${ resValObj.uidValStr }` ) )?.ownedGroups ?? {} ) ).toEqual( [ resValObj.groIdeStr ] ); // What: Nothing Else Created. Why: A refused name writes nothing. How: This expects the account to own only the tidy group.
+
+
+} );
+
+
+test( 'a device with no identity lists no groups without starting Firebase', async ( { page } ) => { // What: First Visit List Test. Why: A first visit must start nothing, so nothing is created before the app is installed (Section 16). How: This watches the groups on a fresh device and checks it reported none, while Firebase's Auth and Firestore made none of their local databases.
+
+
+	const [ groLisArr, datNamArr ] = await page.evaluate( async () => { // What: Page Results. Why: The first report is what the welcome screen reads, and Firebase starting would leave its databases behind. How: This watches in the page, then lists the page's databases.
+
+
+		const modPatStr = '/src/state/groups.ts';                       // What: Module Path String. Why: The dev server serves the app's source by path. How: This names the groups module.
+		const groModObj = await import( /* @vite-ignore */ modPatStr ); // What: Groups Module Object. Why: The page runs the real module. How: This imports it.
+
+		const firRepArr = await new Promise( ( resValFun ) => void groModObj.groWatFun( resValFun ) ); // What: First Report Array. Why: A device with no identity reports once. How: This resolves with that report.
+
+
+
+		return [ firRepArr, ( await indexedDB.databases() ).map( ( datInfObj ) => datInfObj.name ) ]; // What: Results Return. Why: The test checks both. How: This returns the report and every database's name.
+
+
+	} );
+
+	expect( groLisArr ).toEqual( [] );                                                                        // What: No Groups. Why: A device that never acted belongs to no group. How: This expects an empty list.
+	expect( datNamArr.filter( ( datNamStr ) => /^fire(base|store)/.test( String( datNamStr ) ) ) ).toEqual( [] ); // What: Firebase Not Started. Why: Auth and Firestore open their own databases as they start. How: This expects none of them.
+
+
+} );
+
+
+
+test( 'the group list follows the account as groups are created, renamed, and deleted, sorted by name', async ( { page } ) => { // What: Group List Test. Why: The rail and the group switcher show every group by name and keep up as groups change. How: This creates two groups, watches them, then renames one and deletes the other, checking each report.
+
+
+	const groIdeArr = await page.evaluate( async () => { // What: Group Identifier Array. Why: The list needs groups to report, and the test changes them later. How: This creates two groups in the page and starts watching.
+
+
+		const modPatStr = '/src/state/groups.ts';                                // What: Module Path String. Why: The dev server serves the app's source by path. How: This names the groups module.
+		const groModObj = await import( /* @vite-ignore */ modPatStr );          // What: Groups Module Object. Why: The page runs the real module. How: This imports it.
+		const zebIdeStr = await groModObj.groCreFun( 'Zebra Club', 'Alice' );    // What: Zebra Identifier String. Why: The first group, named to sort last. How: This creates it.
+		const appIdeStr = await groModObj.groCreFun( 'Apple Pickers', 'Alice' ); // What: Apple Identifier String. Why: The second group, named to sort first. How: This creates it.
+
+
+		await groModObj.groWatFun( ( groRecArr : unknown ) => { // What: Watch Call. Why: The test reads the first report and each one after it. How: This keeps the first and the latest on the page's global object.
+
+
+			if ( !Reflect.has( globalThis, 'groFirArr' ) ) Reflect.set( globalThis, 'groFirArr', groRecArr ); // What: First Report Set. Why: The list shouldn't flash in partly read. How: This keeps the first report.
+
+			Reflect.set( globalThis, 'groLisArr', groRecArr ); // What: Latest Report Set. Why: Each check reads the latest report. How: This keeps it.
+
+
+		} );
+
+
+
+		return [ appIdeStr, zebIdeStr ]; // What: Identifiers Return. Why: The test renames and deletes these. How: This returns both IDs.
+
+
+	} );
+
+	const repGetFun = () => page.evaluate( () => Reflect.get( globalThis, 'groLisArr' ) ); // What: Report Get Function. Why: Each check polls the latest report. How: This reads it from the page.
+
+
+	await expect.poll( repGetFun ).toEqual( [ { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true }, { ideStr : groIdeArr[ 1 ], namStr : 'Zebra Club', ownBoo : true } ] ); // What: Sorted List Assertion. Why: Both groups show by name, owned by their creator. How: This waits for the report sorted by name.
+
+	expect( await page.evaluate( () => Reflect.get( globalThis, 'groFirArr' ) ) ).toEqual( await repGetFun() ); // What: Whole First Report Assertion. Why: The first report waits for every group's name. How: This expects it to match the full list.
+
+
+	await runPagFun( page, '/src/state/groups.ts', 'groSetFun', groIdeArr[ 1 ], 'Aardvarks', 30 ); // What: Rename Call. Why: A rename shows at once. How: This renames the Zebra group so it sorts first.
+
+
+	await expect.poll( repGetFun ).toEqual( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true }, { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true } ] ); // What: Renamed List Assertion. Why: The new name shows in its sorted place. How: This waits for the report with the renamed group first.
+
+
+	await runPagFun( page, '/src/state/groups.ts', 'groDelFun', groIdeArr[ 0 ] ); // What: Delete Call. Why: A deleted group leaves the list. How: This deletes the Apple group.
+
+
+	await expect.poll( repGetFun ).toEqual( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true } ] ); // What: Deleted List Assertion. Why: The deleted group drops out. How: This waits for the report with one group left.
 
 
 } );
