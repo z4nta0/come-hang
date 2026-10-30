@@ -3,6 +3,9 @@
 
 // #region Imports
 
+import { expect } from '@playwright/test'; // What: Expect. Why: The loading state waits until its loader has appeared. How: This retries its check until the status reads as loading.
+
+
 import type { Page } from '@playwright/test'; // What: Page. Why: Opening and settling a state drives a Playwright page. How: This types the helpers' page parameters.
 
 // #endregion Imports
@@ -39,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'create' | 'group' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address. How: This names the steps that reach it, none when left out.
+	steStr? : 'create' | 'group' | 'loading' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -58,7 +61,8 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  *
  * @summary
  * Every state the checks visit: each screen at a phone width and a desktop
- * width, some in dark mode too, and the group sheet open on a phone. Every
+ * width, some in dark mode too, the group sheet open on a phone, and the
+ * waiting screen with its loader showing. Every
  * row shares the {@link StaRecTyp} shape, so its fields carry no comments of
  * their own:
  *
@@ -87,6 +91,8 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'welcome-phone',        patStr : '/', widNum : 390                                         }, // What: Welcome Phone State. Why: The welcome is checked at a phone width. How: This loads the root at 390px.
 	{ heiNum : 900, ideStr : 'welcome-desktop-dark', patStr : '/', widNum : 1440, schStr : 'dark'                       }, // What: Welcome Desktop Dark State. Why: Dark mode is checked at a desktop width. How: This loads the root at 1,440px with the phone set to dark.
 	{ heiNum : 844, ideStr : 'welcome-phone-dark',   patStr : '/', widNum : 390,  schStr : 'dark'                       }, // What: Welcome Phone Dark State. Why: Dark mode is checked at a phone width. How: This loads the root at 390px with the phone set to dark.
+	{ heiNum : 900, ideStr : 'loading-desktop',      patStr : '/', widNum : 1440, steStr : 'loading'                    }, // What: Loading Desktop State. Why: The waiting screen is checked with its loader showing. How: This holds the app's check at 1,440px.
+	{ heiNum : 844, ideStr : 'loading-phone',        patStr : '/', widNum : 390,  steStr : 'loading'                    }, // What: Loading Phone State. Why: The loader is checked at a phone width. How: This holds the app's check at 390px.
 	{ heiNum : 900, ideStr : 'create-desktop',       patStr : '/', widNum : 1440, steStr : 'create'                     }, // What: Create Desktop State. Why: The form for starting a group is checked at a desktop width. How: This opens it at 1,440px.
 	{ heiNum : 844, ideStr : 'create-phone',         patStr : '/', widNum : 390,  steStr : 'create'                     }, // What: Create Phone State. Why: The form is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 900, ideStr : 'group-desktop',        patStr : '/', widNum : 1440, steStr : 'group'                      }, // What: Group Desktop State. Why: The group frame is checked with its rail. How: This opens a new group at 1,440px.
@@ -165,18 +171,87 @@ async function waiSetFun ( curPagObj : Page ) : Promise< void > {
 
 
 
+// #region datHolFun
+
+/**
+ * datHolFun = Database Hold Function
+ *
+ * @summary
+ * Runs in the page before the app loads and holds back the opening of the
+ * app's IndexedDB database, which the app reads before choosing a screen, so
+ * the waiting screen shows. The open's success is stopped before the app
+ * hears it, then sent again after the given delay, or never for a negative
+ * one. Other databases, such as Firebase's own, open as usual.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param holMilNum - Hold Milliseconds Number: How long to hold the open, or
+ *                    a negative number to hold it for good.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * page.addInitScript(datHolFun, 1500) // => void
+ * ```
+ *
+*/
+
+const datHolFun = ( holMilNum : number ) : void => { // What: Database Hold Function. Why: A launch is usually too quick to see the waiting screen. How: This delays the app's database opening.
+
+
+	const oriOpeFun = IDBFactory.prototype.open; // What: Original Open Function. Why: Every open still goes through the browser's own. How: This keeps it.
+
+
+
+	IDBFactory.prototype.open = function ( this : IDBFactory, datNamStr : string, verValNum? : number ) : IDBOpenDBRequest { // What: Open Override Function. Why: Only the app's database is held. How: This opens as usual and holds the app's open's success.
+
+
+		const opeReqObj = oriOpeFun.call( this, datNamStr, verValNum ); // What: Open Request Object. Why: The database still opens. How: This asks the browser to open it.
+
+
+		if ( datNamStr !== 'come-hang' ) return opeReqObj; // What: Other Database Guard. Why: Firebase's databases aren't the app's check. How: This returns them untouched.
+
+
+
+		opeReqObj.addEventListener( 'success', ( sucEveObj ) => { // What: Success Hold Listener. Why: The app's own handler, added after this one, mustn't hear the open yet. How: This stops the event and sends it again later, once.
+
+
+			sucEveObj.stopImmediatePropagation(); // What: Success Stop Call. Why: The app waits while the open is held. How: This keeps the event from the app's handler.
+
+
+			if ( holMilNum >= 0 ) setTimeout( () => opeReqObj.dispatchEvent( new Event( 'success' ) ), holMilNum ); // What: Success Resend Call. Why: A held open ends after its delay. How: This sends the event again once the delay passes, which this listener, run once, no longer stops.
+
+
+		}, { once : true } );
+
+
+
+		return opeReqObj; // What: Request Return. Why: The app works with the request as usual. How: This returns it.
+
+
+	};
+
+
+};
+
+// #endregion datHolFun
+
+
+
 // #region steRunFun
 
 /**
  * steRunFun = Steps Run Function
  *
  * @summary
- * Takes a loaded page to the screen a state names by using the app as a
- * person would: the create state opens the form for starting a group and
- * reloads it, so it shows with nothing focused, the group state creates a
- * group named Beach Day and then opens the app afresh, so the group shows as
- * it does on a later visit, with nothing focused, and the sheet state also
- * opens the group sheet from its switcher. A group needs the Firebase
+ * Takes a loaded page to the screen a state names by using the app as a person
+ * would: the loading state waits for the loader on a page whose database is
+ * held ({@link datHolFun}), the create state opens the form for starting a
+ * group and reloads it, so it shows with nothing focused, the group state
+ * creates a group named Beach Day and then opens the app afresh, so the group
+ * shows as it does on a later visit, with nothing focused, and the sheet state
+ * also opens the group sheet from its switcher. A group needs the Firebase
  * Emulators, which the suites that reach one run inside.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -193,7 +268,21 @@ async function waiSetFun ( curPagObj : Page ) : Promise< void > {
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'create' | 'group' | 'sheet' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'create' | 'group' | 'loading' | 'sheet' ) : Promise< void > {
+
+
+	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
+
+
+		await expect( curPagObj.getByRole( 'status' ) ).toHaveText( 'Loading' ); // What: Loader Wait. Why: The loader shows once its delay passes. How: This waits for its status message.
+
+
+
+		return; // What: Loading Return. Why: Nothing more reaches this screen. How: This returns.
+
+
+	}
+
 
 
 	await curPagObj.getByRole( 'button', { name : 'Start a group' } ).click(); // What: Start Click Call. Why: Every state with steps starts from the form. How: This opens it from the welcome.
@@ -251,10 +340,11 @@ async function steRunFun ( curPagObj : Page, steStr : 'create' | 'group' | 'shee
  *
  * @summary
  * Opens one state on a page and waits until it's settled: sets the phone's
- * color scheme, sizes the viewport, loads the path, waits for the web fonts,
- * runs the state's steps ({@link steRunFun}), then waits until the page stays
- * still ({@link waiSetFun}), so a check never measures a heading halfway
- * through an entrance fade.
+ * color scheme, sizes the viewport, holds the app's database for the loading
+ * state, loads the path, waits for the web fonts, runs the state's steps
+ * ({@link steRunFun}), then waits until the page stays still ({@link
+ * waiSetFun}), so a check never measures a heading halfway through an
+ * entrance fade.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -278,6 +368,8 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 	await curPagObj.setViewportSize( { height : staRecObj.heiNum, width : staRecObj.widNum } ); // What: Viewport Size Call. Why: The state's layout depends on its width. How: This sizes the page before it loads, so breakpoints apply from the first paint.
 
+	if ( staRecObj.steStr === 'loading' ) await curPagObj.addInitScript( datHolFun, -1 ); // What: Database Hold Call. Why: The waiting screen shows only while the app's check is held. How: This holds the app's database for good, before the page loads.
+
 	await curPagObj.goto( staRecObj.patStr ); // What: Page Load Call. Why: Each state starts from a fresh load of its route. How: This opens the path on the suite's server.
 
 	await curPagObj.evaluate( () => document.fonts.ready ); // What: Fonts Ready Wait. Why: Text measured before its web font loads would have the wrong size and wrapping. How: This waits until the fonts the page uses have loaded.
@@ -297,7 +389,7 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 // #region Exports
 
-export { opeStaFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states and their opener. How: This exports the state list, its type, and the helper that opens one.
+export { datHolFun, opeStaFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states, their opener, and the hold that slows the app's launch. How: This exports the state list, its type, and the two helpers.
 
 // #endregion Exports
 

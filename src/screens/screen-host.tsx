@@ -3,15 +3,17 @@
 
 // #region Imports
 
-import { CreGroCom    } from './create-group.tsx';  // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
-import { GroFraCom    } from './group-frame.tsx';   // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
-import { groWatFun    } from '../state/groups.ts';  // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
-import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component. Why: The screen keeps its main landmark while the groups load. How: This holds the empty screen.
-import { useEffect    } from 'react';               // What: Use Effect. Why: The groups are watched while the host is shown. How: This starts and stops the watch.
-import { useScrOpeFun } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: A created group opens. How: This returns the function that opens its screen.
-import { useScrStaFun } from '../ui/screen.ts';     // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
-import { useState     } from 'react';               // What: Use State. Why: The groups and the watch's restarts change what shows. How: This holds both.
-import { WelScrCom    } from './welcome.tsx';       // What: Welcome Screen Component. Why: Someone in no group sees the welcome. How: The host shows it when there are no groups.
+import { CreGroCom       } from './create-group.tsx';  // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
+import { GroFraCom       } from './group-frame.tsx';   // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
+import { groWatFun       } from '../state/groups.ts';  // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
+import { LoaScrCom       } from './loading.tsx';       // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
+import { scrReaFun       } from '../ui/scroll-top.ts'; // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
+import { useEffect       } from 'react';               // What: Use Effect. Why: The groups are watched while the host is shown. How: This starts and stops the watch.
+import { useLayoutEffect } from 'react';               // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
+import { useScrOpeFun    } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: A created group opens. How: This returns the function that opens its screen.
+import { useScrStaFun    } from '../ui/screen.ts';     // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
+import { useState        } from 'react';               // What: Use State. Why: The groups and the watch's restarts change what shows. How: This holds both.
+import { WelScrCom       } from './welcome.tsx';       // What: Welcome Screen Component. Why: Someone in no group sees the welcome. How: The host shows it when there are no groups.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
@@ -24,14 +26,15 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * screen-host.tsx = Screen Host
  *
  * @summary
- * Chooses the screen the app shows at its one address, from the history
- * entry and the groups this identity is in. While the groups load it shows
- * an empty main area. The screen for starting a group shows when the entry
- * asks for it; otherwise someone in no group sees the welcome, and someone
- * in groups sees the group the entry names, or the first group by name when
- * it names none or one they've left. Creating a group restarts the watch,
- * since a first group is also when the identity is made, and opens the new
- * group in place of the form.
+ * Chooses the screen the app shows at its one address, from the history entry
+ * and the groups this identity is in. While the groups load it shows the
+ * waiting screen, and once they have, it tells the scroll hook the screen is
+ * ready, so a reload can return to where it was. The screen for starting a
+ * group shows when the entry asks for it; otherwise someone in no group sees
+ * the welcome, and someone in groups sees the group the entry names, or the
+ * first group by name when it names none or one they've left. Creating a group
+ * restarts the watch, since a first group is also when the identity is made,
+ * and opens the new group in place of the form.
  *
  * Sections:
  *  - Hooks
@@ -140,8 +143,8 @@ const useGroLisFun = ( watVerNum : number ) : GroRecTyp[] | null => { // What: U
  * ScrHosCom = Screen Host Component
  *
  * @summary
- * Renders the screen the history entry and the groups call for: an empty
- * main area while loading, the screen for starting a group, the welcome, or
+ * Renders the screen the history entry and the groups call for: the waiting
+ * screen while loading, the screen for starting a group, the welcome, or
  * the group frame. A created group restarts the watch and replaces the
  * form's entry with the new group's, marked to take focus.
  *
@@ -170,8 +173,17 @@ function ScrHosCom () : React.JSX.Element {
 	const groRecArr = useGroLisFun( watVerNum ); // What: Group Record Array. Why: The groups decide between the welcome and a group. How: This watches them, null while loading.
 
 
+	useLayoutEffect( () => { // What: Screen Ready Effect. Why: A reload returns to its scroll position only once the real screen is tall enough to reach it. How: This tells the scroll hook the screen is ready once the groups have loaded.
 
-	if ( groRecArr === null ) return <MaiAreCom className=''>{ null }</MaiAreCom>; // What: Loading Return. Why: Nothing should flash before the groups are known, while the skip link keeps its target. How: This returns an empty main area.
+
+		if ( groRecArr !== null ) scrReaFun(); // What: Ready Call. Why: The real screen has just rendered. How: This settles the hook's wait, which later calls leave as it is.
+
+
+	}, [ groRecArr ] ); // What: Effect Dependency Array. Why: The screen is ready once the groups arrive. How: groRecArr changes from null to the list when they do.
+
+
+
+	if ( groRecArr === null ) return <LoaScrCom />; // What: Loading Return. Why: The screen can't be chosen before the groups are known. How: This shows the waiting screen, whose loader appears only if the wait runs long.
 
 
 

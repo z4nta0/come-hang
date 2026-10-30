@@ -183,9 +183,11 @@ emulators need Java, 21 installed.
   queries measure the app container, `appRooDiv` in `src/app.module.css`.
 - **Scroll restoring** (an addition to the scroll position rule, decided
   2026-10-30): a screen renders once the app has checked for groups, a
-  moment after load, so on a reload the hook keeps trying the saved position
-  each frame, after the fonts load, until the page is tall enough to reach
-  it, for at most 2 seconds.
+  moment after load, so a reload's restore waits for the screen host's ready
+  signal (`scrReaFun` in `src/ui/scroll-top.ts`) as well as the fonts before
+  its second jump. While the check runs, the waiting screen
+  (`src/screens/loading.tsx`) shows the mark's three typing dots, but only
+  once the wait passes 300ms, so a quick launch never flashes them.
 - **Layout** (decided 2026-10-29, ARCHITECTURE.md Section 14): wide screens
   get a rail of groups, the group's sections, its content, and a next-event
   panel; phones get a group switcher in the header, the sections as bottom

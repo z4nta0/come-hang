@@ -1584,15 +1584,17 @@ the Blaze change.
   connection (built 2026-10-30).
 - The first screens (built 2026-10-30): the screen host
   (`src/screens/screen-host.tsx`) picks the screen from the history entry and
-  the group list, showing the welcome to someone in no group, the form for
-  starting a group when the entry asks for it, and otherwise the group the
-  entry names, or the first by name. The form tidies and checks both names,
-  says what's wrong beside a field and focuses it, and announces a failed
-  creation; a created group replaces the form's entry and takes focus on its
-  heading. The group frame has the rail from 720px wide and the bar's
-  switcher, which opens the group sheet, below it; its content is an empty
-  chat area until the chat is built. On iOS the welcome will lead through the
-  install screen first (Section 16), built with that screen.
+  the group list, showing a waiting screen while the groups load, whose loader
+  of bouncing typing dots appears only after 300ms, then the welcome to
+  someone in no group, the form for starting a group when the entry asks for
+  it, and otherwise the group the entry names, or the first by name. The form
+  tidies and checks both names, says what's wrong beside a field and focuses
+  it, and announces a failed creation; a created group replaces the form's
+  entry and takes focus on its heading. The group frame has the rail from
+  720px wide and the bar's switcher, which opens the group sheet, below it;
+  its content is an empty chat area until the chat is built. On iOS the
+  welcome will lead through the install screen first (Section 16), built with
+  that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
   name and note, the joiner's view of where it stands, withdrawing it, and
