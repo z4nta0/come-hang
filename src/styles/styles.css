@@ -407,8 +407,8 @@
 
 	/* #region Text Width Tokens */
 
-	--tex-wid-sma : calc( var( --cdn-pow-011 ) * 1em ); /* What: Text Width Small ~= 22.047em. Why: Notes and captions read best near 50 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 50 in the sibling sites' fonts, to re-measure once it is. */
-	--tex-wid-bas : calc( var( --cdn-pow-012 ) * 1em ); /* What: Text Width Base ~= 29.207em. Why: Paragraphs read best near 66 characters a line. How: The main font isn't chosen yet, so this uses the step that gives about 66 in the sibling sites' fonts, to re-measure once it is. */
+	--tex-wid-sma : calc( var( --cdn-pow-011 ) * 1em ); /* What: Text Width Small ~= 22.047em. Why: Notes and captions read best near 50 characters a line. How: Figtree averages about 2.21 characters per em on real prose, measured in Chromium, Firefox, and WebKit, so the eleventh power gives about 49, closer to 50 than any step in ch. */
+	--tex-wid-bas : calc( var( --cdn-pow-012 ) * 1em ); /* What: Text Width Base ~= 29.207em. Why: Paragraphs read best near 66 characters a line. How: Figtree averages about 2.21 characters per em on real prose, measured in Chromium, Firefox, and WebKit, so the twelfth power gives about 65, closer to 66 than any step in ch. */
 
 	/* #endregion Text Width Tokens */
 
@@ -416,11 +416,11 @@
 
 	/* #region Tier Tokens */
 
-	--tie-hor-001 : var( --hor-rhy-014 ); /* What: Tier Horizontal 1 ~= 49.625px @ 1,920px width. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads horizontal rhythm step 14, the top tier. */
-	--tie-hor-002 : var( --hor-rhy-012 ); /* What: Tier Horizontal 2 ~= 28.278px @ 1,920px width. Why: Sections of one screen sit apart. How: This reads horizontal rhythm step 12, two rhythm steps below tier 1. */
-	--tie-hor-003 : var( --hor-rhy-010 ); /* What: Tier Horizontal 3 ~= 16.114px @ 1,920px width. Why: Items in a list, and a heading and its content, sit apart. How: This reads horizontal rhythm step 10, two rhythm steps below tier 2. */
-	--tie-hor-004 : var( --hor-rhy-008 ); /* What: Tier Horizontal 4 ~= 9.182px @ 1,920px width. Why: The parts of one item, such as its title, sit apart. How: This reads horizontal rhythm step 8, two rhythm steps below tier 3. */
-	--tie-hor-005 : var( --hor-rhy-006 ); /* What: Tier Horizontal 5 ~= 5.233px @ 1,920px width. Why: The pieces of one part, such as an icon and its label, sit closest. How: This reads horizontal rhythm step 6, two rhythm steps below tier 4. */
+	--tie-hor-001 : clamp( calc( var( --ver-rhy-p04 ) * 1rem ), var( --hor-rhy-014 ), calc( var( --ver-rhy-p05 ) * 1rem ) ); /* What: Tier Horizontal 1, about 44.876px - 59.447px. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads horizontal rhythm step 14, the top tier, held between the vertical rhythm's p04 and p05 steps, so it never shrinks to a few pixels on a phone or spreads too wide on a large screen. */
+	--tie-hor-002 : clamp( calc( var( --ver-rhy-p02 ) * 1rem ), var( --hor-rhy-012 ), calc( var( --ver-rhy-p03 ) * 1rem ) ); /* What: Tier Horizontal 2, about 25.572px - 33.876px. Why: Sections of one screen sit apart. How: This reads horizontal rhythm step 12, two rhythm steps below tier 1, held between the vertical rhythm's p02 and p03 steps, so it never shrinks to a few pixels on a phone or spreads too wide on a large screen. */
+	--tie-hor-003 : clamp( calc( var( --ver-rhy-bas ) * 1rem ), var( --hor-rhy-010 ), calc( var( --ver-rhy-p01 ) * 1rem ) ); /* What: Tier Horizontal 3, about 14.572px - 19.304px. Why: Items in a list, and a heading and its content, sit apart. How: This reads horizontal rhythm step 10, two rhythm steps below tier 2, held between the vertical rhythm's bas and p01 steps, so it never shrinks to a few pixels on a phone or spreads too wide on a large screen. */
+	--tie-hor-004 : clamp( calc( var( --ver-rhy-m02 ) * 1rem ), var( --hor-rhy-008 ), calc( var( --ver-rhy-m01 ) * 1rem ) ); /* What: Tier Horizontal 4, about 8.304px - 11px. Why: The parts of one item, such as its title, sit apart. How: This reads horizontal rhythm step 8, two rhythm steps below tier 3, held between the vertical rhythm's m02 and m01 steps, so it never shrinks to a few pixels on a phone or spreads too wide on a large screen. */
+	--tie-hor-005 : clamp( calc( var( --ver-rhy-m04 ) * 1rem ), var( --hor-rhy-006 ), calc( var( --ver-rhy-m03 ) * 1rem ) ); /* What: Tier Horizontal 5, about 4.732px - 6.268px. Why: The pieces of one part, such as an icon and its label, sit closest. How: This reads horizontal rhythm step 6, two rhythm steps below tier 4, held between the vertical rhythm's m04 and m03 steps, so it never shrinks to a few pixels on a phone or spreads too wide on a large screen. */
 
 
 	--tie-ver-001 : var( --spa-ver-p04 ); /* What: Tier Vertical 1 ~= 44.876px. Why: The page frame, between the tab bar or header and a screen's content, gets the most space. How: This reads the p04 vertical spacing step, the top tier, chosen first. */

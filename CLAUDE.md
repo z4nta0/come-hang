@@ -52,9 +52,8 @@ screens using them yet, since screens wait for the design pass. Its one
 service worker opens the app offline and shows pushes. Next steps are in
 ARCHITECTURE.md's Section 14.
 
-**Placeholders to replace in the design pass**: the text width tokens in
-`src/styles/styles.css`, which need re-measuring for Figtree. The colors and
-fonts are in.
+**Design tokens**: the chosen design's colors, fonts, and text widths are
+in `src/styles/styles.css`, with no placeholders left.
 
 ## Commands
 
@@ -212,21 +211,23 @@ emulators need Java, 21 installed.
   `--spa-hor-*` family. A value that gets too small or too big on some
   screens becomes fluid, `clamp()` with a `--hor-rhy-*` step in the middle
   and fixed ends written as a vertical rhythm step times `1rem`, as the
-  gutter and the skip link's padding do.
+  gutter, the skip link's padding, and the horizontal spacing tiers do.
 - **Layout and spacing** (per the global grid-first and spacing tier
   rules): grid with areas named after each child's class, and five
   spacing tiers, each two rhythm steps below the one above it, starting
   from p04 vertically and horizontal rhythm step 14 horizontally (decided
-  2026-10-22, horizontal moved to the horizontal rhythm 2026-10-25, values at
-  a 1,920px wide screen):
+  2026-10-22, horizontal moved to the horizontal rhythm 2026-10-25). Each
+  horizontal tier is clamped between its vertical step and the next step up
+  (decided 2026-10-30), since the horizontal rhythm alone shrank them to 1 to
+  10px on a phone:
 
   | Tier | Tokens | Vertical | Horizontal | Separates |
   |---|---|---|---|---|
-  | 1 | `--tie-ver-001` / `--tie-hor-001` | p04, ~44.9px | step 14, ~49.6px | The page frame: the tab bar or header and a screen's content |
-  | 2 | `--tie-ver-002` / `--tie-hor-002` | p02, ~25.6px | step 12, ~28.3px | Sections of one screen |
-  | 3 | `--tie-ver-003` / `--tie-hor-003` | bas, ~14.6px | step 10, ~16.1px | Items in a list; a heading and its content |
-  | 4 | `--tie-ver-004` / `--tie-hor-004` | m02, ~8.3px | step 8, ~9.2px | The parts of one item (title, details, actions) |
-  | 5 | `--tie-ver-005` / `--tie-hor-005` | m04, ~4.7px | step 6, ~5.2px | The pieces of one part (an icon and its label, a label and its field) |
+  | 1 | `--tie-ver-001` / `--tie-hor-001` | p04, ~44.9px | step 14, ~44.9px - 59.4px | The page frame: the tab bar or header and a screen's content |
+  | 2 | `--tie-ver-002` / `--tie-hor-002` | p02, ~25.6px | step 12, ~25.6px - 33.9px | Sections of one screen |
+  | 3 | `--tie-ver-003` / `--tie-hor-003` | bas, ~14.6px | step 10, ~14.6px - 19.3px | Items in a list; a heading and its content |
+  | 4 | `--tie-ver-004` / `--tie-hor-004` | m02, ~8.3px | step 8, ~8.3px - 11px | The parts of one item (title, details, actions) |
+  | 5 | `--tie-ver-005` / `--tie-hor-005` | m04, ~4.7px | step 6, ~4.7px - 6.3px | The pieces of one part (an icon and its label, a label and its field) |
 
 ## Don't forget
 
