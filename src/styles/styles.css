@@ -218,9 +218,9 @@
 
 	/* #region Font Family Tokens */
 
-	--fon-fam-bra : ;                                                         /* What: Font Family Brand. Why: The standard role set includes a brand font. How: None is chosen yet, so it stays empty until the design pass. */
-	--fon-fam-mai : system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; /* What: Font Family Main. Why: This is the main font, for running text and controls. How: This is the device's own interface font, a placeholder until the visual design is chosen. */
-	--fon-fam-sec : ;                                                         /* What: Font Family Secondary. Why: The standard role set includes a secondary font. How: None is chosen yet, so it stays empty until the design pass. */
+	--fon-fam-bra : 'Bricolage Grotesque', var( --fon-fam-mai );                         /* What: Font Family Brand. Why: This is the brand font, for headings and the wordmark. How: This names the self-hosted Bricolage Grotesque, falling back through the main font. */
+	--fon-fam-mai : 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; /* What: Font Family Main. Why: This is the main font, for running text and controls. How: This names the self-hosted Figtree, falling back to the device's own interface font until it loads or for a script it doesn't cover. */
+	--fon-fam-sec : ;                                                                    /* What: Font Family Secondary. Why: The standard role set includes a secondary font. How: The design uses only the main and brand fonts, so it stays empty. */
 
 	/* #endregion Font Family Tokens */
 
@@ -428,7 +428,7 @@ body { /* What: Page Body. Why: Every page shares one font, color, and backgroun
 
 	background-color : var( --bac-pag-col ); /* Background Page Color = #ffffff */
 	color            : var( --tex-mai-col ); /* Text Main Color = #1f2328 */
-	font-family      : var( --fon-fam-mai ); /* Font Family Main = system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif */
+	font-family      : var( --fon-fam-mai ); /* Font Family Main = 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif */
 	font-size        : var( --fon-siz-p01 ); /* Font Size Base Plus 1 ~= 14.572px */
 	line-height      : var( --ver-rhy-p01 ); /* Vertical Rhythm Base Plus 1 ~= 1.755 */
 
@@ -440,9 +440,10 @@ h2,
 h3,
 h4,
 h5,
-h6 { /* What: Headings. Why: Headings set tight, each line as tall as its text. How: This gives them the m01 rhythm step as their line height. */
+h6 { /* What: Headings. Why: Headings set in the brand font, tight, each line as tall as its text. How: This gives them the brand font and the m01 rhythm step as their line height. */
 
 
+	font-family : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
 	line-height : var( --ver-rhy-m01 ); /* Vertical Rhythm Base Minus 1 = 1 */
 
 
@@ -461,7 +462,7 @@ button { /* What: Buttons. Why: Buttons should use the app's font and show they 
 
 
 	cursor      : pointer;
-	font-family : var( --fon-fam-mai ); /* Font Family Main = system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif */
+	font-family : var( --fon-fam-mai ); /* Font Family Main = 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif */
 
 
 }

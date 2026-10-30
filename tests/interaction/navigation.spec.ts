@@ -61,7 +61,7 @@ test( 'an unknown address opens the app at its root address', async ( { page : c
 test( 'a reload returns the home page to where it was left', async ( { page : curPagObj } ) => { // What: Reload Position Test. Why: The hook takes over the browser's restoring, so a reload has to find the position it recorded. How: This scrolls the home page down, reloads it, and checks it opens at the same position.
 
 
-	await curPagObj.setViewportSize( { height : 200, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole home page.
+	await curPagObj.setViewportSize( { height : 120, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole home page.
 
 	await curPagObj.goto( HOM_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the home page. How: This opens the root path.
 
@@ -83,10 +83,51 @@ test( 'a reload returns the home page to where it was left', async ( { page : cu
 
 
 
+test( 'a reload keeps its restored position when the fonts arrive late', async ( { page : curPagObj } ) => { // What: Late Fonts Reload Test. Why: Text set in a fallback font has another height, so fonts arriving after the restore can move the page off its recorded position. How: This scrolls the home page down, reloads it with its font files held back, and checks it sits at the leaving position once the fonts have loaded.
+
+
+	await curPagObj.setViewportSize( { height : 120, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the whole home page.
+
+	await curPagObj.goto( HOM_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the home page. How: This opens the root path.
+
+	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) );           // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the page's bottom, past any smooth scroll-behavior.
+	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser dispatches with its next frame. How: This waits two animation frames, after which that frame's scroll event has run.
+
+
+	const leaScrNum = await curPagObj.evaluate( () => window.scrollY ); // What: Leaving Scroll Number. Why: The reload should return the page to this position. How: This reads how far down the page sits before the reload.
+
+
+	expect( leaScrNum ).toBeGreaterThan( 0 ); // What: Scrolled Assertion. Why: A page that can't scroll would let the check pass without anything restored. How: This checks the page sits below its top.
+
+
+	await curPagObj.route( '**/*.woff2', async ( rouCurObj ) => { // What: Font Delay Route Call. Why: The restore has to run while the page still shows its fallback font. How: This holds every font file back for a moment before letting it load.
+
+
+		await new Promise( ( resProFun ) => setTimeout( resProFun, 600 ) ); // What: Font Delay Wait. Why: The page's first restore should happen well before the fonts arrive. How: This waits 600ms.
+
+
+		await rouCurObj.continue(); // What: Font Continue Call. Why: The fonts still have to load for the second jump to run. How: This sends the request on.
+
+
+	} );
+
+
+	await curPagObj.reload(); // What: Page Reload Call. Why: This is the navigation being checked. How: This reloads the home page, cleared of the browser's cache by the route.
+
+	await curPagObj.evaluate( () => document.fonts.ready.then( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ) ); // What: Fonts Settled Wait. Why: The position is judged once the fonts have arrived and the page has redrawn. How: This waits for the fonts to load, then two animation frames.
+
+
+	expect( await curPagObj.evaluate( () => window.scrollY ) ).toBe( leaScrNum ); // What: Settled Position Assertion. Why: The fonts arriving shouldn't leave the page off where it was left. How: This reads the position after the fonts have loaded.
+
+
+} );
+
+
+
 test( 'a fresh load of an address opens at its top, not where an earlier visit left it', async ( { page : curPagObj } ) => { // What: Fresh Load Test. Why: A new visit in the same tab reuses the first entry's default key, and shouldn't open where the last visit was left. How: This scrolls the home page down, loads its address afresh, and checks it opens at the top, then still does after a reload.
 
 
-	await curPagObj.setViewportSize( { height : 200, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a leftover position to mean anything. How: This makes the screen too short to show the whole home page.
+	await curPagObj.setViewportSize( { height : 120, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to be scrollable for a leftover position to mean anything. How: This makes the screen too short to show the whole home page.
 
 	await curPagObj.goto( HOM_PHO_OBJ.patStr ); // What: Page Load Call. Why: The earlier visit starts on the home page. How: This opens the root path.
 
@@ -122,7 +163,7 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 
 	await curPagObj.addInitScript( () => sessionStorage.setItem( 'scroll-positions', 'null' ) ); // What: Malformed Storage Plant. Why: A stored null parses as JSON, so only the hook's own checks can reject it. How: This writes it before the app's scripts run.
 
-	await curPagObj.setViewportSize( { height : 200, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The recorder and its save should run after the planted value was read, and they only run on a page that scrolls. How: This makes the screen too short to show the whole home page.
+	await curPagObj.setViewportSize( { height : 120, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The recorder and its save should run after the planted value was read, and they only run on a page that scrolls. How: This makes the screen too short to show the whole home page.
 
 	await curPagObj.goto( HOM_PHO_OBJ.patStr ); // What: Page Load Call. Why: The hook reads the planted value as the app loads. How: This opens the root path.
 
@@ -140,7 +181,7 @@ test( 'malformed saved scroll positions are ignored rather than breaking the pag
 test( 'a hash added to the address is not overridden by a saved position', async ( { page : curPagObj } ) => { // What: Hash Entry Test. Why: A hash typed into the address adds an entry that shares the first entry's default key, whose saved position mustn't override the hash. How: This scrolls the home page down, adds the main element's hash to the address, and checks the page leaves the saved position for the main element's top, which is the page's own top here, so the check proves the saved position lost rather than which way the page got there.
 
 
-	await curPagObj.setViewportSize( { height : 200, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to scroll for a saved position to differ from the section. How: This makes the screen too short to show the whole home page.
+	await curPagObj.setViewportSize( { height : 120, width : HOM_PHO_OBJ.widNum } ); // What: Short Viewport Call. Why: The page has to scroll for a saved position to differ from the section. How: This makes the screen too short to show the whole home page.
 
 	await curPagObj.goto( HOM_PHO_OBJ.patStr ); // What: Page Load Call. Why: The check starts on the home page, the visit's first entry. How: This opens the root path.
 

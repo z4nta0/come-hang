@@ -53,6 +53,7 @@ const POS_STO_STR = 'scroll-positions'; // What: Position Storage String. Why: T
 
 // #region Module State
 
+let resPenBoo = false;     // What: Restore Pending Boolean. Why: A restored position can be shifted by the fonts arriving before the hook jumps there again, and recording that shifted position would overwrite the one being restored. How: This is true from a restore until its second jump, and the recorder skips while it is.
 let scrKeyStr = 'default'; // What: Scroll Key String. Why: A recorded position belongs to the history entry showing when the visitor scrolled. How: This holds the router's location key for that entry, which the hook updates on every navigation, starting from the key React Router gives a first load.
 let warLogBoo = false;     // What: Warning Logged Boolean. Why: A failing storage write would otherwise warn on every scroll frame. How: This turns true once the first failure has been logged.
 
@@ -155,18 +156,19 @@ function savPosFun () : void {
  *
  * @summary
  * Scrolls the window to the top after every navigation a link or a redirect
- * makes, including a link to the page already showing, before the new page
- * is drawn. A navigation whose address carries a hash scrolls that section
- * into view instead, when an element with that id exists, following the
+ * makes, including a link to the page already showing, before the new page is
+ * drawn. A navigation whose address carries a hash scrolls that section into
+ * view instead, when an element with that id exists, following the
  * stylesheet's scroll-behavior. Back, forward, and a reload (a POP) return to
- * the position recorded for that history entry, after its page has rendered,
- * or are handled like any other navigation when none was recorded, such as on
- * a first visit, or when the entry is a default-key one carrying a hash,
- * which has no router state of its own and so goes to its hash. The jumps to
- * the top and to a recorded position are instant whatever the stylesheet's
- * scroll-behavior says, since a smooth scroll down a whole page reads as
- * motion rather than as arriving on a new page. Call it once, in a component
- * inside the router that stays mounted across routes.
+ * the position recorded for that history entry, after its page has rendered
+ * and again once its fonts have loaded, or are handled like any other
+ * navigation when none was recorded, such as on a first visit, or when the
+ * entry is a default-key one carrying a hash, which has no router state of its
+ * own and so goes to its hash. The jumps to the top and to a recorded position
+ * are instant whatever the stylesheet's scroll-behavior says, since a smooth
+ * scroll down a whole page reads as motion rather than as arriving on a new
+ * page. Call it once, in a component inside the router that stays mounted
+ * across routes.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -198,7 +200,32 @@ function useScrTopFun () : void {
 		const savTopNum = locCurObj.key === 'default' && locCurObj.hash ? undefined : scrPosMap.get( locCurObj.key ); // What: Saved Top Number. Why: Back, forward, and a reload return to the entry's recorded position, but a hash typed into the address or followed from a plain link adds an entry with no router state, which shares the first entry's default key, so its saved position would override the jump to the section. How: This reads the entry's recorded position, or holds undefined when none was recorded or the entry is a default-key one with a hash.
 
 
-		if ( navTypStr === 'POP' && savTopNum !== undefined ) { window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); return; } // What: Back And Forward Restore Guard. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the recorded position and stops, leaving a POP with nothing recorded to the hash and top handling below.
+		if ( navTypStr === 'POP' && savTopNum !== undefined ) { // What: Back And Forward Restore Block. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the recorded position now and again once the fonts have loaded, then stops, leaving a POP with nothing recorded to the hash and top handling below.
+
+
+			resPenBoo = true; // What: Restore Pending Assignment. Why: The jump below can be shifted before it's repeated. How: This keeps the recorder from saving positions until then.
+
+
+			window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); // What: Saved Top Scroll Call. Why: The page should open where it was left. How: This jumps there before the page is drawn.
+
+
+			void document.fonts.ready.then( () => { // What: Fonts Ready Restore Call. Why: Text set in a fallback font has a different height, so the fonts arriving can move the content and shift the restored position. How: Once the fonts have loaded, this lets the recorder save again and jumps to the recorded position again, unless the visitor has navigated elsewhere since.
+
+
+				resPenBoo = false; // What: Restore Pending Clear. Why: Positions from here on are the visitor's own. How: This lets the recorder save again.
+
+
+				if ( scrKeyStr === locCurObj.key ) window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); // What: Second Restore Scroll Call. Why: The fonts may have shifted the first jump. How: This jumps to the recorded position again while its entry is still showing.
+
+
+			} );
+
+
+
+			return; // What: Restored Position Return. Why: The position is the recorded one, not the hash or the top. How: This stops the effect.
+
+
+		}
 
 
 
@@ -250,7 +277,11 @@ if ( navEntObj?.type === 'navigate' ) { // What: Fresh Load Guard. Why: A new vi
 history.scrollRestoration = 'manual'; // What: Manual Scroll Restoration Assignment. Why: Firefox would otherwise restore a position while the page being left is still drawn, cutting it short, before the hook's own restore runs. How: This stops the browser restoring positions on its own.
 
 
-window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Why: Back, forward, and a reload return to the position each entry was left at, and a mobile browser can discard a background tab without firing pagehide, so saving only as the page hides could lose it. How: On every scroll event, which the browser fires at most once a frame, this records the position under the showing entry's key, trims the oldest, and saves the positions to session storage.
+window.addEventListener( 'scroll', () => { // What: Scroll Recorder Listener. Why: Back, forward, and a reload return to the position each entry was left at, and a mobile browser can discard a background tab without firing pagehide, so saving only as the page hides could lose it. How: On a scroll event, which the browser fires at most once a frame, this records the position under the showing entry's key, trims the oldest, and saves the positions to session storage, unless a restore is waiting for the fonts.
+
+
+	if ( resPenBoo ) return; // What: Pending Restore Guard. Why: A position shifted while a restore waits for the fonts isn't where the visitor left the page. How: This skips recording until the restore has jumped again.
+
 
 
 	scrPosMap.delete( scrKeyStr ); // What: Position Removal Call. Why: Re-adding an entry moves it to the end, so the map stays ordered oldest first. How: This removes the showing entry's old position, if any.
