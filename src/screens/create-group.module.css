@@ -1,0 +1,254 @@
+
+
+
+/**
+ * create-group.module.css = Create Group Module
+ *
+ * @summary
+ * Styles for CreGroCom: one column at the base text width, centered in the
+ * screen, holding a bar with the back button beside the heading, then the
+ * form's fields, alert, and button a tier 2 space apart. A field stacks its
+ * label, box, hint, and problem a tier 5 space apart, and its box shifts its
+ * border on hover, turns red with a problem, and grows its focus ring in.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region creScrMai */
+
+.creScrMai { /* What: Create Screen Main. Why: The form should read as one column, at a comfortable width, whatever the screen. How: This holds the bar and the form in named areas, the frame tier apart, at the base text width centered in the screen, with the frame tier above and below and the gutter at the sides. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-areas   : 'creBarDiv' 'creGroFor';
+	grid-template-columns : minmax( 0, var( --tex-wid-bas ) );         /* Text Width Base ~= 29.207em */
+	justify-content       : center;
+	min-height            : 100vh;
+	padding               : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-001 );                      /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+
+
+/* #region creBarDiv */
+
+.creBarDiv { /* What: Create Bar Div. Why: The way back sits beside the heading it leaves. How: This lays the back button and the heading out in one row of named areas, a tier 4 space apart, centered on each other. */
+
+
+	align-items           : center;
+	column-gap            : var( --tie-hor-004 );              /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-area             : creBarDiv;
+	grid-template-areas   : 'creBacBut creTitHea';
+	grid-template-columns : auto 1fr;
+	margin-left           : calc( var( --spa-ver-m03 ) * -1 ); /* Spacing Vertical Base Minus 3 ~= -6.268px */ /* What: Icon Inset. Why: The arrow, not its touch target, should line up with the form's left edge. How: This pulls the bar left by about the room around the icon inside its button. */
+
+
+}
+
+.creBacBut { /* What: Create Back Button. Why: Going back is a small, quiet control in the bar, still a full touch target. How: This draws a borderless circle at the touch target size, in the main text color, in its own area, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	border-radius    : 50%;
+	color            : var( --tex-mai-col );                /* Text Main Color = #1D1E33 */
+	display          : grid;
+	grid-area        : creBacBut;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.creBacBut:hover { /* What: Hovered Create Back Button. Why: An icon toggle in a bar shows it's live by color alone, since a lift would jostle the bar. How: This fills the circle with the hover color. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+
+
+}
+.creBacBut:active { /* What: Pressed Create Back Button. Why: A press should register before the screen changes. How: This presses the circle in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Create Back Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.creBacBut { /* What: Motionless Create Back Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.creTitHea { /* What: Create Title Heading. Why: The heading names the screen. How: This sets it at Base Plus 4 in its own area. */
+
+
+	font-size : var( --fon-siz-p04 ); /* Font Size Base Plus 4 ~= 33.876px */
+	grid-area : creTitHea;
+
+
+}
+.creTitHea:focus { /* What: Focused Create Title Heading. Why: Focus moves to the heading only so the screen is announced and the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+/* #endregion creBarDiv */
+
+
+
+/* #region creGroFor */
+
+.creGroFor { /* What: Create Group Form. Why: The fields, the alert, and the button read top to bottom as the form's steps. How: This stacks them a tier 2 space apart, placed in order rather than by name, since its two fields share one class. */
+
+
+	display   : grid;
+	grid-area : creGroFor;
+	row-gap   : var( --tie-ver-002 ); /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+
+/* #region creFieDiv */
+
+.creFieDiv { /* What: Create Field Div. Why: A field's label, box, hint, and problem belong together. How: This stacks them in named areas a tier 5 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'fieNamLab' 'fieValInp' 'fieHinPar' 'fieErrPar';
+	row-gap             : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.fieNamLab { /* What: Field Name Label. Why: The label names the field above its box. How: This sets it bold in its own area. */
+
+
+	font-weight : 700;
+	grid-area   : fieNamLab;
+
+
+}
+
+.fieValInp { /* What: Field Value Input. Why: A box should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	grid-area        : fieValInp;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.fieValInp:hover { /* What: Hovered Field Value Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.fieValInp[aria-invalid='true'] { /* What: Invalid Field Value Input. Why: A box with a problem should stand out beside its message. How: This turns its border the error color. */
+
+
+	border-color : var( --err-mai-col ); /* Error Main Color = #D14343 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Field Value Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fieValInp { /* What: Motionless Field Value Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.fieHinPar { /* What: Field Hint Paragraph. Why: The hint is secondary to the label and box. How: This sets it small in the muted text color, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area : fieHinPar;
+
+
+}
+
+.fieErrPar { /* What: Field Error Paragraph. Why: A field's problem should be clear beside it. How: This sets it small and bold in the dark error color, in its own area. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-size   : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	font-weight : 700;
+	grid-area   : fieErrPar;
+
+
+}
+.fieErrPar:empty { /* What: Empty Field Error Paragraph. Why: A field with no problem shouldn't keep a gap for one, and its field reads the message through its description, not as an alert. How: This hides it while it's empty. */
+
+
+	display : none;
+
+
+}
+
+/* #endregion creFieDiv */
+
+
+.forErrPar { /* What: Form Error Paragraph. Why: A failed creation should be clear above the button. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.forErrPar:empty { /* What: Empty Form Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap above the button. How: This pulls it up by the form's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-002 ) * -1 ); /* Tier Vertical 2 ~= -25.572px */
+
+
+}
+
+.creSubBut { /* What: Create Submit Button. Why: The button sits at the form's start edge rather than stretching across it. How: This aligns it to the start of its row. */
+
+
+	justify-self : start;
+
+
+}
+
+/* #endregion creGroFor */
+
+/* #endregion creScrMai */
+
+

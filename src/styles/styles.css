@@ -562,7 +562,8 @@ main:focus { /* What: Focused Main. Why: The skip link moves focus to the main e
 }
 
 a,
-button { /* What: Focus Ring Controls. Why: Keyboard focus should ease in rather than snap. How: This gives every link and button a zero-width outline in the focus ring color, held a little away from it, and eases the ring's width and offset when focus arrives. */
+button,
+input { /* What: Focus Ring Controls. Why: Keyboard focus should ease in rather than snap. How: This gives every link, button, and field a zero-width outline in the focus ring color, held a little away from it, and eases the ring's width and offset when focus arrives. */
 
 
 	outline        : 0 solid var( --foc-rin-col );                                                                                      /* Focus Ring Color = #4A4FC9 */ /* What: Zero Width Outline. Why: A zero width stays invisible, even in forced colors mode, until something is focused. How: The focused rule below grows it. */
@@ -572,7 +573,8 @@ button { /* What: Focus Ring Controls. Why: Keyboard focus should ease in rather
 
 }
 a:focus-visible,
-button:focus-visible { /* What: Focused Focus Ring Controls. Why: A keyboard user has to see where focus is. How: This grows the ring to its full width and draws it in close, so it eases in; every element with its own transition lists the two outline properties so the ease survives. */
+button:focus-visible,
+input:focus-visible { /* What: Focused Focus Ring Controls. Why: A keyboard user has to see where focus is. How: This grows the ring to its full width and draws it in close, so it eases in; every element with its own transition lists the two outline properties so the ease survives. */
 
 
 	outline-offset : var( --bor-wid-lar ); /* Border Width Large ~= 2.035px */
@@ -584,7 +586,8 @@ button:focus-visible { /* What: Focused Focus Ring Controls. Why: A keyboard use
 
 
 	a,
-	button { /* What: Motionless Focus Ring Controls. Why: The ring should simply appear. How: This turns the transition off. */
+	button,
+	input { /* What: Motionless Focus Ring Controls. Why: The ring should simply appear. How: This turns the transition off. */
 
 
 		transition : none;

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1581,8 +1581,18 @@ the Blaze change.
   account's two maps and each group they name, reporting the groups sorted
   by name once every one has been read, and on a device with no identity yet
   it reports none without starting Firebase, so a first visit still makes no
-  connection (built 2026-10-30). Screens come after the design pass (decided
-  2026-10-28), so each feature is built and tested as app code first.
+  connection (built 2026-10-30).
+- The first screens (built 2026-10-30): the screen host
+  (`src/screens/screen-host.tsx`) picks the screen from the history entry and
+  the group list, showing the welcome to someone in no group, the form for
+  starting a group when the entry asks for it, and otherwise the group the
+  entry names, or the first by name. The form tidies and checks both names,
+  says what's wrong beside a field and focuses it, and announces a failed
+  creation; a created group replaces the form's entry and takes focus on its
+  heading. The group frame has the rail from 720px wide and the bar's
+  switcher, which opens the group sheet, below it; its content is an empty
+  chat area until the chat is built. On iOS the welcome will lead through the
+  install screen first (Section 16), built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
   name and note, the joiner's view of where it stands, withdrawing it, and

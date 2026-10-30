@@ -161,7 +161,8 @@ function savPosFun () : void {
  * view instead, when an element with that id exists, following the
  * stylesheet's scroll-behavior. Back, forward, and a reload (a POP) return to
  * the position recorded for that history entry, after its page has rendered
- * and again once its fonts have loaded, or are handled like any other
+ * and again once its fonts have loaded and the page has grown tall enough to
+ * reach it, waiting at most 2 seconds, or are handled like any other
  * navigation when none was recorded, such as on a first visit, or when the
  * entry is a default-key one carrying a hash, which has no router state of its
  * own and so goes to its hash. The jumps to the top and to a recorded position
@@ -200,7 +201,7 @@ function useScrTopFun () : void {
 		const savTopNum = locCurObj.key === 'default' && locCurObj.hash ? undefined : scrPosMap.get( locCurObj.key ); // What: Saved Top Number. Why: Back, forward, and a reload return to the entry's recorded position, but a hash typed into the address or followed from a plain link adds an entry with no router state, which shares the first entry's default key, so its saved position would override the jump to the section. How: This reads the entry's recorded position, or holds undefined when none was recorded or the entry is a default-key one with a hash.
 
 
-		if ( navTypStr === 'POP' && savTopNum !== undefined ) { // What: Back And Forward Restore Block. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the recorded position now and again once the fonts have loaded, then stops, leaving a POP with nothing recorded to the hash and top handling below.
+		if ( navTypStr === 'POP' && savTopNum !== undefined ) { // What: Back And Forward Restore Block. Why: Back, forward, and a reload should return to where the visitor was, once the earlier page has rendered. How: This jumps to the recorded position now and again once the fonts have loaded and the page can reach it, then stops, leaving a POP with nothing recorded to the hash and top handling below.
 
 
 			resPenBoo = true; // What: Restore Pending Assignment. Why: The jump below can be shifted before it's repeated. How: This keeps the recorder from saving positions until then.
@@ -209,13 +210,38 @@ function useScrTopFun () : void {
 			window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); // What: Saved Top Scroll Call. Why: The page should open where it was left. How: This jumps there before the page is drawn.
 
 
-			void document.fonts.ready.then( () => { // What: Fonts Ready Restore Call. Why: Text set in a fallback font has a different height, so the fonts arriving can move the content and shift the restored position. How: Once the fonts have loaded, this lets the recorder save again and jumps to the recorded position again, unless the visitor has navigated elsewhere since.
+			void document.fonts.ready.then( () => { // What: Fonts Ready Restore Call. Why: Text set in a fallback font has a different height, so the fonts arriving can move the content and shift the restored position, and a screen that renders once its data loads can be too short to reach it yet. How: Once the fonts have loaded, this waits for the page to reach the recorded position, then jumps there again.
 
 
-				resPenBoo = false; // What: Restore Pending Clear. Why: Positions from here on are the visitor's own. How: This lets the recorder save again.
+				const resStaNum = performance.now(); // What: Restore Start Number. Why: The wait for the page to grow has to end even if it never does. How: This marks when the wait began.
 
 
-				if ( scrKeyStr === locCurObj.key ) window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); // What: Second Restore Scroll Call. Why: The fonts may have shifted the first jump. How: This jumps to the recorded position again while its entry is still showing.
+
+				const resTryFun = () : void => { // What: Restore Try Function. Why: The page may still be loading its screen, and the jump has to land once it can. How: This checks each frame, then jumps and lets the recorder save again.
+
+
+					const leaKeyBoo = scrKeyStr !== locCurObj.key;                                            // What: Left Key Boolean. Why: The visitor may have navigated elsewhere since. How: This is true when another entry is showing.
+					const reaTopBoo = document.documentElement.scrollHeight - window.innerHeight >= savTopNum; // What: Reachable Top Boolean. Why: A jump past the page's end would land short. How: This is true once the page is tall enough.
+					const timOveBoo = performance.now() - resStaNum > 2000;                                   // What: Time Over Boolean. Why: A page that never grows that tall shouldn't hold the recorder off for good. How: This is true after 2 seconds.
+
+					const waiMorBoo = !leaKeyBoo && !reaTopBoo && !timOveBoo; // What: Wait More Boolean. Why: The jump waits while the entry is showing, the page is short, and time remains. How: This combines the three.
+
+
+					if ( waiMorBoo ) { requestAnimationFrame( resTryFun ); return; } // What: Wait Guard. Why: The page hasn't grown enough yet. How: This checks again next frame and stops.
+
+
+
+					resPenBoo = false; // What: Restore Pending Clear. Why: Positions from here on are the visitor's own. How: This lets the recorder save again.
+
+
+					if ( !leaKeyBoo ) window.scrollTo( { behavior : 'instant', left : 0, top : savTopNum } ); // What: Second Restore Scroll Call. Why: The fonts or the screen's loading may have kept the first jump short. How: This jumps to the recorded position again while its entry is still showing.
+
+
+				};
+
+
+
+				resTryFun(); // What: Restore Try Call. Why: The page may already be tall enough. How: This starts checking.
 
 
 			} );

@@ -1,0 +1,735 @@
+
+
+
+/**
+ * group-frame.module.css = Group Frame Module
+ *
+ * @summary
+ * Styles for GroFraCom. Below 720px wide the frame stacks a surface bar with
+ * the group's name as a switcher above the content. From 720px up a rail of
+ * group tiles runs down the left, the bar's name turns to plain text, and the
+ * content sits beside the rail. The group sheet covers the screen in a dimmed
+ * layer while it's open, its surface sliding up from the bottom and back down
+ * as it closes.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region fraRooDiv */
+
+.fraRooDiv { /* What: Frame Root Div. Why: The bar, content, and rail share one layout that fills the screen. How: This stacks the bar above the content in named areas, at least as tall as the screen. */
+
+
+	display             : grid;
+	grid-template-areas : 'fraBarHed' 'fraConMai';
+	grid-template-rows  : auto 1fr;
+	min-height          : 100vh;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Root Div. Why: A wide screen has room for every group down the side. How: This applies from 720px wide and up. */
+
+
+	.fraRooDiv { /* What: Railed Frame Root Div. Why: The rail runs the full height beside the bar and the content. How: This adds the rail's column on the left, spanning both rows. */
+
+
+		grid-template-areas   : 'fraRaiNav fraBarHed' 'fraRaiNav fraConMai';
+		grid-template-columns : auto 1fr;
+
+
+	}
+
+
+}
+
+
+/* #region fraRaiNav */
+
+.fraRaiNav { /* What: Frame Rail Nav. Why: A phone reaches its groups through the sheet instead. How: This hides the rail below 720px wide. */
+
+
+	display : none;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Rail Nav. Why: A wide screen shows every group at once. How: This applies from 720px wide and up. */
+
+
+	.fraRaiNav { /* What: Shown Frame Rail Nav. Why: The rail sets the groups apart from the open group's content. How: This stacks the tiles down a tinted column, centered, a tier 4 space apart, with a border on its right, in its own area. */
+
+
+		align-content    : start;
+		background-color : var( --bac-hov-col );                            /* Background Hover Color = #ECEDF7 */
+		border-right     : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+		display          : grid;
+		grid-area        : fraRaiNav;
+		justify-items    : center;
+		padding          : var( --tie-ver-003 ) var( --tie-hor-004 );       /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 4, about 8.304px - 11px */
+		row-gap          : var( --tie-ver-004 );                            /* Tier Vertical 4 ~= 8.304px */
+
+
+	}
+
+
+}
+
+
+/* #region raiGroBut */
+
+.raiGroBut { /* What: Rail Group Button. Why: A group's tile should be easy to hit and show its initials clearly. How: This draws a rounded square at the touch target size on the surface color, with the initials bold in the brand font, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	border-radius    : var( --rad-bor-lar );                            /* Radius Border Large ~= 14.572px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	display          : grid;
+	font-family      : var( --fon-fam-bra );                            /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-weight      : 700;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.raiGroBut:hover { /* What: Hovered Rail Group Button. Why: A tile in the rail's column shows it's live by color alone, since a lift would jostle the rail. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.raiGroBut[aria-current='true'] { /* What: Current Rail Group Button. Why: The open group's tile should stand out from the rest. How: This fills it with the main accent and sets its initials in the accent's text color. */
+
+
+	background-color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	border-color     : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	color            : var( --tex-acc-col ); /* Text Accent Color = #FFFFFF */
+
+
+}
+.raiGroBut[aria-current='true']:hover { /* What: Hovered Current Rail Group Button. Why: The open group's tile should still respond to the pointer. How: This darkens its accent a step. */
+
+
+	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.raiGroBut:active { /* What: Pressed Rail Group Button. Why: A press should register before the group opens. How: This presses the tile in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Rail Group Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.raiGroBut { /* What: Motionless Rail Group Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.raiNamSpa { /* What: Rail Name Span. Why: The tile's name is for screen readers, while sight gets the initials. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion raiGroBut */
+
+
+.raiNewBut { /* What: Rail New Button. Why: Starting a group sits apart from the groups as a lighter tile. How: This draws a dashed rounded square at the touch target size in the muted text color, and eases its hover colors, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-lar ) dashed var( --bor-str-col ); /* Border Width Large ~= 2.035px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-lar );                             /* Radius Border Large ~= 14.572px */
+	color            : var( --tex-mut-col );                             /* Text Muted Color = #5A5D7E */
+	display          : grid;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem );              /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem );              /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.raiNewBut:hover { /* What: Hovered Rail New Button. Why: The tile shows it's live by color alone, like the group tiles. How: This fills it with the accent tint and darkens its plus to the main text color. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+	color            : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.raiNewBut:active { /* What: Pressed Rail New Button. Why: A press should register before the screen changes. How: This presses the tile in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Rail New Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.raiNewBut { /* What: Motionless Rail New Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion fraRaiNav */
+
+
+
+/* #region fraBarHed */
+
+.fraBarHed { /* What: Frame Bar Header. Why: The group's name heads the screen on a surface set apart from the content. How: This centers the heading on the surface color, with a border below, a tier 4 space above and below it and the gutter at the sides, in its own area. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border-bottom    : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display          : grid;
+	grid-area        : fraBarHed;
+	justify-items    : center;
+	padding          : var( --tie-ver-004 ) var( --gut-sid-pad );       /* Tier Vertical 4 ~= 8.304px, Gutter Side Padding, about 19.304px - 44.876px */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Bar Header. Why: Beside the rail, the name reads as the content's title. How: This applies from 720px wide and up. */
+
+
+	.fraBarHed { /* What: Start Aligned Frame Bar Header. Why: The name lines up with the content below it. How: This moves the heading to the start of the bar, with the tier 3 space above and below it. */
+
+
+		justify-items : start;
+		padding       : var( --tie-ver-003 ) var( --gut-sid-pad ); /* Tier Vertical 3 ~= 14.572px, Gutter Side Padding, about 19.304px - 44.876px */
+
+
+	}
+
+
+}
+
+
+/* #region fraNamHea */
+
+.fraNamHea { /* What: Frame Name Heading. Why: The group's name is the screen's heading. How: This sets it at Base Plus 2, a size that fits a phone's bar. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.fraNamHea:focus { /* What: Focused Frame Name Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Name Heading. Why: A wide screen has room for a larger title. How: This applies from 720px wide and up. */
+
+
+	.fraNamHea { /* What: Larger Frame Name Heading. Why: Beside the rail, the name titles the whole content. How: This sets it at Base Plus 3. */
+
+
+		font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+
+
+	}
+
+
+}
+
+.fraSwiBut { /* What: Frame Switcher Button. Why: On a phone the name is how someone reaches their other groups, and it should look like the heading it is. How: This sets the name and its chevron in one row, a tier 5 space apart, in the heading's own type on no background, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	align-items      : center;
+	background-color : transparent;
+	border           : 0;
+	border-radius    : 999px;
+	color            : inherit;
+	column-gap       : var( --tie-hor-005 );                /* Tier Horizontal 5, about 4.732px - 6.268px */
+	display          : inline-grid;
+	font             : inherit;
+	grid-auto-flow   : column;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : 0 var( --spa-ver-bas );              /* Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.fraSwiBut:hover { /* What: Hovered Frame Switcher Button. Why: The name shows it's live by color alone, since a lift would jostle the bar. How: This fills it with the hover color. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+
+
+}
+.fraSwiBut:active { /* What: Pressed Frame Switcher Button. Why: A press should register before the sheet opens. How: This presses it in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Frame Switcher Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fraSwiBut { /* What: Motionless Frame Switcher Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Switcher Button. Why: The rail switches groups on a wide screen. How: This applies from 720px wide and up. */
+
+
+	.fraSwiBut { /* What: Hidden Frame Switcher Button. Why: The plain name takes its place. How: This hides it. */
+
+
+		display : none;
+
+
+	}
+
+
+}
+
+.fraNamSpa { /* What: Frame Name Span. Why: On a phone the switcher shows the name instead. How: This hides it below 720px wide. */
+
+
+	display : none;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Name Span. Why: The name shows as plain text beside the rail. How: This applies from 720px wide and up. */
+
+
+	.fraNamSpa { /* What: Shown Frame Name Span. Why: The heading needs its text once the switcher hides. How: This shows it inline. */
+
+
+		display : inline;
+
+
+	}
+
+
+}
+
+/* #endregion fraNamHea */
+
+/* #endregion fraBarHed */
+
+
+
+/* #region fraConMai */
+
+.fraConMai { /* What: Frame Content Main. Why: The group's content sits below the bar with the frame's space around it. How: This stacks it from the top a tier 3 space apart, with the frame tier above and below and the gutter at the sides, in its own area. */
+
+
+	align-content : start;
+	display       : grid;
+	grid-area     : fraConMai;
+	padding       : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap       : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.chaTitHea { /* What: Chat Title Heading. Why: The heading names the open part of the group. How: This sets it at Base Plus 3. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+
+
+}
+
+.chaEmpPar { /* What: Chat Empty Paragraph. Why: The empty note is secondary to the heading. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+/* #endregion fraConMai */
+
+
+
+/* #region groSheDia */
+
+.groSheDia { /* What: Group Sheet Dialog. Why: The sheet covers the whole screen, its own scrim dimming the page rather than the browser's backdrop. How: This makes the dialog a borderless, transparent layer the size of the screen, its text in the main color. */
+
+
+	background-color : transparent;
+	border           : 0;
+	color            : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+	height           : 100%;
+	inset            : 0;
+	max-height       : none;
+	max-width        : none;
+	width            : 100%;
+
+
+}
+.groSheDia[open] { /* What: Open Group Sheet Dialog. Why: The scrim and the panel share the screen, the panel resting at the bottom. How: This lays them in one grid cell, shown only while the dialog is open. */
+
+
+	display : grid;
+
+
+}
+.groSheDia::backdrop { /* What: Group Sheet Dialog Backdrop. Why: The sheet's own scrim dims the page and animates, so the browser's backdrop should add nothing. How: This makes it transparent. */
+
+
+	background-color : transparent;
+
+
+}
+
+.sheScrDiv { /* What: Sheet Scrim Div. Why: The page behind the sheet should dim, fading in as it opens. How: This fills the dialog's one cell with the scrim color at about half opacity, shared with the panel so the two overlap, and fades it in on the decelerating curve. */
+
+
+	animation        : sheScrEnterFadeIn var( --dur-ani-p03 ) var( --mot-dec-eas );         /* Duration Animation Base Plus 3 ~= 366.9ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	background-color : oklch( from var( --scr-mai-col ) l c h / var( --cdn-pow-002-rec ) ); /* Scrim Main Color = #1D1E33 @ 0.570 opacity */
+	grid-area        : 1 / 1;                                                               /* What: Shared Cell. Why: The scrim and the panel overlap in the dialog's one cell, so named areas would only name the same cell twice. How: This places it by line numbers. */
+
+
+}
+.groSheDia[data-sheet-closing] .sheScrDiv { /* What: Closing Sheet Scrim Div. Why: The dim should lift as the sheet leaves. How: This fades it out on the accelerating curve, leaving it hidden. */
+
+
+	animation : sheScrLeaveFadeOut var( --dur-ani-p02 ) var( --mot-acc-eas ) forwards; /* Duration Animation Base Plus 2 ~= 277.0ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Sheet Scrim Div. Why: Someone who asked for less motion shouldn't see the dim fade. How: This applies only when the reduced-motion preference is set. */
+
+
+	.sheScrDiv,
+	.groSheDia[data-sheet-closing] .sheScrDiv { /* What: Motionless Sheet Scrim Div. Why: The dim should simply appear and go. How: This turns the animation off on both the opening and the closing rule, since the closing rule outranks the base. */
+
+
+		animation : none;
+
+
+	}
+
+
+}
+@keyframes sheScrEnterFadeIn { /* What: Sheet Scrim Enter Fade In. Why: The scrim fades in as the sheet opens. How: This runs its opacity from clear to full. */
+
+
+	from {
+
+
+		opacity : 0;
+
+
+	}
+
+	to {
+
+
+		opacity : 1;
+
+
+	}
+
+
+}
+@keyframes sheScrLeaveFadeOut { /* What: Sheet Scrim Leave Fade Out. Why: The scrim fades out as the sheet closes. How: This runs its opacity from full to clear. */
+
+
+	from {
+
+
+		opacity : 1;
+
+
+	}
+
+	to {
+
+
+		opacity : 0;
+
+
+	}
+
+
+}
+
+
+/* #region shePanDiv */
+
+.shePanDiv { /* What: Sheet Panel Div. Why: The sheet's content rises from the bottom on the surface color, never taller than the screen allows. How: This rests it at the bottom of the shared cell with its top corners rounded, stacks its bar, list, and button in named areas a tier 3 space apart, scrolls it when it overflows, and slides it up on the decelerating curve. */
+
+
+	align-self          : end;
+	animation           : shePanEnterSlideIn var( --dur-ani-p03 ) var( --mot-dec-eas );   /* Duration Animation Base Plus 3 ~= 366.9ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	background-color    : var( --bac-sur-col );                                           /* Background Surface Color = #FFFFFF */
+	border-radius       : var( --rad-bor-xla ) var( --rad-bor-xla ) 0 0;                  /* Radius Border Extra Large ~= 19.304px */
+	display             : grid;
+	grid-area           : 1 / 1;                                                          /* What: Shared Cell. Why: The panel overlaps the scrim in the dialog's one cell, so named areas would only name the same cell twice. How: This places it by line numbers. */
+	grid-template-areas : 'sheBarDiv' 'sheGroUno' 'sheNewBut';
+	max-height          : calc( 100% - var( --tie-ver-001 ) );                            /* Tier Vertical 1 ~= 44.876px */
+	overflow-y          : auto;
+	padding             : var( --tie-ver-002 ) var( --gut-sid-pad ) var( --tie-ver-001 ); /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px, Tier Vertical 1 ~= 44.876px */
+	row-gap             : var( --tie-ver-003 );                                           /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+.groSheDia[data-sheet-closing] .shePanDiv { /* What: Closing Sheet Panel Div. Why: The sheet should leave the way it came, and the dialog closes once it has. How: This slides it down on the accelerating curve, leaving it hidden. */
+
+
+	animation : shePanLeaveSlideOut var( --dur-ani-p02 ) var( --mot-acc-eas ) forwards; /* Duration Animation Base Plus 2 ~= 277.0ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Sheet Panel Div. Why: Someone who asked for less motion shouldn't see the sheet slide, while its closing still has to end so the dialog closes. How: This applies only when the reduced-motion preference is set. */
+
+
+	.shePanDiv,
+	.groSheDia[data-sheet-closing] .shePanDiv { /* What: Motionless Sheet Panel Div. Why: The sheet should simply appear and go, while the closing animation still ends for the dialog to close. How: This shortens both animations to .01ms on the opening and the closing rule, since the closing rule outranks the base. */
+
+
+		animation-duration : .01ms;
+
+
+	}
+
+
+}
+@keyframes shePanEnterSlideIn { /* What: Sheet Panel Enter Slide In. Why: The sheet rises from the bottom as it opens. How: This moves it from below its own height up into place. */
+
+
+	from {
+
+
+		transform : translateY( 100% );
+
+
+	}
+
+	to {
+
+
+		transform : translateY( 0 );
+
+
+	}
+
+
+}
+@keyframes shePanLeaveSlideOut { /* What: Sheet Panel Leave Slide Out. Why: The sheet sinks back down as it closes. How: This moves it from its place down below its own height. */
+
+
+	from {
+
+
+		transform : translateY( 0 );
+
+
+	}
+
+	to {
+
+
+		transform : translateY( 100% );
+
+
+	}
+
+
+}
+
+
+/* #region sheBarDiv */
+
+.sheBarDiv { /* What: Sheet Bar Div. Why: The sheet's title sits beside its close button. How: This lays them out in one row of named areas, the title taking the room, centered on each other. */
+
+
+	align-items           : center;
+	display               : grid;
+	grid-area             : sheBarDiv;
+	grid-template-areas   : 'sheTitHea sheCloBut';
+	grid-template-columns : 1fr auto;
+
+
+}
+
+.sheTitHea { /* What: Sheet Title Heading. Why: The title names the sheet. How: This sets it at Base Plus 3 in its own area. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	grid-area : sheTitHea;
+
+
+}
+
+.sheCloBut { /* What: Sheet Close Button. Why: Closing is a small, quiet control in the sheet's bar, still a full touch target. How: This draws a borderless circle at the touch target size, in the main text color, in its own area, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	border-radius    : 50%;
+	color            : var( --tex-mai-col );                /* Text Main Color = #1D1E33 */
+	display          : grid;
+	grid-area        : sheCloBut;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.sheCloBut:hover { /* What: Hovered Sheet Close Button. Why: An icon button in a bar shows it's live by color alone, since a lift would jostle the bar. How: This fills the circle with the hover color. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+
+
+}
+.sheCloBut:active { /* What: Pressed Sheet Close Button. Why: A press should register before the sheet closes. How: This presses the circle in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Sheet Close Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.sheCloBut { /* What: Motionless Sheet Close Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion sheBarDiv */
+
+
+
+/* #region sheGroUno */
+
+.sheGroUno { /* What: Sheet Group Unordered List. Why: The groups read as one list of rows. How: This stacks them a tier 5 space apart with no bullets, in its own area. */
+
+
+	display    : grid;
+	grid-area  : sheGroUno;
+	list-style : none;
+	row-gap    : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.sheGroBut { /* What: Sheet Group Button. Why: Each group is a full-width row that's easy to hit. How: This draws a borderless rounded row at least a touch target tall, its name at the start, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	border-radius    : var( --rad-bor-med );                      /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                      /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A row's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	text-align       : start;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : 100%;
+
+
+}
+.sheGroBut:hover { /* What: Hovered Sheet Group Button. Why: A row in a list shows it's live by color, since a lift would jostle the list. How: This fills it with the hover color. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+
+
+}
+.sheGroBut[aria-current='true'] { /* What: Current Sheet Group Button. Why: The open group should stand out in the list. How: This fills its row with the accent tint and sets its name bold. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+	font-weight      : 700;
+
+
+}
+.sheGroBut[aria-current='true']:hover { /* What: Hovered Current Sheet Group Button. Why: The open group's row should still respond to the pointer. How: This deepens its tint a step. */
+
+
+	background-color : oklch( from var( --acc-tin-col ) calc( l - 0.04 ) c h ); /* Accent Tint Color = #E7E8FA, darkened by 0.04 lightness */
+
+
+}
+.sheGroBut:active { /* What: Pressed Sheet Group Button. Why: A press should register before the group opens. How: This presses the row in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Sheet Group Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.sheGroBut { /* What: Motionless Sheet Group Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion sheGroUno */
+
+
+.sheNewBut { /* What: Sheet New Button. Why: Starting a group sits below the list at its start edge, rather than stretching across the sheet. How: This aligns it to the start of its own area. */
+
+
+	grid-area    : sheNewBut;
+	justify-self : start;
+
+
+}
+
+/* #endregion shePanDiv */
+
+/* #endregion groSheDia */
+
+

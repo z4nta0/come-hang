@@ -29,29 +29,27 @@ current decisions:
 
 ## Status
 
-Scaffolded: the app shell answering at one address, a placeholder home
-page, the global stylesheet, the accessibility, interaction, and security
-suites, and the Firebase Emulator harness with a rules suite and a
-functions suite. The security rules are complete, each walked through with
-the user: `firestore.rules` covers every Firestore collection in
-ARCHITECTURE.md's data model, `database.rules.json` covers chat and
-presence, and `storage.rules` covers history transfers. The Cloud Functions
-so far are the membership mirror, group deletion, the removal and offer
-notices, the offer decline, the daily run, and the pushes, with the push
-token rules, including the activity pushes for chat, join requests, history
-requests, and key requests, and the purchase's Polar checkout and
-webhook. The app has its Firebase services, created on first use, the
-identity bootstrap, the group key encryption, group creation and the
-group list, joining through an invite with a member's approval, the
-membership changes
-(names, activity, leaving, removal, link rotation, and settings), and
-ownership offers and notices, events with their bring-lists, chat
-with its on-device history, presence, history requests, location
-sharing, push notifications, Google linking and recovery with the
-group keys shared again, and buying the upgrade, with no
-screens using them yet, since screens wait for the design pass. Its one
-service worker opens the app offline and shows pushes. Next steps are in
-ARCHITECTURE.md's Section 14.
+Scaffolded: the app shell answering at one address, the global stylesheet, the
+accessibility, interaction, and security suites, and the Firebase Emulator
+harness with a rules suite and a functions suite. The security rules are
+complete, each walked through with the user: `firestore.rules` covers every
+Firestore collection in ARCHITECTURE.md's data model, `database.rules.json`
+covers chat and presence, and `storage.rules` covers history transfers. The
+Cloud Functions so far are the membership mirror, group deletion, the removal
+and offer notices, the offer decline, the daily run, and the pushes, with the
+push token rules, including the activity pushes for chat, join requests,
+history requests, and key requests, and the purchase's Polar checkout and
+webhook. The app has its Firebase services, created on first use, the identity
+bootstrap, the group key encryption, group creation and the group list, joining
+through an invite with a member's approval, the membership changes (names,
+activity, leaving, removal, link rotation, and settings), and ownership offers
+and notices, events with their bring-lists, chat with its on-device history,
+presence, history requests, location sharing, push notifications, Google
+linking and recovery with the group keys shared again, and buying the upgrade.
+The first screens are built: the welcome, the form for starting a group, and
+the group frame with its rail, its switcher and sheet, and an empty chat area.
+Its one service worker opens the app offline and shows pushes. Next steps are
+in ARCHITECTURE.md's Section 14.
 
 **Design tokens**: the chosen design's colors, fonts, and text widths are
 in `src/styles/styles.css`, with no placeholders left.
@@ -80,10 +78,14 @@ npm run test:worker          # the service worker, offline, in the build
 The suites start their own dev server on port 5200, and the security and
 worker suites a production build served by `vite preview` on 5201 (sibling projects use
 5190 through 5199), so they never touch a dev server already running.
-`npm test` and `npm run test:rules` run inside `firebase emulators:exec`,
-which starts the Firestore emulator on 8200 (ease-my-life's uses 8080), the
-Realtime Database emulator on 8210, and the Storage emulator on 8220, under
-the `demo-come-hang` project, which can't reach a real one.
+`npm test`, `npm run test:rules`, and the accessibility and interaction
+suites run inside `firebase emulators:exec`, which starts the Firestore
+emulator on 8200 (ease-my-life's uses 8080), the Realtime Database emulator
+on 8210, and the Storage emulator on 8220, under the `demo-come-hang`
+project, which can't reach a real one, plus the Auth emulator on 8240 for the
+browser suites, whose states reach a group by creating one through the app
+(`steRunFun` in `tests/support/states.ts`). The security suite's policy check
+skips those states, since its production build has no Firebase project.
 `npm run test:client` builds the functions and runs in its own session,
 with the Auth emulator on 8240 and the Functions emulator on 8230 beside
 Firestore, the Realtime Database, and Storage, since the app calls callables and the
@@ -171,10 +173,19 @@ emulators need Java, 21 installed.
   since the app moves between screens and has no links to sections of a
   page. If the public landing page gains in-page links, the rule applies
   to that page then.
-- **Main content** (per the skip link rule): the `<main>` element in
-  `app.tsx`, which holds whichever page the address matches. There's no bar
-  or tab bar yet, so it's everything after the skip link; once the tab bar
-  joins, it stays the open screen's content, past the bar.
+- **Main content** (per the skip link rule): each screen holds its content
+  in `<main>`, rendered by `MaiAreCom` in `src/ui/main-area.tsx`. On the
+  welcome and the form for starting a group that's the whole screen; in the
+  group frame it's the open group's content, past the rail and the bar, and
+  it stays past the tab bar once that joins.
+- **Breakpoints** (per the breakpoint rule): 720px, where the group frame
+  switches from the phone's bar and sheet to the wide screen's rail. Layout
+  queries measure the app container, `appRooDiv` in `src/app.module.css`.
+- **Scroll restoring** (an addition to the scroll position rule, decided
+  2026-10-30): a screen renders once the app has checked for groups, a
+  moment after load, so on a reload the hook keeps trying the saved position
+  each frame, after the fonts load, until the page is tall enough to reach
+  it, for at most 2 seconds.
 - **Layout** (decided 2026-10-29, ARCHITECTURE.md Section 14): wide screens
   get a rail of groups, the group's sections, its content, and a next-event
   panel; phones get a group switcher in the header, the sections as bottom
