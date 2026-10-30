@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router'; // What: Use Navigate. Why: Moving b
  *
  * Sections:
  *  - Types
+ *  - Constants
  *  - Helpers
  *  - Hooks
  *  - Exports
@@ -36,17 +37,28 @@ import { useNavigate } from 'react-router'; // What: Use Navigate. Why: Moving b
 
 // #region Types
 
+type SecNamTyp = 'chat' | 'events' | 'map' | 'people' | 'settings'; // What: Section Name Type. Why: A group's screen shows one of its sections. How: This names each.
+
 type ScrStaTyp = { // What: Screen State Type. Why: Each history entry records the screen it shows. How: This types the state an entry holds.
 
 
 	creBoo? : boolean,            // What: Created Boolean. Why: A group just created takes focus on its heading. How: This is true on the entry its creation opens.
 	groStr? : string,             // What: Group String. Why: A group's screen shows one group. How: This is the group's ID.
-	scrStr  : 'create' | 'group'  // What: Screen String. Why: The entry names its screen. How: This is the screen's name.
+	scrStr  : 'create' | 'group', // What: Screen String. Why: The entry names its screen. How: This is the screen's name.
+	secStr? : SecNamTyp           // What: Section String. Why: A group's screen shows one section, its chat when none is named. How: This is the section's name.
 
 
 };
 
 // #endregion Types
+
+
+
+// #region Constants
+
+const SEC_NAM_ARR : SecNamTyp[] = [ 'chat', 'events', 'map', 'people', 'settings' ]; // What: Section Name Array. Why: A history entry's section is checked against the ones this version knows. How: This lists them.
+
+// #endregion Constants
 
 
 
@@ -60,7 +72,8 @@ type ScrStaTyp = { // What: Screen State Type. Why: Each history entry records t
  * @summary
  * Checks a history entry's state is a screen this version knows: an object
  * naming the create or group screen, whose group, when it names one, is a
- * string, and whose created flag, when it has one, is a boolean.
+ * string, whose created flag, when it has one, is a boolean, and whose
+ * section, when it names one, is one this version knows.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -85,14 +98,16 @@ const isaScrFun = ( staValAny : unknown ) : staValAny is ScrStaTyp => { // What:
 	const creValAny : unknown = Reflect.get( staValAny, 'creBoo' ); // What: Created Value Any. Why: The created flag is optional. How: This reads it, untyped.
 	const groValAny : unknown = Reflect.get( staValAny, 'groStr' ); // What: Group Value Any. Why: The group is optional. How: This reads it, untyped.
 	const scrValAny : unknown = Reflect.get( staValAny, 'scrStr' ); // What: Screen Value Any. Why: The screen's name decides what shows. How: This reads it, untyped.
+	const secValAny : unknown = Reflect.get( staValAny, 'secStr' ); // What: Section Value Any. Why: The section is optional. How: This reads it, untyped.
 
-	const creOkaBoo = creValAny === undefined || typeof creValAny === 'boolean'; // What: Created Okay Boolean. Why: A flag of any other type isn't one this version wrote. How: This is true when it's absent or a boolean.
-	const groOkaBoo = groValAny === undefined || typeof groValAny === 'string';  // What: Group Okay Boolean. Why: A group of any other type isn't one this version wrote. How: This is true when it's absent or a string.
-	const scrOkaBoo = scrValAny === 'create' || scrValAny === 'group';           // What: Screen Okay Boolean. Why: Only a known screen can be shown. How: This is true for the create or group screen.
+	const creOkaBoo = creValAny === undefined || typeof creValAny === 'boolean';                               // What: Created Okay Boolean. Why: A flag of any other type isn't one this version wrote. How: This is true when it's absent or a boolean.
+	const groOkaBoo = groValAny === undefined || typeof groValAny === 'string';                                // What: Group Okay Boolean. Why: A group of any other type isn't one this version wrote. How: This is true when it's absent or a string.
+	const scrOkaBoo = scrValAny === 'create' || scrValAny === 'group';                                         // What: Screen Okay Boolean. Why: Only a known screen can be shown. How: This is true for the create or group screen.
+	const secOkaBoo = secValAny === undefined || SEC_NAM_ARR.some( ( secNamStr ) => secNamStr === secValAny ); // What: Section Okay Boolean. Why: Only a known section can be shown. How: This is true when it's absent or one this version lists.
 
 
 
-	return creOkaBoo && groOkaBoo && scrOkaBoo; // What: Check Return. Why: The state is a screen only when every field is. How: This combines the three checks.
+	return creOkaBoo && groOkaBoo && scrOkaBoo && secOkaBoo; // What: Check Return. Why: The state is a screen only when every field is. How: This combines the four checks.
 
 
 };
@@ -227,7 +242,7 @@ const useScrBacFun = () : ( () => void ) => { // What: Use Screen Back Function.
 
 // #region Exports
 
-export { type ScrStaTyp, useScrBacFun, useScrOpeFun, useScrStaFun }; // What: Named Exports. Why: The screens read and move between screens through these. How: This exports the hooks and the state's type.
+export { type ScrStaTyp, type SecNamTyp, useScrBacFun, useScrOpeFun, useScrStaFun }; // What: Named Exports. Why: The screens read and move between screens through these. How: This exports the hooks and the state's type.
 
 // #endregion Exports
 

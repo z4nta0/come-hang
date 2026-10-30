@@ -14,10 +14,11 @@ import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component
 import { SheDiaCom    } from '../ui/sheet.tsx';     // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
 import { useEffect    } from 'react';               // What: Use Effect. Why: A group just created takes focus on its heading. How: This moves focus once it's drawn.
 import { useRef       } from 'react';               // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
-import { useScrOpeFun } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This returns the function that opens one.
+import { useScrOpeFun } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
+import type { SecNamTyp } from '../ui/screen.ts';    // What: Section Name Type. Why: The frame shows one of the group's sections. How: This types its name.
 import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type. Why: The frame opens and closes the group sheet. How: This types its handle.
 
 // #endregion Imports
@@ -32,11 +33,14 @@ import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type.
  * group's name, which opens a sheet listing every group and offering to start
  * one; from 720px up, a rail of every group, by initials, sits down the left
  * beside the bar, the name there plain text, and the rail holds the button
- * that starts a group. The group's content fills the main area below the bar,
- * its chat for now. Choosing a group or starting one opens it as a new history
- * entry, and a group just created takes focus on its heading.
+ * that starts a group. The group's sections, from its chat to its settings,
+ * run along the bottom below 720px and down a column beside the rail from
+ * 720px, and the open section fills the main area below the bar. Choosing a
+ * group, a section, or starting a group opens it as a new history entry, and
+ * a group just created takes focus on its heading.
  *
  * Sections:
+ *  - Constants
  *  - Components
  *  - Exports
  *
@@ -46,9 +50,80 @@ import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type.
 
 
 
+// #region Constants
+
+type SecTabTyp = { icoNamStr : SecNamTyp, labStr : string }; // What: Section Tab Type. Why: Each tab names its section and label. How: This types one row of SEC_TAB_ARR.
+
+const SEC_TAB_ARR : SecTabTyp[] = [ // What: Section Tab Array. Why: Every group has the same sections, in the same order. How: Each row names a section, which is also its icon's name, and its label.
+
+
+	{ icoNamStr : 'chat',     labStr : 'Chat'     }, // What: Chat Tab. Why: The chat is where a group talks. How: This names it.
+	{ icoNamStr : 'events',   labStr : 'Events'   }, // What: Events Tab. Why: Events are planned there. How: This names it.
+	{ icoNamStr : 'map',      labStr : 'Map'      }, // What: Map Tab. Why: Members find each other there on the day. How: This names it.
+	{ icoNamStr : 'people',   labStr : 'People'   }, // What: People Tab. Why: The members and joining live there. How: This names it.
+	{ icoNamStr : 'settings', labStr : 'Settings' }  // What: Settings Tab. Why: The group's settings live there. How: This names it.
+
+
+];
+
+// #endregion Constants
+
+
+
 // #region Components
 
-type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[] }; // What: Group Frame Component Props Type. Why: The frame shows one group among every group, and focuses it when it's new. How: This types GroFraCom's props.
+type SscProTyp = { labStr : string }; // What: Section Soon Component Props Type. Why: The placeholder names its section. How: This types SecSooCom's one prop.
+
+// #region SecSooCom
+
+/**
+ * SecSooCom = Section Soon Component
+ *
+ * @summary
+ * Renders a section that isn't built yet: its name as a heading and a short
+ * line saying it's on its way, so each tab leads somewhere while the
+ * sections are built one at a time.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param props.labStr - Label String: The section's name.
+ *
+ * @returns The placeholder.
+ *
+ * @example
+ * ```tsx
+ * SecSooCom({ labStr : 'Map' }) // => <SecSooCom />
+ * ```
+ *
+*/
+
+function SecSooCom ( { labStr } : SscProTyp ) : React.JSX.Element {
+
+
+	return (
+
+
+		<div className={ cssModObj.secSooDiv }>{ /* What: Section Soon Div Element. Why: An unbuilt section still needs a heading and a word about it. How: This stacks them at the top of the content. */ }
+
+
+			<h2>{ labStr }</h2>{ /* What: Section Soon Heading Element. Why: The section is named for a screen reader and for sight. How: This shows its name. */ }
+
+			<p className={ cssModObj.secSooPar }>This part of the group is on its way.</p>{ /* What: Section Soon Paragraph Element. Why: An empty screen would read as broken. How: This says the section is coming. */ }
+
+
+		</div>
+
+
+	);
+
+
+}
+
+// #endregion SecSooCom
+
+
+
+type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[], secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, and focuses it when it's new. How: This types GroFraCom's props.
 
 // #region GroFraCom
 
@@ -57,7 +132,8 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  *
  * @summary
  * Renders the frame around the open group: the rail, the bar with the
- * group's name as the screen's one h1, the main area, and the group sheet,
+ * group's name as the screen's one h1, the section tabs, the main area
+ * showing the open section, and the group sheet,
  * a modal sheet that slides up from the bottom. The sheet closes on its
  * close button, on Escape, on a tap of the dimmed page, or once a group is
  * chosen, sliding back down first. When focBoo is true, the heading takes
@@ -70,17 +146,18 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  * @param props.focBoo    - Focus Boolean: Whether the heading takes focus,
  *                          as it does for a group just created.
  * @param props.groRecArr - Group Record Array: Every group, sorted by name.
+ * @param props.secNamStr - Section Name String: The section to show.
  *
  * @returns The frame.
  *
  * @example
  * ```tsx
- * GroFraCom({ curGroObj, focBoo, groRecArr }) // => <GroFraCom />
+ * GroFraCom({ curGroObj, focBoo, groRecArr, secNamStr }) // => <GroFraCom />
  * ```
  *
 */
 
-function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.Element {
+function GroFraCom ( { curGroObj, focBoo, groRecArr, secNamStr } : GfcProTyp ) : React.JSX.Element {
 
 
 	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group just created takes focus on its heading. How: This holds the heading.
@@ -227,15 +304,68 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 
 
 
-			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open group's content is the screen's main content. How: This holds its chat below the bar, filling the rest of the screen. */ }
+			<nav
+				className={ cssModObj.fraSecNav }
+
+				aria-label='Group sections'
+			>{ /* What: Frame Section Nav Element. Why: Every part of the group sits one tap away. How: This lists a button for each section, along the bottom below 720px wide and down a column beside the rail from 720px. */ }
 
 
-				<GroChaCom
-					key={ curGroObj.ideStr } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages. How: This remounts the chat for each group.
+				{ SEC_TAB_ARR.map( ( secTabObj ) => ( // What: Section Tab Map. Why: Each section gets its own button. How: This renders one per section.
 
-					groIdeStr={ curGroObj.ideStr }
-					groNamStr={ curGroObj.namStr }
-				/>{ /* What: Group Chat Component. Why: The chat is the group's first part. How: This shows the open group's chat. */ }
+
+					<button
+						key={ secTabObj.icoNamStr }
+
+						className={ cssModObj.secTabBut }
+
+						type='button'
+
+						aria-current={ secTabObj.icoNamStr === secNamStr ? 'page' : undefined } // What: Section Current State. Why: The open section should be marked, to sight and to a screen reader. How: This sets aria-current on its button.
+
+						onClick={ () => scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group', secStr : secTabObj.icoNamStr } ) }
+					>{ /* What: Section Tab Button Element. Why: A section opens with a tap, and back returns to the last one. How: This opens the section as a new history entry. */ }
+
+
+						<IcoSvgCom
+							icoNamStr={ secTabObj.icoNamStr }
+							sizSteStr='p01'
+						/>{ /* What: Section Icon SVG Component. Why: An icon makes each tab quick to find. How: This draws the section's icon at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
+
+						{ secTabObj.labStr }
+
+
+					</button>
+
+
+				) ) }
+
+
+			</nav>
+
+
+
+			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open section is the screen's main content. How: This holds it below the bar, filling the rest of the screen. */ }
+
+
+				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: The chat is built, and the other sections are on their way. How: This shows the chat, or the open section's placeholder.
+
+
+					<GroChaCom
+						key={ curGroObj.ideStr } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages. How: This remounts the chat for each group.
+
+						groIdeStr={ curGroObj.ideStr }
+						groNamStr={ curGroObj.namStr }
+					/> // What: Group Chat Component. Why: The chat is the group's first section. How: This shows the open group's chat.
+
+
+				) : (
+
+
+					<SecSooCom labStr={ SEC_TAB_ARR.find( ( secTabObj ) => secTabObj.icoNamStr === secNamStr )!.labStr } /> // What: Section Soon Component. Why: Each tab should lead somewhere while its section is built. How: This shows the open section's placeholder. // What: Non-Null Note. Why: Every section name has a tab. How: The ! reads the found tab as present.
+
+
+				) }
 
 
 			</MaiAreCom>

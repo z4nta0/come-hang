@@ -6,11 +6,11 @@
  *
  * @summary
  * Styles for GroFraCom. Below 720px wide the frame stacks a surface bar with
- * the group's name as a switcher above the content. From 720px up a rail of
- * group tiles runs down the left, the bar's name turns to plain text, and the
- * content sits beside the rail. The group sheet covers the screen in a dimmed
- * layer while it's open, its surface sliding up from the bottom and back down
- * as it closes.
+ * the group's name as a switcher above the content, and the section tabs
+ * along the bottom. From 720px up a rail of group tiles runs down the left,
+ * the bar's name turns to plain text, and the sections become a column of
+ * rows beside the content. The group sheet's list and button are styled here,
+ * while the sheet itself is the shared sheet's.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -20,12 +20,12 @@
 
 /* #region fraRooDiv */
 
-.fraRooDiv { /* What: Frame Root Div. Why: The bar, content, and rail share one layout that is exactly the screen's height, so the chat scrolls inside it while the bar and composer stay put. How: This stacks the bar above the content in named areas, the content's row taking the room left, at the height of the screen as it's shown. */
+.fraRooDiv { /* What: Frame Root Div. Why: The bar, sections, content, and rail share one layout that is exactly the screen's height, so the chat scrolls inside it while the bar, composer, and tabs stay put. How: This stacks the bar, the content, and the section tabs in named areas, the content's row taking the room left, at the height of the screen as it's shown. */
 
 
 	display             : grid;
-	grid-template-areas : 'fraBarHed' 'fraConMai';
-	grid-template-rows  : auto minmax( 0, 1fr );
+	grid-template-areas : 'fraBarHed' 'fraConMai' 'fraSecNav';
+	grid-template-rows  : auto minmax( 0, 1fr ) auto;
 	height              : 100dvh;
 
 
@@ -33,11 +33,12 @@
 @container app ( min-width : 720px ) { /* What: Wide Frame Root Div. Why: A wide screen has room for every group down the side. How: This applies from 720px wide and up. */
 
 
-	.fraRooDiv { /* What: Railed Frame Root Div. Why: The rail runs the full height beside the bar and the content. How: This adds the rail's column on the left, spanning both rows. */
+	.fraRooDiv { /* What: Railed Frame Root Div. Why: The rail runs the full height, and the sections sit in a column of their own under the bar, beside the content. How: This puts the rail's column on the left, spanning both rows, the bar across the rest, and the sections beside the content below it. */
 
 
-		grid-template-areas   : 'fraRaiNav fraBarHed' 'fraRaiNav fraConMai';
-		grid-template-columns : auto 1fr;
+		grid-template-areas   : 'fraRaiNav fraBarHed fraBarHed' 'fraRaiNav fraSecNav fraConMai';
+		grid-template-columns : auto auto minmax( 0, 1fr );
+		grid-template-rows    : auto minmax( 0, 1fr );
 
 
 	}
@@ -351,7 +352,148 @@
 
 
 
-.fraConMai { /* What: Frame Content Main. Why: The group's content fills the rest of the screen below the bar, and its own parts scroll inside it. How: This makes it a one-cell grid in its own area, allowed to shrink below its content. */
+/* #region fraSecNav */
+
+.fraSecNav { /* What: Frame Section Nav. Why: On a phone the sections sit along the bottom, in reach of a thumb. How: This lays the tabs out in five equal columns, in order since they're listed from one table, on the surface color with a border above, in its own area, clearing the phone's home bar. */
+
+
+	background-color      : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border-top            : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display               : grid;
+	grid-area             : fraSecNav;
+	grid-template-columns : repeat( 5, minmax( 0, 1fr ) );
+	padding-bottom        : env( safe-area-inset-bottom );
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Frame Section Nav. Why: A wide screen lists the sections down a column beside the content. How: This applies from 720px wide and up. */
+
+
+	.fraSecNav { /* What: Column Frame Section Nav. Why: The sections read as a list of rows under the bar, set apart from the content. How: This stacks the tabs a tier 5 space apart at the top of the column, a tier 3 space inside and a border on the right, in place of the bottom border. */
+
+
+		align-content         : start;
+		border-right          : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+		border-top            : 0;
+		grid-template-columns : none;
+		padding               : var( --tie-ver-003 ) var( --tie-hor-003 );       /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 3, about 14.572px - 19.304px */
+		row-gap               : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+	}
+
+
+}
+
+.secTabBut { /* What: Section Tab Button. Why: Each tab shows its icon over its name, quiet until it's the open one, and stays a full touch target. How: This stacks the icon over a small label in the muted text color on no background, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	color            : var( --tex-mut-col );                /* Text Muted Color = #5A5D7E */
+	display          : grid;
+	font             : inherit;
+	font-size        : var( --fon-siz-bas );                /* Font Size Base = 11px */
+	justify-items    : center;
+	min-height       : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+	padding          : var( --spa-ver-m04 ) 0;              /* Spacing Vertical Base Minus 4 ~= 4.732px */ /* What: Control Padding Note. Why: A tab's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	place-content    : center;
+	row-gap          : var( --spa-ver-m05 );                /* Spacing Vertical Base Minus 5 ~= 3.572px */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.secTabBut:hover { /* What: Hovered Section Tab Button. Why: A tab in a row of tabs shows it's live by color alone, since a lift would jostle the row. How: This darkens it to the main text color. */
+
+
+	color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.secTabBut[aria-current='page'] { /* What: Current Section Tab Button. Why: The open section should stand out from the rest. How: This sets it bold in the main accent. */
+
+
+	color       : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	font-weight : 700;
+
+
+}
+.secTabBut[aria-current='page']:hover { /* What: Hovered Current Section Tab Button. Why: The open section's tab should still respond to the pointer. How: This darkens its accent a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.secTabBut:active { /* What: Pressed Section Tab Button. Why: A press should register before the section opens. How: This presses the tab in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Section Tab Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.secTabBut { /* What: Motionless Section Tab Button. Why: The hover, current, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Section Tab Button. Why: In a column, a tab reads as a row with its icon beside its name. How: This applies from 720px wide and up. */
+
+
+	.secTabBut { /* What: Row Section Tab Button. Why: A row with its icon beside a full-size name is easy to scan down the column. How: This lines the icon up beside the label at the start, a tier 5 space apart, at the body size and the touch target height, rounded, with the side padding a row needs. */
+
+
+		border-radius   : var( --rad-bor-med );                      /* Radius Border Medium = 11px */
+		column-gap      : var( --tie-hor-005 );                      /* Tier Horizontal 5, about 4.732px - 6.268px */
+		font-size       : var( --fon-siz-p01 );                      /* Font Size Base Plus 1 ~= 14.572px */
+		grid-auto-flow  : column;
+		justify-content : start;
+		min-height      : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+		padding         : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A row's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+		row-gap         : 0;
+
+
+	}
+	.secTabBut:hover { /* What: Hovered Row Section Tab Button. Why: A row shows it's live with a fill as well as its color. How: This fills it with the hover color. */
+
+
+		background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+
+
+	}
+	.secTabBut[aria-current='page'] { /* What: Current Row Section Tab Button. Why: The open section's row should stand out in the column. How: This fills it with the accent tint. */
+
+
+		background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+	}
+	.secTabBut[aria-current='page']:hover { /* What: Hovered Current Row Section Tab Button. Why: The open section's row should still respond to the pointer. How: This deepens its tint a step. */
+
+
+		background-color : oklch( from var( --acc-tin-col ) calc( l - 0.04 ) c h ); /* Accent Tint Color = #E7E8FA, darkened by 0.04 lightness */
+
+
+	}
+
+
+}
+
+/* #endregion fraSecNav */
+
+
+
+/* #region fraConMai */
+
+.fraConMai { /* What: Frame Content Main. Why: The open section fills the rest of the screen below the bar, and its own parts scroll inside it. How: This makes it a one-cell grid in its own area, allowed to shrink below its content. */
 
 
 	display    : grid;
@@ -360,6 +502,33 @@
 
 
 }
+
+
+/* #region secSooDiv */
+
+.secSooDiv { /* What: Section Soon Div. Why: An unbuilt section's heading and note sit at the top of the content, inside the gutter. How: This stacks them a tier 3 space apart at the top, with the tier 2 space above and the gutter at the sides. */
+
+
+	align-content : start;
+	display       : grid;
+	padding       : var( --tie-ver-002 ) var( --gut-sid-pad ); /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap       : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.secSooPar { /* What: Section Soon Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+/* #endregion secSooDiv */
+
+/* #endregion fraConMai */
+
 
 
 /* #region sheGroUno */

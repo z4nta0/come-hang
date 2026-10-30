@@ -206,6 +206,7 @@ function ScrHosCom () : React.JSX.Element {
 			curGroObj={ curGroObj }
 			focBoo={ scrStaObj?.creBoo === true && curGroObj.ideStr === scrStaObj.groStr } // What: Focus Request. Why: Only the group just created takes focus, and only when it's the one shown. How: This is true for the entry its creation opened.
 			groRecArr={ groRecArr }
+			secNamStr={ scrStaObj?.groStr === curGroObj.ideStr ? scrStaObj.secStr ?? 'chat' : 'chat' } // What: Section Name Choice. Why: The entry names the open section, and a group opened without one, or one that's gone, starts at its chat. How: This reads the entry's section when it's for the group shown, else the chat.
 		/> // What: Group Frame Component. Why: Someone in groups sees the open one framed with the rest. How: This shows the current group.
 
 

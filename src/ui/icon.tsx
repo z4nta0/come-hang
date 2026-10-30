@@ -39,11 +39,16 @@
 const ICO_PAT_OBJ = { // What: Icon Path Object. Why: Every icon is drawn the same way from its path alone. How: This maps each icon's name to its path data.
 
 
-	back  : 'M15 5l-7 7 7 7',
-	close : 'M6 6l12 12M18 6L6 18',
-	down  : 'M6 9l6 6 6-6',
-	plus  : 'M12 5v14M5 12h14',
-	send  : 'M4 12l16-8-6 16-2-7z'
+	back     : 'M15 5l-7 7 7 7',
+	chat     : 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',
+	close    : 'M6 6l12 12M18 6L6 18',
+	down     : 'M6 9l6 6 6-6',
+	events   : 'M5 6h14v14H5zM5 10h14M9 3v4M15 3v4',
+	map      : 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+	people   : 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.7',
+	plus     : 'M12 5v14M5 12h14',
+	send     : 'M4 12l16-8-6 16-2-7z',
+	settings : 'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'
 
 
 };

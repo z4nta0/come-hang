@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1593,8 +1593,13 @@ the Blaze change.
   tidies and checks both names, says what's wrong beside a field and focuses
   it, and announces a failed creation; a created group replaces the form's
   entry and takes focus on its heading. The group frame has the rail from
-  720px wide and the bar's switcher, which opens the group sheet, below it;
-  its content is the group's chat. The chat pins the group's next event that
+  720px wide and the bar's switcher, which opens the group sheet, below it.
+  Its section tabs, chat, events, map, people, and settings, run along the
+  bottom below 720px and down a column beside the content from 720px, and
+  each opens its section as a new history entry, which records it, so back
+  walks back through them; a group opens at its chat, as does an entry naming
+  a section this version doesn't know. The chat is built, and the other
+  sections show a placeholder until theirs are. The chat pins the group's next event that
   hasn't ended at its top, opens with the history kept on the device, then
   watches the chat, starting the watch again a second later while the rules
   refuse it, as they do until the membership mirror holds a new member, and

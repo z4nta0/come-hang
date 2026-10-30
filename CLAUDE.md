@@ -181,13 +181,14 @@ emulators need Java, 21 installed.
 - **Main content** (per the skip link rule): each screen holds its content
   in `<main>`, rendered by `MaiAreCom` in `src/ui/main-area.tsx`. On the
   welcome and the form for starting a group that's the whole screen; in the
-  group frame it's the open group's content, past the rail and the bar, and
-  it stays past the tab bar once that joins.
+  group frame it's the open section, past the rail, the bar, and the section
+  tabs.
 - **Breakpoints** (per the breakpoint rule): 720px, where the group frame
-  switches from the phone's bar and sheet to the wide screen's rail, and
-  1100px (decided 2026-10-30), where the next-event panel joins beside the
-  chat, replacing the event pinned above it. Layout queries measure the app
-  container, `appRooDiv` in `src/app.module.css`.
+  switches from the phone's bar, sheet, and bottom tabs to the wide screen's
+  rail and column of sections, and 1100px (decided 2026-10-30), where the
+  next-event panel joins beside the chat, replacing the event pinned above
+  it. Layout queries measure the app container, `appRooDiv` in
+  `src/app.module.css`.
 - **Scroll restoring** (an addition to the scroll position rule, decided
   2026-10-30): a screen renders once the app has checked for groups, a
   moment after load, so a reload's restore waits for the screen host's ready
