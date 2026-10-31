@@ -564,6 +564,7 @@ main:focus { /* What: Focused Main. Why: The skip link moves focus to the main e
 a,
 button,
 input,
+select,
 textarea { /* What: Focus Ring Controls. Why: Keyboard focus should ease in rather than snap. How: This gives every link, button, and field a zero-width outline in the focus ring color, held a little away from it, and eases the ring's width and offset when focus arrives. */
 
 
@@ -577,6 +578,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 input[type='datetime-local']:focus,
+select:focus-visible,
 textarea:focus-visible { /* What: Focused Focus Ring Controls. Why: A keyboard user has to see where focus is. How: This grows the ring to its full width and draws it in close, so it eases in; every element with its own transition lists the two outline properties so the ease survives. A date and time field takes it on any focus, since WebKit focuses the field's inner parts and the field itself never matches :focus-visible. */
 
 
@@ -591,6 +593,7 @@ textarea:focus-visible { /* What: Focused Focus Ring Controls. Why: A keyboard u
 	a,
 	button,
 	input,
+	select,
 	textarea { /* What: Motionless Focus Ring Controls. Why: The ring should simply appear. How: This turns the transition off. */
 
 

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-31 (the Events section and its form, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-31 (the Events section and its form, and editing bring-list items, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1621,8 +1621,10 @@ the Blaze change.
   with who's bringing it in their color, or "Open", offering "I'll bring it"
   on an open item, "Let go" on the member's own, and removal on any, with a
   box to add an open item. The list follows every member's changes as they
-  land, each change is announced, and a failure says why. Relabeling and
-  reassigning items in the screens and the status lines come next.
+  land, each change is announced, and a failure says why. An item's label
+  opens a form in its row for its label and who's bringing it, "Open", the
+  member, or any other member, which Escape or Cancel leaves; once it saves
+  or cancels, focus returns to the label. The status lines come next.
   On iOS the welcome will lead through the install screen first (Section 16),
   built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite

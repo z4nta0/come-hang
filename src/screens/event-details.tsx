@@ -6,7 +6,7 @@
 import cssModObj from './event-details.module.css'; // What: CSS Module Object. Why: The details are styled in their own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Adding to the list is the details' leading action. How: This draws its button.
+import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Adding to the list and saving an item's edit are the details' leading actions. How: This draws their buttons.
 import { eveDatFun } from '../utils/date.ts';       // What: Event Date Function. Why: The details give the event's full date and hours. How: This formats them.
 import { IcoSvgCom } from '../ui/icon.tsx';         // What: Icon SVG Component. Why: Each item's remove button shows a cross. How: This draws it.
 import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Function. Why: A claim shows its member's avatar. How: This takes their initials.
@@ -14,10 +14,12 @@ import { iteAddFun } from '../state/items.ts';      // What: Item Add Function. 
 import { iteAsgFun } from '../state/items.ts';      // What: Item Assign Function. Why: A member lets go of what they claimed. How: This opens the item again.
 import { iteClaFun } from '../state/items.ts';      // What: Item Claim Function. Why: A member takes an open item. How: This claims it.
 import { iteDelFun } from '../state/items.ts';      // What: Item Delete Function. Why: Any member removes an item. How: This deletes it.
+import { iteRenFun } from '../state/items.ts';      // What: Item Rename Function. Why: Any member relabels an item. How: This saves the new label.
 import { iteWatFun } from '../state/items.ts';      // What: Item Watch Function. Why: Claims and new items show at once. How: This watches the list.
 import { sloColFun } from '../ui/member-color.ts';  // What: Slot Color Function. Why: A claim wears its member's color. How: This names the color.
 import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: An added item is announced as it's stored. How: This tidies its label.
-import { useEffect } from 'react';                  // What: Use Effect. Why: The list is watched while the details are shown. How: This starts and stops the watch.
+import { useEffect } from 'react';                  // What: Use Effect. Why: The list is watched while the details are shown, and an item's edit takes and returns focus. How: This starts and stops the watch and moves focus.
+import { useRef    } from 'react';                  // What: Use Reference. Why: Focus moves between an item's label and its edit form. How: This holds the elements.
 import { useState  } from 'react';                  // What: Use State. Why: The list, the box, and the messages change while the details are shown. How: This holds each.
 
 
@@ -37,7 +39,8 @@ import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Typ
  * and in the wide screen's event panel: the date and hours, the place and
  * notes when there are any, then who's bringing what. Each item shows who
  * claimed it in their color, or that it's open, and offers to claim an open
- * item, to let go of the member's own, and to remove it. The list follows
+ * item, to let go of the member's own, and to remove it, and its label opens
+ * a form to relabel or reassign it. The list follows
  * every member's changes as they land. Each change is announced, and one
  * that fails says why.
  *
@@ -55,13 +58,167 @@ import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Typ
 // #region Constants
 
 const FAI_ITE_STR = "That didn't go through. Try again."; // What: Failure Item String. Why: A change that fails for any other reason still has to be told. How: The alert shows this.
-const LAB_LIM_STR = 'Use 1 to 50 characters.';          // What: Label Limits String. Why: A label outside its limits is refused before it's sent. How: The alert shows this.
+const LAB_LIM_STR = 'Use 1 to 50 characters.';            // What: Label Limits String. Why: A label outside its limits is refused before it's sent. How: The alert shows this.
 
 // #endregion Constants
 
 
 
 // #region Components
+
+type IecProTyp = { asgMemObj : MemRecTyp | undefined, ideStr : string, iteRecObj : IteRecTyp, memRecMap : Map< string, MemRecTyp >, onCanFun : () => void, onSavFun : ( labTexStr : string, asgUidStr : string | null ) => void, uidValStr : string }; // What: Item Edit Component Props Type. Why: The form edits one item, offers the group's members, and hands its result back. How: This types IteEdiCom's props.
+
+// #region IteEdiCom
+
+/**
+ * IteEdiCom = Item Edit Component
+ *
+ * @summary
+ * Renders the form that takes an item's row while it's edited: its label in
+ * a box, which takes focus, and who's bringing it, "Open", "You", or any
+ * other member by name, a member who has left kept as "A removed member".
+ * Save hands the typed label and the chosen UID, or null for open, to
+ * onSavFun, and Cancel or Escape calls onCanFun, Escape kept from closing
+ * the sheet around it.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param props.asgMemObj - Assigned Member Object: The item's claimer, or
+ *                          undefined when it's open or they've left.
+ * @param props.ideStr    - Identifier String: A prefix that keeps the
+ *                          form's IDs unique on the page.
+ * @param props.iteRecObj - Item Record Object: The item being edited.
+ * @param props.memRecMap - Member Record Map: The group's members, by UID.
+ * @param props.onCanFun  - On Cancel Function: Called to leave the form.
+ * @param props.onSavFun  - On Save Function: Called with the label and UID.
+ * @param props.uidValStr - UID Value String: This member's UID.
+ *
+ * @returns The form.
+ *
+ * @example
+ * ```tsx
+ * IteEdiCom({ asgMemObj, ideStr, iteRecObj, ... }) // => <IteEdiCom />
+ * ```
+ *
+*/
+
+function IteEdiCom ( { asgMemObj, ideStr, iteRecObj, memRecMap, onCanFun, onSavFun, uidValStr } : IecProTyp ) : React.JSX.Element {
+
+
+	const labInpRef = useRef< HTMLInputElement >( null ); // What: Label Input Reference. Why: The box takes focus as the form opens. How: This holds it.
+
+	const [ asgValStr, setAsgValStr ] = useState( iteRecObj.asgUidStr ?? '' ); // What: Assigned Value String And Setter. Why: The choice shows who's bringing it. How: This holds the chosen UID, empty for open.
+	const [ labTexStr, setLabTexStr ] = useState( iteRecObj.labTexStr );       // What: Label Text String And Setter. Why: The box shows what's typed. How: This holds the label, starting from the item's.
+
+
+	const othMemArr = [ ...memRecMap.values() ].filter( ( memRecObj ) => memRecObj.uidValStr !== uidValStr ).sort( ( memOneObj, memTwoObj ) => memOneObj.namTexStr.localeCompare( memTwoObj.namTexStr ) ); // What: Other Member Array. Why: The choice lists everyone else by name, after "You". How: This leaves this member out and sorts the rest.
+	const remMemBoo = iteRecObj.asgUidStr !== null && iteRecObj.asgUidStr !== uidValStr && !asgMemObj;                                                                                                     // What: Removed Member Boolean. Why: A claim by someone who left keeps its choice. How: This is true when the claimer isn't a member.
+
+
+
+	useEffect( () => labInpRef.current?.focus(), [] ); // What: Box Focus Effect. Why: Choosing to edit puts the member in the box. How: This focuses it once the form shows. // What: Effect Dependency Note. Why: Focus moves once, as the form opens. How: The empty list runs it once.
+
+
+
+	return (
+
+
+		<form
+			className={ cssModObj.iteEdiFor }
+
+			noValidate
+
+			onKeyDown={ ( keyEveObj ) => { if ( keyEveObj.key === 'Escape' ) { keyEveObj.preventDefault(); keyEveObj.stopPropagation(); onCanFun(); } } } // What: Escape Handler. Why: Escape leaves the form without closing the sheet around it. How: This stops the key reaching the sheet and cancels the edit.
+			onSubmit={ ( subEveObj ) => { subEveObj.preventDefault(); onSavFun( labTexStr, asgValStr === '' ? null : asgValStr ); } }                     // What: Submit Handler. Why: Saving hands the edit back. How: This cancels the browser's submit and passes the label and the chosen UID, null for open.
+		>{ /* What: Item Edit Form Element. Why: An item's label and who's bringing it are changed in place. How: This holds the two fields and the two buttons, across the whole row. */ }
+
+
+			<label
+				className={ cssModObj.ediLabLab }
+				htmlFor={ `${ ideStr }Lab` }
+			>Item</label>{ /* What: Edit Label Label Element. Why: The box needs a visible name. How: This labels it. */ }
+
+			<input
+				ref={ labInpRef }
+				id={ `${ ideStr }Lab` }
+
+				className={ cssModObj.ediLabInp }
+
+				autoComplete='off'
+				maxLength={ 50 }
+				type='text'
+				value={ labTexStr }
+
+				onChange={ ( chaEveObj ) => setLabTexStr( chaEveObj.target.value ) }
+			/>{ /* What: Edit Label Input Element. Why: The item's label is changed here. How: This holds it, at most 50 characters. */ }
+
+			<label
+				className={ cssModObj.ediWhoLab }
+				htmlFor={ `${ ideStr }Who` }
+			>Who's bringing it</label>{ /* What: Edit Who Label Element. Why: The choice needs a visible name. How: This labels it. */ }
+
+
+
+			<select
+				id={ `${ ideStr }Who` }
+
+				className={ cssModObj.ediWhoSel }
+
+				value={ asgValStr }
+
+				onChange={ ( chaEveObj ) => setAsgValStr( chaEveObj.target.value ) }
+			>{ /* What: Edit Who Select Element. Why: Any member reassigns an item or opens it. How: This offers "Open", "You", and each other member. */ }
+
+
+				<option value=''>Open</option>{ /* What: Open Option Element. Why: An item can be left for anyone. How: This chooses no one. */ }
+
+				<option value={ uidValStr }>You</option>{ /* What: You Option Element. Why: The member can take the item. How: This chooses them. */ }
+
+				{ remMemBoo && <option value={ iteRecObj.asgUidStr ?? '' }>A removed member</option> }{ /* What: Removed Option Check. Why: A claim by someone who left keeps its choice. How: This offers it while they hold the item. */ }
+
+				{ othMemArr.map( ( memRecObj ) => ( // What: Member Option Map. Why: Anyone in the group can be given the item. How: This offers each other member by name.
+
+
+					<option
+						key={ memRecObj.uidValStr }
+
+						value={ memRecObj.uidValStr }
+					>{ memRecObj.namTexStr }</option> // What: Member Option Element. Why: Each other member can be chosen. How: This names them.
+
+
+				) ) }
+
+
+			</select>
+
+
+
+			<ButBasCom
+				className={ cssModObj.ediSavBut }
+
+				type='submit'
+			>Save</ButBasCom>{ /* What: Edit Save Button Component. Why: The change is saved on purpose. How: This submits the form. */ }
+
+			<button
+				className={ cssModObj.ediCanBut }
+
+				type='button'
+
+				onClick={ onCanFun }
+			>Cancel</button>{ /* What: Edit Cancel Button Element. Why: A member can leave without changing anything. How: This cancels the edit. */ }
+
+
+		</form>
+
+
+	);
+
+
+}
+
+// #endregion IteEdiCom
+
+
 
 type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members and marking the member's own claims, in the sheet or the panel. How: This types EveDetCom's props.
 
@@ -73,7 +230,9 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  * @summary
  * Renders an event's details and its bring-list, watching the list while
  * shown. Claiming, letting go, and removing act on one item, adding takes
- * what's typed, and one change runs at a time. A change that lands is
+ * what's typed, and one change runs at a time. Choosing an item's label turns
+ * its row into a form for its label and who's bringing it, and once the form
+ * saves or cancels, focus returns to the label. A change that lands is
  * announced through a status region, and one that fails through an alert,
  * saying when someone already claimed the item or a label is outside its
  * limits. A list that can't load says so. The variant keeps the box's ID
@@ -103,8 +262,12 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 	const addIdeStr = `briAddInp--${ varStr }`; // What: Add Identifier String. Why: The sheet and the panel both hold a box, and IDs have to be unique. How: This names the box with its variant.
 
+	const focIdeRef = useRef( '' );                                     // What: Focus Identifier Reference. Why: Leaving an item's edit returns focus to its label. How: This holds the item's ID until its label shows again.
+	const labButRef = useRef( new Map< string, HTMLButtonElement >() ); // What: Label Button Reference. Why: Focus returns to an item's label by its ID. How: This holds each label button by item.
+
 	const [ actReqBoo, setActReqBoo ] = useState( false );                      // What: Action Request Boolean And Setter. Why: One change at a time keeps a double tap from acting twice. How: This is true while one is out.
 	const [ addTexStr, setAddTexStr ] = useState( '' );                         // What: Add Text String And Setter. Why: The box shows what's typed. How: This holds it.
+	const [ ediIdeStr, setEdiIdeStr ] = useState( '' );                         // What: Edit Identifier String And Setter. Why: One item's row turns into its edit form. How: This holds that item's ID, empty when none is edited.
 	const [ errMesStr, setErrMesStr ] = useState( '' );                         // What: Error Message String And Setter. Why: A failed change is announced. How: This holds the alert's text, empty when there's none.
 	const [ iteRecArr, setIteRecArr ] = useState< IteRecTyp[] | null >( null ); // What: Item Record Array And Setter. Why: The list shows each item. How: This holds them, null until the first report.
 	const [ lisErrBoo, setLisErrBoo ] = useState( false );                      // What: List Error Boolean And Setter. Why: A list that can't load says so. How: This is true once the watch fails.
@@ -198,6 +361,82 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 
 
+	useEffect( () => { // What: Label Focus Effect. Why: Leaving an item's edit puts focus back on its label, which only exists once the row redraws. How: This focuses the owed label after the edit closes.
+
+
+		if ( ediIdeStr !== '' || focIdeRef.current === '' ) return; // What: Nothing Owed Guard. Why: Focus moves only once an edit has closed and owes it. How: This returns otherwise.
+
+
+
+		labButRef.current.get( focIdeRef.current )?.focus(); // What: Label Focus Call. Why: The member is put back where they started. How: This focuses the item's label.
+
+		focIdeRef.current = ''; // What: Owed Clear. Why: Focus moves once. How: This forgets the item.
+
+
+	}, [ ediIdeStr ] ); // What: Effect Dependency Array. Why: Focus moves when an edit closes. How: ediIdeStr changes as one opens and closes.
+
+
+
+	// #region ediSavFun
+
+	/**
+	 * ediSavFun = Edit Save Function
+	 *
+	 * @summary
+	 * Saves an item's edit as one change: relabels it when the tidied label
+	 * differs, then reassigns it when the chosen member differs, and announces
+	 * the save. Once it lands, the edit closes and focus returns to the
+	 * item's label; a failure keeps the form open with the alert saying why.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param iteRecObj - Item Record Object: The item edited.
+	 * @param labTexStr - Label Text String: The label, as typed.
+	 * @param asgUidStr - Assigned UID String: The chosen member, or null.
+	 *
+	 * @returns A promise that settles once the save is handled, with no
+	 *          value.
+	 *
+	 * @example
+	 * ```ts
+	 * ediSavFun(iteRecObj, 'Pie', null) // => Promise<void>
+	 * ```
+	 *
+	*/
+
+	const ediSavFun = async ( iteRecObj : IteRecTyp, labTexStr : string, asgUidStr : string | null ) : Promise< void > => { // What: Edit Save Function. Why: An item's label and claimer change together from its form. How: This saves what changed and closes the form.
+
+
+		const labNorStr = texNorFun( labTexStr ); // What: Label Normalized String. Why: The label is compared and announced as it'll be saved. How: This tidies it.
+
+
+		const lanValBoo = await actRunFun( async () => { // What: Landed Value Boolean. Why: The form closes only once the save lands. How: This runs the save as one change.
+
+
+			if ( labNorStr !== iteRecObj.labTexStr ) await iteRenFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, labTexStr ); // What: Rename Call. Why: A changed label is saved. How: This relabels the item.
+
+			if ( asgUidStr !== iteRecObj.asgUidStr ) await iteAsgFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, asgUidStr ); // What: Assign Call. Why: A changed claimer is saved. How: This reassigns the item, or opens it.
+
+
+		}, `Saved ${ labNorStr === '' ? 'the item' : labNorStr }.` );
+
+
+
+		if ( !lanValBoo ) return; // What: Failed Guard. Why: A failed save keeps the form to fix. How: This returns.
+
+
+
+		focIdeRef.current = iteRecObj.iteIdeStr; // What: Focus Owed Set. Why: The label takes focus once the row redraws. How: This owes it to the item.
+
+		setEdiIdeStr( '' ); // What: Edit Close Call. Why: The saved row shows again. How: This closes the form.
+
+
+	};
+
+	// #endregion ediSavFun
+
+
+
 	return (
 
 
@@ -252,87 +491,122 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 							>{ /* What: Bring Item Item Element. Why: An item shows what it is, who's bringing it, and what can be done. How: This lays the label over who, beside the actions. */ }
 
 
-								<span className={ cssModObj.iteLabSpa }>{ labShoStr }</span>{ /* What: Item Label Span Element. Why: The label says what to bring. How: This shows it. */ }
+								{ ediIdeStr === iteRecObj.iteIdeStr ? ( // What: Edit Check. Why: The item being edited shows its form in place of its row. How: This shows the form, or else the label, who, and actions.
 
 
-								<span className={ cssModObj.iteWhoSpa }>{ /* What: Item Who Span Element. Why: Who's bringing it is read beside their color. How: This shows the avatar and the name, or "Open". */ }
+									<IteEdiCom
+										asgMemObj={ asgMemObj }
+										ideStr={ `iteEdi${ varStr }${ iteRecObj.iteIdeStr }` }
+										iteRecObj={ iteRecObj }
+										memRecMap={ memRecMap }
+										uidValStr={ uidValStr }
+
+										onCanFun={ () => { focIdeRef.current = iteRecObj.iteIdeStr; setErrMesStr( '' ); setEdiIdeStr( '' ); } } // What: Cancel Handler. Why: Leaving the form puts focus back on the item's label and drops any failure it caused. How: This owes the label focus, clears the alert, and closes the form.
+										onSavFun={ ( labTexStr, asgUidStr ) => void ediSavFun( iteRecObj, labTexStr, asgUidStr ) }
+									/> // What: Item Edit Component. Why: The item's label and claimer are changed in place. How: This shows its form.
 
 
-									{ iteRecObj.asgUidStr !== null && ( // What: Avatar Check. Why: Only a claim has a member to show. How: This shows the claimer's avatar.
+								) : ( // What: Row Branch. Why: An item not being edited shows its label, who's bringing it, and its actions. How: This shows them.
 
 
-										<span
-											className={ cssModObj.iteAvaSpa }
-											style={{ backgroundColor : asgMemObj ? sloColFun( asgMemObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
-
-											aria-hidden='true'
-										>{ iniTexFun( asgMemObj ? asgMemObj.namTexStr : '?' ) }</span> // What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their initials, hidden from screen readers.
-
-
-									) }
-
-									{ whoNamStr }
-
-
-								</span>
-
-
-
-								<span className={ cssModObj.iteActSpa }>{ /* What: Item Actions Span Element. Why: An item's actions sit together at its end. How: This lines them up in a row. */ }
-
-
-									{ iteRecObj.asgUidStr === null && ( // What: Claim Check. Why: Only an open item can be claimed. How: This offers the claim.
+									<> // What: Row Fragment. Why: The label, who, and actions fill the row's areas as its own children. How: This groups them without adding an element.
 
 
 										<button
-											className={ cssModObj.iteClaBut }
+											ref={ ( butCurEle ) => { if ( butCurEle ) labButRef.current.set( iteRecObj.iteIdeStr, butCurEle ); else labButRef.current.delete( iteRecObj.iteIdeStr ); } } // What: Label Reference Callback. Why: Focus returns to this label after its edit. How: This keeps the button by item while it shows.
+
+											className={ cssModObj.iteLabBut }
 
 											type='button'
 
-											onClick={ () => void actRunFun( () => iteClaFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ), `You're bringing ${ labShoStr }.` ) }
-										>I'll bring it<span className={ cssModObj.iteHidSpa }>{ ` (${ labShoStr })` }</span></button> // What: Item Claim Button Element. Why: Taking an item is one tap, and a screen reader hears which item. How: This claims it and announces it.
+											onClick={ () => { setErrMesStr( '' ); setEdiIdeStr( iteRecObj.iteIdeStr ); } } // What: Label Click Handler. Why: Choosing an item's label edits it, with no failure left from before. How: This clears the alert and opens the item's form.
+										>{ labShoStr }<span className={ cssModObj.iteHidSpa }> (change)</span></button>{ /* What: Item Label Button Element. Why: The label says what to bring and opens its edit, and a screen reader hears that it changes the item. How: This shows the label and edits the item. */ }
 
 
-									) }
-
-									{ ownIteBoo && ( // What: Release Check. Why: Only the member's own claim is theirs to let go. How: This offers to let go.
+										<span className={ cssModObj.iteWhoSpa }>{ /* What: Item Who Span Element. Why: Who's bringing it is read beside their color. How: This shows the avatar and the name, or "Open". */ }
 
 
-										<button
-											className={ cssModObj.iteRelBut }
-
-											type='button'
-
-											onClick={ () => void actRunFun( () => iteAsgFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, null ), `${ labShoStr } is open again.` ) }
-										>Let go<span className={ cssModObj.iteHidSpa }>{ ` (${ labShoStr })` }</span></button> // What: Item Release Button Element. Why: Plans change, and an item someone can't bring should open up for others. How: This opens it again and announces it.
+											{ iteRecObj.asgUidStr !== null && ( // What: Avatar Check. Why: Only a claim has a member to show. How: This shows the claimer's avatar.
 
 
-									) }
+												<span
+													className={ cssModObj.iteAvaSpa }
+													style={{ backgroundColor : asgMemObj ? sloColFun( asgMemObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
+
+													aria-hidden='true'
+												>{ iniTexFun( asgMemObj ? asgMemObj.namTexStr : '?' ) }</span> // What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their initials, hidden from screen readers.
+
+
+											) }
+
+											{ whoNamStr }
+
+
+										</span>
 
 
 
-									<button
-										className={ cssModObj.iteDelBut }
-
-										type='button'
-
-										aria-label={ `Remove ${ labShoStr }` }
-										title='Remove'
-
-										onClick={ () => void actRunFun( () => iteDelFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ), `Removed ${ labShoStr }.` ) }
-									>{ /* What: Item Delete Button Element. Why: An item nobody needs comes off the list. How: This removes it and announces it. */ }
+										<span className={ cssModObj.iteActSpa }>{ /* What: Item Actions Span Element. Why: An item's actions sit together at its end. How: This lines them up in a row. */ }
 
 
-										<IcoSvgCom
-											icoNamStr='close'
-											sizSteStr='bas'
-										/>{ /* What: Close Icon SVG Component. Why: A cross says the button removes the item. How: This draws it at the base step. */ }{ /* Vertical Rhythm Base ~= 14.572px */ }
+											{ iteRecObj.asgUidStr === null && ( // What: Claim Check. Why: Only an open item can be claimed. How: This offers the claim.
 
 
-									</button>
+												<button
+													className={ cssModObj.iteClaBut }
+
+													type='button'
+
+													onClick={ () => void actRunFun( () => iteClaFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ), `You're bringing ${ labShoStr }.` ) }
+												>I'll bring it<span className={ cssModObj.iteHidSpa }>{ ` (${ labShoStr })` }</span></button> // What: Item Claim Button Element. Why: Taking an item is one tap, and a screen reader hears which item. How: This claims it and announces it.
 
 
-								</span>
+											) }
+
+											{ ownIteBoo && ( // What: Release Check. Why: Only the member's own claim is theirs to let go. How: This offers to let go.
+
+
+												<button
+													className={ cssModObj.iteRelBut }
+
+													type='button'
+
+													onClick={ () => void actRunFun( () => iteAsgFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, null ), `${ labShoStr } is open again.` ) }
+												>Let go<span className={ cssModObj.iteHidSpa }>{ ` (${ labShoStr })` }</span></button> // What: Item Release Button Element. Why: Plans change, and an item someone can't bring should open up for others. How: This opens it again and announces it.
+
+
+											) }
+
+
+
+											<button
+												className={ cssModObj.iteDelBut }
+
+												type='button'
+
+												aria-label={ `Remove ${ labShoStr }` }
+												title='Remove'
+
+												onClick={ () => void actRunFun( () => iteDelFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ), `Removed ${ labShoStr }.` ) }
+											>{ /* What: Item Delete Button Element. Why: An item nobody needs comes off the list. How: This removes it and announces it. */ }
+
+
+												<IcoSvgCom
+													icoNamStr='close'
+													sizSteStr='bas'
+												/>{ /* What: Close Icon SVG Component. Why: A cross says the button removes the item. How: This draws it at the base step. */ }{ /* Vertical Rhythm Base ~= 14.572px */ }
+
+
+											</button>
+
+
+										</span>
+
+
+									</>
+
+
+								) }
 
 
 							</li>

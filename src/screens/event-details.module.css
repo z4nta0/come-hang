@@ -7,7 +7,8 @@
  * @summary
  * Styles for EveDetCom: the event's facts stacked above its bring-list, each
  * item a row with its label over who's bringing it, in their color, beside
- * its actions, then the box for adding an item. The status that announces a
+ * its actions, or its edit form across the row while it's edited, then the
+ * box for adding an item. The status that announces a
  * change is for screen readers alone, while a failure shows in the dark
  * error color.
  *
@@ -95,7 +96,7 @@
 	border-bottom         : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
 	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
 	display               : grid;
-	grid-template-areas   : 'iteLabSpa iteActSpa' 'iteWhoSpa iteActSpa';
+	grid-template-areas   : 'iteLabBut iteActSpa' 'iteWhoSpa iteActSpa';
 	grid-template-columns : minmax( 0, 1fr ) auto;
 	padding               : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
 	row-gap               : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
@@ -103,15 +104,231 @@
 
 }
 
-.iteLabSpa { /* What: Item Label Span. Why: What to bring is the row's main line, and a long word shouldn't push the actions off the row. How: This sets it bold in its own area, breaking a long word where it has to. */
+/* #region iteEdiFor */
+
+.iteEdiFor { /* What: Item Edit Form. Why: An item's edit takes its whole row while it's open, its fields stacked over its two buttons. How: This spans both of the row's columns and rows by line numbers, since it stands in for the row's three areas, and lays its labels, fields, and buttons out in named areas a tier 5 space apart down and a tier 4 space across. */
 
 
-	font-weight   : 700;
-	grid-area     : iteLabSpa;
-	overflow-wrap : anywhere;
+	align-items           : center;
+	display               : grid;
+	gap                   : var( --tie-ver-005 ) var( --tie-hor-004 ); /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 4, about 8.304px - 11px */
+	grid-column           : 1 / -1;
+	grid-row              : 1 / -1;
+	grid-template-areas   : 'ediLabLab ediLabLab ediLabLab' 'ediLabInp ediLabInp ediLabInp' 'ediWhoLab ediWhoLab ediWhoLab' 'ediWhoSel ediWhoSel ediWhoSel' 'ediSavBut ediCanBut .';
+	grid-template-columns : auto auto minmax( 0, 1fr );
 
 
 }
+
+.ediLabLab { /* What: Edit Label Label. Why: The label names the box below it. How: This sets it bold in its own area. */
+
+
+	font-weight : 700;
+	grid-area   : ediLabLab;
+
+
+}
+
+.ediLabInp { /* What: Edit Label Input. Why: A box should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	grid-area        : ediLabInp;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.ediLabInp:hover { /* What: Hovered Edit Label Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Edit Label Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.ediLabInp { /* What: Motionless Edit Label Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.ediWhoLab { /* What: Edit Who Label. Why: The label names the choice below it. How: This sets it bold in its own area. */
+
+
+	font-weight : 700;
+	grid-area   : ediWhoLab;
+
+
+}
+
+.ediWhoSel { /* What: Edit Who Select. Why: A choice should be easy to hit and its boundary easy to see. How: This draws a rounded choice on the surface color with a strong border, at least a touch target tall, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	grid-area        : ediWhoSel;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.ediWhoSel:hover { /* What: Hovered Edit Who Select. Why: A choice should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Edit Who Select. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.ediWhoSel { /* What: Motionless Edit Who Select. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.ediSavBut { /* What: Edit Save Button. Why: Saving sits first below the fields. How: This places it in its own area. */
+
+
+	grid-area : ediSavBut;
+
+
+}
+
+.ediCanBut { /* What: Edit Cancel Button. Why: Cancelling is quieter than saving, so it reads as text, still a full touch target. How: This sets bold accent text on no background, at least a touch target tall, in its own area, and eases its hover color, press dim, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	color            : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	grid-area        : ediCanBut;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : 0 var( --spa-ver-m02 );              /* Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition       : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.ediCanBut:hover { /* What: Hovered Edit Cancel Button. Why: A text button shows it's live by color alone. How: This darkens its text a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.ediCanBut:active { /* What: Pressed Edit Cancel Button. Why: A button styled as text presses like a text link. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Edit Cancel Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.ediCanBut { /* What: Motionless Edit Cancel Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion iteEdiFor */
+
+
+
+/* #region iteLabBut */
+
+.iteLabBut { /* What: Item Label Button. Why: What to bring is the row's main line and opens its edit, so it reads as text rather than a button, a long word never pushing the actions off the row. How: This sets the label bold at the start in the main text color on no background, at least a small target tall, in its own area, breaking a long word where it has to, and eases its hover color, press dim, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	color            : var( --tex-mai-col );                /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	font-weight      : 700;
+	grid-area        : iteLabBut;
+	justify-self     : start;
+	min-height       : calc( var( --ver-rhy-p02 ) * 1rem ); /* Vertical Rhythm Base Plus 2 ~= 25.572px */
+	overflow-wrap    : anywhere;
+	padding          : 0;
+	text-align       : start;
+	transition       : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.iteLabBut:hover { /* What: Hovered Item Label Button. Why: A label that opens its edit shows it's live by color alone. How: This sets it in the main accent. */
+
+
+	color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+
+
+}
+.iteLabBut:active { /* What: Pressed Item Label Button. Why: A button styled as text presses like a text link. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Item Label Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.iteLabBut { /* What: Motionless Item Label Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.iteHidSpa { /* What: Item Hidden Span. Why: A screen reader hears what a button does to which item, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion iteLabBut */
 
 
 
@@ -213,18 +430,7 @@
 
 }
 
-.iteHidSpa { /* What: Item Hidden Span. Why: A screen reader hears which item a button acts on, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
-
-
-	clip-path   : inset( 50% );
-	height      : 1px;
-	overflow    : hidden;
-	position    : absolute;
-	white-space : nowrap;
-	width       : 1px;
-
-
-}
+/* What: Item Hidden Span Pointer. Why: The claim button names its item to a screen reader too. How: Its rule sits in the iteLabBut region. */
 
 /* #endregion iteClaBut */
 
@@ -275,7 +481,7 @@
 
 }
 
-/* What: Item Hidden Span Pointer. Why: The release button names its item to a screen reader too. How: Its rule sits in the iteClaBut region. */
+/* What: Item Hidden Span Pointer. Why: The release button names its item to a screen reader too. How: Its rule sits in the iteLabBut region. */
 
 /* #endregion iteRelBut */
 

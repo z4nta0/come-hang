@@ -42,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -62,9 +62,9 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  * @summary
  * Every state the checks visit: each screen at a phone width and a desktop
  * width, some in dark mode too, the chat at a tablet width, the group and
- * event sheets and the event form open on a phone, and the waiting screen with
- * its loader showing. Every row shares the {@link StaRecTyp} shape, so its
- * fields carry no comments of their own:
+ * event sheets, an item's form, and the event form open on a phone, and the
+ * waiting screen with its loader showing. Every row shares the {@link
+ * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
  *
@@ -105,7 +105,8 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'event-phone',          patStr : '/', widNum : 390,  steStr : 'event'                      }, // What: Event Phone State. Why: The pinned event's sheet is a modal layer of its own. How: This opens it at 390px.
 	{ heiNum : 900, ideStr : 'events-desktop',       patStr : '/', widNum : 1440, steStr : 'events'                     }, // What: Events Desktop State. Why: The Events section is checked at a desktop width. How: This opens it in a new group with a planned event at 1,440px.
 	{ heiNum : 844, ideStr : 'events-phone',         patStr : '/', widNum : 390,  steStr : 'events'                     }, // What: Events Phone State. Why: The Events section is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 844, ideStr : 'form-phone',           patStr : '/', widNum : 390,  steStr : 'form'                       }  // What: Form Phone State. Why: The event form is a modal layer of its own. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'form-phone',           patStr : '/', widNum : 390,  steStr : 'form'                       }, // What: Form Phone State. Why: The event form is a modal layer of its own. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'edit-phone',           patStr : '/', widNum : 390,  steStr : 'edit'                       }  // What: Edit Phone State. Why: An item's edit form is checked in its sheet. How: This opens the open item's form at 390px.
 
 
 ];
@@ -324,12 +325,13 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  * held ({@link datHolFun}), the create state opens the form for starting a
  * group and reloads it, so it shows with nothing focused, the group state
  * creates a group named Beach Day, for the chat state fills its chat ({@link
- * chaSteFun}), as do the event, events, and form states, and then opens the
- * app afresh, so the group shows as it does on a later visit, with nothing
- * focused. The event state then opens the pinned event's sheet, the events
- * state the Events section, the form state the section's form, and the sheet
- * state the group sheet from its switcher. A group needs the Firebase
- * Emulators, which the suites that reach one run inside.
+ * chaSteFun}), as do the edit, event, events, and form states, and then opens
+ * the app afresh, so the group shows as it does on a later visit, with nothing
+ * focused. The event state then opens the pinned event's sheet, the edit state
+ * an item's form in it, the events state the Events section, the form state
+ * the section's form, and the sheet state the group sheet from its switcher. A
+ * group needs the Firebase Emulators, which the suites that reach one run
+ * inside.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -345,7 +347,7 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'sheet' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'sheet' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -390,19 +392,22 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'event
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Group Wait. Why: The group has to exist before the app is opened again. How: This waits for its heading.
 
-	if ( steStr !== 'group' && steStr !== 'sheet' ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
+	if ( steStr !== 'group' && steStr !== 'sheet' ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, edit, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
 
 	await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: A later visit shows the group without the focus its creation gave it. How: This opens the app again.
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Reopened Group Wait. Why: The group shows once its list has loaded. How: This waits for its heading.
 
 
-	if ( steStr === 'event' ) { // What: Event Block. Why: The event state opens the pinned event's sheet. How: This presses the card, waits for the sheet's list, and stops.
+	if ( steStr === 'edit' || steStr === 'event' ) { // What: Event Block. Why: The event state opens the pinned event's sheet, and the edit state an item's form in it. How: This presses the card, waits for the sheet's list, opens the open item's form for the edit state, and stops.
 
 
 		await curPagObj.getByRole( 'button', { name : /Friendsgiving/ } ).click(); // What: Card Click Call. Why: The sheet opens from the pinned event. How: This presses the card.
 
-		await curPagObj.getByRole( 'dialog', { name : 'Friendsgiving' } ).getByText( 'Pumpkin pie', { exact : true } ).waitFor(); // What: Event Sheet Wait. Why: The sheet has to be open with its list loaded before it's checked. How: This waits for an item in the dialog.
+		await curPagObj.getByRole( 'dialog', { name : 'Friendsgiving' } ).getByRole( 'button', { name : 'Pumpkin pie (change)' } ).waitFor(); // What: Event Sheet Wait. Why: The sheet has to be open with its list loaded before it's checked. How: This waits for an item in the dialog.
+
+
+		if ( steStr === 'edit' ) await curPagObj.getByRole( 'button', { name : 'Rolls (change)' } ).click(); // What: Label Click Call. Why: The edit state shows an item's form. How: This opens the open item's form.
 
 
 
