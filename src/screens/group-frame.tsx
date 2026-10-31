@@ -8,6 +8,7 @@ import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Wh
 
 import { ButBasCom    } from '../ui/button.tsx';    // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
 import { GroChaCom    } from './group-chat.tsx';    // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
+import { GroEveCom    } from './group-events.tsx';  // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
 import { IcoSvgCom    } from '../ui/icon.tsx';      // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
 import { iniTexFun    } from '../utils/text.ts';    // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
 import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
@@ -348,7 +349,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, secNamStr } : GfcProTyp ) :
 			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open section is the screen's main content. How: This holds it below the bar, filling the rest of the screen. */ }
 
 
-				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: The chat is built, and the other sections are on their way. How: This shows the chat, or the open section's placeholder.
+				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: The chat and events are built, and the other sections are on their way. How: This shows the chat, the Events section, or the open section's placeholder.
 
 
 					<GroChaCom
@@ -359,7 +360,18 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, secNamStr } : GfcProTyp ) :
 					/> // What: Group Chat Component. Why: The chat is the group's first section. How: This shows the open group's chat.
 
 
-				) : (
+				) : secNamStr === 'events' ? ( // What: Events Section Check. Why: The Events section is built. How: This shows it.
+
+
+					<GroEveCom
+						key={ curGroObj.ideStr } // What: Events Key. Why: Another group's events have to start afresh. How: This remounts the section for each group.
+
+						groIdeStr={ curGroObj.ideStr }
+						ownBoo={ curGroObj.ownBoo }
+					/> // What: Group Events Component. Why: The group plans its events here. How: This shows the open group's Events section.
+
+
+				) : ( // What: Placeholder Branch. Why: A section still to build should lead somewhere. How: This shows its placeholder.
 
 
 					<SecSooCom labStr={ SEC_TAB_ARR.find( ( secTabObj ) => secTabObj.icoNamStr === secNamStr )!.labStr } /> // What: Section Soon Component. Why: Each tab should lead somewhere while its section is built. How: This shows the open section's placeholder. // What: Non-Null Note. Why: Every section name has a tab. How: The ! reads the found tab as present.

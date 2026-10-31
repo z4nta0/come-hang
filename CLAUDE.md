@@ -49,7 +49,9 @@ linking and recovery with the group keys shared again, and buying the upgrade.
 The first screens are built: the welcome, the form for starting a group, the
 group frame with its rail, its switcher and sheet, and the group chat with
 its next event, pinned as a card that opens a sheet below 1,100px and shown in
-a panel beside the chat from 1,100px, each with the live bring-list.
+a panel beside the chat from 1,100px, each with the live bring-list, the
+section tabs, and the Events section with its form for planning, changing,
+and cancelling events.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 

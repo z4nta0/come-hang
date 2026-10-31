@@ -7,7 +7,8 @@
  * @summary
  * Turns times in milliseconds into the short labels a screen shows, in the
  * visitor's own language and clock: a message's time, which grows a weekday
- * or a date as it gets older, and an event's date block and time range.
+ * or a date as it gets older, and an event's date block and time range. It
+ * also turns a time into a date and time field's value and back.
  *
  * Sections:
  *  - Helpers
@@ -78,6 +79,48 @@ const mesTimFun = ( sntTimNum : number, nowTimNum : number ) : string => { // Wh
 
 
 
+// #region datInpFun
+
+/**
+ * datInpFun = Date Input Function
+ *
+ * @summary
+ * Formats a time as a local date and time field's value, the form
+ * YYYY-MM-DDTHH:MM in the visitor's own time zone, so a field shows the time
+ * it holds.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param timValNum - Time Value Number: The time, in milliseconds.
+ *
+ * @returns The field's value.
+ *
+ * @example
+ * ```ts
+ * datInpFun(staTimNum) // => '2026-11-08T18:00'
+ * ```
+ *
+*/
+
+const datInpFun = ( timValNum : number ) : string => { // What: Date Input Function. Why: A field changing an event shows the event's times. How: This writes the local date and time in the field's form.
+
+
+	const timDatObj = new Date( timValNum ); // What: Time Date Object. Why: The parts are read in local time. How: This wraps the time.
+
+
+	const padTwoFun = ( parValNum : number ) : string => String( parValNum ).padStart( 2, '0' ); // What: Pad Two Function. Why: The field's form writes each part in two digits. How: This pads a part with a leading zero.
+
+
+
+	return `${ timDatObj.getFullYear() }-${ padTwoFun( timDatObj.getMonth() + 1 ) }-${ padTwoFun( timDatObj.getDate() ) }T${ padTwoFun( timDatObj.getHours() ) }:${ padTwoFun( timDatObj.getMinutes() ) }`; // What: Value Return. Why: The field reads this form. How: This joins the year, month, day, hours, and minutes.
+
+
+};
+
+// #endregion datInpFun
+
+
+
 // #region eveBloFun
 
 /**
@@ -124,6 +167,7 @@ const eveBloFun = ( staTimNum : number, nowTimNum : number ) : { botStr : string
 
 const eveDatFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { day : 'numeric', hour : 'numeric', minute : '2-digit', month : 'long', weekday : 'long' } ).formatRange( staTimNum, endTimNum ); // What: Event Date Function. Why: An event's details give its full date and hours. How: This formats the start and end as one range, with the weekday and month spelled out, repeating the date only when it changes.
 const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { hour : 'numeric', minute : '2-digit', weekday : 'short' } ).formatRange( staTimNum, endTimNum );                                 // What: Event Range Function. Why: An event's line says the day and the hours it runs. How: This formats the start and end as one range, which repeats the day only when it changes.
+const inpDatFun = ( inpValStr : string ) : number => inpValStr === '' ? Number.NaN : new Date( inpValStr ).getTime();                                                                                                                           // What: Input Date Function. Why: A date and time field's value becomes a time to check and save. How: This reads it as local time, or not a number when it's empty.
 
 // #endregion Helpers
 
@@ -131,7 +175,7 @@ const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Int
 
 // #region Exports
 
-export { eveBloFun, eveDatFun, eveRanFun, mesTimFun }; // What: Named Exports. Why: The chat and the event details label messages and events with these. How: This exports the helpers.
+export { datInpFun, eveBloFun, eveDatFun, eveRanFun, inpDatFun, mesTimFun }; // What: Named Exports. Why: The chat and the event details label messages and events with these. How: This exports the helpers.
 
 // #endregion Exports
 

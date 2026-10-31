@@ -1,0 +1,393 @@
+
+
+
+/**
+ * group-events.module.css = Group Events Module
+ *
+ * @summary
+ * Styles for GroEveCom: the section's heading beside its plan button, then
+ * its events as a list of cards, each a date block on a tint beside its title
+ * and line, lifting on hover. Inside an event's sheet, the creator's controls
+ * sit in a row above the details, with the cancel's confirmation and its
+ * failure in their place. The status that announces a change is for screen
+ * readers alone.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region groEveDiv */
+
+.groEveDiv { /* What: Group Events Div. Why: The bar and the list read top to bottom inside the gutter, and scroll when they outgrow the content. How: This stacks them a tier 2 space apart at the top in one column of capped width, with the tier 2 space above and below and the gutter at the sides, scrolling on its own. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-columns : minmax( 0, calc( var( --ver-rhy-p14 ) * 1rem ) ); /* Vertical Rhythm Base Plus 14 ~= 746.867px */ /* What: Column Cap. Why: Cards stretched across a wide screen read poorly. How: The one column grows up to about 747px. */
+	min-height            : 0;
+	overflow-y            : auto;
+	padding               : var( --tie-ver-002 ) var( --gut-sid-pad );        /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-002 );                             /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+
+/* #region eveBarDiv */
+
+.eveBarDiv { /* What: Events Bar Div. Why: The heading sits beside its leading action. How: This lays them out in one row of named areas, the heading taking the room, centered on each other, a tier 3 space apart. */
+
+
+	align-items           : center;
+	column-gap            : var( --tie-hor-003 );  /* Tier Horizontal 3, about 14.572px - 19.304px */
+	display               : grid;
+	grid-template-areas   : 'eveTitHea eveNewBut';
+	grid-template-columns : minmax( 0, 1fr ) auto;
+
+
+}
+
+.eveTitHea { /* What: Events Title Heading. Why: The heading names the section. How: This sets it at Base Plus 3 in its own area. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	grid-area : eveTitHea;
+
+
+}
+.eveTitHea:focus { /* What: Focused Events Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.eveNewBut { /* What: Events New Button. Why: The button sits at the bar's end. How: This places it in its own area. */
+
+
+	grid-area : eveNewBut;
+
+
+}
+
+/* #endregion eveBarDiv */
+
+
+.eveNotPar { /* What: Events Note Paragraph. Why: A loading, failed, or empty list is a quiet note. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+/* #region eveLisUno */
+
+.eveLisUno { /* What: Events List Unordered List. Why: The cards read as one list. How: This stacks them a tier 3 space apart with no bullets. */
+
+
+	display    : grid;
+	list-style : none;
+	row-gap    : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+/* #region eveCarBut */
+
+.eveCarBut { /* What: Event Card Button. Why: Each event is a card that opens its details. How: This lays the date block beside the title and line in named areas on a bordered surface card, its text at the start in the main color, filling its row, and eases its hover background and lift, press scale, and focus ring. */
+
+
+	align-items           : center;
+	background-color      : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border                : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	border-radius         : var( --rad-bor-lar );                            /* Radius Border Large ~= 14.572px */
+	color                 : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	font                  : inherit;
+	grid-template-areas   : 'carDatSpa carTitSpa' 'carDatSpa carLinSpa';
+	grid-template-columns : auto 1fr;
+	padding               : var( --tie-ver-004 ) var( --tie-hor-004 );       /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	row-gap               : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+	text-align            : start;
+	transition            : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width                 : 100%;
+
+
+}
+.eveCarBut:hover { /* What: Hovered Event Card Button. Why: A card that repeats as an item in a list lifts to show it's live. How: This fills it with the hover color and raises it 2px. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+	transform        : translateY( -2px );   /* What: Hover Lift. Why: A small lift shows the card invites a tap. How: This raises it 2px, a literal since no spacing step lands within 10%. */
+
+
+}
+.eveCarBut:active { /* What: Pressed Event Card Button. Why: A press should register before the sheet opens. How: This presses the card in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Event Card Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.eveCarBut { /* What: Motionless Event Card Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+
+/* #region carDatSpa */
+
+.carDatSpa { /* What: Card Date Span. Why: The date reads first, set apart on a tint. How: This stacks its two lines centered in a rounded square of the accent tint, in its own area. */
+
+
+	align-content    : center;
+	background-color : var( --acc-tin-col );                /* Accent Tint Color = #E7E8FA */
+	border-radius    : var( --rad-bor-med );                /* Radius Border Medium = 11px */
+	color            : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	display          : grid;
+	grid-area        : carDatSpa;
+	justify-items    : center;
+	min-height       : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+	min-width        : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+	padding          : var( --spa-ver-m04 );                /* Spacing Vertical Base Minus 4 ~= 4.732px */
+	pointer-events   : none;                                /* What: Pass Through Note. Why: WebKit drops the card's pressed look when the text under the pointer moves as the card scales. How: The card itself takes the pointer instead. */
+
+
+}
+
+.datTopSpa { /* What: Date Top Span. Why: The month, or "Today", labels the block. How: This sets it small, extra bold, and uppercase. */
+
+
+	font-size      : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	font-weight    : 800;
+	text-transform : uppercase;
+
+
+}
+
+.datBotSpa { /* What: Date Bottom Span. Why: The day, or today's hour, is the block's main figure. How: This sets it large and bold in the brand font, as tall as its text. */
+
+
+	font-family : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size   : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	font-weight : 700;
+	line-height : var( --ver-rhy-m01 ); /* Vertical Rhythm Base Minus 1 = 1 */
+
+
+}
+
+/* #endregion carDatSpa */
+
+
+.carTitSpa { /* What: Card Title Span. Why: The event's title leads the card like a heading. How: This sets it at Base Plus 2, bold in the brand font and as tall as its text, resting on its row's bottom edge, in its own area. */
+
+
+	align-self     : end;
+	font-family    : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size      : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	font-weight    : 700;
+	grid-area      : carTitSpa;
+	line-height    : var( --ver-rhy-m01 ); /* Vertical Rhythm Base Minus 1 = 1 */
+	pointer-events : none;                 /* What: Pass Through Note. Why: WebKit drops the card's pressed look when the text under the pointer moves as the card scales. How: The card itself takes the pointer instead. */
+
+
+}
+
+
+/* #region carLinSpa */
+
+.carLinSpa { /* What: Card Line Span. Why: The hours and place are secondary to the title. How: This sets them small in the muted text color, hanging from its row's top edge, in its own area. */
+
+
+	align-self     : start;
+	color          : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size      : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area      : carLinSpa;
+	pointer-events : none;                 /* What: Pass Through Note. Why: WebKit drops the card's pressed look when the text under the pointer moves as the card scales. How: The card itself takes the pointer instead. */
+
+
+}
+
+.carHidSpa { /* What: Card Hidden Span. Why: A screen reader hears a comma between the hours and the place, while sight has the dot. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion carLinSpa */
+
+/* #endregion eveCarBut */
+
+
+/* #endregion eveLisUno */
+
+
+.eveStaPar { /* What: Events Status Paragraph. Why: The list itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+
+
+/* #region eveActDiv */
+
+.eveActDiv { /* What: Event Actions Div. Why: The creator's controls, or the cancel's question and answers, sit together in a row above the details, wrapping when the sheet is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.conAskPar { /* What: Confirm Ask Paragraph. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row. */
+
+
+	flex-basis  : 100%;
+	font-weight : 700;
+
+
+}
+
+.actDanBut { /* What: Action Danger Button. Why: Confirming a cancel is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actDanBut:hover { /* What: Hovered Action Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
+
+
+	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
+
+
+}
+.actDanBut:active { /* What: Pressed Action Danger Button. Why: A press should register before the event is cancelled. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actDanBut { /* What: Motionless Action Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Changing, cancelling, and keeping are lighter actions than the sheet's content, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion eveActDiv */
+
+
+.canErrPar { /* What: Cancel Error Paragraph. Why: A failed cancel should be clear in the sheet. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.canErrPar:empty { /* What: Empty Cancel Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap to the sheet. How: This pulls it up by the sheet's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+/* #endregion groEveDiv */
+
+

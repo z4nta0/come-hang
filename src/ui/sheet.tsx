@@ -44,7 +44,7 @@ type SheHanTyp = { cloFun : () => void, opeFun : () => void }; // What: Sheet Ha
 
 // #region Components
 
-type SdcProTyp = { children : React.ReactNode, ideStr : string, ref : React.Ref< SheHanTyp >, titStr : string }; // What: Sheet Dialog Component Props Type. Why: A sheet holds its screen's content under a title, and hands its screen a handle. How: This types SheDiaCom's props.
+type SdcProTyp = { children : React.ReactNode, ideStr : string, onCloFun? : () => void, ref : React.Ref< SheHanTyp >, titStr : string }; // What: Sheet Dialog Component Props Type. Why: A sheet holds its screen's content under a title, hands its screen a handle, and may tell it when it has closed. How: This types SheDiaCom's props.
 
 // #region SheDiaCom
 
@@ -59,13 +59,16 @@ type SdcProTyp = { children : React.ReactNode, ideStr : string, ref : React.Ref<
  * making the page behind it inert, and its cloFun slides it down, as do the
  * close button, Escape, and a tap of the dimmed page. Once the panel's
  * closing slide ends the dialog closes, returning focus to whatever opened
- * it. The closing slide still ends under reduced motion.
+ * it, and onCloFun runs, so a screen whose opener has gone can place focus
+ * itself. The closing slide still ends under reduced motion.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param props.children - Children: What the sheet holds below its bar.
  * @param props.ideStr   - Identifier String: The title's ID, unique on the
  *                         page, which names the dialog.
+ * @param props.onCloFun - On Close Function: Runs once the sheet has closed,
+ *                         by default nothing.
  * @param props.ref      - Reference: Receives the sheet's handle.
  * @param props.titStr   - Title String: The sheet's title.
  *
@@ -73,12 +76,12 @@ type SdcProTyp = { children : React.ReactNode, ideStr : string, ref : React.Ref<
  *
  * @example
  * ```tsx
- * SheDiaCom({ children, ideStr, ref, titStr }) // => <SheDiaCom />
+ * SheDiaCom({ children, ideStr, onCloFun, ref, titStr }) // => <SheDiaCom />
  * ```
  *
 */
 
-function SheDiaCom ( { children, ideStr, ref, titStr } : SdcProTyp ) : React.JSX.Element {
+function SheDiaCom ( { children, ideStr, onCloFun = () => {}, ref, titStr } : SdcProTyp ) : React.JSX.Element {
 
 
 	const diaEleRef = useRef< HTMLDialogElement >( null ); // What: Dialog Element Reference. Why: The sheet opens and closes as a modal dialog. How: This holds its element.
@@ -135,6 +138,8 @@ function SheDiaCom ( { children, ideStr, ref, titStr } : SdcProTyp ) : React.JSX
 					diaEleRef.current?.close(); // What: Dialog Close Call. Why: The slide has finished. How: This closes the dialog, which returns focus to whatever opened it.
 
 					setCloSheBoo( false ); // What: Closing Clear Call. Why: The next opening should slide up again. How: This marks the sheet as no longer closing.
+
+					onCloFun(); // What: Closed Report Call. Why: A screen may need to place focus once the sheet has gone. How: This tells it the sheet has closed.
 
 
 				} }

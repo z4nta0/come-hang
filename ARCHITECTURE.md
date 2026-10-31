@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-31 (the Events section and its form, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1598,8 +1598,15 @@ the Blaze change.
   bottom below 720px and down a column beside the content from 720px, and
   each opens its section as a new history entry, which records it, so back
   walks back through them; a group opens at its chat, as does an entry naming
-  a section this version doesn't know. The chat is built, and the other
-  sections show a placeholder until theirs are. The chat pins the group's next event that
+  a section this version doesn't know. The chat and Events sections are
+  built, and the others show a placeholder until theirs are. The Events
+  section lists the events that haven't ended, soonest first, as cards that
+  open each event's details and bring-list in a sheet; there its creator or
+  the group's owner changes it in a form sheet over it, or cancels it after
+  confirming, focus then landing on the section's heading. Plan an event
+  opens the same form empty: a title, when it starts and ends, a place, and
+  notes, each field saying what's wrong with it beside it and the first one
+  with a problem taking focus. Each plan, change, and cancel is announced. The chat pins the group's next event that
   hasn't ended at its top, opens with the history kept on the device, then
   watches the chat, starting the watch again a second later while the rules
   refuse it, as they do until the membership mirror holds a new member, and
@@ -1615,8 +1622,7 @@ the Blaze change.
   on an open item, "Let go" on the member's own, and removal on any, with a
   box to add an open item. The list follows every member's changes as they
   land, each change is announced, and a failure says why. Relabeling and
-  reassigning in the screens, planning events, and the status lines come
-  next.
+  reassigning items in the screens and the status lines come next.
   On iOS the welcome will lead through the install screen first (Section 16),
   built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
