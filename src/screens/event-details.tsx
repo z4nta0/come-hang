@@ -509,7 +509,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 								) : ( // What: Row Branch. Why: An item not being edited shows its label, who's bringing it, and its actions. How: This shows them.
 
 
-									<> // What: Row Fragment. Why: The label, who, and actions fill the row's areas as its own children. How: This groups them without adding an element.
+									<>{ /* What: Row Fragment. Why: The label, who, and actions fill the row's areas as its own children. How: This groups them without adding an element. */ }
 
 
 										<button

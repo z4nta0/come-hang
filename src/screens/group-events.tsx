@@ -358,7 +358,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 				{ selEveObj && ( // What: Open Event Check. Why: The sheet shows an event only once a card picked one. How: This shows its controls and details.
 
 
-					<> // What: Open Event Fragment. Why: The controls, the alert, and the details show together for the open event. How: This groups them without adding an element.
+					<>{ /* What: Open Event Fragment. Why: The controls, the alert, and the details show together for the open event. How: This groups them without adding an element. */ }
 
 
 						{ ediAllBoo && ( // What: Edit Controls Check. Why: Only the event's creator or the group's owner changes or cancels it. How: This shows their controls.
@@ -370,7 +370,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 								{ canConBoo ? ( // What: Confirm Check. Why: Cancelling removes the event and its list for everyone, so it asks first. How: This shows the confirmation, or else the two controls.
 
 
-									<> // What: Confirmation Fragment. Why: The question and its two answers replace the controls together. How: This groups them without adding an element.
+									<>{ /* What: Confirmation Fragment. Why: The question and its two answers replace the controls together. How: This groups them without adding an element. */ }
 
 
 										<p className={ cssModObj.conAskPar }>{ `Cancel ${ selEveObj.titTexStr } for everyone?` }</p>{ /* What: Confirm Ask Paragraph Element. Why: The member should know what cancelling does. How: This asks, naming the event. */ }
@@ -398,7 +398,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 								) : ( // What: Controls Branch. Why: Without a confirmation showing, the creator or owner sees both controls. How: This shows them.
 
 
-									<> // What: Controls Fragment. Why: Changing and cancelling sit side by side. How: This groups them without adding an element.
+									<>{ /* What: Controls Fragment. Why: Changing and cancelling sit side by side. How: This groups them without adding an element. */ }
 
 
 										<button
