@@ -42,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -106,7 +106,9 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 900, ideStr : 'events-desktop',       patStr : '/', widNum : 1440, steStr : 'events'                     }, // What: Events Desktop State. Why: The Events section is checked at a desktop width. How: This opens it in a new group with a planned event at 1,440px.
 	{ heiNum : 844, ideStr : 'events-phone',         patStr : '/', widNum : 390,  steStr : 'events'                     }, // What: Events Phone State. Why: The Events section is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 844, ideStr : 'form-phone',           patStr : '/', widNum : 390,  steStr : 'form'                       }, // What: Form Phone State. Why: The event form is a modal layer of its own. How: This opens it at 390px.
-	{ heiNum : 844, ideStr : 'edit-phone',           patStr : '/', widNum : 390,  steStr : 'edit'                       }  // What: Edit Phone State. Why: An item's edit form is checked in its sheet. How: This opens the open item's form at 390px.
+	{ heiNum : 844, ideStr : 'edit-phone',           patStr : '/', widNum : 390,  steStr : 'edit'                       }, // What: Edit Phone State. Why: An item's edit form is checked in its sheet. How: This opens the open item's form at 390px.
+	{ heiNum : 900, ideStr : 'people-desktop',       patStr : '/', widNum : 1440, steStr : 'people'                     }, // What: People Desktop State. Why: The People section is checked at a desktop width. How: This opens it in a new group at 1,440px.
+	{ heiNum : 844, ideStr : 'people-phone',         patStr : '/', widNum : 390,  steStr : 'people'                     }  // What: People Phone State. Why: The People section is checked at a phone width. How: This opens it at 390px.
 
 
 ];
@@ -347,7 +349,7 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'sheet' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'sheet' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -392,7 +394,7 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit'
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Group Wait. Why: The group has to exist before the app is opened again. How: This waits for its heading.
 
-	if ( steStr !== 'group' && steStr !== 'sheet' ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, edit, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
+	if ( steStr !== 'group' && steStr !== 'people' && steStr !== 'sheet' ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, edit, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
 
 	await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: A later visit shows the group without the focus its creation gave it. How: This opens the app again.
 
@@ -440,6 +442,24 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit'
 
 
 		return; // What: Form Return. Why: The form state stops at the open form. How: This returns.
+
+
+	}
+
+
+
+	if ( steStr === 'people' ) { // What: People Block. Why: The people states open the People section. How: This presses the tab, reloads the section so nothing is focused, waits for its members, and stops.
+
+
+		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: The section opens from its tab. How: This presses it.
+
+		await curPagObj.reload(); // What: Section Reload Call. Why: The section is checked as it opens on a later visit, with nothing focused. How: This reloads it, which its history entry keeps.
+
+		await curPagObj.getByRole( 'heading', { level : 3, name : 'Members (1)' } ).waitFor(); // What: Members Wait. Why: The section has to show its members before it's checked. How: This waits for the counted heading.
+
+
+
+		return; // What: People Return. Why: The people states stop at the section. How: This returns.
 
 
 	}

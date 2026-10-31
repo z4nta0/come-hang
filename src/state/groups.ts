@@ -291,7 +291,7 @@ const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : nu
 
 
 
-type GroRecTyp = { ideStr : string, namStr : string, ownBoo : boolean }; // What: Group Record Type. Why: The group list shows each group by name and marks the ones this identity owns. How: This types each entry groWatFun reports.
+type GroRecTyp = { ideStr : string, namStr : string, ownBoo : boolean, ownUidStr : string, tokStr : string }; // What: Group Record Type. Why: The group list shows each group by name, marks the ones this identity owns, names each group's owner, and carries its invite link. How: This types each entry groWatFun reports.
 
 // #region groWatFun
 
@@ -299,13 +299,13 @@ type GroRecTyp = { ideStr : string, namStr : string, ownBoo : boolean }; // What
  * groWatFun = Group Watch Function
  *
  * @summary
- * Watches the groups this identity belongs to, owned or not, and reports
- * them sorted by name each time one is added, renamed, or lost, once every
- * group in the account has been read. A device with no identity yet reports
- * none and connects to nothing, so a first visit makes no connection
- * (Section 16). A group whose read is refused, such as one just left or
- * deleted, drops out of the list. Resolves with the function that stops
- * watching.
+ * Watches the groups this identity belongs to, owned or not, and reports them
+ * sorted by name, each with its owner and current invite token, each time one
+ * is added, renamed, handed over, given a new link, or lost, once every group
+ * in the account has been read. A device with no identity yet reports none and
+ * connects to nothing, so a first visit makes no connection (Section 16). A
+ * group whose read is refused, such as one just left or deleted, drops out of
+ * the list. Resolves with the function that stops watching.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -394,7 +394,7 @@ const groWatFun = async ( onGroFun : ( groRecArr : GroRecTyp[] ) => void ) : Pro
 		groStoMap.set( groIdeStr, onSnapshot( doc( fstDatObj, `groups/${ groIdeStr }` ), ( groSnaObj ) => { // What: Group Watch Call. Why: A rename or a change of owner shows at once. How: This listens to the group's document and keeps its entry.
 
 
-			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr } ); // What: Entry Set Call. Why: The list shows the group by name and marks it when owned. How: This keeps the entry from the document. // What: Type Assertion Note. Why: The rules store the name as a string. How: The as reads it as one.
+			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr, ownUidStr : groSnaObj.get( 'ownerUid' ) as string, tokStr : groSnaObj.get( 'currentInviteToken' ) as string } ); // What: Entry Set Call. Why: The list shows the group by name, marks it when owned, and carries its owner and invite link. How: This keeps the entry from the document. // What: Type Assertion Note. Why: The rules store the name, the owner's UID, and the invite token as strings. How: The as read them as such.
 
 			else groRecMap.delete( groIdeStr ); // What: Entry Delete Call. Why: A deleted group shouldn't stay listed. How: This drops its entry.
 

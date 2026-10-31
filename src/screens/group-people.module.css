@@ -1,0 +1,543 @@
+
+
+
+/**
+ * group-people.module.css = Group People Module
+ *
+ * @summary
+ * Styles for GroPeoCom: the heading, the invite part with its note, its
+ * read-only link box, and its buttons, and the members part, each member a
+ * row with their avatar in their color beside their name and actions, or
+ * their name form across the row while it's open. Confirmations take a
+ * line of their own above their answers. The status that announces a change
+ * is for screen readers alone, while a failure shows in the dark error color.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region groPeoDiv */
+
+.groPeoDiv { /* What: Group People Div. Why: The heading and the two parts read top to bottom inside the gutter, and scroll when they outgrow the content. How: This stacks them a tier 2 space apart at the top in one column of capped width, with the tier 2 space above and below and the gutter at the sides, scrolling on its own. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-columns : minmax( 0, calc( var( --ver-rhy-p14 ) * 1rem ) ); /* Vertical Rhythm Base Plus 14 ~= 746.867px */ /* What: Column Cap. Why: Rows stretched across a wide screen read poorly. How: The one column grows up to about 747px. */
+	min-height            : 0;
+	overflow-y            : auto;
+	padding               : var( --tie-ver-002 ) var( --gut-sid-pad );        /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-002 );                             /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.peoTitHea { /* What: People Title Heading. Why: The heading names the section. How: This sets it at Base Plus 3. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+
+
+}
+
+
+
+/* #region invLinSec */
+
+.invLinSec { /* What: Invite Link Section. Why: The link's heading, note, box, and buttons read as one part. How: This stacks them in named areas a tier 4 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'invTitHea' 'invNotPar' 'invLabLab' 'invLinInp' 'invActDiv';
+	row-gap             : var( --tie-ver-004 );                                        /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.invTitHea { /* What: Invite Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2 in its own area. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : invTitHea;
+
+
+}
+
+.invNotPar { /* What: Invite Note Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : invNotPar;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+.invLabLab { /* What: Invite Label Label. Why: The label names the box below it. How: This sets it bold in its own area. */
+
+
+	font-weight : 700;
+	grid-area   : invLabLab;
+
+
+}
+
+.invLinInp { /* What: Invite Link Input. Why: A box should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	grid-area        : invLinInp;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.invLinInp:hover { /* What: Hovered Invite Link Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Invite Link Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.invLinInp { /* What: Motionless Invite Link Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+
+
+/* #region invActDiv */
+
+.invActDiv { /* What: Invite Actions Div. Why: Copying and replacing sit together, or the replacement's question and answers in their place, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks, in its own area. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	grid-area   : invActDiv;
+
+
+}
+
+.conAskPar { /* What: Confirm Ask Paragraph. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row. */
+
+
+	flex-basis  : 100%;
+	font-weight : 700;
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Changing, cancelling, and keeping are lighter actions than the sheet's content, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion invActDiv */
+
+/* #endregion invLinSec */
+
+
+
+/* #region memLisSec */
+
+.memLisSec { /* What: Member List Section. Why: The heading and the list read as one part. How: This stacks them a tier 3 space apart, in order since the list gives way to a note while it loads. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.memTitHea { /* What: Member Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.memNotPar { /* What: Member Note Paragraph. Why: A loading list is a quiet note. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+/* #region memLisUno */
+
+.memLisUno { /* What: Member List Unordered List. Why: The members read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below. */
+
+
+	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display    : grid;
+	list-style : none;
+
+
+}
+
+
+
+/* #region memRowIte */
+
+.memRowIte { /* What: Member Row Item. Why: A member's avatar, name, and actions read across one row. How: This lays them out in named areas a tier 4 space apart, centered on each other, with a tier 4 space above and below and a border below. */
+
+
+	align-items           : center;
+	border-bottom         : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-areas   : 'memAvaSpa memNamSpa memActSpa';
+	grid-template-columns : auto minmax( 0, 1fr ) auto;
+	padding               : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.memAvaSpa { /* What: Member Avatar Span. Why: An avatar in the member's color ties them to their messages and claims. How: This draws a circle in their color with their initials bold, in its own area. */
+
+
+	border-radius : 50%;
+	color         : var( --mem-tex-col );                /* Member Text Color = #221F1B */
+	display       : grid;
+	font-weight   : 700;
+	grid-area     : memAvaSpa;
+	height        : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	place-items   : center;
+	width         : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+
+
+
+/* #region namEdiFor */
+
+.namEdiFor { /* What: Name Edit Form. Why: The name form takes the row's name and actions while it's open. How: This spans the row's second and third columns by line numbers, since it stands in for two areas, and lays its label, box, and buttons out in named areas a tier 5 space apart down and a tier 4 space across. */
+
+
+	align-items           : center;
+	display               : grid;
+	gap                   : var( --tie-ver-005 ) var( --tie-hor-004 );                                               /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 4, about 8.304px - 11px */
+	grid-column           : 2 / -1;
+	grid-template-areas   : 'namLabLab namLabLab namLabLab' 'namEdiInp namEdiInp namEdiInp' 'namSavBut namCanBut .';
+	grid-template-columns : auto auto minmax( 0, 1fr );
+
+
+}
+
+.namLabLab { /* What: Name Label Label. Why: The label names the box below it. How: This sets it bold in its own area. */
+
+
+	font-weight : 700;
+	grid-area   : namLabLab;
+
+
+}
+
+.namEdiInp { /* What: Name Edit Input. Why: A box should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	grid-area        : namEdiInp;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.namEdiInp:hover { /* What: Hovered Name Edit Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Name Edit Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.namEdiInp { /* What: Motionless Name Edit Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.namSavBut { /* What: Name Save Button. Why: Saving sits first below the box. How: This places it in its own area. */
+
+
+	grid-area : namSavBut;
+
+
+}
+
+.namCanBut { /* What: Name Cancel Button. Why: Cancelling is quieter than saving, so it reads as text, still a full touch target. How: This sets bold accent text on no background, at least a touch target tall, in its own area, and eases its hover color, press dim, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	color            : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	grid-area        : namCanBut;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : 0 var( --spa-ver-m02 );              /* Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition       : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.namCanBut:hover { /* What: Hovered Name Cancel Button. Why: A text button shows it's live by color alone. How: This darkens its text a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.namCanBut:active { /* What: Pressed Name Cancel Button. Why: A button styled as text presses like a text link. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Name Cancel Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.namCanBut { /* What: Motionless Name Cancel Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion namEdiFor */
+
+
+
+/* #region memNamSpa */
+
+.memNamSpa { /* What: Member Name Span. Why: Each member is known by their name, and a long one shouldn't push the actions off the row. How: This sets it bold in its own area, breaking a long word where it has to. */
+
+
+	font-weight   : 700;
+	grid-area     : memNamSpa;
+	overflow-wrap : anywhere;
+
+
+}
+
+.memTagSpa { /* What: Member Tag Span. Why: The marks for the member and the owner are quieter than the name. How: This sets them at the normal weight in the muted text color. */
+
+
+	color       : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-weight : 400;
+
+
+}
+
+/* #endregion memNamSpa */
+
+
+
+/* #region memActSpa */
+
+.memActSpa { /* What: Member Actions Span. Why: A row's actions sit together at its end, or a removal's question and answers in their place, wrapping when the row is narrow. How: This lays them out in a flex row a tier 5 space apart, ending at the row's end, since its items keep their own widths and wrap, which grid can't do without fixed tracks, in its own area. */
+
+
+	align-items     : center;
+	display         : flex;
+	flex-wrap       : wrap;
+	gap             : var( --tie-ver-005 ) var( --tie-hor-005 ); /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 5, about 4.732px - 6.268px */
+	grid-area       : memActSpa;
+	justify-content : end;
+
+
+}
+
+
+
+/* #region actPlaBut */
+
+/* What: Action Plain Button Pointer. Why: Changing a name, removing, and keeping use the same outlined pill. How: Its rule sits in the invActDiv region. */
+
+.memHidSpa { /* What: Member Hidden Span. Why: A screen reader hears who a button acts on, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion actPlaBut */
+
+.conAskSpa { /* What: Confirm Ask Span. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row of actions. */
+
+
+	flex-basis  : 100%;
+	font-weight : 700;
+
+
+}
+
+.actDanBut { /* What: Action Danger Button. Why: Confirming a cancel is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actDanBut:hover { /* What: Hovered Action Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
+
+
+	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
+
+
+}
+.actDanBut:active { /* What: Pressed Action Danger Button. Why: A press should register before the event is cancelled. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actDanBut { /* What: Motionless Action Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion memActSpa */
+
+/* #endregion memRowIte */
+
+/* #endregion memLisUno */
+
+/* #endregion memLisSec */
+
+
+.peoStaPar { /* What: People Status Paragraph. Why: The page itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.peoErrPar { /* What: People Error Paragraph. Why: A failed change should be clear below the members. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.peoErrPar:empty { /* What: Empty People Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the section's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-002 ) * -1 ); /* Tier Vertical 2 ~= -25.572px */
+
+
+}
+
+/* #endregion groPeoDiv */
+
+

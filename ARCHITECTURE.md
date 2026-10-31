@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-31 (the Events section and its form, and editing bring-list items, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1598,8 +1598,16 @@ the Blaze change.
   bottom below 720px and down a column beside the content from 720px, and
   each opens its section as a new history entry, which records it, so back
   walks back through them; a group opens at its chat, as does an entry naming
-  a section this version doesn't know. The chat and Events sections are
-  built, and the others show a placeholder until theirs are. The Events
+  a section this version doesn't know. The chat, Events, and People
+  sections are built, and the others show a placeholder until theirs are.
+  The People section shows the invite link, which any member copies (or,
+  where the browser won't copy, selects) and the owner replaces after
+  confirming, and the members in name order, each with their avatar in their
+  color, the owner marked; the member changes their own name from their row,
+  and the owner removes anyone else after confirming, which also replaces
+  the link. The group list carries each group's owner and current invite
+  token, so a new link shows as soon as it's made. Reviewing join requests
+  comes next. The Events
   section lists the events that haven't ended, soonest first, as cards that
   open each event's details and bring-list in a sheet; there its creator or
   the group's owner changes it in a form sheet over it, or cancels it after
