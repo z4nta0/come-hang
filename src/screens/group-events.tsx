@@ -88,10 +88,13 @@ type GecProTyp = { groIdeStr : string, ownBoo : boolean }; // What: Group Events
 function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 
+	const canButRef = useRef< HTMLButtonElement >( null );  // What: Cancel Button Reference. Why: Leaving the cancel's confirmation returns focus to its button. How: This holds the button.
 	const detHanRef = useRef< SheHanTyp >( null );          // What: Details Handle Reference. Why: A card opens its event's sheet, and a cancel closes it. How: This holds that sheet's handle.
+	const focCanRef = useRef( false );                      // What: Focus Cancel Reference. Why: Focus returns to Cancel event once its confirmation has gone. How: This is true while that's owed.
 	const focHeaRef = useRef( false );                      // What: Focus Heading Reference. Why: After a cancel, focus lands on the heading once the sheet has gone. How: This is true while that's owed.
 	const forHanRef = useRef< SheHanTyp >( null );          // What: Form Handle Reference. Why: Planning or changing opens the form's sheet, and a save closes it. How: This holds that sheet's handle.
 	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: The heading takes focus after a cancel. How: This holds it.
+	const keeButRef = useRef< HTMLButtonElement >( null );  // What: Keep Button Reference. Why: The cancel's confirmation puts the member on its safe answer. How: This holds the Keep it button.
 
 	const [ canConBoo, setCanConBoo ] = useState( false );                                    // What: Cancel Confirm Boolean And Setter. Why: Cancelling asks to confirm first. How: This is true while the confirmation shows.
 	const [ canErrStr, setCanErrStr ] = useState( '' );                                       // What: Cancel Error String And Setter. Why: A failed cancel is announced in the sheet. How: This holds the message, empty when there's none.
@@ -164,6 +167,18 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 
 	}, [ groIdeStr, lisVerNum ] ); // What: Effect Dependency Array. Why: The list belongs to one group and is read again after each change. How: groIdeStr names the group, and lisVerNum counts the reads asked for.
+
+
+
+	useEffect( () => { // What: Cancel Focus Effect. Why: The button that opened the confirmation goes with it, and comes back when it closes. How: This focuses Keep it as it opens, and Cancel event again when it closes owing focus.
+
+
+		if ( canConBoo ) keeButRef.current?.focus(); // What: Keep Focus Call. Why: The confirmation opened, and its safe answer is the one to land on. How: This focuses Keep it.
+
+		else if ( focCanRef.current ) { focCanRef.current = false; canButRef.current?.focus(); } // What: Button Focus Call. Why: The confirmation closed and owes its button focus. How: This focuses the button and clears the debt.
+
+
+	}, [ canConBoo ] ); // What: Effect Dependency Array. Why: Focus moves as the confirmation opens and closes. How: canConBoo changes then.
 
 
 
@@ -384,11 +399,13 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 										>Yes, cancel it</button>{ /* What: Action Danger Button Element. Why: Cancelling is confirmed on purpose. How: This cancels the event. */ }
 
 										<button
+											ref={ keeButRef }
+
 											className={ cssModObj.actPlaBut }
 
 											type='button'
 
-											onClick={ () => setCanConBoo( false ) }
+											onClick={ () => { focCanRef.current = true; setCanConBoo( false ); } } // What: Keep Handler. Why: A member can change their mind, and the answer goes with the question. How: This owes Cancel event focus and hides the confirmation.
 										>Keep it</button>{ /* What: Action Plain Button Element. Why: A member can change their mind. How: This hides the confirmation. */ }
 
 
@@ -412,6 +429,8 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 										>Change</button>{ /* What: Action Plain Button Element. Why: The creator or owner changes the event. How: This opens the form. */ }
 
 										<button
+											ref={ canButRef }
+
 											className={ cssModObj.actPlaBut }
 
 											type='button'

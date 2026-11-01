@@ -242,6 +242,13 @@ test( "an event's creator changes it, then cancels it after confirming, and focu
 	await curPagObj.getByRole( 'button', { name : 'Cancel event' } ).click(); // What: Cancel Click Call. Why: Cancelling asks to confirm first. How: This presses the button.
 
 	await expect( curPagObj.getByText( 'Cancel Park picnic for everyone?' ) ).toBeVisible(); // What: Confirm Assertion. Why: The member is asked before the event goes. How: This waits for the question.
+	await expect( curPagObj.getByRole( 'button', { name : 'Keep it' } ) ).toBeFocused();     // What: Keep Focus Assertion. Why: The button went with the question, so focus lands on the safe answer. How: This expects Keep it focused.
+
+	await curPagObj.getByRole( 'button', { name : 'Keep it' } ).click(); // What: Keep Click Call. Why: A member can change their mind. How: This presses the safe answer.
+
+	await expect( curPagObj.getByRole( 'button', { name : 'Cancel event' } ) ).toBeFocused(); // What: Return Focus Assertion. Why: Leaving the question returns focus to its button. How: This expects the button focused.
+
+	await curPagObj.getByRole( 'button', { name : 'Cancel event' } ).click(); // What: Reopen Click Call. Why: The member cancels after all. How: This asks to confirm again.
 
 	await curPagObj.getByRole( 'button', { name : 'Yes, cancel it' } ).click(); // What: Confirm Click Call. Why: The cancel is confirmed. How: This presses the button.
 

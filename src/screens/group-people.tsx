@@ -109,6 +109,7 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 	const ediButRef = useRef< HTMLButtonElement >( null );  // What: Edit Button Reference. Why: Leaving the name form returns focus to its button. How: This holds the button.
 	const focEdiRef = useRef( false );                      // What: Focus Edit Reference. Why: Focus returns to the button once the form has gone. How: This is true while that's owed.
+	const focTarRef = useRef( '' );                         // What: Focus Target Reference. Why: A button that opens a confirmation goes with it, and comes back when it closes, so focus has to wait for the control that replaces it. How: This names the control owed focus once it's drawn, empty when none is.
 	const focUidRef = useRef< string[] >( [] );             // What: Focus UID Reference. Why: Answering a request removes the button that did it, so focus is moved once its request is gone. How: This holds the UIDs being answered, empty when none is.
 	const invLinRef = useRef< HTMLInputElement >( null );   // What: Invite Link Reference. Why: Where the browser won't copy, the link is selected for the member to copy. How: This holds its box.
 	const memHeaRef = useRef< HTMLHeadingElement >( null ); // What: Member Heading Reference. Why: Focus lands on the members' heading once the last request is answered. How: This holds it.
@@ -267,6 +268,50 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 	};
 
 	// #endregion actRunFun
+
+
+
+	// #region focTarFun
+
+	/**
+	 * focTarFun = Focus Target Function
+	 *
+	 * @summary
+	 * Returns the ref for a control that may be owed focus as it's drawn,
+	 * such as a confirmation's safe answer, or the button that opened it once
+	 * the confirmation closes. When the control mounts while focTarRef names
+	 * its key, it takes focus and the debt clears, so focus never falls to the
+	 * page as one control replaces another.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param tarKeyStr - Target Key String: The control's key, such as
+	 *                    'rotate' or 'remove-keep:' and a member's UID.
+	 *
+	 * @returns The ref callback for the control.
+	 *
+	 * @example
+	 * ```ts
+	 * focTarFun('rotate') // => ( butEleObj ) => void
+	 * ```
+	 *
+	*/
+
+	const focTarFun = ( tarKeyStr : string ) => ( butEleObj : HTMLButtonElement | null ) : void => { // What: Focus Target Function. Why: A confirmation replaces its button, and the button replaces the confirmation, each needing focus as it appears. How: This returns a ref that focuses the control when it's owed.
+
+
+		if ( butEleObj === null || focTarRef.current !== tarKeyStr ) return; // What: Owed Guard. Why: Only the control owed focus takes it, and only once it's drawn. How: This returns otherwise.
+
+
+
+		focTarRef.current = ''; // What: Focus Clear Assignment. Why: The move is owed once. How: This clears the debt.
+
+		butEleObj.focus(); // What: Focus Call. Why: The next key press carries on from the control that replaced the one pressed. How: This focuses it.
+
+
+	};
+
+	// #endregion focTarFun
 
 
 
@@ -495,15 +540,17 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 								type='button'
 
-								onClick={ () => void actRunFun( () => invRotFun( curGroObj.ideStr ), 'Made a new link.' ).then( () => setConRotBoo( false ) ) } // What: Rotate Confirm Handler. Why: The owner confirmed. How: This makes the new link, announces it, and hides the question.
+								onClick={ () => void actRunFun( () => invRotFun( curGroObj.ideStr ), 'Made a new link.' ).then( () => { focTarRef.current = 'rotate'; setConRotBoo( false ); } ) } // What: Rotate Confirm Handler. Why: The owner confirmed, and the answer goes with the question. How: This makes the new link, announces it, owes its button focus, and hides the question.
 							>Make the new link</button>{ /* What: Action Plain Button Element. Why: The new link is made on purpose. How: This makes it. */ }
 
 							<button
+								ref={ focTarFun( 'rotate-keep' ) }
+
 								className={ cssModObj.actPlaBut }
 
 								type='button'
 
-								onClick={ () => setConRotBoo( false ) }
+								onClick={ () => { focTarRef.current = 'rotate'; setConRotBoo( false ); } } // What: Keep Handler. Why: The owner can change their mind, and the answer goes with the question. How: This owes the button focus and hides the question.
 							>Keep this link</button>{ /* What: Action Plain Button Element. Why: The owner can change their mind. How: This hides the question. */ }
 
 
@@ -524,11 +571,13 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 								<button
+									ref={ focTarFun( 'rotate' ) }
+
 									className={ cssModObj.actPlaBut }
 
 									type='button'
 
-									onClick={ () => setConRotBoo( true ) }
+									onClick={ () => { focTarRef.current = 'rotate-keep'; setConRotBoo( true ); } } // What: Rotate Click Handler. Why: The button goes with the question it opens, so focus lands on the safe answer. How: This owes Keep this link focus and shows the question.
 								>Make a new link</button> // What: Action Plain Button Element. Why: An over-shared link can be replaced. How: This asks to confirm first.
 
 
@@ -637,11 +686,13 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 												>Yes, block</button>{ /* What: Action Danger Button Element. Why: Blocking is confirmed on purpose. How: This blocks the joiner. */ }
 
 												<button
+													ref={ focTarFun( `block-keep:${ reqRecObj.uidValStr }` ) }
+
 													className={ cssModObj.actPlaBut }
 
 													type='button'
 
-													onClick={ () => setConBloStr( '' ) }
+													onClick={ () => { focTarRef.current = `block:${ reqRecObj.uidValStr }`; setConBloStr( '' ); } } // What: Don't Block Handler. Why: The member can change their mind, and the answer goes with the question. How: This owes the Block button focus and hides the question.
 												>{ "Don't block" }</button>{ /* What: Action Plain Button Element. Why: The member can change their mind. How: This hides the question. */ }
 
 
@@ -665,11 +716,13 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 												>Decline<span className={ cssModObj.actHidSpa }>{ ` ${ reqRecObj.namTexStr }` }</span></button>{ /* What: Action Plain Button Element. Why: A member turns a request down, and a screen reader hears whose. How: This declines it. */ }
 
 												<button
+													ref={ focTarFun( `block:${ reqRecObj.uidValStr }` ) }
+
 													className={ cssModObj.actPlaBut }
 
 													type='button'
 
-													onClick={ () => setConBloStr( reqRecObj.uidValStr ) }
+													onClick={ () => { focTarRef.current = `block-keep:${ reqRecObj.uidValStr }`; setConBloStr( reqRecObj.uidValStr ); } } // What: Block Click Handler. Why: The button goes with the question it opens, so focus lands on the safe answer. How: This owes Don't block focus and shows the question.
 												>Block<span className={ cssModObj.actHidSpa }>{ ` ${ reqRecObj.namTexStr }` }</span></button>{ /* What: Action Plain Button Element. Why: A request from someone unwelcome can be ended for good, and a screen reader hears whose. How: This asks to confirm first. */ }
 
 
@@ -718,11 +771,13 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 									>Yes, decline all</button>{ /* What: Action Danger Button Element. Why: Declining everyone is confirmed on purpose. How: This declines them all. */ }
 
 									<button
+										ref={ focTarFun( 'all-keep' ) }
+
 										className={ cssModObj.actPlaBut }
 
 										type='button'
 
-										onClick={ () => setConAllBoo( false ) }
+										onClick={ () => { focTarRef.current = 'all'; setConAllBoo( false ); } } // What: Keep Them Handler. Why: The member can change their mind, and the answer goes with the question. How: This owes Decline all focus and hides the question.
 									>Keep them</button>{ /* What: Action Plain Button Element. Why: The member can change their mind. How: This hides the question. */ }
 
 
@@ -733,11 +788,13 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 								<button
+									ref={ focTarFun( 'all' ) }
+
 									className={ cssModObj.actPlaBut }
 
 									type='button'
 
-									onClick={ () => setConAllBoo( true ) }
+									onClick={ () => { focTarRef.current = 'all-keep'; setConAllBoo( true ); } } // What: Decline All Click Handler. Why: The button goes with the question it opens, so focus lands on the safe answer. How: This owes Keep them focus and shows the question.
 								>Decline all</button> // What: Action Plain Button Element. Why: A flood is cleared in one step. How: This asks to confirm first.
 
 
@@ -898,11 +955,13 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 													<button
+														ref={ focTarFun( `remove:${ memRecObj.uidValStr }` ) }
+
 														className={ cssModObj.actPlaBut }
 
 														type='button'
 
-														onClick={ () => setConRemStr( memRecObj.uidValStr ) }
+														onClick={ () => { focTarRef.current = `remove-keep:${ memRecObj.uidValStr }`; setConRemStr( memRecObj.uidValStr ); } } // What: Remove Click Handler. Why: The button goes with the question it opens, so focus lands on the safe answer. How: This owes Keep focus and shows the question.
 													>Remove<span className={ cssModObj.actHidSpa }>{ ` ${ memRecObj.namTexStr }` }</span></button> // What: Action Plain Button Element. Why: The owner removes a member, and a screen reader hears who. How: This asks to confirm first.
 
 
@@ -921,15 +980,17 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 															type='button'
 
-															onClick={ () => void actRunFun( () => memRemFun( curGroObj.ideStr, memRecObj.uidValStr ), `Removed ${ memRecObj.namTexStr }. The invite link changed.` ).then( () => setConRemStr( '' ) ) } // What: Remove Confirm Handler. Why: The owner confirmed. How: This removes the member, announces it with the new link, and hides the question.
+															onClick={ () => void actRunFun( () => memRemFun( curGroObj.ideStr, memRecObj.uidValStr ), `Removed ${ memRecObj.namTexStr }. The invite link changed.` ).then( ( lanValBoo ) => { if ( lanValBoo ) memHeaRef.current?.focus(); else focTarRef.current = `remove:${ memRecObj.uidValStr }`; setConRemStr( '' ); } ) } // What: Remove Confirm Handler. Why: The owner confirmed, and a removed member's row goes with its buttons. How: This removes the member, announces it with the new link, moves focus to the members' heading, or back to the Remove button when it failed, and hides the question.
 														>Yes, remove</button>{ /* What: Action Danger Button Element. Why: Removing is confirmed on purpose. How: This removes the member. */ }
 
 														<button
+															ref={ focTarFun( `remove-keep:${ memRecObj.uidValStr }` ) }
+
 															className={ cssModObj.actPlaBut }
 
 															type='button'
 
-															onClick={ () => setConRemStr( '' ) }
+															onClick={ () => { focTarRef.current = `remove:${ memRecObj.uidValStr }`; setConRemStr( '' ); } } // What: Keep Handler. Why: The owner can change their mind, and the answer goes with the question. How: This owes the Remove button focus and hides the question.
 														>Keep</button>{ /* What: Action Plain Button Element. Why: The owner can change their mind. How: This hides the question. */ }
 
 
