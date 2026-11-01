@@ -6,17 +6,18 @@
 import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Why: The frame is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom    } from '../ui/button.tsx';    // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
-import { GroChaCom    } from './group-chat.tsx';    // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
-import { GroEveCom    } from './group-events.tsx';  // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
-import { GroPeoCom    } from './group-people.tsx';  // What: Group People Component. Why: The People section shows the group's link and members. How: The frame shows it when that section is open.
-import { IcoSvgCom    } from '../ui/icon.tsx';      // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
-import { iniTexFun    } from '../utils/text.ts';    // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
-import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
-import { SheDiaCom    } from '../ui/sheet.tsx';     // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
-import { useEffect    } from 'react';               // What: Use Effect. Why: A group just created takes focus on its heading. How: This moves focus once it's drawn.
-import { useRef       } from 'react';               // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
-import { useScrOpeFun } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
+import { ButBasCom    } from '../ui/button.tsx';     // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
+import { GroChaCom    } from './group-chat.tsx';     // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
+import { GroEveCom    } from './group-events.tsx';   // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
+import { GroPeoCom    } from './group-people.tsx';   // What: Group People Component. Why: The People section shows the group's link and members. How: The frame shows it when that section is open.
+import { GroSetCom    } from './group-settings.tsx'; // What: Group Settings Component. Why: The Settings section changes, leaves, or deletes the group. How: The frame shows it when that section is open.
+import { IcoSvgCom    } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
+import { iniTexFun    } from '../utils/text.ts';     // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
+import { MaiAreCom    } from '../ui/main-area.tsx';  // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
+import { SheDiaCom    } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
+import { useEffect    } from 'react';                // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This moves focus once it's drawn.
+import { useRef       } from 'react';                // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
+import { useScrOpeFun } from '../ui/screen.ts';      // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
@@ -125,7 +126,7 @@ function SecSooCom ( { labStr } : SscProTyp ) : React.JSX.Element {
 
 
 
-type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[], secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, and focuses it when it's new. How: This types GroFraCom's props.
+type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, focuses it when asked, and hands on a group left or deleted. How: This types GroFraCom's props.
 
 // #region GroFraCom
 
@@ -146,38 +147,42 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  *
  * @param props.curGroObj - Current Group Object: The open group.
  * @param props.focBoo    - Focus Boolean: Whether the heading takes focus,
- *                          as it does for a group just created.
+ *                          as it does for a group just created, or one
+ *                          opened after another was left or deleted.
  * @param props.groRecArr - Group Record Array: Every group, sorted by name.
+ * @param props.onGonFun  - On Gone Function: Called with a group's ID and
+ *                          what to announce once Settings leaves or deletes
+ *                          it.
  * @param props.secNamStr - Section Name String: The section to show.
  *
  * @returns The frame.
  *
  * @example
  * ```tsx
- * GroFraCom({ curGroObj, focBoo, groRecArr, secNamStr }) // => <GroFraCom />
+ * GroFraCom({ curGroObj, focBoo, groRecArr, ... }) // => <GroFraCom />
  * ```
  *
 */
 
-function GroFraCom ( { curGroObj, focBoo, groRecArr, secNamStr } : GfcProTyp ) : React.JSX.Element {
+function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
 
 
-	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group just created takes focus on its heading. How: This holds the heading.
+	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This holds the heading.
 	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This reads the function that opens one.
 	const sheHanRef = useRef< SheHanTyp >( null );          // What: Sheet Handle Reference. Why: The switcher opens the group sheet and a choice closes it. How: This holds the sheet's handle.
 
 
 
-	useEffect( () => { // What: Heading Focus Effect. Why: A group just created replaces the form that made it, so focus should land on what replaced it. How: This focuses the heading when asked, then clears the request from the history entry.
+	useEffect( () => { // What: Heading Focus Effect. Why: A group just created replaces the form that made it, and one opened after a leave or a deletion replaces the section that did it, so focus should land on what replaced them. How: This focuses the heading when asked, then clears the request from the history entry.
 
 
-		if ( !focBoo ) return; // What: No Request Guard. Why: Only a group just created takes focus. How: This returns otherwise.
+		if ( !focBoo ) return; // What: No Request Guard. Why: Only a group opened by one of those changes takes focus. How: This returns otherwise.
 
 
 
 		heaEleRef.current?.focus(); // What: Focus Call. Why: The new group is announced and the next Tab starts from it. How: This focuses the heading.
 
-		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of creation, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
+		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of the change, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
 
 
 	}, [ curGroObj.ideStr, focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curGroObj.ideStr changes when another group opens, focBoo when the request to focus does, and scrOpeFun only if the router's navigate does.
@@ -350,7 +355,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, secNamStr } : GfcProTyp ) :
 			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open section is the screen's main content. How: This holds it below the bar, filling the rest of the screen. */ }
 
 
-				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: The chat, events, and people are built, and the other sections are on their way. How: This shows the open section, or its placeholder.
+				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: Every section but the map is built, and the map is on its way. How: This shows the open section, or its placeholder.
 
 
 					<GroChaCom
@@ -380,6 +385,18 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, secNamStr } : GfcProTyp ) :
 
 						curGroObj={ curGroObj }
 					/> // What: Group People Component. Why: The group's link and members live here. How: This shows the open group's People section.
+
+
+				) : secNamStr === 'settings' ? ( // What: Settings Section Check. Why: The Settings section is built. How: This shows it.
+
+
+					<GroSetCom
+						key={ curGroObj.ideStr } // What: Settings Key. Why: Another group's settings have to start afresh rather than keep this one's draft. How: This remounts the section for each group.
+
+						curGroObj={ curGroObj }
+
+						onGonFun={ onGonFun }
+					/> // What: Group Settings Component. Why: The group is changed, left, or deleted here. How: This shows the open group's Settings section.
 
 
 				) : ( // What: Placeholder Branch. Why: A section still to build should lead somewhere. How: This shows its placeholder.

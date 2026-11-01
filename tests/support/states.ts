@@ -42,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'requests' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'member' | 'people' | 'requests' | 'settings' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -63,8 +63,9 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  * Every state the checks visit: each screen at a phone width and a desktop
  * width, some in dark mode too, the chat at a tablet width, the group and
  * event sheets, an item's form, and the event form open on a phone, the
- * People section with two requests waiting, and the waiting screen with its
- * loader showing. Every row shares the {@link
+ * People section with two requests waiting, the owner's Settings, its
+ * deletion's confirmation, and a member's Settings, and the waiting screen
+ * with its loader showing. Every row shares the {@link
  * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
@@ -111,7 +112,11 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 900, ideStr : 'people-desktop',       patStr : '/', widNum : 1440, steStr : 'people'                     }, // What: People Desktop State. Why: The People section is checked at a desktop width. How: This opens it in a new group at 1,440px.
 	{ heiNum : 844, ideStr : 'people-phone',         patStr : '/', widNum : 390,  steStr : 'people'                     }, // What: People Phone State. Why: The People section is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 900, ideStr : 'requests-desktop',     patStr : '/', widNum : 1440, steStr : 'requests'                   }, // What: Requests Desktop State. Why: The waiting list is checked at a desktop width. How: This opens the People section with two requests waiting at 1,440px.
-	{ heiNum : 844, ideStr : 'requests-phone',       patStr : '/', widNum : 390,  steStr : 'requests'                   }  // What: Requests Phone State. Why: The waiting list is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'requests-phone',       patStr : '/', widNum : 390,  steStr : 'requests'                   }, // What: Requests Phone State. Why: The waiting list is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'settings-desktop',     patStr : '/', widNum : 1440, steStr : 'settings'                   }, // What: Settings Desktop State. Why: The owner's Settings section is checked at a desktop width. How: This opens it in a new group at 1,440px.
+	{ heiNum : 844, ideStr : 'settings-phone',       patStr : '/', widNum : 390,  steStr : 'settings'                   }, // What: Settings Phone State. Why: The owner's Settings section is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/', widNum : 390,  steStr : 'delete'                     }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
+	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/', widNum : 390,  steStr : 'member'                     }  // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
 
 
 ];
@@ -319,6 +324,75 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
 
 
 
+// #region memSteFun
+
+/**
+ * memSteFun = Member Steps Function
+ *
+ * @summary
+ * Makes the page a member of someone else's group: an owner on a device of
+ * their own creates Beach Day as Alice and opens its People section for the
+ * link, the page asks to join through it as Sam, and the owner approves, the
+ * way the app does each step.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param curPagObj - Current Page Object: The page to make a member, with the
+ *                    app loaded.
+ *
+ * @returns A promise that settles once the page is a member, with no value.
+ *
+ * @example
+ * ```ts
+ * memSteFun(page) // => Promise<void>
+ * ```
+ *
+*/
+
+const memSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Member Steps Function. Why: A member's view of a group needs an owner who isn't the page. How: This has another device create the group and approve the page.
+
+
+	const ownConObj = await curPagObj.context().browser()!.newContext( { baseURL : new URL( curPagObj.url() ).origin } ); // What: Owner Context Object. Why: The owner needs an identity and storage of their own. How: This opens a new browser context on the same server. // What: Non-Null Note. Why: A page from Playwright's own launch always has its browser. How: The ! reads it as present.
+	const ownPagObj = await ownConObj.newPage();                                                                       // What: Owner Page Object. Why: The owner acts from their own page. How: This opens one.
+
+
+	await ownPagObj.goto( '/' ); // What: Owner Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await ownPagObj.evaluate( async ( modPatStr ) => ( await import( /* @vite-ignore */ modPatStr ) ).groCreFun( 'Beach Day', 'Alice' ) as Promise< string >, '/src/state/groups.ts' ); // What: Group Identifier String. Why: The owner approves the member into this group. How: This creates it with the groups module, passing its path since the page can't read the test's variables. // What: Type Assertion Note. Why: groCreFun resolves with the group's ID. How: The as reads it as a string.
+
+
+	await ownPagObj.goto( '/' ); // What: Owner Reopen Call. Why: The watch started before the identity existed, so the app opens afresh to show the group. How: This opens the app again.
+
+	await ownPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: The link shows in the People section. How: This presses its tab.
+
+
+	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link' ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The page asks through the group's link. How: This reads the link and takes the token from its end.
+
+	const uidMemStr = await curPagObj.evaluate( async ( [ joiPatStr, idePatStr, tokArgStr ] ) => { // What: UID Member String. Why: The owner approves the page by its UID. How: This files the page's request through the joins module, then reads its identity.
+
+
+		await ( await import( /* @vite-ignore */ joiPatStr ) ).reqCreFun( tokArgStr, 'Sam', '' ); // What: Request Create Call. Why: The page asks to join the way the app does. How: This files the request as Sam.
+
+
+
+		return ( await ( await import( /* @vite-ignore */ idePatStr ) ).ideEnsFun() ).uidValStr as string; // What: UID Return. Why: The request made the identity, whose UID the owner needs. How: This reads it. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity's record. How: The as reads its UID as a string.
+
+
+	}, [ '/src/state/joins.ts', '/src/state/identity.ts', tokValStr ] ); // What: Request Arguments. Why: The page can't read the test's variables. How: This passes both modules' paths and the token.
+
+
+	await ownPagObj.evaluate( async ( [ modPatStr, groArgStr, uidArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).reqAppFun( groArgStr, uidArgStr ); }, [ '/src/state/joins.ts', groIdeStr, uidMemStr ] ); // What: Approval Call. Why: The owner lets the page in the way the app does. How: This approves its request with the joins module.
+
+	await ownConObj.close(); // What: Context Close Call. Why: The owner's device isn't needed again. How: This closes it.
+
+
+};
+
+// #endregion memSteFun
+
+
+
 // #region reqSteFun
 
 /**
@@ -392,18 +466,20 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
  * @summary
  * Takes a loaded page to the screen a state names by using the app as a person
  * would: the loading state waits for the loader on a page whose database is
- * held ({@link datHolFun}), the create state opens the form for starting a
- * group and reloads it, so it shows with nothing focused, the group state
- * creates a group named Beach Day, for the chat state fills its chat ({@link
- * chaSteFun}), as do the edit, event, events, and form states, and then opens
- * the app afresh, so the group shows as it does on a later visit, with nothing
- * focused. The event state then opens the pinned event's sheet, the edit state
- * an item's form in it, the events state the Events section, the form state
- * the section's form, the people state the People section, the requests
- * state that section once two people have asked to join ({@link reqSteFun}),
- * and the sheet state the group sheet from its switcher. A
- * group needs the Firebase Emulators, which the suites that reach one run
- * inside.
+ * held ({@link datHolFun}), and the member state joins Beach Day from another
+ * device's group ({@link memSteFun}) and opens its Settings section. Otherwise
+ * the create state opens the form for starting a group and reloads it, so it
+ * shows with nothing focused, the group state creates a group named Beach Day,
+ * for the chat state fills its chat ({@link chaSteFun}), as do the edit,
+ * event, events, and form states, and then opens the app afresh, so the group
+ * shows as it does on a later visit, with nothing focused. The event state
+ * then opens the pinned event's sheet, the edit state an item's form in it,
+ * the events state the Events section, the form state the section's form, the
+ * people state the People section, the requests state that section once two
+ * people have asked to join ({@link reqSteFun}), the settings state the
+ * Settings section, the delete state its deletion's confirmation, and the
+ * sheet state the group sheet from its switcher. A group needs the Firebase
+ * Emulators, which the suites that reach one run inside.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -419,17 +495,39 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'requests' | 'sheet' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'member' | 'people' | 'requests' | 'settings' | 'sheet' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
 
 
-		await expect( curPagObj.getByRole( 'status' ) ).toHaveText( 'Loading' ); // What: Loader Wait. Why: The loader shows once its delay passes. How: This waits for its status message.
+		await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Loading' ); // What: Loader Wait. Why: The loader shows once its delay passes. How: This waits for its status message.
 
 
 
 		return; // What: Loading Return. Why: Nothing more reaches this screen. How: This returns.
+
+
+	}
+
+
+
+	if ( steStr === 'member' ) { // What: Member Block. Why: The member state opens Settings in another's group, which it joins rather than starts. How: This joins through the owner's device, opens the app afresh, presses the tab, reloads the section so nothing is focused, waits for the leave, and stops.
+
+
+		await memSteFun( curPagObj ); // What: Member Steps Call. Why: The page has to be a member who isn't the owner. How: This joins it to another's group.
+
+		await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: The watch started before the identity existed, so the app opens afresh to show the group. How: This opens the app again.
+
+		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The section opens from its tab. How: This presses it.
+
+		await curPagObj.reload(); // What: Section Reload Call. Why: The section is checked as it opens on a later visit, with nothing focused. How: This reloads it, which its history entry keeps.
+
+		await curPagObj.getByRole( 'button', { name : 'Leave group' } ).waitFor(); // What: Leave Wait. Why: The section has to show the leave before it's checked. How: This waits for its button.
+
+
+
+		return; // What: Member Return. Why: The member state stops at the section. How: This returns.
 
 
 	}
@@ -464,7 +562,7 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit'
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Group Wait. Why: The group has to exist before the app is opened again. How: This waits for its heading.
 
-	if ( steStr !== 'group' && steStr !== 'people' && steStr !== 'sheet' ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, edit, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
+	if ( [ 'chat', 'edit', 'event', 'events', 'form' ].includes( steStr ) ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, edit, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
 
 	await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: A later visit shows the group without the focus its creation gave it. How: This opens the app again.
 
@@ -535,6 +633,27 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit'
 
 
 		return; // What: People Return. Why: The people states stop at the section. How: This returns.
+
+
+	}
+
+
+
+	if ( steStr === 'delete' || steStr === 'settings' ) { // What: Settings Block. Why: The settings states open the owner's Settings section, and the delete state the deletion's confirmation too. How: This presses the tab, reloads the section so nothing is focused, waits for its form, opens the confirmation for the delete state, and stops.
+
+
+		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The section opens from its tab. How: This presses it.
+
+		await curPagObj.reload(); // What: Section Reload Call. Why: The section is checked as it opens on a later visit, with nothing focused. How: This reloads it, which its history entry keeps.
+
+		await curPagObj.getByRole( 'button', { name : 'Save' } ).waitFor(); // What: Form Wait. Why: The section has to show the owner's form before it's checked. How: This waits for its button.
+
+
+		if ( steStr === 'delete' ) await curPagObj.getByRole( 'button', { name : 'Delete group' } ).click(); // What: Delete Click Call. Why: The delete state shows the confirmation. How: This opens it.
+
+
+
+		return; // What: Settings Return. Why: The settings states stop at the section. How: This returns.
 
 
 	}

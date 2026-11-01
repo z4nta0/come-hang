@@ -118,7 +118,7 @@ test( 'the invite link shows and copies, and the owner replaces it after confirm
 
 	await curPagObj.getByRole( 'button', { name : 'Copy link' } ).click(); // What: Copy Click Call. Why: Copying is how the link is shared. How: This presses the button.
 
-	await expect( curPagObj.getByRole( 'status' ) ).toHaveText( /^Link (copied\.|selected\. Copy it to share it\.)$/ ); // What: Copy Status Assertion. Why: The copy, or the selection where the browser won't copy, is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( /^Link (copied\.|selected\. Copy it to share it\.)$/ ); // What: Copy Status Assertion. Why: The copy, or the selection where the browser won't copy, is announced. How: This reads the status.
 
 	await curPagObj.getByRole( 'button', { name : 'Make a new link' } ).click(); // What: New Link Click Call. Why: The owner replaces the link. How: This asks to confirm.
 
@@ -126,8 +126,8 @@ test( 'the invite link shows and copies, and the owner replaces it after confirm
 
 	await curPagObj.getByRole( 'button', { name : 'Make the new link' } ).click(); // What: Confirm Click Call. Why: The owner confirms. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ) ).toHaveText( 'Made a new link.' ); // What: New Link Status Assertion. Why: The replacement is announced. How: This reads the status.
-	await expect( linInpObj ).not.toHaveValue( oldLinStr );                           // What: New Link Assertion. Why: The box shows the new link. How: This waits for its value to change.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Made a new link.' ); // What: New Link Status Assertion. Why: The replacement is announced. How: This reads the status.
+	await expect( linInpObj ).not.toHaveValue( oldLinStr );                                               // What: New Link Assertion. Why: The box shows the new link. How: This waits for its value to change.
 
 
 } );
@@ -168,9 +168,9 @@ test( 'a member changes their own name in a form that takes and returns focus an
 
 	await curPagObj.getByRole( 'button', { name : 'Save' } ).click(); // What: Save Click Call. Why: The name is saved. How: This presses Save.
 
-	await expect( curPagObj.getByRole( 'status' ) ).toHaveText( 'Your name is now Ali.' );   // What: Saved Status Assertion. Why: The change is announced, tidied. How: This reads the status.
-	await expect( curPagObj.getByRole( 'listitem' ) ).toContainText( 'Ali (you)' );          // What: Renamed Row Assertion. Why: The row shows the new name. How: This waits for it.
-	await expect( curPagObj.getByRole( 'button', { name : 'Change name' } ) ).toBeFocused(); // What: Saved Focus Assertion. Why: Saving puts focus back on the button. How: This expects it focused.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Your name is now Ali.' ); // What: Saved Status Assertion. Why: The change is announced, tidied. How: This reads the status.
+	await expect( curPagObj.getByRole( 'listitem' ) ).toContainText( 'Ali (you)' );                            // What: Renamed Row Assertion. Why: The row shows the new name. How: This waits for it.
+	await expect( curPagObj.getByRole( 'button', { name : 'Change name' } ) ).toBeFocused();                   // What: Saved Focus Assertion. Why: Saving puts focus back on the button. How: This expects it focused.
 
 
 } );
@@ -205,9 +205,9 @@ pagTesObj( 'the owner removes a member after confirming, which changes the link,
 
 	await curPagObj.getByRole( 'button', { name : 'Yes, remove' } ).click(); // What: Confirm Click Call. Why: The owner confirms. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ) ).toHaveText( 'Removed Dana Lee. The invite link changed.' ); // What: Removed Status Assertion. Why: The removal is announced with its new link. How: This reads the status.
-	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (1)' } ) ).toBeVisible();        // What: Count Assertion. Why: The member is gone from the list. How: This waits for the count.
-	await expect( curPagObj.getByLabel( 'Invite link' ) ).not.toHaveValue( oldLinStr );                         // What: Changed Link Assertion. Why: A removal replaces the link. How: This waits for the box to change.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Removed Dana Lee. The invite link changed.' ); // What: Removed Status Assertion. Why: The removal is announced with its new link. How: This reads the status.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (1)' } ) ).toBeVisible();                            // What: Count Assertion. Why: The member is gone from the list. How: This waits for the count.
+	await expect( curPagObj.getByLabel( 'Invite link' ) ).not.toHaveValue( oldLinStr );                                             // What: Changed Link Assertion. Why: A removal replaces the link. How: This waits for the box to change.
 
 
 } );
@@ -243,9 +243,9 @@ test( 'a member approves a request and blocks another after confirming, focus la
 
 	await curPagObj.getByRole( 'button', { name : 'Approve Dana Lee' } ).click(); // What: Approve Click Call. Why: The member lets Dana in. How: This presses the button.
 
-	await expect( curPagObj.getByRole( 'status' ) ).toHaveText( "Approved Dana Lee. They're in the group." );    // What: Approved Status Assertion. Why: The approval is announced. How: This reads the status.
-	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (2)' } ) ).toBeVisible();         // What: Members Count Assertion. Why: The new member joins the list. How: This waits for the count.
-	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Waiting to join (1)' } ) ).toBeFocused(); // What: Waiting Focus Assertion. Why: The approve button went with its request, and another still waits. How: This expects the waiting list's heading focused.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( "Approved Dana Lee. They're in the group." ); // What: Approved Status Assertion. Why: The approval is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (2)' } ) ).toBeVisible();                          // What: Members Count Assertion. Why: The new member joins the list. How: This waits for the count.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Waiting to join (1)' } ) ).toBeFocused();                  // What: Waiting Focus Assertion. Why: The approve button went with its request, and another still waits. How: This expects the waiting list's heading focused.
 
 	await curPagObj.getByRole( 'button', { name : 'Block Alice' } ).click(); // What: Block Click Call. Why: The member blocks the one reusing their name. How: This asks to confirm.
 
@@ -253,9 +253,9 @@ test( 'a member approves a request and blocks another after confirming, focus la
 
 	await curPagObj.getByRole( 'button', { name : 'Yes, block' } ).click(); // What: Confirm Click Call. Why: The member confirms. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ) ).toHaveText( 'Blocked Alice.' );                          // What: Blocked Status Assertion. Why: The block is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Blocked Alice.' );          // What: Blocked Status Assertion. Why: The block is announced. How: This reads the status.
 	await expect( curPagObj.getByRole( 'heading', { level : 3, name : /^Waiting to join/ } ) ).toHaveCount( 0 ); // What: List Gone Assertion. Why: The list shows only while someone waits. How: This expects no heading.
-	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (2)' } ) ).toBeFocused();     // What: Members Focus Assertion. Why: With no one waiting, focus lands on the members. How: This expects their heading focused.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (2)' } ) ).toBeFocused();         // What: Members Focus Assertion. Why: With no one waiting, focus lands on the members. How: This expects their heading focused.
 
 	expect( Object.keys( ( await docReaFun( peoEnvObj, `groups/${ groIdeStr }` ) )?.removedUids as object ) ).toHaveLength( 1 ); // What: Blocklist Assertion. Why: A block keeps that identity from asking again. How: This expects one UID on the group's blocklist. // What: Type Assertion Note. Why: The rules store the blocklist as a map. How: The as reads it as an object.
 
@@ -285,9 +285,9 @@ pagTesObj( 'any member declines a request, and declines them all after confirmin
 
 	await secPagObj.getByRole( 'button', { name : 'Decline Alice' } ).click(); // What: Decline Click Call. Why: The member turns one request down. How: This presses the button.
 
-	await expect( secPagObj.getByRole( 'status' ) ).toHaveText( 'Declined Alice.' );                                // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Declined Alice.' );         // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
 	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Waiting to join (1)' } ) ).toBeFocused(); // What: Waiting Focus Assertion. Why: The decline button went with its request. How: This expects the waiting list's heading focused.
-	await expect( secPagObj.getByRole( 'button', { name : 'Decline all' } ) ).toHaveCount( 0 );                   // What: No All Assertion. Why: Declining all is offered only for two or more. How: This expects no button.
+	await expect( secPagObj.getByRole( 'button', { name : 'Decline all' } ) ).toHaveCount( 0 );                  // What: No All Assertion. Why: Declining all is offered only for two or more. How: This expects no button.
 
 	await reqSteFun( secPagObj ); // What: Second Requests Call. Why: A flood is cleared at once. How: This has two more people ask.
 
@@ -299,9 +299,9 @@ pagTesObj( 'any member declines a request, and declines them all after confirmin
 
 	await secPagObj.getByRole( 'button', { name : 'Yes, decline all' } ).click(); // What: Confirm Click Call. Why: The member confirms. How: This presses the answer.
 
-	await expect( secPagObj.getByRole( 'status' ) ).toHaveText( 'Declined 3 requests.' );                      // What: All Status Assertion. Why: Declining all is announced with the count. How: This reads the status.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Declined 3 requests.' );    // What: All Status Assertion. Why: Declining all is announced with the count. How: This reads the status.
 	await expect( secPagObj.getByRole( 'heading', { level : 3, name : /^Waiting to join/ } ) ).toHaveCount( 0 ); // What: List Gone Assertion. Why: No one is waiting. How: This expects no heading.
-	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Members (2)' } ) ).toBeFocused();     // What: Members Focus Assertion. Why: With no one waiting, focus lands on the members. How: This expects their heading focused.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Members (2)' } ) ).toBeFocused();         // What: Members Focus Assertion. Why: With no one waiting, focus lands on the members. How: This expects their heading focused.
 
 
 } );

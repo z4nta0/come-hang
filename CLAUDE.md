@@ -53,7 +53,8 @@ a panel beside the chat from 1,100px, each with the live bring-list, the
 section tabs, the Events section with its form for planning, changing,
 and cancelling events, and the People section with the invite link, the
 people waiting to join, whom any member approves, declines, or blocks, and the
-members.
+members, and the Settings section, where the owner renames the group and sets
+its chat retention, a member leaves, and the owner deletes the group by name.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 

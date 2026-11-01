@@ -52,6 +52,13 @@
 
 
 }
+.welTitHea:focus { /* What: Focused Welcome Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
 
 .welTagPar { /* What: Welcome Tagline Paragraph. Why: The tagline is secondary to the name and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area. */
 

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-01 (reviewing join requests in the People section, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-01 (reviewing join requests in the People section, and the Settings section's group settings, leaving, and deleting, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1598,8 +1598,9 @@ the Blaze change.
   bottom below 720px and down a column beside the content from 720px, and
   each opens its section as a new history entry, which records it, so back
   walks back through them; a group opens at its chat, as does an entry naming
-  a section this version doesn't know. The chat, Events, and People
-  sections are built, and the others show a placeholder until theirs are.
+  a section this version doesn't know. The chat, Events, People, and
+  Settings sections are built, and the map shows a placeholder until its
+  section is.
   The People section shows the invite link, which any member copies (or,
   where the browser won't copy, selects) and the owner replaces after
   confirming, and the members in name order, each with their avatar in their
@@ -1615,7 +1616,21 @@ the Blaze change.
   confirming, blocks one, and from two waiting declines them all after
   confirming; focus then lands on the waiting list's heading, or the
   members' once no one waits, and each change to the requests reads the
-  members again, so an approval shows there. The Events
+  members again, so an approval shows there. The Settings section (built
+  2026-11-01) shows the group's name and how long the server holds a
+  message someone hasn't received: the owner changes both in a form that
+  tidies and checks the name, saying what's wrong beside its box, and picks
+  the retention from 7, 14, 30, 60, 90, or 180 days, while everyone else
+  reads them. A member leaves after confirming, focus moving to the
+  confirmation's Stay; the owner, who can't leave, deletes the group after
+  typing its name, the confirmation taking focus in its box, and leaving
+  either confirmation returns focus to its button. A group left or deleted
+  is hidden at once and its entry replaced with the next group's by name,
+  or with none, so the welcome shows, and that screen takes focus on its
+  heading while a status region the screen host keeps across screens
+  announces the change. The group list carries each group's retention for
+  the form. Handing the group over, the device's light or dark choice and
+  notifications, Google recovery, and the upgrade join Settings next. The Events
   section lists the events that haven't ended, soonest first, as cards that
   open each event's details and bring-list in a sheet; there its creator or
   the group's owner changes it in a form sheet over it, or cancels it after
