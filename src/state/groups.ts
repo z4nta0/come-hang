@@ -28,6 +28,9 @@ import { updateDoc       } from 'firebase/firestore';       // What: Update Doc.
 import { wraKeyFun       } from '../platform/crypto.ts';    // What: Wrap Key Function. Why: The creator's membership holds the group key wrapped for them. How: This wraps it.
 import { writeBatch      } from 'firebase/firestore';       // What: Write Batch. Why: A group is created whole or not at all. How: This groups the creation's writes.
 
+
+import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: An offer of ownership carries the time it was made. How: This types it as the watch reads it.
+
 // #endregion Imports
 
 
@@ -291,7 +294,7 @@ const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : nu
 
 
 
-type GroRecTyp = { ideStr : string, namStr : string, ownBoo : boolean, ownUidStr : string, tokStr : string, ttlDayNum : number }; // What: Group Record Type. Why: The group list shows each group by name, marks the ones this identity owns, names each group's owner, and carries its invite link and chat retention. How: This types each entry groWatFun reports.
+type GroRecTyp = { ideStr : string, namStr : string, offTimNum : number, offUidStr : string, ownBoo : boolean, ownUidStr : string, tokStr : string, ttlDayNum : number }; // What: Group Record Type. Why: The group list shows each group by name, marks the ones this identity owns, names each group's owner, and carries its invite link, chat retention, and standing offer of ownership. How: This types each entry groWatFun reports, the offer's time 0 and its member empty when none stands.
 
 // #region groWatFun
 
@@ -300,12 +303,13 @@ type GroRecTyp = { ideStr : string, namStr : string, ownBoo : boolean, ownUidStr
  *
  * @summary
  * Watches the groups this identity belongs to, owned or not, and reports them
- * sorted by name, each with its owner, current invite token, and chat
- * retention, each time one is added, changed, handed over, or lost, once every
- * group in the account has been read. A device with no identity yet reports
- * none and connects to nothing, so a first visit makes no connection (Section
- * 16). A group whose read is refused, such as one just left or deleted, drops
- * out of the list. Resolves with the function that stops watching.
+ * sorted by name, each with its owner, current invite token, chat retention,
+ * and any standing offer of ownership, each time one is added, changed, handed
+ * over, or lost, once every group in the account has been read. A device with
+ * no identity yet reports none and connects to nothing, so a first visit makes
+ * no connection (Section 16). A group whose read is refused, such as one just
+ * left or deleted, drops out of the list. Resolves with the function that
+ * stops watching.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -394,7 +398,7 @@ const groWatFun = async ( onGroFun : ( groRecArr : GroRecTyp[] ) => void ) : Pro
 		groStoMap.set( groIdeStr, onSnapshot( doc( fstDatObj, `groups/${ groIdeStr }` ), ( groSnaObj ) => { // What: Group Watch Call. Why: A rename or a change of owner shows at once. How: This listens to the group's document and keeps its entry.
 
 
-			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr, ownUidStr : groSnaObj.get( 'ownerUid' ) as string, tokStr : groSnaObj.get( 'currentInviteToken' ) as string, ttlDayNum : groSnaObj.get( 'chatTtlDays' ) as number } ); // What: Entry Set Call. Why: The list shows the group by name, marks it when owned, and carries its owner, invite link, and chat retention. How: This keeps the entry from the document. // What: Type Assertion Note. Why: The rules store the name, the owner's UID, and the invite token as strings, and the retention as an integer. How: The as read them as such.
+			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, offTimNum : ( groSnaObj.get( 'pendingOfferedAt', { serverTimestamps : 'estimate' } ) as Timestamp | null )?.toMillis() ?? 0, offUidStr : ( groSnaObj.get( 'pendingOwnerUid' ) as string | null ) ?? '', ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr, ownUidStr : groSnaObj.get( 'ownerUid' ) as string, tokStr : groSnaObj.get( 'currentInviteToken' ) as string, ttlDayNum : groSnaObj.get( 'chatTtlDays' ) as number } ); // What: Entry Set Call. Why: The list shows the group by name, marks it when owned, and carries its owner, invite link, chat retention, and any offer of ownership. How: This keeps the entry from the document, an offer just made timed by the device's estimate until the server's time arrives. // What: Type Assertion Note. Why: The rules store the name, the owner's UID, and the invite token as strings, the retention as an integer, and the offer as a UID and a time, each null with no offer. How: The as read them as such.
 
 			else groRecMap.delete( groIdeStr ); // What: Entry Delete Call. Why: A deleted group shouldn't stay listed. How: This drops its entry.
 

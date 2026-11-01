@@ -28,8 +28,12 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * and chat retention, a bad name refused beside its box, and can't leave;
  * the owner deletes the group only once its name is typed, focus moving into
  * the confirmation and back, then landing on the next group or the welcome;
- * and a member sees the settings without the form, and leaves after
- * confirming, focus moving to Stay and back, then landing on the welcome.
+ * a member sees the settings without the form, and leaves after
+ * confirming, focus moving to Stay and back, then landing on the welcome;
+ * and the owner offers the group to a member and withdraws it, and the
+ * member declines one offer and accepts the next, focus landing on what
+ * replaces each button pressed, while an offer to a member who can't own
+ * another group is refused, saying why.
  *
  * Sections:
  *  - Module State
@@ -57,7 +61,7 @@ const secOpeFun = async ( curPagObj : Page ) : Promise< void > => { // What: Sec
 
 	await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Tab Click Call. Why: The section opens from its tab. How: This presses it.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'This group' } ) ).toBeVisible(); // What: Section Wait. Why: The section has to show before it's used. How: This waits for its first heading.
+	await expect( curPagObj.getByRole( 'heading', { exact : true, level : 3, name : 'This group' } ) ).toBeVisible(); // What: Section Wait. Why: The section has to show before it's used. How: This waits for its first heading.
 
 
 };
@@ -250,6 +254,98 @@ pagTesObj( 'a member sees the settings without the form and leaves after confirm
 
 
 } );
+
+
+pagTesObj( 'the owner offers the group and withdraws it, then the member declines one offer and accepts the next, focus landing on what replaces each button', async ( { page : curPagObj, secPagObj } ) => { // What: Handover Test. Why: A group moves only when the member offered it agrees, and the owner can call an offer off (Section 18). How: This offers, withdraws, and offers again as the owner, has the member decline, then offers once more and has the member accept, checking each status, focus, and the group's owner.
+
+
+	test.setTimeout( 60000 ); // What: Timeout Call. Why: The test runs four offers and three answers across two devices. How: This allows a minute.
+
+	await curPagObj.goto( '/' ); // What: Owner Page Load Call. Why: The owner's device needs the app's modules. How: This opens the app.
+
+
+	const { groIdeStr, uidMemStr } = await memSetFun( setEnvObj, curPagObj, secPagObj ); // What: Group Identifier String. Why: The new owner is read back from the group. How: This creates the group with an owner and a member. // What: UID Member String. Why: The member becomes the owner. How: This takes their UID from the setup.
+
+
+	await curPagObj.goto( '/' ); // What: Owner Open Call. Why: The owner offers the group. How: This opens the app on their device.
+
+	await secOpeFun( curPagObj ); // What: Owner Section Call. Why: The handover is in the Settings section. How: This opens it.
+
+
+	const offButObj = curPagObj.getByRole( 'button', { name : 'Offer the group' } );    // What: Offer Button Object. Why: The checks offer and expect focus back on it. How: This finds the button.
+	const witButObj = curPagObj.getByRole( 'button', { name : 'Withdraw the offer' } ); // What: Withdraw Button Object. Why: The checks withdraw and expect focus on it. How: This finds the button.
+
+
+	await expect( curPagObj.getByLabel( 'Offer the group to' ) ).toHaveValue( uidMemStr ); // What: Choice Assertion. Why: The only other member is picked to start. How: This reads the choice.
+
+	await offButObj.click(); // What: Offer Click Call. Why: The owner offers the group. How: This presses the button.
+
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Offered Beach Day to Dana Lee.' ); // What: Offered Status Assertion. Why: The offer is announced. How: This reads the status.
+	await expect( curPagObj.getByText( 'Offered to Dana Lee.', { exact : false } ) ).toBeVisible();                    // What: Standing Assertion. Why: The owner sees whom it's to. How: This waits for the note.
+	await expect( witButObj ).toBeFocused();                                                                          // What: Withdraw Focus Assertion. Why: The offer's button went with its form. How: This expects the withdrawal focused.
+
+	await witButObj.click(); // What: Withdraw Click Call. Why: The owner calls the offer off. How: This presses the button.
+
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Withdrew the offer.' ); // What: Withdrew Status Assertion. Why: The withdrawal is announced. How: This reads the status.
+	await expect( offButObj ).toBeFocused();                                                               // What: Offer Focus Assertion. Why: The withdrawal went with the offer. How: This expects the offer's button focused.
+
+	await offButObj.click(); // What: Second Offer Click Call. Why: The member is offered the group to decline. How: This offers it again.
+
+	await expect( witButObj ).toBeVisible(); // What: Second Standing Assertion. Why: The offer has to stand before the member answers. How: This waits for the withdrawal.
+
+	await secPagObj.goto( '/' ); // What: Member Open Call. Why: The member answers from their own device. How: This opens the app on it.
+
+	await secOpeFun( secPagObj ); // What: Member Section Call. Why: The offer shows in the Settings section. How: This opens it.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : "You're offered this group" } ) ).toBeVisible(); // What: Offered Assertion. Why: The member sees the offer. How: This waits for its heading.
+
+	await secPagObj.getByRole( 'button', { name : 'Decline' } ).click(); // What: Decline Click Call. Why: The member turns the group down. How: This presses Decline.
+
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Declined the offer.' );               // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Leave the group' } ) ).toBeFocused();              // What: Next Heading Focus Assertion. Why: The offer's part went with it. How: This expects the next part's heading focused.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : "You're offered this group" } ) ).toHaveCount( 0 ); // What: Offer Gone Assertion. Why: A declined offer stops showing. How: This expects no heading.
+	await expect( offButObj ).toBeVisible();                                                                             // What: Owner Form Assertion. Why: The owner's form returns once the offer ends. How: This waits for its button.
+
+	await offButObj.click(); // What: Third Offer Click Call. Why: The member is offered the group to accept. How: This offers it again.
+
+	await secPagObj.getByRole( 'button', { name : 'Accept' } ).click(); // What: Accept Click Call. Why: The member takes the group. How: This presses Accept.
+
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'You now own Beach Day.' );     // What: Accepted Status Assertion. Why: The acceptance is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Hand over the group' } ) ).toBeFocused(); // What: Heading Focus Assertion. Why: The answers went with the offer. How: This expects the part's heading focused.
+	await expect( curPagObj.getByRole( 'button', { name : 'Leave group' } ) ).toBeVisible();                     // What: Old Owner Assertion. Why: The old owner stays in the group as a member who can leave. How: This waits for their leave.
+
+	expect( ( await docReaFun( setEnvObj, `groups/${ groIdeStr }` ) )?.ownerUid ).toBe( uidMemStr ); // What: New Owner Assertion. Why: The handover reached the server. How: This reads the group's owner.
+
+
+} );
+
+
+
+pagTesObj( "an offer to a member who can't own another group is refused, saying why", async ( { page : curPagObj, secPagObj } ) => { // What: Refused Offer Test. Why: The rules refuse an offer to a member with no free owned slot, and the owner should learn that at once without hearing more about their account (Section 18). How: This fills the member's owned slots, then offers them the group, checking the alert and that the form stays.
+
+
+	test.setTimeout( 60000 ); // What: Timeout Call. Why: The member creates ten groups first. How: This allows a minute.
+
+	await curPagObj.goto( '/' ); // What: Owner Page Load Call. Why: The owner's device needs the app's modules. How: This opens the app.
+
+	await memSetFun( setEnvObj, curPagObj, secPagObj ); // What: Member Setup Call. Why: The offer needs a member. How: This creates the group with an owner and a member.
+
+	for ( let groIndNum = 0; groIndNum < 10; groIndNum += 1 ) await runPagFun( secPagObj, '/src/state/groups.ts', 'groCreFun', `Club ${ groIndNum + 1 }`, 'Dana Lee' ); // What: Owned Fill Loop. Why: While the paywall is off, everyone owns at most 10 groups. How: This has the member create ten.
+
+
+
+	await curPagObj.goto( '/' ); // What: Owner Open Call. Why: The owner offers the group. How: This opens the app on their device.
+
+	await secOpeFun( curPagObj ); // What: Owner Section Call. Why: The handover is in the Settings section. How: This opens it.
+
+	await curPagObj.getByRole( 'button', { name : 'Offer the group' } ).click(); // What: Offer Click Call. Why: The owner offers the group to the full member. How: This presses the button.
+
+	await expect( curPagObj.getByRole( 'alert' ).filter( { hasText : 'take on' } ) ).toHaveText( "That member can't take on another group right now. Offer it to someone else." ); // What: Refused Alert Assertion. Why: The owner learns the offer can't land, and why. How: This reads the alert.
+	await expect( curPagObj.getByRole( 'button', { name : 'Offer the group' } ) ).toBeVisible();                                                                                 // What: Form Stays Assertion. Why: No offer was made, so the owner can pick someone else. How: This expects the button still shown.
+
+
+} );
+
 
 // #endregion Module Init
 

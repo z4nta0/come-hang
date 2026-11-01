@@ -7,11 +7,11 @@
  * @summary
  * Styles for GroSetCom: the heading, the group's part with the owner's form,
  * each field's label, box or choice, hint, and problem stacked, or the values
- * paired for everyone else, and the part for leaving or deleting, its note,
- * its buttons, and the deletion's confirmation with its own box. The forms
- * place their children in order, since their fields share classes. The
- * status that announces a save is for screen readers alone, while a failure
- * shows in the dark error color.
+ * paired for everyone else, the handover's note, buttons, and offer form, and
+ * the part for leaving or deleting, its note, its buttons, and the deletion's
+ * confirmation with its own box. The forms place their children in order,
+ * since their fields share classes. The status that announces a change is for
+ * screen readers alone, while a failure shows in the dark error color.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -265,6 +265,134 @@
 
 
 
+/* #region hanSetSec */
+
+.hanSetSec { /* What: Handover Settings Section. Why: The heading, note, and controls read as one part. How: This stacks them a tier 3 space apart, in order since the controls change with the offer. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.hanTitHea { /* What: Handover Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.hanTitHea:focus { /* What: Focused Handover Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.hanNotPar { /* What: Handover Note Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+.endActDiv { /* What: End Actions Div. Why: A part's buttons sit together, or a question and its answers in their place, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Declining, withdrawing, offering, and opening or leaving a confirmation are lighter actions, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion endActDiv */
+
+
+
+/* #region hanOffFor */
+
+.hanOffFor { /* What: Handover Offer Form. Why: The choice and the button read down one column. How: This stacks them a tier 4 space apart, in order, since the label and choice share classes with the settings form. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+/* What: Field Name Label Pointer. Why: The offer's label is set like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+/* What: Field Value Select Pointer. Why: The offer's choice is drawn like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The offer's button sits in the same wrapping row as the part's other buttons. How: Its rule sits in the hanSetSec region. */
+
+/* What: Action Plain Button Pointer. Why: Offering uses the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion hanOffFor */
+
+/* #endregion hanSetSec */
+
+
+
 /* #region endSetSec */
 
 .endSetSec { /* What: End Settings Section. Why: The heading, note, and controls read as one part. How: This stacks them a tier 3 space apart, in order since the controls change with the confirmation. */
@@ -280,6 +408,13 @@
 
 
 	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.endTitHea:focus { /* What: Focused End Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
 
 
 }
@@ -325,16 +460,7 @@
 
 /* #region endActDiv */
 
-.endActDiv { /* What: End Actions Div. Why: A part's buttons sit together, or a question and its answers in their place, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
-
-
-	align-items : center;
-	display     : flex;
-	flex-wrap   : wrap;
-	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
-
-
-}
+/* What: End Actions Div Pointer. Why: The confirmation's answers sit in the same wrapping row as the handover's buttons. How: Its rule sits in the hanSetSec region. */
 
 .actDanBut { /* What: Action Danger Button. Why: Confirming a leave or a deletion is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
 
@@ -379,48 +505,7 @@
 
 }
 
-.actPlaBut { /* What: Action Plain Button. Why: Opening a confirmation and leaving one are lighter actions, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
-
-
-	background-color : transparent;
-	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
-	border-radius    : 999px;
-	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
-	font             : inherit;
-	font-weight      : 700;
-	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
-	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
-	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
-
-
-}
-.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
-
-
-	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
-
-
-}
-.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
-
-
-	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
-
-
-}
-@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
-
-
-	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
-
-
-		transition : none;
-
-
-	}
-
-
-}
+/* What: Action Plain Button Pointer. Why: Keeping the group uses the outlined pill. How: Its rule sits in the hanSetSec region. */
 
 /* #endregion endActDiv */
 
@@ -430,20 +515,20 @@
 
 /* #region endActDiv */
 
-/* What: End Actions Div Pointer. Why: The deletion's button, and the leave with its question and answers, sit in the same wrapping row as the confirmation's answers. How: Its rule sits in the delConFor region. */
+/* What: End Actions Div Pointer. Why: The deletion's button, and the leave with its question and answers, sit in the same wrapping row as the handover's buttons. How: Its rule sits in the hanSetSec region. */
 
 /* What: Confirm Ask Paragraph Pointer. Why: The leave's question reads before its answers, as the deletion's does. How: Its rule sits in the delConFor region. */
 
 /* What: Action Danger Button Pointer. Why: Confirming a leave uses the danger pill. How: Its rule sits in the endActDiv region inside delConFor. */
 
-/* What: Action Plain Button Pointer. Why: Opening a confirmation and staying use the outlined pill. How: Its rule sits in the endActDiv region inside delConFor. */
+/* What: Action Plain Button Pointer. Why: Opening a confirmation and staying use the outlined pill. How: Its rule sits in the hanSetSec region. */
 
 /* #endregion endActDiv */
 
 /* #endregion endSetSec */
 
 
-.setStaPar { /* What: Settings Status Paragraph. Why: The page itself shows a save to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+.setStaPar { /* What: Settings Status Paragraph. Why: The page itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
 
 
 	clip-path   : inset( 50% );

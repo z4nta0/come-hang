@@ -6,18 +6,27 @@
 import cssModObj from './group-settings.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Saving the group's settings is the section's leading action. How: This draws its button.
-import { groDelFun } from '../state/groups.ts';     // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
-import { groLeaFun } from '../state/members.ts';    // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
-import { groNamFun } from '../core/text-limits.ts'; // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
-import { groSetFun } from '../state/groups.ts';     // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
-import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
-import { useEffect } from 'react';                  // What: Use Effect. Why: Opening and closing a confirmation moves focus. How: This moves it once drawn.
-import { useRef    } from 'react';                  // What: Use Reference. Why: Focus moves between a button, the confirmation it opens, and a field with a problem. How: This holds the elements.
-import { useState  } from 'react';                  // What: Use State. Why: The drafts, the confirmations, and the messages change while the section is open. How: This holds each.
+import { ButBasCom   } from '../ui/button.tsx';       // What: Button Base Component. Why: Saving the group's settings and accepting an offer are the section's leading actions. How: This draws their buttons.
+import { dayDatFun   } from '../utils/date.ts';       // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
+import { groDelFun   } from '../state/groups.ts';     // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
+import { groLeaFun   } from '../state/members.ts';    // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
+import { groNamFun   } from '../core/text-limits.ts'; // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
+import { groSetFun   } from '../state/groups.ts';     // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
+import { ideEnsFun   } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member an offer names answers it. How: This reads their UID.
+import { memLisFun   } from '../state/members.ts';    // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
+import { OFF_LIF_NUM } from '../state/ownership.ts';  // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
+import { offAccFun   } from '../state/ownership.ts';  // What: Offer Accept Function. Why: The member offered the group can take it. How: This makes them its owner.
+import { offDecFun   } from '../state/ownership.ts';  // What: Offer Decline Function. Why: The member offered the group can turn it down. How: This declines and tells the owner.
+import { offMakFun   } from '../state/ownership.ts';  // What: Offer Make Function. Why: The owner hands the group over by offering it (Section 18). How: This makes the offer.
+import { offWitFun   } from '../state/ownership.ts';  // What: Offer Withdraw Function. Why: The owner can call an offer off. How: This withdraws it.
+import { texNorFun   } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
+import { useEffect   } from 'react';                  // What: Use Effect. Why: The section reads the members, and a confirmation or an offer moves focus. How: This starts the read and moves focus once drawn.
+import { useRef      } from 'react';                  // What: Use Reference. Why: Focus moves between a button, what replaces it, and a field with a problem. How: This holds the elements.
+import { useState    } from 'react';                  // What: Use State. Why: The drafts, the members, the confirmations, and the messages change while the section is open. How: This holds each.
 
 
-import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The section shows one group's settings. How: This types the group.
+import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The section shows one group's settings. How: This types the group.
+import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Type. Why: The owner picks a member to offer the group to. How: This types each.
 
 // #endregion Imports
 
@@ -27,13 +36,14 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * group-settings.tsx = Group Settings
  *
  * @summary
- * The open group's Settings section: the group's name and how long the
- * server holds a message someone hasn't received, which the owner changes in
- * a form and everyone else reads, then the way out of the group, a leave for
- * a member and a deletion, confirmed by typing the group's name, for the
- * owner. Each change is announced, a field with a problem says so beside
- * it, and a change that fails says why. A leave or deletion hands the group
- * to the screen host, which opens what's left.
+ * The open group's Settings section: the group's name and how long the server
+ * holds a message someone hasn't received, which the owner changes in a form
+ * and everyone else reads; handing the group over, which the owner offers to a
+ * member and the member accepts or declines; then the way out of the group, a
+ * leave for a member and a deletion, confirmed by typing the group's name, for
+ * the owner. Each change is announced, a field with a problem says so beside
+ * it, and a change that fails says why. A leave or deletion hands the group to
+ * the screen host, which opens what's left.
  *
  * Sections:
  *  - Constants
@@ -48,8 +58,10 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
 
 // #region Constants
 
-const FAI_SET_STR = "That didn't go through. Try again.";                   // What: Failure Settings String. Why: A change that fails still has to be told. How: The alert shows this.
-const GRO_ERR_STR = 'Use letters, numbers, emoji, and simple punctuation.'; // What: Group Error String. Why: A group name with other characters is refused. How: This says what it may hold.
+const ACC_DEN_STR = "You can't take on another group right now. Delete or hand over a group you own first."; // What: Accept Denied String. Why: The rules refuse an acceptance past the member's owned cap (Section 18). How: The alert shows this.
+const FAI_SET_STR = "That didn't go through. Try again.";                                                    // What: Failure Settings String. Why: A change that fails for any other reason still has to be told. How: The alert shows this.
+const GRO_ERR_STR = 'Use letters, numbers, emoji, and simple punctuation.';                                  // What: Group Error String. Why: A group name with other characters is refused. How: This says what it may hold.
+const OFF_DEN_STR = "That member can't take on another group right now. Offer it to someone else.";          // What: Offer Denied String. Why: The rules refuse an offer to a member with no free owned slot, without saying more about their account (Section 18). How: The alert shows this.
 
 const TTL_DAY_ARR = [ 7, 14, 30, 60, 90, 180 ]; // What: TTL Day Array. Why: The retention runs 7 to 180 days (Section 5), and a few steps cover every group's need. How: This lists the choices, in days.
 
@@ -74,11 +86,15 @@ type GscProTyp = { curGroObj : GroRecTyp, onGonFun : ( gonIdeStr : string, mesSt
  * member then sees Leave group, whose confirmation takes focus on its Stay
  * button, and the owner sees why they can't leave and Delete group, whose
  * confirmation asks for the group's name and takes focus in its box. Leaving
- * a confirmation returns focus to the button that opened it. One change runs
- * at a time, its button reading what it's doing; a save is announced through
- * the status and a failure through the alert, while a leave or deletion that
- * lands calls onGonFun with the group's ID and what to announce. Key it by
- * the group, so another group starts afresh.
+ * a confirmation returns focus to the button that opened it. Between them,
+ * the owner offers the group to a member chosen by name, then sees whom it's
+ * offered to and when it lapses, with a withdrawal, while the member offered
+ * it sees an accept and a decline; focus lands on what replaces the button
+ * pressed once the group shows the change. One change runs at a time, its
+ * button reading what it's doing; a change is announced through the status
+ * and a failure through the alert, a refused offer or acceptance saying why,
+ * while a leave or deletion that lands calls onGonFun with the group's ID and
+ * what to announce. Key it by the group, so another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -99,25 +115,82 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 	const delButRef = useRef< HTMLButtonElement >( null ); // What: Delete Button Reference. Why: Leaving the deletion's confirmation returns focus to its button. How: This holds the button.
-	const delInpRef = useRef< HTMLInputElement >( null );  // What: Delete Input Reference. Why: The deletion's confirmation puts the owner in its box. How: This holds the box.
-	const focRetRef = useRef( false );                     // What: Focus Return Reference. Why: Focus returns to a button once its confirmation has gone. How: This is true while that's owed.
-	const leaButRef = useRef< HTMLButtonElement >( null ); // What: Leave Button Reference. Why: Leaving the leave's confirmation returns focus to its button. How: This holds the button.
-	const leaStaRef = useRef< HTMLButtonElement >( null ); // What: Leave Stay Reference. Why: The leave's confirmation puts the member on its safe answer. How: This holds the Stay button.
-	const namInpRef = useRef< HTMLInputElement >( null );  // What: Name Input Reference. Why: The name box takes focus when it has a problem. How: This holds the box.
+	const delInpRef = useRef< HTMLInputElement >( null );   // What: Delete Input Reference. Why: The deletion's confirmation puts the owner in its box. How: This holds the box.
+	const endHeaRef = useRef< HTMLHeadingElement >( null ); // What: End Heading Reference. Why: A declined offer takes its part away, so focus lands on the next part's heading. How: This holds it.
+	const focRetRef = useRef( false );                      // What: Focus Return Reference. Why: Focus returns to a button once its confirmation has gone. How: This is true while that's owed.
+	const hanHeaRef = useRef< HTMLHeadingElement >( null ); // What: Handover Heading Reference. Why: An accepted offer replaces its buttons, so focus lands on the part's heading. How: This holds it.
+	const leaButRef = useRef< HTMLButtonElement >( null );  // What: Leave Button Reference. Why: Leaving the leave's confirmation returns focus to its button. How: This holds the button.
+	const leaStaRef = useRef< HTMLButtonElement >( null );  // What: Leave Stay Reference. Why: The leave's confirmation puts the member on its safe answer. How: This holds the Stay button.
+	const namInpRef = useRef< HTMLInputElement >( null );   // What: Name Input Reference. Why: The name box takes focus when it has a problem. How: This holds the box.
+	const offButRef = useRef< HTMLButtonElement >( null );  // What: Offer Button Reference. Why: A withdrawn offer brings the offer back, which takes focus. How: This holds its button.
+	const witButRef = useRef< HTMLButtonElement >( null );  // What: Withdraw Button Reference. Why: An offer made replaces its form with the withdrawal, which takes focus. How: This holds its button.
 
-	const [ actKinStr, setActKinStr ] = useState( '' );                  // What: Action Kind String And Setter. Why: One change at a time keeps a double tap from acting twice, and its button says what it's doing. How: This holds the change that's out, save, leave, or delete, empty when none is.
-	const [ conDelBoo, setConDelBoo ] = useState( false );               // What: Confirm Delete Boolean And Setter. Why: Deleting asks to confirm by name first. How: This is true while the confirmation shows.
-	const [ conLeaBoo, setConLeaBoo ] = useState( false );               // What: Confirm Leave Boolean And Setter. Why: Leaving asks to confirm first. How: This is true while the confirmation shows.
-	const [ delErrStr, setDelErrStr ] = useState( '' );                  // What: Delete Error String And Setter. Why: A name that doesn't match is told beside its box. How: This holds the problem, empty when there's none.
-	const [ delNamStr, setDelNamStr ] = useState( '' );                  // What: Delete Name String And Setter. Why: The confirmation's box shows what's typed. How: This holds it.
-	const [ errMesStr, setErrMesStr ] = useState( '' );                  // What: Error Message String And Setter. Why: A failed change is announced. How: This holds the alert's text, empty when there's none.
-	const [ namErrStr, setNamErrStr ] = useState( '' );                  // What: Name Error String And Setter. Why: The name box says what's wrong with it. How: This holds the problem, empty when there's none.
-	const [ namTexStr, setNamTexStr ] = useState( curGroObj.namStr );    // What: Name Text String And Setter. Why: The name box shows what's typed, starting from the group's name. How: This holds it.
-	const [ staMesStr, setStaMesStr ] = useState( '' );                  // What: Status Message String And Setter. Why: A save that lands is announced. How: This holds the status's text.
-	const [ ttlDayNum, setTtlDayNum ] = useState( curGroObj.ttlDayNum ); // What: TTL Day Number And Setter. Why: The retention choice shows what's picked, starting from the group's. How: This holds it, in days.
+	const focOffRef = useRef< React.RefObject< HTMLElement | null > | null >( null ); // What: Focus Offer Reference. Why: An offer's buttons give way only once the group shows the change, which can arrive before or after the write settles. How: This holds the reference of the element owed focus then, null when none is.
+
+	const [ actKinStr, setActKinStr ] = useState( '' );                         // What: Action Kind String And Setter. Why: One change at a time keeps a double tap from acting twice, and its button says what it's doing. How: This holds the change that's out, save, leave, or delete, empty when none is.
+	const [ conDelBoo, setConDelBoo ] = useState( false );                      // What: Confirm Delete Boolean And Setter. Why: Deleting asks to confirm by name first. How: This is true while the confirmation shows.
+	const [ conLeaBoo, setConLeaBoo ] = useState( false );                      // What: Confirm Leave Boolean And Setter. Why: Leaving asks to confirm first. How: This is true while the confirmation shows.
+	const [ delErrStr, setDelErrStr ] = useState( '' );                         // What: Delete Error String And Setter. Why: A name that doesn't match is told beside its box. How: This holds the problem, empty when there's none.
+	const [ delNamStr, setDelNamStr ] = useState( '' );                         // What: Delete Name String And Setter. Why: The confirmation's box shows what's typed. How: This holds it.
+	const [ errMesStr, setErrMesStr ] = useState( '' );                         // What: Error Message String And Setter. Why: A failed change is announced. How: This holds the alert's text, empty when there's none.
+	const [ memRecArr, setMemRecArr ] = useState< MemRecTyp[] | null >( null ); // What: Member Record Array And Setter. Why: The owner offers the group to a member by name, and the offer names whom it's to. How: This holds the members, null until read.
+	const [ namErrStr, setNamErrStr ] = useState( '' );                         // What: Name Error String And Setter. Why: The name box says what's wrong with it. How: This holds the problem, empty when there's none.
+	const [ namTexStr, setNamTexStr ] = useState( curGroObj.namStr );           // What: Name Text String And Setter. Why: The name box shows what's typed, starting from the group's name. How: This holds it.
+	const [ offTarStr, setOffTarStr ] = useState( '' );                         // What: Offer Target String And Setter. Why: The offer's choice shows the member picked. How: This holds their UID, empty until one is picked.
+	const [ staMesStr, setStaMesStr ] = useState( '' );                         // What: Status Message String And Setter. Why: A change that lands is announced. How: This holds the status's text.
+	const [ ttlDayNum, setTtlDayNum ] = useState( curGroObj.ttlDayNum );        // What: TTL Day Number And Setter. Why: The retention choice shows what's picked, starting from the group's. How: This holds it, in days.
+	const [ uidValStr, setUidValStr ] = useState( '' );                         // What: UID Value String And Setter. Why: The member an offer names sees its answers. How: This holds their UID, empty until read.
 
 
 	const ttlOptArr = TTL_DAY_ARR.includes( curGroObj.ttlDayNum ) ? TTL_DAY_ARR : [ ...TTL_DAY_ARR, curGroObj.ttlDayNum ].sort( ( dayOneNum, dayTwoNum ) => dayOneNum - dayTwoNum ); // What: TTL Option Array. Why: A retention saved outside the usual steps should still show as chosen. How: This adds the group's own value to the steps when it isn't one.
+
+
+
+	const offEndNum = curGroObj.offTimNum + OFF_LIF_NUM;                                                                        // What: Offer End Number. Why: An offer lapses 7 days after it's made. How: This adds its life to its time.
+	const offLivBoo = curGroObj.offUidStr !== '' && offEndNum > Date.now();                                                       // What: Offer Live Boolean. Why: A lapsed offer can't be accepted, and the daily run clears it later (Section 18). How: This is true while one stands and hasn't lapsed.
+	const othMemArr = ( memRecArr ?? [] ).filter( ( memRecObj ) => memRecObj.uidValStr !== curGroObj.ownUidStr );                // What: Other Member Array. Why: The owner offers the group to someone else. How: This leaves the owner out of the members.
+	const offMemStr = othMemArr.find( ( memRecObj ) => memRecObj.uidValStr === curGroObj.offUidStr )?.namTexStr || 'a member'; // What: Offer Member String. Why: The owner sees whom the offer is to. How: This finds their name, or says a member when it's unread.
+	const offPicStr = othMemArr.some( ( memRecObj ) => memRecObj.uidValStr === offTarStr ) ? offTarStr : othMemArr[ 0 ]?.uidValStr ?? ''; // What: Offer Picked String. Why: The choice starts on the first member, and a member who has left can't stay picked. How: This takes the pick while it's a member, else the first.
+
+	const offYouBoo = offLivBoo && curGroObj.offUidStr === uidValStr; // What: Offer You Boolean. Why: Only the member an offer names answers it. How: This is true when the live offer names this identity.
+
+
+
+	useEffect( () => { // What: Members Load Effect. Why: The offer names members, and a handover changes who owns the group. How: This reads the UID and the members, again when the owner changes.
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: A read finishing after a newer one began, or after the section closed, mustn't change it. How: This is true until the cleanup runs.
+
+
+		void ideEnsFun().then( ( ideRecObj ) => { if ( actValBoo ) setUidValStr( ideRecObj.uidValStr ); } ); // What: UID Read Call. Why: The member offered the group answers it. How: This reads the UID.
+
+		void memLisFun( curGroObj.ideStr ).then( ( lisRecArr ) => { if ( actValBoo ) setMemRecArr( [ ...lisRecArr ].sort( ( memOneObj, memTwoObj ) => memOneObj.namTexStr.localeCompare( memTwoObj.namTexStr ) ) ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Members Read Call. Why: The owner picks a member by name. How: This reads the members and sorts them, logging a failure.
+
+
+
+		return () => { actValBoo = false; }; // What: Cleanup Return. Why: A read still out shouldn't land after a newer one began. How: This marks it stale.
+
+
+	}, [ curGroObj.ideStr, curGroObj.ownUidStr ] ); // What: Effect Dependency Array. Why: The members belong to one group, and a handover changes whose view this is. How: curGroObj.ideStr names the group, and curGroObj.ownUidStr changes with its owner.
+
+
+
+	useEffect( () => { // What: Offer Focus Effect. Why: Making, withdrawing, accepting, or declining an offer takes away the button pressed once the group shows the change. How: Once the element owed focus is drawn, this focuses it and clears the debt.
+
+
+		const tarEleObj = focOffRef.current?.current; // What: Target Element Object. Why: The element owed focus may not be drawn yet. How: This reads it, undefined or null until it is.
+
+
+		if ( !tarEleObj ) return; // What: Drawn Guard. Why: Focus waits for the element to appear. How: This returns until it has.
+
+
+
+		focOffRef.current = null; // What: Focus Clear Assignment. Why: The move is owed once. How: This clears the debt.
+
+		tarEleObj.focus(); // What: Focus Call. Why: The next Tab carries on from the part that changed. How: This focuses it.
+
+
+	}, [ curGroObj.offUidStr, curGroObj.ownBoo, memRecArr ] ); // What: Effect Dependency Array. Why: The element owed focus appears once the offer, the owner, or the members change. How: curGroObj.offUidStr changes with an offer, curGroObj.ownBoo with an acceptance, and memRecArr when the members are read again.
 
 
 
@@ -153,15 +226,18 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	 * @summary
 	 * Runs one change: ignores it while another is out, marks which change
 	 * is out so its button can say so, clears the messages, then awaits it.
-	 * A failure is logged and announced through the alert. Resolves true when
-	 * the change landed, leaving the caller to say so, since a leave or
-	 * deletion is announced by the screen host.
+	 * A failure is logged and announced through the alert, a refusal by the
+	 * rules with the given message and anything else asking to try again.
+	 * Resolves true when the change landed, leaving the caller to say so,
+	 * since a leave or deletion is announced by the screen host.
 	 *
 	 * @author z4nta0 <https://github.com/z4nta0>
 	 *
-	 * @param actKinVal - Action Kind Value: Which change it is, save, leave,
-	 *                    or delete.
+	 * @param actKinVal - Action Kind Value: Which change it is, such as save
+	 *                    or leave.
 	 * @param actStaFun - Action Start Function: Starts the change.
+	 * @param denMesStr - Denied Message String: What to announce when the
+	 *                    rules refuse it, the general failure by default.
 	 *
 	 * @returns A promise that resolves with whether the change landed.
 	 *
@@ -172,7 +248,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	 *
 	*/
 
-	const actRunFun = async ( actKinVal : string, actStaFun : () => Promise< unknown > ) : Promise< boolean > => { // What: Action Run Function. Why: Every change in the section runs, and fails, the same way. How: This runs one and reports whether it landed.
+	const actRunFun = async ( actKinVal : string, actStaFun : () => Promise< unknown >, denMesStr = FAI_SET_STR ) : Promise< boolean > => { // What: Action Run Function. Why: Every change in the section runs, and fails, the same way. How: This runs one and reports whether it landed.
 
 
 		if ( actKinStr !== '' ) return false; // What: Busy Guard. Why: A change while another is out could act twice. How: This ignores it.
@@ -196,7 +272,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 			setActKinStr( '' ); // What: Busy Clear Call. Why: The member can try again. How: This marks the change as done.
 
-			setErrMesStr( FAI_SET_STR ); // What: Failure Announce Call. Why: The member has to learn it failed. How: This puts the message in the alert.
+			setErrMesStr( Reflect.get( Object( errCatObj ), 'code' ) === 'permission-denied' ? denMesStr : FAI_SET_STR ); // What: Failure Announce Call. Why: The member has to learn it failed, and a refusal by the rules can say why. How: This picks the message by Firestore's error code.
 
 
 
@@ -322,6 +398,65 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	};
 
 	// #endregion delConFun
+
+
+
+	// #region offRunFun
+
+	/**
+	 * offRunFun = Offer Run Function
+	 *
+	 * @summary
+	 * Runs one change to the group's offer as one change: it owes focus the
+	 * given element, which takes it once the group shows the change, then
+	 * runs the change, clearing the debt should it fail, and announces the
+	 * given message once it lands. A refusal by the rules is announced with
+	 * its own message.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param actKinVal - Action Kind Value: Which change it is, such as offer
+	 *                    or accept.
+	 * @param tarRefObj - Target Reference Object: The element owed focus once
+	 *                    the change shows.
+	 * @param actStaFun - Action Start Function: Starts the change.
+	 * @param donMesStr - Done Message String: What to announce once it lands.
+	 * @param denMesStr - Denied Message String: What to announce when the
+	 *                    rules refuse it, the general failure by default.
+	 *
+	 * @returns A promise that settles once the change is handled, with no
+	 *          value.
+	 *
+	 * @example
+	 * ```ts
+	 * offRunFun('withdraw', offButRef, witStaFun, ...) // => Promise<void>
+	 * ```
+	 *
+	*/
+
+	const offRunFun = async ( actKinVal : string, tarRefObj : React.RefObject< HTMLElement | null >, actStaFun : () => Promise< unknown >, donMesStr : string, denMesStr = FAI_SET_STR ) : Promise< void > => { // What: Offer Run Function. Why: Each change to the offer takes away the button pressed. How: This owes focus what replaces it, runs the change, and announces it.
+
+
+		if ( actKinStr !== '' ) return; // What: Busy Guard. Why: A change while another is out could act twice, and mustn't owe focus. How: This ignores it.
+
+
+
+		focOffRef.current = tarRefObj; // What: Focus Owed Assignment. Why: The group can show the change before the write settles. How: This owes focus before it starts.
+
+
+		const lanValBoo = await actRunFun( actKinVal, actStaFun, denMesStr ); // What: Landed Value Boolean. Why: A failed change keeps its buttons. How: This runs it as one change.
+
+
+		if ( !lanValBoo ) { focOffRef.current = null; return; } // What: Failed Guard. Why: The button pressed still shows, so no focus is owed. How: This clears the debt and returns.
+
+
+
+		setStaMesStr( donMesStr ); // What: Status Set Call. Why: The member hears the change landed. How: This announces it.
+
+
+	};
+
+	// #endregion offRunFun
 
 
 
@@ -496,6 +631,182 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 
+			{ ( curGroObj.ownBoo || offYouBoo ) && ( // What: Handover Check. Why: Only the owner hands the group over, and only the member offered it answers (Section 18). How: This shows the part to them.
+
+
+				<section
+					className={ cssModObj.hanSetSec }
+
+					aria-labelledby='hanSetHea'
+				>{ /* What: Handover Settings Section Element. Why: Handing the group to another member reads as one part. How: This holds its heading, note, and controls. */ }
+
+
+					<h3
+						ref={ hanHeaRef }
+						id='hanSetHea'
+
+						className={ cssModObj.hanTitHea }
+
+						tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here once an accepted offer replaces its buttons, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
+					>{ curGroObj.ownBoo ? 'Hand over the group' : "You're offered this group" }</h3>{ /* What: Handover Title Heading Element. Why: The part needs a heading saying what it's for. How: This names the handover for the owner and the offer for the member it names. */ }
+
+
+
+					{ !curGroObj.ownBoo ? ( // What: Offered Check. Why: The member offered the group answers it. How: This shows them the offer, or else the owner's controls.
+
+
+						<>{ /* What: Offered Fragment. Why: The note and the answers sit in the part as its own children. How: This groups them without adding an element. */ }
+
+
+							<p className={ cssModObj.hanNotPar }>{ `If you accept, you become the owner of ${ curGroObj.namStr }, and the owner now stays in it as a member. The offer lapses on ${ dayDatFun( offEndNum ) }.` }</p>{ /* What: Handover Note Paragraph Element. Why: The member should know what accepting does and how long they have. How: This says both, naming the day it lapses. */ }
+
+
+
+							<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The two answers sit together below the note. How: This lines them up in a row that wraps. */ }
+
+
+								<ButBasCom onClick={ () => void offRunFun( 'accept', hanHeaRef, () => offAccFun( curGroObj.ideStr ), `You now own ${ curGroObj.namStr }.`, ACC_DEN_STR ) }>{ actKinStr === 'accept' ? 'Accepting…' : 'Accept' }</ButBasCom>{ /* What: Accept Button Component. Why: Taking the group is the offer's leading answer, and the label shows while it's out. How: This accepts, owing the heading focus, reading "Accepting…" while the acceptance is out. */ }
+
+								<button
+									className={ cssModObj.actPlaBut }
+
+									type='button'
+
+									onClick={ () => void offRunFun( 'decline', endHeaRef, () => offDecFun( curGroObj.ideStr ), 'Declined the offer.' ) } // What: Decline Handler. Why: The member can turn the group down, which tells the owner, and the part goes with the offer. How: This declines, owing the next part's heading focus, and announces it.
+								>{ actKinStr === 'decline' ? 'Declining…' : 'Decline' }</button>{ /* What: Action Plain Button Element. Why: Declining is the lighter answer, and the label shows while it's out. How: This declines the offer, reading "Declining…" while the decline is out. */ }
+
+
+							</div>
+
+
+						</>
+
+
+					) : offLivBoo ? ( // What: Standing Offer Check. Why: An owner with an offer out sees where it stands (Section 18). How: This shows whom it's to and when it lapses, or else the offer's form.
+
+
+						<>{ /* What: Standing Fragment. Why: The note and the withdrawal sit in the part as its own children. How: This groups them without adding an element. */ }
+
+
+							<p className={ cssModObj.hanNotPar }>{ `Offered to ${ offMemStr }. The group moves to them once they accept, and the offer lapses on ${ dayDatFun( offEndNum ) }.` }</p>{ /* What: Handover Note Paragraph Element. Why: The owner should see the handover isn't done until it's accepted. How: This names the member and the day it lapses. */ }
+
+
+
+							<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The withdrawal sits below the note. How: This holds it in a row that wraps. */ }
+
+
+								<button
+									ref={ witButRef }
+
+									className={ cssModObj.actPlaBut }
+
+									type='button'
+
+									onClick={ () => void offRunFun( 'withdraw', offButRef, () => offWitFun( curGroObj.ideStr ), 'Withdrew the offer.' ) } // What: Withdraw Handler. Why: The owner can call the offer off at once, and the button goes with it. How: This withdraws it, owing the offer's button focus, and announces it.
+								>{ actKinStr === 'withdraw' ? 'Withdrawing…' : 'Withdraw the offer' }</button>{ /* What: Action Plain Button Element. Why: An offer is withdrawn on purpose, and the label shows while it's out. How: This withdraws it, reading "Withdrawing…" while the withdrawal is out. */ }
+
+
+							</div>
+
+
+						</>
+
+
+					) : memRecArr === null ? ( // What: Members Loaded Check. Why: Until the members are read, there's no one to offer the group to. How: This says they're loading, or else shows the form.
+
+
+						<p className={ cssModObj.hanNotPar }>Loading members…</p> // What: Handover Note Paragraph Element. Why: An empty part would read as broken. How: This says the members are loading.
+
+
+					) : othMemArr.length === 0 ? ( // What: No Members Check. Why: A group of one has no one to hand to. How: This says so, or else shows the form.
+
+
+						<p className={ cssModObj.hanNotPar }>Once someone else joins, you can offer them the group.</p> // What: Handover Note Paragraph Element. Why: The owner should know why there's no choice. How: This says when there will be.
+
+
+					) : ( // What: Offer Form Branch. Why: The owner offers the group to a member. How: This shows the note and the form.
+
+
+						<>{ /* What: Offer Fragment. Why: The note and the form sit in the part as its own children. How: This groups them without adding an element. */ }
+
+
+							<p className={ cssModObj.hanNotPar }>The group moves to the member you choose only once they accept, and you stay in it as a member.</p>{ /* What: Handover Note Paragraph Element. Why: The owner should know an offer isn't a handover until it's accepted. How: This says so. */ }
+
+
+
+							<form
+								className={ cssModObj.hanOffFor }
+
+								noValidate
+
+								onSubmit={ ( subEveObj ) => { subEveObj.preventDefault(); void offRunFun( 'offer', witButRef, () => offMakFun( curGroObj.ideStr, offPicStr ), `Offered ${ curGroObj.namStr } to ${ othMemArr.find( ( memRecObj ) => memRecObj.uidValStr === offPicStr )?.namTexStr || 'a member' }.`, OFF_DEN_STR ); } } // What: Submit Handler. Why: The offer is made by the app, not by a page load, and the form goes with it. How: This cancels the browser's submit, then offers the group to the member picked, owing the withdrawal focus, and announces whom it's to.
+							>{ /* What: Handover Offer Form Element. Why: The owner picks whom to offer the group to. How: This holds the choice and the button. */ }
+
+
+								<label
+									className={ cssModObj.fieNamLab }
+									htmlFor='hanTarSel'
+								>Offer the group to</label>{ /* What: Field Name Label Element. Why: The choice needs a visible name. How: This labels it. */ }
+
+								<select
+									id='hanTarSel'
+
+									className={ cssModObj.fieValSel }
+
+									value={ offPicStr }
+
+									onChange={ ( chaEveObj ) => setOffTarStr( chaEveObj.target.value ) }
+								>{ /* What: Field Value Select Element. Why: The group goes to one of its other members. How: This lists them by name. */ }
+
+
+									{ othMemArr.map( ( memRecObj ) => ( // What: Member Option Map. Why: Each other member is a choice. How: This renders an option per member.
+
+
+										<option
+											key={ memRecObj.uidValStr }
+
+											value={ memRecObj.uidValStr }
+										>{ memRecObj.namTexStr || 'A member' }</option> // What: Member Option Element. Why: A member is chosen by name. How: This names them, or says a member when the name is unread.
+
+
+									) ) }
+
+
+								</select>
+
+
+
+								<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The offer's button sits below the choice. How: This holds it in a row that wraps. */ }
+
+
+									<button
+										ref={ offButRef }
+
+										className={ cssModObj.actPlaBut }
+
+										type='submit'
+									>{ actKinStr === 'offer' ? 'Offering…' : 'Offer the group' }</button>{ /* What: Action Plain Button Element. Why: The offer is made on purpose, and the label shows while it's out. How: This submits the form, reading "Offering…" while the offer is out. */ }
+
+
+								</div>
+
+
+							</form>
+
+
+						</>
+
+
+					) }
+
+
+				</section>
+
+
+			) }
+
+
+
 			<section
 				className={ cssModObj.endSetSec }
 
@@ -504,9 +815,12 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 				<h3
+					ref={ endHeaRef }
 					id='endSetHea'
 
 					className={ cssModObj.endTitHea }
+
+					tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here once a declined offer takes its part away, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
 				>{ curGroObj.ownBoo ? 'Delete the group' : 'Leave the group' }</h3>{ /* What: End Title Heading Element. Why: The part needs a heading saying what it does. How: This names the deletion for the owner and the leave for anyone else. */ }
 
 
@@ -693,7 +1007,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 				className={ cssModObj.setStaPar }
 
 				role='status'
-			>{ staMesStr }</p>{ /* What: Settings Status Paragraph Element. Why: A save is announced, since the page itself changes silently. How: This holds the status, empty from the first render. */ }
+			>{ staMesStr }</p>{ /* What: Settings Status Paragraph Element. Why: A save or a change to the offer is announced, since the page itself changes silently. How: This holds the status, empty from the first render. */ }
 
 			<p
 				className={ cssModObj.setErrPar }

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-01 (reviewing join requests in the People section, and the Settings section's group settings, leaving, and deleting, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, and handing the group over, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1629,8 +1629,17 @@ the Blaze change.
   or with none, so the welcome shows, and that screen takes focus on its
   heading while a status region the screen host keeps across screens
   announces the change. The group list carries each group's retention for
-  the form. Handing the group over, the device's light or dark choice and
-  notifications, Google recovery, and the upgrade join Settings next. The Events
+  the form. Between the two, the owner offers the group to a member chosen
+  by name, then sees whom it's offered to and the day it lapses, with a
+  withdrawal, and the member offered it sees an accept and a decline; a
+  refused offer or acceptance says why without saying more about anyone's
+  account, and focus lands on what replaces the button pressed once the
+  group shows the change. The group list carries each group's standing
+  offer for this. The device's light or dark choice and notifications,
+  Google recovery, and the upgrade join Settings next. In every section, a
+  button that turns into a confirmation (removing a member, blocking,
+  replacing the link, cancelling an event) puts focus on the
+  confirmation's safe answer, and leaving it returns focus to the button. The Events
   section lists the events that haven't ended, soonest first, as cards that
   open each event's details and bring-list in a sheet; there its creator or
   the group's owner changes it in a form sheet over it, or cancels it after

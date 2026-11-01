@@ -222,7 +222,7 @@ const offWitFun = ( groIdeStr : string ) : Promise< void > => updateDoc( doc( fi
 
 // #region Exports
 
-export { offAccFun, offDecFun, offMakFun, offWitFun }; // What: Named Exports. Why: The group settings and the offer screen drive a handover through these. How: This exports the functions.
+export { OFF_LIF_NUM, offAccFun, offDecFun, offMakFun, offWitFun }; // What: Named Exports. Why: The group settings drive a handover through these and say when an offer lapses. How: This exports the functions and the offer's life.
 
 // #endregion Exports
 
