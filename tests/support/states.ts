@@ -42,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'requests' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -62,8 +62,9 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  * @summary
  * Every state the checks visit: each screen at a phone width and a desktop
  * width, some in dark mode too, the chat at a tablet width, the group and
- * event sheets, an item's form, and the event form open on a phone, and the
- * waiting screen with its loader showing. Every row shares the {@link
+ * event sheets, an item's form, and the event form open on a phone, the
+ * People section with two requests waiting, and the waiting screen with its
+ * loader showing. Every row shares the {@link
  * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
@@ -108,7 +109,9 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'form-phone',           patStr : '/', widNum : 390,  steStr : 'form'                       }, // What: Form Phone State. Why: The event form is a modal layer of its own. How: This opens it at 390px.
 	{ heiNum : 844, ideStr : 'edit-phone',           patStr : '/', widNum : 390,  steStr : 'edit'                       }, // What: Edit Phone State. Why: An item's edit form is checked in its sheet. How: This opens the open item's form at 390px.
 	{ heiNum : 900, ideStr : 'people-desktop',       patStr : '/', widNum : 1440, steStr : 'people'                     }, // What: People Desktop State. Why: The People section is checked at a desktop width. How: This opens it in a new group at 1,440px.
-	{ heiNum : 844, ideStr : 'people-phone',         patStr : '/', widNum : 390,  steStr : 'people'                     }  // What: People Phone State. Why: The People section is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'people-phone',         patStr : '/', widNum : 390,  steStr : 'people'                     }, // What: People Phone State. Why: The People section is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'requests-desktop',     patStr : '/', widNum : 1440, steStr : 'requests'                   }, // What: Requests Desktop State. Why: The waiting list is checked at a desktop width. How: This opens the People section with two requests waiting at 1,440px.
+	{ heiNum : 844, ideStr : 'requests-phone',       patStr : '/', widNum : 390,  steStr : 'requests'                   }  // What: Requests Phone State. Why: The waiting list is checked at a phone width. How: This opens it at 390px.
 
 
 ];
@@ -316,6 +319,71 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
 
 
 
+// #region reqSteFun
+
+/**
+ * reqSteFun = Requests Steps Function
+ *
+ * @summary
+ * Has two people ask to join the group whose People section is showing, each
+ * from a device of their own and both at once, through the link the section
+ * shows: Dana Lee with a note, and someone using the member's own name, Alice,
+ * so the waiting list's warning shows too.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param curPagObj - Current Page Object: The member's page, showing the
+ *                    People section.
+ *
+ * @returns A promise that settles once both requests are filed, with no
+ *          value.
+ *
+ * @example
+ * ```ts
+ * reqSteFun(page) // => Promise<void>
+ * ```
+ *
+*/
+
+const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Requests Steps Function. Why: The waiting list is checked with people waiting, one of them reusing a member's name. How: This files two requests through the group's link, each from a new device.
+
+
+	const linValStr = await curPagObj.getByLabel( 'Invite link' ).inputValue(); // What: Link Value String. Why: A joiner asks through the group's link. How: This reads it from the section.
+	const tokValStr = linValStr.split( '/join/' )[ 1 ];                       // What: Token Value String. Why: A request names the invite it used. How: This takes the token from the link's end.
+
+
+	await Promise.all( [ [ 'Dana Lee', "Sam's cousin" ], [ 'Alice', '' ] ].map( async ( [ namTexStr, notTexStr ] ) => { // What: Joiner Requests Call. Why: Each joiner is a different person, with an identity of their own, and filing both at once keeps the states quick. How: This files one request per name and note, side by side.
+
+
+		const joiConObj = await curPagObj.context().browser()!.newContext( { baseURL : new URL( curPagObj.url() ).origin } ); // What: Joiner Context Object. Why: A second identity needs storage of its own. How: This opens a new browser context on the same server. // What: Non-Null Note. Why: A page from Playwright's own launch always has its browser. How: The ! reads it as present.
+		const joiPagObj = await joiConObj.newPage();                                                                       // What: Joiner Page Object. Why: The request is filed from the joiner's own page. How: This opens one.
+
+
+		await joiPagObj.goto( '/' ); // What: Joiner Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+		await joiPagObj.evaluate( async ( [ modPatStr, tokArgStr, namArgStr, notArgStr ] ) => { // What: Request File Call. Why: The joiner asks to join the way the app does. How: This imports the joins module by its path and files the request.
+
+
+			const joiModObj = await import( /* @vite-ignore */ modPatStr ); // What: Joins Module Object. Why: The page runs the real module. How: This imports it.
+
+
+			await joiModObj.reqCreFun( tokArgStr, namArgStr, notArgStr ); // What: Request Create Call. Why: The joiner asks with their name and note. How: This files the request through the link's token.
+
+
+		}, [ '/src/state/joins.ts', tokValStr, namTexStr, notTexStr ] ); // What: Request Arguments. Why: The page can't read the test's variables. How: This passes the module's path, the token, the name, and the note.
+
+		await joiConObj.close(); // What: Context Close Call. Why: The joiner's device isn't needed again. How: This closes it.
+
+
+	} ) );
+
+
+};
+
+// #endregion reqSteFun
+
+
+
 // #region steRunFun
 
 /**
@@ -331,7 +399,9 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  * the app afresh, so the group shows as it does on a later visit, with nothing
  * focused. The event state then opens the pinned event's sheet, the edit state
  * an item's form in it, the events state the Events section, the form state
- * the section's form, and the sheet state the group sheet from its switcher. A
+ * the section's form, the people state the People section, the requests
+ * state that section once two people have asked to join ({@link reqSteFun}),
+ * and the sheet state the group sheet from its switcher. A
  * group needs the Firebase Emulators, which the suites that reach one run
  * inside.
  *
@@ -349,7 +419,7 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'sheet' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'people' | 'requests' | 'sheet' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -448,14 +518,19 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'edit'
 
 
 
-	if ( steStr === 'people' ) { // What: People Block. Why: The people states open the People section. How: This presses the tab, reloads the section so nothing is focused, waits for its members, and stops.
+	if ( steStr === 'people' || steStr === 'requests' ) { // What: People Block. Why: The people states open the People section, and the requests states have two people ask to join first. How: This presses the tab, files the requests for the requests states, reloads the section so nothing is focused, waits for its members and any requests, and stops.
 
 
 		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: The section opens from its tab. How: This presses it.
 
+		if ( steStr === 'requests' ) await reqSteFun( curPagObj ); // What: Requests Steps Call. Why: The waiting list shows only while someone is waiting. How: This has two people ask to join.
+
 		await curPagObj.reload(); // What: Section Reload Call. Why: The section is checked as it opens on a later visit, with nothing focused. How: This reloads it, which its history entry keeps.
 
 		await curPagObj.getByRole( 'heading', { level : 3, name : 'Members (1)' } ).waitFor(); // What: Members Wait. Why: The section has to show its members before it's checked. How: This waits for the counted heading.
+
+
+		if ( steStr === 'requests' ) await curPagObj.getByRole( 'heading', { level : 3, name : 'Waiting to join (2)' } ).waitFor(); // What: Requests Wait. Why: The waiting list has to show both requests before it's checked. How: This waits for its counted heading.
 
 
 
@@ -537,7 +612,7 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 // #region Exports
 
-export { datHolFun, opeStaFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states, their opener, and the hold that slows the app's launch. How: This exports the state list, its type, and the two helpers.
+export { datHolFun, opeStaFun, reqSteFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states, their opener, the hold that slows the app's launch, and the joiners who ask to join. How: This exports the state list, its type, and the three helpers.
 
 // #endregion Exports
 

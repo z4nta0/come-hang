@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-01 (reviewing join requests in the People section, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1606,8 +1606,16 @@ the Blaze change.
   color, the owner marked; the member changes their own name from their row,
   and the owner removes anyone else after confirming, which also replaces
   the link. The group list carries each group's owner and current invite
-  token, so a new link shows as soon as it's made. Reviewing join requests
-  comes next. The Events
+  token, so a new link shows as soon as it's made. While anyone is waiting to
+  join, the section lists their requests between the link and the members,
+  oldest first and live, so a new request or one another member answered
+  shows at once: each with the name, when it was made, the note, and a
+  warning when a member already has that name, under advice to approve only
+  people the member recognizes. Any member approves, declines, or, after
+  confirming, blocks one, and from two waiting declines them all after
+  confirming; focus then lands on the waiting list's heading, or the
+  members' once no one waits, and each change to the requests reads the
+  members again, so an approval shows there. The Events
   section lists the events that haven't ended, soonest first, as cards that
   open each event's details and bring-list in a sheet; there its creator or
   the group's owner changes it in a form sheet over it, or cancels it after

@@ -12,17 +12,23 @@ import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Funct
 import { invRotFun } from '../state/groups.ts';     // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
 import { memLisFun } from '../state/members.ts';    // What: Member List Function. Why: The section lists the group's members. How: This reads them.
 import { memRemFun } from '../state/members.ts';    // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
+import { mesTimFun } from '../utils/date.ts';       // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
 import { namSetFun } from '../state/members.ts';    // What: Name Set Function. Why: A member changes their own name in the group. How: This saves it.
 import { perNamFun } from '../core/text-limits.ts'; // What: Person Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
+import { reqAppFun } from '../state/joins.ts';      // What: Request Approve Function. Why: Any member lets a joiner in (Section 17). How: This approves their request.
+import { reqBloFun } from '../state/joins.ts';      // What: Request Block Function. Why: A request from someone unwelcome is ended for good. How: This blocks its sender.
+import { reqDecFun } from '../state/joins.ts';      // What: Request Decline Function. Why: Any member turns a request down. How: This declines it.
+import { reqWatFun } from '../state/joins.ts';      // What: Request Watch Function. Why: A new request, or one another member answered, shows at once. How: This watches them.
 import { sloColFun } from '../ui/member-color.ts';  // What: Slot Color Function. Why: Each member's avatar wears their color. How: This names it.
 import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: A name is checked as it'll be saved. How: This tidies it.
-import { useEffect } from 'react';                  // What: Use Effect. Why: The section reads its members when it opens and after each change, and an edit moves focus. How: This starts the reads and moves focus.
-import { useRef    } from 'react';                  // What: Use Reference. Why: Focus moves between a control and the form it opens. How: This holds the elements.
+import { useEffect } from 'react';                  // What: Use Effect. Why: The section reads its members and watches its requests, and an edit or an answer moves focus. How: This starts the reads and the watch and moves focus.
+import { useRef    } from 'react';                  // What: Use Reference. Why: Focus moves between a control and the form it opens, and to a heading after an answer. How: This holds the elements.
 import { useState  } from 'react';                  // What: Use State. Why: The members, the open form, and the messages change while the section is open. How: This holds each.
 
 
 import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The section shows one group's members and link. How: This types the group.
 import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Type. Why: The section lists the members. How: This types each.
+import type { ReqRecTyp } from '../state/joins.ts';   // What: Request Record Type. Why: The section lists the people waiting to join. How: This types each.
 
 // #endregion Imports
 
@@ -33,7 +39,8 @@ import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Typ
  *
  * @summary
  * The open group's People section: the invite link, which any member copies
- * and the owner can replace, and the members, each with their avatar in
+ * and the owner can replace; the people waiting to join, whom any member
+ * approves, declines, or blocks; and the members, each with their avatar in
  * their color, the member's own name changeable from their row, and anyone
  * else removable by the owner after confirming. Each change is announced,
  * and one that fails says why.
@@ -68,16 +75,21 @@ type GpcProTyp = { curGroObj : GroRecTyp }; // What: Group People Component Prop
  * GroPeoCom = Group People Component
  *
  * @summary
- * Renders the open group's People section. The invite link shows in a
- * read-only box with a button that copies it, falling back to selecting it
- * where the browser won't copy, and the owner's button that makes a new
- * link after confirming. The members list in name order, the owner marked,
- * the member's own row offering to change their name in a form that takes
- * and returns focus, and each other row offering the owner a removal after
+ * Renders the open group's People section. The invite link shows in a read-
+ * only box with a button that copies it, falling back to selecting it where
+ * the browser won't copy, and the owner's button that makes a new link after
+ * confirming. While anyone is waiting to join, their requests list oldest
+ * first, live, each with its name, its time, its note, and a warning when a
+ * member already has that name, and any member approves, declines, or, after
+ * confirming, blocks one, or declines them all after confirming; once a
+ * request is gone, focus moves to the waiting list's heading, or the members'
+ * when none is left. The members list in name order, the owner marked, the
+ * member's own row offering to change their name in a form that takes and
+ * returns focus, and each other row offering the owner a removal after
  * confirming, which also makes a new link. Changes are announced through a
- * status region and failures through an alert, and the members are read
- * again after each change. Key it by the group, so another group starts
- * afresh.
+ * status region and failures through an alert, and the members are read again
+ * after each change and each change to the requests. Key it by the group, so
+ * another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -95,21 +107,27 @@ type GpcProTyp = { curGroObj : GroRecTyp }; // What: Group People Component Prop
 function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
-	const ediButRef = useRef< HTMLButtonElement >( null ); // What: Edit Button Reference. Why: Leaving the name form returns focus to its button. How: This holds the button.
-	const focEdiRef = useRef( false );                     // What: Focus Edit Reference. Why: Focus returns to the button once the form has gone. How: This is true while that's owed.
-	const invLinRef = useRef< HTMLInputElement >( null );  // What: Invite Link Reference. Why: Where the browser won't copy, the link is selected for the member to copy. How: This holds its box.
-	const namInpRef = useRef< HTMLInputElement >( null );  // What: Name Input Reference. Why: The name form puts the member in its box. How: This holds the box.
+	const ediButRef = useRef< HTMLButtonElement >( null );  // What: Edit Button Reference. Why: Leaving the name form returns focus to its button. How: This holds the button.
+	const focEdiRef = useRef( false );                      // What: Focus Edit Reference. Why: Focus returns to the button once the form has gone. How: This is true while that's owed.
+	const focUidRef = useRef< string[] >( [] );             // What: Focus UID Reference. Why: Answering a request removes the button that did it, so focus is moved once its request is gone. How: This holds the UIDs being answered, empty when none is.
+	const invLinRef = useRef< HTMLInputElement >( null );   // What: Invite Link Reference. Why: Where the browser won't copy, the link is selected for the member to copy. How: This holds its box.
+	const memHeaRef = useRef< HTMLHeadingElement >( null ); // What: Member Heading Reference. Why: Focus lands on the members' heading once the last request is answered. How: This holds it.
+	const namInpRef = useRef< HTMLInputElement >( null );   // What: Name Input Reference. Why: The name form puts the member in its box. How: This holds the box.
+	const reqHeaRef = useRef< HTMLHeadingElement >( null ); // What: Request Heading Reference. Why: Focus lands on the waiting list's heading once a request is answered and others wait. How: This holds it.
 
-	const [ actReqBoo, setActReqBoo ] = useState( false );                                    // What: Action Request Boolean And Setter. Why: One change at a time keeps a double tap from acting twice. How: This is true while one is out.
-	const [ conRemStr, setConRemStr ] = useState( '' );                                       // What: Confirm Remove String And Setter. Why: Removing asks to confirm first. How: This holds the UID being confirmed, empty when none is.
-	const [ conRotBoo, setConRotBoo ] = useState( false );                                    // What: Confirm Rotate Boolean And Setter. Why: A new link asks to confirm first. How: This is true while the confirmation shows.
-	const [ ediNamBoo, setEdiNamBoo ] = useState( false );                                    // What: Edit Name Boolean And Setter. Why: The member's row turns into a name form. How: This is true while it shows.
-	const [ errMesStr, setErrMesStr ] = useState( '' );                                       // What: Error Message String And Setter. Why: A failed change is announced. How: This holds the alert's text, empty when there's none.
-	const [ lisVerNum, setLisVerNum ] = useState( 0 );                                        // What: List Version Number And Setter. Why: A change reads the members again. How: This counts the reads asked for.
-	const [ memRecArr, setMemRecArr ] = useState< MemRecTyp[] | null >( null );               // What: Member Record Array And Setter. Why: The section lists the members. How: This holds them in name order, null until read.
-	const [ namTexStr, setNamTexStr ] = useState( '' );                                       // What: Name Text String And Setter. Why: The name box shows what's typed. How: This holds it.
-	const [ staMesStr, setStaMesStr ] = useState( '' );                                       // What: Status Message String And Setter. Why: A change that lands is announced. How: This holds the status's text.
-	const [ uidValStr, setUidValStr ] = useState( '' );                                       // What: UID Value String And Setter. Why: The member's own row is marked and editable. How: This holds their UID, empty until read.
+	const [ actReqBoo, setActReqBoo ] = useState( false );                      // What: Action Request Boolean And Setter. Why: One change at a time keeps a double tap from acting twice. How: This is true while one is out.
+	const [ conAllBoo, setConAllBoo ] = useState( false );                      // What: Confirm All Boolean And Setter. Why: Declining every request asks to confirm first. How: This is true while the confirmation shows.
+	const [ conBloStr, setConBloStr ] = useState( '' );                         // What: Confirm Block String And Setter. Why: Blocking asks to confirm first. How: This holds the UID being confirmed, empty when none is.
+	const [ conRemStr, setConRemStr ] = useState( '' );                         // What: Confirm Remove String And Setter. Why: Removing asks to confirm first. How: This holds the UID being confirmed, empty when none is.
+	const [ conRotBoo, setConRotBoo ] = useState( false );                      // What: Confirm Rotate Boolean And Setter. Why: A new link asks to confirm first. How: This is true while the confirmation shows.
+	const [ ediNamBoo, setEdiNamBoo ] = useState( false );                      // What: Edit Name Boolean And Setter. Why: The member's row turns into a name form. How: This is true while it shows.
+	const [ errMesStr, setErrMesStr ] = useState( '' );                         // What: Error Message String And Setter. Why: A failed change is announced. How: This holds the alert's text, empty when there's none.
+	const [ lisVerNum, setLisVerNum ] = useState( 0 );                          // What: List Version Number And Setter. Why: A change reads the members again. How: This counts the reads asked for.
+	const [ memRecArr, setMemRecArr ] = useState< MemRecTyp[] | null >( null ); // What: Member Record Array And Setter. Why: The section lists the members. How: This holds them in name order, null until read.
+	const [ namTexStr, setNamTexStr ] = useState( '' );                         // What: Name Text String And Setter. Why: The name box shows what's typed. How: This holds it.
+	const [ reqRecArr, setReqRecArr ] = useState< ReqRecTyp[] >( [] );          // What: Request Record Array And Setter. Why: The section lists the people waiting to join. How: This holds their requests, oldest first, empty until any arrive.
+	const [ staMesStr, setStaMesStr ] = useState( '' );                         // What: Status Message String And Setter. Why: A change that lands is announced. How: This holds the status's text.
+	const [ uidValStr, setUidValStr ] = useState( '' );                         // What: UID Value String And Setter. Why: The member's own row is marked and editable. How: This holds their UID, empty until read.
 
 
 	const linValStr = `${ window.location.origin }/join/${ curGroObj.tokStr }`; // What: Link Value String. Why: The link opens the group's invite screen. How: This joins the app's address and the group's current token.
@@ -132,6 +150,27 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 	}, [ curGroObj.ideStr, lisVerNum ] ); // What: Effect Dependency Array. Why: The members belong to one group and are read again after each change. How: curGroObj.ideStr names the group, and lisVerNum counts the reads asked for.
+
+
+
+	useEffect( () => reqWatFun( curGroObj.ideStr, ( watRecArr ) => { setReqRecArr( watRecArr ); setLisVerNum( ( preVerNum ) => preVerNum + 1 ); }, ( errCatObj ) => console.warn( errCatObj ) ), [ curGroObj.ideStr ] ); // What: Request Watch Effect. Why: A request shows as it arrives, and an approval by any member shows in the members. How: This watches the requests, reads the members again with each change, logs a failure, and stops the watch when the section closes. // What: Effect Dependency Note. Why: The requests belong to one group. How: curGroObj.ideStr names it.
+
+
+
+	useEffect( () => { // What: Answer Focus Effect. Why: The button that answered a request goes with it, and focus mustn't fall to the page. How: Once every request being answered is gone, this focuses the waiting list's heading, or the members' when none is left.
+
+
+		if ( focUidRef.current.length === 0 || reqRecArr.some( ( reqRecObj ) => focUidRef.current.includes( reqRecObj.uidValStr ) ) ) return; // What: Waiting Guard. Why: Focus moves only once the answered requests have left the list. How: This returns while none is owed or one still shows.
+
+
+
+		focUidRef.current = []; // What: Focus Clear Assignment. Why: The move is owed once. How: This clears the debt.
+
+
+		( reqRecArr.length > 0 ? reqHeaRef : memHeaRef ).current?.focus(); // What: Heading Focus Call. Why: The next Tab carries on from the part that changed. How: This focuses the waiting list's heading while others wait, else the members'.
+
+
+	}, [ reqRecArr ] ); // What: Effect Dependency Array. Why: Focus moves once the requests change. How: reqRecArr changes then.
 
 
 
@@ -342,6 +381,61 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 
+	// #region reqAnsFun
+
+	/**
+	 * reqAnsFun = Request Answer Function
+	 *
+	 * @summary
+	 * Answers one or more join requests as one announced change: it owes
+	 * focus a heading once every answered request has left the list, then
+	 * runs the answer, clearing the debt should it fail, and hides any
+	 * confirmation once it lands.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param uidValArr - UID Value Array: The joiners being answered.
+	 * @param actStaFun - Action Start Function: Starts the answer.
+	 * @param donMesStr - Done Message String: What to announce once it lands.
+	 *
+	 * @returns A promise that settles once the answer is handled, with no
+	 *          value.
+	 *
+	 * @example
+	 * ```ts
+	 * reqAnsFun(['u9F...'], decStaFun, 'Declined Dana.') // => Promise<void>
+	 * ```
+	 *
+	*/
+
+	const reqAnsFun = async ( uidValArr : string[], actStaFun : () => Promise< unknown >, donMesStr : string ) : Promise< void > => { // What: Request Answer Function. Why: Approving, declining, and blocking each end a request, taking its buttons with it. How: This owes focus a heading, runs the answer, and tidies up after it.
+
+
+		if ( actReqBoo ) return; // What: Busy Guard. Why: An answer while another change is out could act twice, and mustn't owe focus. How: This ignores it.
+
+
+
+		focUidRef.current = uidValArr; // What: Focus Owed Assignment. Why: A deletion can leave the list before the answer resolves. How: This owes focus before it starts.
+
+
+		const lanValBoo = await actRunFun( actStaFun, donMesStr ); // What: Landed Value Boolean. Why: A failed answer keeps its request and its buttons. How: This runs the answer as one change.
+
+
+		if ( !lanValBoo ) { focUidRef.current = []; return; } // What: Failed Guard. Why: The request still shows, so no focus is owed. How: This clears the debt and returns.
+
+
+
+		setConAllBoo( false ); // What: All Confirm Hide Call. Why: The answer is done. How: This hides the decline-all question.
+
+		setConBloStr( '' ); // What: Block Confirm Hide Call. Why: The answer is done. How: This hides the block question.
+
+
+	};
+
+	// #endregion reqAnsFun
+
+
+
 	return (
 
 
@@ -454,6 +548,215 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 
+			{ reqRecArr.length > 0 && ( // What: Requests Check. Why: The waiting list shows only while someone is waiting. How: This shows it when any request is pending.
+
+
+				<section
+					className={ cssModObj.reqLisSec }
+
+					aria-labelledby='reqLisHea'
+				>{ /* What: Request List Section Element. Why: The people waiting to join read as one part. How: This holds the heading, the advice, the requests, and, for two or more, the decline-all control. */ }
+
+
+					<h3
+						ref={ reqHeaRef }
+						id='reqLisHea'
+
+						className={ cssModObj.reqTitHea }
+
+						tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here once a request is answered and others wait, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
+					>{ `Waiting to join (${ reqRecArr.length })` }</h3>{ /* What: Request Title Heading Element. Why: The part needs a heading, and the count helps. How: This names it with the number waiting. */ }
+
+					<p className={ cssModObj.reqIntPar }>Approve only people you recognize. If you're not sure, check with them outside the app.</p>{ /* What: Request Intro Paragraph Element. Why: Anyone holding the link can type any name, so a name is only a claim (Section 17). How: This says to approve only people the member knows. */ }
+
+
+
+					<ul className={ cssModObj.reqLisUno }>{ /* What: Request List Unordered List Element. Why: The requests read as one list. How: This stacks a row for each, oldest first. */ }
+
+
+						{ reqRecArr.map( ( reqRecObj ) => { // What: Request Row Map. Why: Each request gets its own row. How: This renders one per request.
+
+
+							const samNamBoo = memRecArr?.some( ( memRecObj ) => memRecObj.namTexStr.toLocaleLowerCase() === reqRecObj.namTexStr.toLocaleLowerCase() ) === true; // What: Same Name Boolean. Why: A request reusing a member's name may be someone posing as them (Section 17). How: This is true when a member's name matches, ignoring case.
+
+
+
+							return (
+
+
+								<li
+									key={ reqRecObj.uidValStr }
+
+									className={ cssModObj.reqRowIte }
+								>{ /* What: Request Row Item Element. Why: A request shows who is asking, when, any warning, their note, and the answers. How: This stacks them down the row. */ }
+
+
+									<span className={ cssModObj.reqNamSpa }>{ reqRecObj.namTexStr }</span>{ /* What: Request Name Span Element. Why: The member recognizes the joiner by name. How: This shows the name they asked with. */ }
+
+									<span className={ cssModObj.reqTimSpa }>{ `Asked ${ mesTimFun( reqRecObj.reqTimNum, Date.now() ) }` }</span>{ /* What: Request Time Span Element. Why: A request's age helps place who sent it. How: This says when it was made, as the chat labels its messages. */ }
+
+
+
+									{ samNamBoo && ( // What: Same Name Check. Why: The screen points out a request reusing a member's name (Section 17). How: This shows the warning when one does.
+
+
+										<p className={ cssModObj.reqWarPar }>A member already has this name. Check with them before you approve.</p> // What: Request Warning Paragraph Element. Why: A matching name may be someone else using it. How: This says to check first.
+
+
+									) }
+
+
+
+									{ reqRecObj.notTexStr !== '' && ( // What: Note Check. Why: A note helps when the name isn't enough. How: This shows it when there is one.
+
+
+										<p className={ cssModObj.reqNotPar }>{ `“${ reqRecObj.notTexStr }”` }</p> // What: Request Note Paragraph Element. Why: The joiner's note says how the group knows them. How: This quotes it.
+
+
+									) }
+
+
+
+									<span className={ cssModObj.reqActSpa }>{ /* What: Request Actions Span Element. Why: The answers sit together below the request, or a block's confirmation in their place. How: This lines them up in a row that wraps. */ }
+
+
+										{ conBloStr === reqRecObj.uidValStr ? ( // What: Block Confirm Check. Why: A block stops this person asking again, so it asks first. How: This shows the question and its answers, or else the three answers.
+
+
+											<>{ /* What: Block Confirmation Fragment. Why: The question and its two answers replace the buttons together. How: This groups them without adding an element. */ }
+
+
+												<span className={ cssModObj.conAskSpa }>{ `Block ${ reqRecObj.namTexStr }? They won't be able to ask to join again.` }</span>{ /* What: Confirm Ask Span Element. Why: The member should know what blocking does. How: This asks, naming the joiner. */ }
+
+												<button
+													className={ cssModObj.actDanBut }
+
+													type='button'
+
+													onClick={ () => void reqAnsFun( [ reqRecObj.uidValStr ], () => reqBloFun( curGroObj.ideStr, reqRecObj.uidValStr ), `Blocked ${ reqRecObj.namTexStr }.` ) } // What: Block Confirm Handler. Why: The member confirmed. How: This blocks the joiner and announces it.
+												>Yes, block</button>{ /* What: Action Danger Button Element. Why: Blocking is confirmed on purpose. How: This blocks the joiner. */ }
+
+												<button
+													className={ cssModObj.actPlaBut }
+
+													type='button'
+
+													onClick={ () => setConBloStr( '' ) }
+												>{ "Don't block" }</button>{ /* What: Action Plain Button Element. Why: The member can change their mind. How: This hides the question. */ }
+
+
+											</>
+
+
+										) : ( // What: Answers Branch. Why: Without a question showing, the three answers show. How: This shows them.
+
+
+											<>{ /* What: Answers Fragment. Why: Approving, declining, and blocking sit side by side. How: This groups them without adding an element. */ }
+
+
+												<ButBasCom onClick={ () => void reqAnsFun( [ reqRecObj.uidValStr ], () => reqAppFun( curGroObj.ideStr, reqRecObj.uidValStr ), `Approved ${ reqRecObj.namTexStr }. They're in the group.` ) }>Approve<span className={ cssModObj.actHidSpa }>{ ` ${ reqRecObj.namTexStr }` }</span></ButBasCom>{ /* What: Approve Button Component. Why: Letting a joiner in is the leading answer, and a screen reader hears who. How: This approves the request. */ }
+
+												<button
+													className={ cssModObj.actPlaBut }
+
+													type='button'
+
+													onClick={ () => void reqAnsFun( [ reqRecObj.uidValStr ], () => reqDecFun( curGroObj.ideStr, reqRecObj.uidValStr ), `Declined ${ reqRecObj.namTexStr }.` ) } // What: Decline Handler. Why: A decline ends the request, and the joiner may ask again. How: This declines it and announces it.
+												>Decline<span className={ cssModObj.actHidSpa }>{ ` ${ reqRecObj.namTexStr }` }</span></button>{ /* What: Action Plain Button Element. Why: A member turns a request down, and a screen reader hears whose. How: This declines it. */ }
+
+												<button
+													className={ cssModObj.actPlaBut }
+
+													type='button'
+
+													onClick={ () => setConBloStr( reqRecObj.uidValStr ) }
+												>Block<span className={ cssModObj.actHidSpa }>{ ` ${ reqRecObj.namTexStr }` }</span></button>{ /* What: Action Plain Button Element. Why: A request from someone unwelcome can be ended for good, and a screen reader hears whose. How: This asks to confirm first. */ }
+
+
+											</>
+
+
+										) }
+
+
+									</span>
+
+
+								</li>
+
+
+							);
+
+
+						} ) }
+
+
+					</ul>
+
+
+
+					{ reqRecArr.length > 1 && ( // What: Decline All Check. Why: A flood through a leaked link is cleared at once (Section 17). How: This offers it when two or more wait.
+
+
+						<div className={ cssModObj.reqAllDiv }>{ /* What: Request All Div Element. Why: Declining every request sits below the list, or its confirmation in its place. How: This lays them out in one row that wraps. */ }
+
+
+							{ conAllBoo ? ( // What: All Confirm Check. Why: Declining everyone at once is easy to regret, so it asks first. How: This shows the question and its answers, or else the button.
+
+
+								<>{ /* What: All Confirmation Fragment. Why: The question and its two answers replace the button together. How: This groups them without adding an element. */ }
+
+
+									<p className={ cssModObj.conAskPar }>{ `Decline all ${ reqRecArr.length } requests?` }</p>{ /* What: Confirm Ask Paragraph Element. Why: The member should know how many they're declining. How: This asks with the count. */ }
+
+									<button
+										className={ cssModObj.actDanBut }
+
+										type='button'
+
+										onClick={ () => void reqAnsFun( reqRecArr.map( ( reqRecObj ) => reqRecObj.uidValStr ), () => Promise.all( reqRecArr.map( ( reqRecObj ) => reqDecFun( curGroObj.ideStr, reqRecObj.uidValStr ) ) ), `Declined ${ reqRecArr.length } requests.` ) } // What: All Confirm Handler. Why: The member confirmed. How: This declines every request shown and announces how many.
+									>Yes, decline all</button>{ /* What: Action Danger Button Element. Why: Declining everyone is confirmed on purpose. How: This declines them all. */ }
+
+									<button
+										className={ cssModObj.actPlaBut }
+
+										type='button'
+
+										onClick={ () => setConAllBoo( false ) }
+									>Keep them</button>{ /* What: Action Plain Button Element. Why: The member can change their mind. How: This hides the question. */ }
+
+
+								</>
+
+
+							) : ( // What: Button Branch. Why: Without a question showing, the button shows. How: This shows it.
+
+
+								<button
+									className={ cssModObj.actPlaBut }
+
+									type='button'
+
+									onClick={ () => setConAllBoo( true ) }
+								>Decline all</button> // What: Action Plain Button Element. Why: A flood is cleared in one step. How: This asks to confirm first.
+
+
+							) }
+
+
+						</div>
+
+
+					) }
+
+
+				</section>
+
+
+			) }
+
+
+
 			<section
 				className={ cssModObj.memLisSec }
 
@@ -462,9 +765,12 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 				<h3
+					ref={ memHeaRef }
 					id='memLisHea'
 
 					className={ cssModObj.memTitHea }
+
+					tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here once the last request is answered, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
 				>{ memRecArr === null ? 'Members' : `Members (${ memRecArr.length })` }</h3>{ /* What: Member Title Heading Element. Why: The part needs a heading, and the count helps. How: This names it, with the count once read. */ }
 
 
@@ -597,7 +903,7 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 														type='button'
 
 														onClick={ () => setConRemStr( memRecObj.uidValStr ) }
-													>Remove<span className={ cssModObj.memHidSpa }>{ ` ${ memRecObj.namTexStr }` }</span></button> // What: Action Plain Button Element. Why: The owner removes a member, and a screen reader hears who. How: This asks to confirm first.
+													>Remove<span className={ cssModObj.actHidSpa }>{ ` ${ memRecObj.namTexStr }` }</span></button> // What: Action Plain Button Element. Why: The owner removes a member, and a screen reader hears who. How: This asks to confirm first.
 
 
 												) }

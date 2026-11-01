@@ -5,12 +5,13 @@
  * group-people.module.css = Group People Module
  *
  * @summary
- * Styles for GroPeoCom: the heading, the invite part with its note, its
- * read-only link box, and its buttons, and the members part, each member a
- * row with their avatar in their color beside their name and actions, or
- * their name form across the row while it's open. Confirmations take a
- * line of their own above their answers. The status that announces a change
- * is for screen readers alone, while a failure shows in the dark error color.
+ * Styles for GroPeoCom: the heading, the invite part with its note, its read-
+ * only link box, and its buttons, the waiting list, each request a row of its
+ * name, time, any warning or note, and answers, and the members part, each
+ * member a row with their avatar in their color beside their name and actions,
+ * or their name form across the row while it's open. Confirmations take a line
+ * of their own above their answers. The status that announces a change is for
+ * screen readers alone, while a failure shows in the dark error color.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -195,6 +196,230 @@
 
 
 
+/* #region reqLisSec */
+
+.reqLisSec { /* What: Request List Section. Why: The heading, the advice, the requests, and the decline-all control read as one part. How: This stacks them a tier 3 space apart, in order since the decline-all control shows only for two or more. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.reqTitHea { /* What: Request Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.reqTitHea:focus { /* What: Focused Request Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.reqIntPar { /* What: Request Intro Paragraph. Why: The advice is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region reqLisUno */
+
+.reqLisUno { /* What: Request List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below. */
+
+
+	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display    : grid;
+	list-style : none;
+
+
+}
+
+
+
+/* #region reqRowIte */
+
+.reqRowIte { /* What: Request Row Item. Why: A request's name, time, warning, note, and answers read down one row. How: This stacks them a tier 5 space apart by auto placement, since the warning and the note show only sometimes and named rows would leave their gaps, each at its own width, with a tier 4 space above and below and a border below. */
+
+
+	border-bottom : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display       : grid;
+	justify-items : start;
+	padding       : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+	row-gap       : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.reqNamSpa { /* What: Request Name Span. Why: The joiner is known by their name, and a long one shouldn't run off the row. How: This sets it bold, breaking a long word where it has to. */
+
+
+	font-weight   : 700;
+	overflow-wrap : anywhere;
+
+
+}
+
+.reqTimSpa { /* What: Request Time Span. Why: The time is quieter than the name. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+.reqWarPar { /* What: Request Warning Paragraph. Why: A name a member already has should stand out before anyone approves. How: This sets it bold in the dark warning color on the warning tint, in a rounded box. */
+
+
+	background-color : var( --war-tin-col );                      /* Warning Tint Color = #FBF1DC */
+	border-radius    : var( --rad-bor-sma );                      /* Radius Border Small ~= 8.304px */
+	color            : var( --war-dar-col );                      /* Warning Dark Color = #7F5200 */
+	font-weight      : 700;
+	padding          : var( --spa-ver-m04 ) var( --spa-ver-m02 ); /* Spacing Vertical Base Minus 4 ~= 4.732px, Spacing Vertical Base Minus 2 ~= 8.304px */
+
+
+}
+
+.reqNotPar { /* What: Request Note Paragraph. Why: The joiner's note reads as their own words, and a long one shouldn't run off the row. How: This sets it in italics, capped at the base text width, breaking a long word where it has to. */
+
+
+	font-style    : italic;
+	max-width     : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+	overflow-wrap : anywhere;
+
+
+}
+
+
+
+/* #region reqActSpa */
+
+.reqActSpa { /* What: Request Actions Span. Why: The answers sit together below the request, or a block's question and answers in their place, wrapping when the row is narrow. How: This lays them out in a flex row a tier 5 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-005 ) var( --tie-hor-005 ); /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 5, about 4.732px - 6.268px */
+
+
+}
+
+.conAskSpa { /* What: Confirm Ask Span. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row of actions. */
+
+
+	flex-basis  : 100%;
+	font-weight : 700;
+
+
+}
+
+.actDanBut { /* What: Action Danger Button. Why: Confirming a block or a removal is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actDanBut:hover { /* What: Hovered Action Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
+
+
+	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
+
+
+}
+.actDanBut:active { /* What: Pressed Action Danger Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actDanBut { /* What: Motionless Action Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+
+/* #region actPlaBut */
+
+/* What: Action Plain Button Pointer. Why: Declining, blocking, and keeping use the same outlined pill. How: Its rule sits in the invActDiv region. */
+
+.actHidSpa { /* What: Action Hidden Span. Why: A screen reader hears whom a button acts on, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion actPlaBut */
+
+/* #endregion reqActSpa */
+
+/* #endregion reqRowIte */
+
+/* #endregion reqLisUno */
+
+
+
+/* #region reqAllDiv */
+
+.reqAllDiv { /* What: Request All Div. Why: Declining every request sits below the list, or its question and answers in its place, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+/* What: Confirm Ask Paragraph Pointer. Why: The decline-all question reads before its answers, as a new link's does. How: Its rule sits in the invActDiv region. */
+
+/* What: Action Danger Button Pointer. Why: Confirming a decline of everyone uses the danger pill. How: Its rule sits in the reqActSpa region. */
+
+/* What: Action Plain Button Pointer. Why: Declining all and keeping use the outlined pill. How: Its rule sits in the invActDiv region. */
+
+/* #endregion reqAllDiv */
+
+/* #endregion reqLisSec */
+
+
+
 /* #region memLisSec */
 
 .memLisSec { /* What: Member List Section. Why: The heading and the list read as one part. How: This stacks them a tier 3 space apart, in order since the list gives way to a note while it loads. */
@@ -210,6 +435,13 @@
 
 
 	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.memTitHea:focus { /* What: Focused Member Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
 
 
 }
@@ -433,72 +665,13 @@
 
 /* What: Action Plain Button Pointer. Why: Changing a name, removing, and keeping use the same outlined pill. How: Its rule sits in the invActDiv region. */
 
-.memHidSpa { /* What: Member Hidden Span. Why: A screen reader hears who a button acts on, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
-
-
-	clip-path   : inset( 50% );
-	height      : 1px;
-	overflow    : hidden;
-	position    : absolute;
-	white-space : nowrap;
-	width       : 1px;
-
-
-}
+/* What: Action Hidden Span Pointer. Why: A screen reader hears whom a removal acts on. How: Its rule sits in the reqActSpa region. */
 
 /* #endregion actPlaBut */
 
-.conAskSpa { /* What: Confirm Ask Span. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row of actions. */
+/* What: Confirm Ask Span Pointer. Why: A removal's question reads before its answers, as a block's does. How: Its rule sits in the reqActSpa region. */
 
-
-	flex-basis  : 100%;
-	font-weight : 700;
-
-
-}
-
-.actDanBut { /* What: Action Danger Button. Why: Confirming a cancel is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
-
-
-	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
-	border           : 0;
-	border-radius    : 999px;
-	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
-	font             : inherit;
-	font-weight      : 700;
-	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
-	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
-	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
-
-
-}
-.actDanBut:hover { /* What: Hovered Action Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
-
-
-	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
-
-
-}
-.actDanBut:active { /* What: Pressed Action Danger Button. Why: A press should register before the event is cancelled. How: This presses the pill in slightly. */
-
-
-	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
-
-
-}
-@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
-
-
-	.actDanBut { /* What: Motionless Action Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
-
-
-		transition : none;
-
-
-	}
-
-
-}
+/* What: Action Danger Button Pointer. Why: Confirming a removal uses the same danger pill as confirming a block. How: Its rule sits in the reqActSpa region. */
 
 /* #endregion memActSpa */
 
