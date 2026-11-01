@@ -520,16 +520,16 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
  * fieProFun = Field Problems Function
  *
  * @summary
- * Probes every form field a visitor can reach (each visible input, select,
- * and textarea) and returns a problem for each one that gives no focus
- * feedback. Each field is scrolled into view and read at rest, then focused
- * by keyboard, by stepping back off it with Shift+Tab and onto it again with
- * Tab, and read once its transition has settled. A field the Tab press doesn't
- * land on, or that looks the same focused as at rest (its border color and
- * outline), is a problem. Normally every one of those that changes has to be
- * eased by a transition ({@link snaProFun}), outline-width included, so the
- * ring eases in; under reduced motion every one of its transition durations
- * must be zero instead.
+ * Probes every form field a visitor can reach (each visible input, select, and
+ * textarea, a radio group by its checked choice) and returns a problem for
+ * each one that gives no focus feedback. Each field is scrolled into view and
+ * read at rest, then focused by keyboard, by stepping back off it with
+ * Shift+Tab and onto it again with Tab, and read once its transition has
+ * settled. A field the Tab press doesn't land on, or that looks the same
+ * focused as at rest (its border color and outline), is a problem. Normally
+ * every one of those that changes has to be eased by a transition ({@link
+ * snaProFun}), outline-width included, so the ring eases in; under reduced
+ * motion every one of its transition durations must be zero instead.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -553,7 +553,7 @@ async function fieProFun ( curPagObj : Page, redMotBoo : boolean ) : Promise< st
 	const proLisArr : string[] = []; // What: Problem List Array. Why: Every problem should be reported, not just the first. How: This collects them.
 
 
-	for ( const fieCurObj of await conLisFun( curPagObj, 'input, select, textarea' ) ) { // What: Field Probe Loop. Why: Every reachable form field has to show focus. How: This reads each one at rest and focused by keyboard.
+	for ( const fieCurObj of await conLisFun( curPagObj, 'input:not( [type="radio"]:not( :checked ) ), select, textarea' ) ) { // What: Field Probe Loop. Why: Every reachable form field has to show focus. How: This reads each one at rest and focused by keyboard. // A radio group is one Tab stop, reached at its checked choice while the arrow keys move between the others, so its unchecked choices are left out.
 
 
 		const fieDesStr = await fieCurObj.evaluate( ( fieCurEle ) => `${ fieCurEle.tagName.toLowerCase() } "${ fieCurEle.getAttribute( 'name' ) || '' }"` ); // What: Field Description String. Why: A problem should name the field in terms of the form. How: This joins its tag with the name the form submits it under.

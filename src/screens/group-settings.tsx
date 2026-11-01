@@ -6,27 +6,33 @@
 import cssModObj from './group-settings.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom   } from '../ui/button.tsx';       // What: Button Base Component. Why: Saving the group's settings and accepting an offer are the section's leading actions. How: This draws their buttons.
-import { dayDatFun   } from '../utils/date.ts';       // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
-import { groDelFun   } from '../state/groups.ts';     // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
-import { groLeaFun   } from '../state/members.ts';    // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
-import { groNamFun   } from '../core/text-limits.ts'; // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
-import { groSetFun   } from '../state/groups.ts';     // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
-import { ideEnsFun   } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member an offer names answers it. How: This reads their UID.
-import { memLisFun   } from '../state/members.ts';    // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
-import { OFF_LIF_NUM } from '../state/ownership.ts';  // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
-import { offAccFun   } from '../state/ownership.ts';  // What: Offer Accept Function. Why: The member offered the group can take it. How: This makes them its owner.
-import { offDecFun   } from '../state/ownership.ts';  // What: Offer Decline Function. Why: The member offered the group can turn it down. How: This declines and tells the owner.
-import { offMakFun   } from '../state/ownership.ts';  // What: Offer Make Function. Why: The owner hands the group over by offering it (Section 18). How: This makes the offer.
-import { offWitFun   } from '../state/ownership.ts';  // What: Offer Withdraw Function. Why: The owner can call an offer off. How: This withdraws it.
-import { texNorFun   } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
-import { useEffect   } from 'react';                  // What: Use Effect. Why: The section reads the members, and a confirmation or an offer moves focus. How: This starts the read and moves focus once drawn.
-import { useRef      } from 'react';                  // What: Use Reference. Why: Focus moves between a button, what replaces it, and a field with a problem. How: This holds the elements.
-import { useState    } from 'react';                  // What: Use State. Why: The drafts, the members, the confirmations, and the messages change while the section is open. How: This holds each.
+import { ButBasCom    } from '../ui/button.tsx';          // What: Button Base Component. Why: Saving the group's settings and accepting an offer are the section's leading actions. How: This draws their buttons.
+import { colModGetFun } from '../platform/color-mode.ts'; // What: Color Mode Get Function. Why: The appearance choice starts from the one kept on this phone. How: This reads it.
+import { colModSetFun } from '../platform/color-mode.ts'; // What: Color Mode Set Function. Why: Picking light, dark, or the phone's setting applies at once and is kept. How: This applies and keeps it.
+import { dayDatFun    } from '../utils/date.ts';          // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
+import { groDelFun    } from '../state/groups.ts';        // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
+import { groLeaFun    } from '../state/members.ts';       // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
+import { groNamFun    } from '../core/text-limits.ts';    // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
+import { groSetFun    } from '../state/groups.ts';        // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
+import { ideEnsFun    } from '../state/identity.ts';      // What: Identity Ensure Function. Why: The member an offer names answers it. How: This reads their UID.
+import { memLisFun    } from '../state/members.ts';       // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
+import { OFF_LIF_NUM  } from '../state/ownership.ts';     // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
+import { offAccFun    } from '../state/ownership.ts';     // What: Offer Accept Function. Why: The member offered the group can take it. How: This makes them its owner.
+import { offDecFun    } from '../state/ownership.ts';     // What: Offer Decline Function. Why: The member offered the group can turn it down. How: This declines and tells the owner.
+import { offMakFun    } from '../state/ownership.ts';     // What: Offer Make Function. Why: The owner hands the group over by offering it (Section 18). How: This makes the offer.
+import { offWitFun    } from '../state/ownership.ts';     // What: Offer Withdraw Function. Why: The owner can call an offer off. How: This withdraws it.
+import { pusActFun    } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
+import { pusDisFun    } from '../state/push.ts';          // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
+import { pusEnaFun    } from '../state/push.ts';          // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
+import { texNorFun    } from '../core/text-limits.ts';    // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
+import { useEffect    } from 'react';                     // What: Use Effect. Why: The section reads the members, and a confirmation or an offer moves focus. How: This starts the read and moves focus once drawn.
+import { useRef       } from 'react';                     // What: Use Reference. Why: Focus moves between a button, what replaces it, and a field with a problem. How: This holds the elements.
+import { useState     } from 'react';                     // What: Use State. Why: The drafts, the members, the confirmations, and the messages change while the section is open. How: This holds each.
 
 
-import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The section shows one group's settings. How: This types the group.
-import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Type. Why: The owner picks a member to offer the group to. How: This types each.
+import type { ColModTyp } from '../platform/color-mode.ts'; // What: Color Mode Type. Why: Each appearance choice names a mode. How: This types it.
+import type { GroRecTyp } from '../state/groups.ts';        // What: Group Record Type. Why: The section shows one group's settings. How: This types the group.
+import type { MemRecTyp } from '../state/members.ts';       // What: Member Record Type. Why: The owner picks a member to offer the group to. How: This types each.
 
 // #endregion Imports
 
@@ -39,11 +45,12 @@ import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Typ
  * The open group's Settings section: the group's name and how long the server
  * holds a message someone hasn't received, which the owner changes in a form
  * and everyone else reads; handing the group over, which the owner offers to a
- * member and the member accepts or declines; then the way out of the group, a
- * leave for a member and a deletion, confirmed by typing the group's name, for
- * the owner. Each change is announced, a field with a problem says so beside
- * it, and a change that fails says why. A leave or deletion hands the group to
- * the screen host, which opens what's left.
+ * member and the member accepts or declines; this phone's appearance and
+ * notifications; then the way out of the group, a leave for a member and a
+ * deletion, confirmed by typing the group's name, for the owner. Each change
+ * is announced, a field with a problem says so beside it, and a change that
+ * fails says why. A leave or deletion hands the group to the screen host,
+ * which opens what's left.
  *
  * Sections:
  *  - Constants
@@ -62,6 +69,16 @@ const ACC_DEN_STR = "You can't take on another group right now. Delete or hand o
 const FAI_SET_STR = "That didn't go through. Try again.";                                                    // What: Failure Settings String. Why: A change that fails for any other reason still has to be told. How: The alert shows this.
 const GRO_ERR_STR = 'Use letters, numbers, emoji, and simple punctuation.';                                  // What: Group Error String. Why: A group name with other characters is refused. How: This says what it may hold.
 const OFF_DEN_STR = "That member can't take on another group right now. Offer it to someone else.";          // What: Offer Denied String. Why: The rules refuse an offer to a member with no free owned slot, without saying more about their account (Section 18). How: The alert shows this.
+
+const COL_MOD_ARR : { labStr : string, modStr : ColModTyp }[] = [ // What: Color Mode Array. Why: The appearance follows the phone or is set light or dark (Section 14). How: Each row names a choice and its mode.
+
+
+	{ labStr : 'Match this phone', modStr : 'system' }, // What: System Choice. Why: Most people want the phone's own setting. How: This names it first.
+	{ labStr : 'Light',            modStr : 'light'  }, // What: Light Choice. Why: Someone can keep the app light. How: This names it.
+	{ labStr : 'Dark',             modStr : 'dark'   }  // What: Dark Choice. Why: Someone can keep the app dark. How: This names it.
+
+
+];
 
 const TTL_DAY_ARR = [ 7, 14, 30, 60, 90, 180 ]; // What: TTL Day Array. Why: The retention runs 7 to 180 days (Section 5), and a few steps cover every group's need. How: This lists the choices, in days.
 
@@ -85,16 +102,18 @@ type GscProTyp = { curGroObj : GroRecTyp, onGonFun : ( gonIdeStr : string, mesSt
  * else sees both values, with a note that only the owner changes them. A
  * member then sees Leave group, whose confirmation takes focus on its Stay
  * button, and the owner sees why they can't leave and Delete group, whose
- * confirmation asks for the group's name and takes focus in its box. Leaving
- * a confirmation returns focus to the button that opened it. Between them,
- * the owner offers the group to a member chosen by name, then sees whom it's
+ * confirmation asks for the group's name and takes focus in its box. Leaving a
+ * confirmation returns focus to the button that opened it. Between them, the
+ * owner offers the group to a member chosen by name, then sees whom it's
  * offered to and when it lapses, with a withdrawal, while the member offered
  * it sees an accept and a decline; focus lands on what replaces the button
- * pressed once the group shows the change. One change runs at a time, its
- * button reading what it's doing; a change is announced through the status
- * and a failure through the alert, a refused offer or acceptance saying why,
- * while a leave or deletion that lands calls onGonFun with the group's ID and
- * what to announce. Key it by the group, so another group starts afresh.
+ * pressed once the group shows the change. Then this phone's part picks light,
+ * dark, or the phone's setting, applied at once, and turns notifications on or
+ * off with one button, saying what the browser answered. One change runs at a
+ * time, its button reading what it's doing; a change is announced through the
+ * status and a failure through the alert, a refused offer or acceptance saying
+ * why, while a leave or deletion that lands calls onGonFun with the group's ID
+ * and what to announce. Key it by the group, so another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -128,6 +147,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	const focOffRef = useRef< React.RefObject< HTMLElement | null > | null >( null ); // What: Focus Offer Reference. Why: An offer's buttons give way only once the group shows the change, which can arrive before or after the write settles. How: This holds the reference of the element owed focus then, null when none is.
 
 	const [ actKinStr, setActKinStr ] = useState( '' );                         // What: Action Kind String And Setter. Why: One change at a time keeps a double tap from acting twice, and its button says what it's doing. How: This holds the change that's out, save, leave, or delete, empty when none is.
+	const [ colModStr, setColModStr ] = useState( colModGetFun );               // What: Color Mode String And Setter. Why: The appearance choice shows the mode kept on this phone. How: This holds it, read once as the section opens.
 	const [ conDelBoo, setConDelBoo ] = useState( false );                      // What: Confirm Delete Boolean And Setter. Why: Deleting asks to confirm by name first. How: This is true while the confirmation shows.
 	const [ conLeaBoo, setConLeaBoo ] = useState( false );                      // What: Confirm Leave Boolean And Setter. Why: Leaving asks to confirm first. How: This is true while the confirmation shows.
 	const [ delErrStr, setDelErrStr ] = useState( '' );                         // What: Delete Error String And Setter. Why: A name that doesn't match is told beside its box. How: This holds the problem, empty when there's none.
@@ -137,6 +157,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	const [ namErrStr, setNamErrStr ] = useState( '' );                         // What: Name Error String And Setter. Why: The name box says what's wrong with it. How: This holds the problem, empty when there's none.
 	const [ namTexStr, setNamTexStr ] = useState( curGroObj.namStr );           // What: Name Text String And Setter. Why: The name box shows what's typed, starting from the group's name. How: This holds it.
 	const [ offTarStr, setOffTarStr ] = useState( '' );                         // What: Offer Target String And Setter. Why: The offer's choice shows the member picked. How: This holds their UID, empty until one is picked.
+	const [ pusActBoo, setPusActBoo ] = useState( pusActFun );                  // What: Push Active Boolean And Setter. Why: The notifications button says whether they're on for this phone. How: This holds it, read once as the section opens.
 	const [ staMesStr, setStaMesStr ] = useState( '' );                         // What: Status Message String And Setter. Why: A change that lands is announced. How: This holds the status's text.
 	const [ ttlDayNum, setTtlDayNum ] = useState( curGroObj.ttlDayNum );        // What: TTL Day Number And Setter. Why: The retention choice shows what's picked, starting from the group's. How: This holds it, in days.
 	const [ uidValStr, setUidValStr ] = useState( '' );                         // What: UID Value String And Setter. Why: The member an offer names sees its answers. How: This holds their UID, empty until read.
@@ -457,6 +478,75 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	};
 
 	// #endregion offRunFun
+
+
+
+	// #region pusTogFun
+
+	/**
+	 * pusTogFun = Push Toggle Function
+	 *
+	 * @summary
+	 * Turns notifications for this phone off when they're on, or on when
+	 * they're off, as one change. Turning them on asks the browser, and its
+	 * answer decides the message: on, still off when the prompt was
+	 * dismissed, blocked by the browser, or not possible here, which on an
+	 * iPhone means the app isn't on the home screen yet. A change that lands
+	 * updates the button, whose label says what it will do next.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param void - This function takes no parameters.
+	 *
+	 * @returns A promise that settles once the change is handled, with no
+	 *          value.
+	 *
+	 * @example
+	 * ```ts
+	 * pusTogFun() // => Promise<void>
+	 * ```
+	 *
+	*/
+
+	const pusTogFun = async () : Promise< void > => { // What: Push Toggle Function. Why: The member decides whether this phone is notified (Section 11.1). How: This turns notifications off or on and says how it went.
+
+
+		if ( pusActBoo ) { // What: Turn Off Block. Why: Notifications on are turned off. How: This turns them off and says so once it lands.
+
+
+			if ( await actRunFun( 'push', pusDisFun ) ) { setPusActBoo( false ); setStaMesStr( 'Notifications are off for this phone.' ); } // What: Off Call. Why: The button and the member learn the change. How: This turns them off, then updates the state and announces it.
+
+
+
+			return;
+
+
+		}
+
+
+
+		let ansValStr = ''; // What: Answer Value String. Why: The browser's answer decides the message. How: This holds it once the change runs.
+
+
+		const lanValBoo = await actRunFun( 'push', async () => { ansValStr = await pusEnaFun(); } ); // What: Landed Value Boolean. Why: A failure is announced by the change itself. How: This turns them on, keeping the answer.
+
+
+		if ( !lanValBoo ) return; // What: Failed Guard. Why: The alert already says so. How: This returns.
+
+
+
+		setPusActBoo( ansValStr === 'granted' ); // What: State Set Call. Why: Notifications are on only once the browser allows them. How: This keeps whether it did.
+
+		if ( ansValStr === 'granted' ) setStaMesStr( 'Notifications are on for this phone.' ); // What: On Status Call. Why: The member hears it worked. How: This announces it.
+
+		else if ( ansValStr === 'default' ) setStaMesStr( 'Notifications are still off.' ); // What: Dismissed Status Call. Why: A dismissed prompt changes nothing. How: This says they're still off.
+
+		else setErrMesStr( ansValStr === 'denied' ? 'Your browser is blocking notifications for this app. Allow them in its site settings, then try again.' : "This browser can't show notifications here. On an iPhone, add the app to your home screen first." ); // What: Refused Alert Call. Why: A block or a browser that can't show them needs the member to act elsewhere. How: This says what to do, by the answer.
+
+
+	};
+
+	// #endregion pusTogFun
 
 
 
@@ -804,6 +894,86 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 			) }
+
+
+
+			<section
+				className={ cssModObj.devSetSec }
+
+				aria-labelledby='devSetHea'
+			>{ /* What: Device Settings Section Element. Why: The appearance and notifications belong to this phone rather than the group. How: This holds its heading, the choice, the note, and the button. */ }
+
+
+				<h3
+					id='devSetHea'
+
+					className={ cssModObj.devTitHea }
+				>This phone</h3>{ /* What: Device Title Heading Element. Why: The part needs a heading saying these settings are the phone's own. How: This names it. */ }
+
+
+
+				<fieldset className={ cssModObj.devAppFie }>{ /* What: Device Appearance Fieldset Element. Why: The three choices answer one question. How: This groups them under its legend. */ }
+
+
+					<legend className={ cssModObj.devAppLeg }>Appearance</legend>{ /* What: Device Appearance Legend Element. Why: The choices need a shared name. How: This names them. */ }
+
+
+
+					{ COL_MOD_ARR.map( ( colModObj ) => ( // What: Color Mode Map. Why: Each mode is a choice. How: This renders a row per mode.
+
+
+						<label
+							key={ colModObj.modStr }
+
+							className={ cssModObj.devChoLab }
+						>{ /* What: Device Choice Label Element. Why: The whole row picks its mode, a bigger target than the circle alone. How: This holds the circle and its name. */ }
+
+
+							<input
+								className={ cssModObj.devChoInp }
+
+								name='colModRad'
+
+								checked={ colModStr === colModObj.modStr }
+								type='radio'
+								value={ colModObj.modStr }
+
+								onChange={ () => { colModSetFun( colModObj.modStr ); setColModStr( colModObj.modStr ); } } // What: Mode Change Handler. Why: A choice applies at once and stays on this phone. How: This applies and keeps it, then marks it chosen.
+							/>{ /* What: Device Choice Input Element. Why: A circle shows the chosen mode. How: This draws it, checked for the kept choice. */ }
+
+							{ colModObj.labStr }{ /* What: Choice Name Text. Why: The circle needs its mode's name beside it, which also names it for a screen reader. How: This prints the row's label. */ }
+
+
+						</label>
+
+
+					) ) }
+
+
+				</fieldset>
+
+
+
+				<p className={ cssModObj.devNotPar }>{ pusActBoo ? "This phone gets a notification when there's news in your groups, such as a new message." : "Get a notification on this phone when there's news in your groups, such as a new message." }</p>{ /* What: Device Note Paragraph Element. Why: The member should know what notifications bring before turning them on or off. How: This says it, by whether they're on. */ }
+
+
+
+				<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The notifications button sits below the note. How: This holds it in a row that wraps. */ }
+
+
+					<button
+						className={ cssModObj.actPlaBut }
+
+						type='button'
+
+						onClick={ () => void pusTogFun() }
+					>{ actKinStr === 'push' ? 'Working…' : pusActBoo ? 'Turn off notifications' : 'Turn on notifications' }</button>{ /* What: Action Plain Button Element. Why: One button turns notifications on or off, and keeps focus as its label changes. How: This toggles them, reading "Working…" while the change is out. */ }
+
+
+				</div>
+
+
+			</section>
 
 
 

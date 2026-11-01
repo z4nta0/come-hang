@@ -55,7 +55,8 @@ and cancelling events, and the People section with the invite link, the
 people waiting to join, whom any member approves, declines, or blocks, and the
 members, and the Settings section, where the owner renames the group, sets
 its chat retention, offers the group to a member, who accepts or declines, and
-deletes the group by name, and a member leaves.
+deletes the group by name, a member leaves, and anyone picks light or dark
+and turns notifications on or off for their phone.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 

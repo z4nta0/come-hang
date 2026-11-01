@@ -33,7 +33,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * and the owner offers the group to a member and withdraws it, and the
  * member declines one offer and accepts the next, focus landing on what
  * replaces each button pressed, while an offer to a member who can't own
- * another group is refused, saying why.
+ * another group is refused, saying why; and this phone's appearance applies
+ * at once and stays, while one button turns notifications on and off.
  *
  * Sections:
  *  - Module State
@@ -342,6 +343,71 @@ pagTesObj( "an offer to a member who can't own another group is refused, saying 
 
 	await expect( curPagObj.getByRole( 'alert' ).filter( { hasText : 'take on' } ) ).toHaveText( "That member can't take on another group right now. Offer it to someone else." ); // What: Refused Alert Assertion. Why: The owner learns the offer can't land, and why. How: This reads the alert.
 	await expect( curPagObj.getByRole( 'button', { name : 'Offer the group' } ) ).toBeVisible();                                                                                 // What: Form Stays Assertion. Why: No offer was made, so the owner can pick someone else. How: This expects the button still shown.
+
+
+} );
+
+
+
+test( "this phone's appearance applies at once and stays, and one button turns notifications on and off", async ( { page : curPagObj } ) => { // What: Phone Settings Test. Why: The appearance and notifications are the phone's own, chosen from Settings (Sections 11.1 and 14). How: This picks dark and the phone's setting, reloading between, then has the browser block and then allow notifications, checking the page's mode, the button, the focus, and each message.
+
+
+	await curPagObj.addInitScript( () => { // What: Permission Stand-In Call. Why: No engine lets a script answer the permission prompt alike. How: This stands in the permission's state and a prompt that answers with whatever the test has set, denied by default.
+
+
+		let curPerStr = 'default'; // What: Current Permission String. Why: The prompt's answer becomes the state, as a browser's does. How: This holds it.
+
+
+		Object.defineProperty( Notification, 'permission', { configurable : true, get : () => curPerStr } ); // What: Permission Define Call. Why: The app reads the state there. How: This reports the stand-in.
+
+		Notification.requestPermission = async () => ( curPerStr = ( Reflect.get( window, 'ansValStr' ) ?? 'denied' ) as NotificationPermission ); // What: Prompt Stand-In. Why: The app asks there. How: This answers with the test's answer, keeping it as the state. // What: Type Assertion Note. Why: The test sets one of the permission's values. How: The as reads it as one.
+
+
+	} );
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ); // What: Group Create Call. Why: Settings belong to a group's screen. How: This creates one.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The phone's settings are in the Settings section. How: This opens it.
+
+
+	const htmEleObj = curPagObj.locator( 'html' );                                    // What: HTML Element Object. Why: The kept choice sets the root's attribute. How: This finds the root.
+	const notButObj = curPagObj.getByRole( 'button', { name : /notifications$/ } ); // What: Notifications Button Object. Why: One button turns notifications on and off. How: This finds it by the end of its label.
+
+
+	await curPagObj.getByRole( 'radio', { name : 'Dark' } ).check(); // What: Dark Check Call. Why: The member keeps the app dark. How: This picks Dark.
+
+	await expect( htmEleObj ).toHaveAttribute( 'data-color-mode-choice', 'dark' ); // What: Dark Applied Assertion. Why: The choice applies at once. How: This reads the root's attribute.
+
+	await curPagObj.reload(); // What: Reload Call. Why: The choice is kept on this phone. How: This opens the section again.
+
+	await expect( curPagObj.getByRole( 'radio', { name : 'Dark' } ) ).toBeChecked();  // What: Dark Kept Assertion. Why: The kept choice shows as chosen. How: This expects Dark checked.
+	await expect( htmEleObj ).toHaveAttribute( 'data-color-mode-choice', 'dark' ); // What: Dark Kept Root Assertion. Why: The kept choice applies as the app starts. How: This reads the root's attribute.
+
+	await curPagObj.getByRole( 'radio', { name : 'Match this phone' } ).check(); // What: System Check Call. Why: The member goes back to the phone's setting. How: This picks it.
+
+	await expect( htmEleObj ).not.toHaveAttribute( 'data-color-mode-choice' ); // What: System Applied Assertion. Why: The page follows the phone again. How: This expects no attribute.
+
+	await notButObj.click(); // What: Blocked Click Call. Why: The browser blocks notifications first. How: This presses Turn on notifications, answered with denied.
+
+	await expect( curPagObj.getByRole( 'alert' ).filter( { hasText : 'blocking' } ) ).toHaveText( 'Your browser is blocking notifications for this app. Allow them in its site settings, then try again.' ); // What: Blocked Alert Assertion. Why: The member has to allow them elsewhere. How: This reads the alert.
+	await expect( notButObj ).toHaveText( 'Turn on notifications' );                                                                                                                                 // What: Still Off Assertion. Why: Notifications stay off. How: This reads the button.
+
+	await curPagObj.evaluate( () => Reflect.set( window, 'ansValStr', 'granted' ) ); // What: Allow Set Call. Why: The browser allows notifications next. How: This sets the stand-in's answer.
+
+	await notButObj.click(); // What: On Click Call. Why: The member turns notifications on. How: This presses the button again.
+
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are on for this phone.' ); // What: On Status Assertion. Why: The change is announced. How: This reads the status.
+	await expect( notButObj ).toHaveText( 'Turn off notifications' );                                                     // What: On Button Assertion. Why: The button says what it will do next. How: This reads it.
+	await expect( notButObj ).toBeFocused();                                                                             // What: Kept Focus Assertion. Why: The button stays as its label changes. How: This expects it focused.
+
+	await notButObj.click(); // What: Off Click Call. Why: The member turns notifications off. How: This presses the button.
+
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are off for this phone.' ); // What: Off Status Assertion. Why: The change is announced. How: This reads the status.
+	await expect( notButObj ).toHaveText( 'Turn on notifications' );                                                       // What: Off Button Assertion. Why: The button says what it will do next. How: This reads it.
 
 
 } );

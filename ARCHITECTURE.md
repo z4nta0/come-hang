@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, and handing the group over, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, and this phone's appearance and notifications, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1537,8 +1537,8 @@ the Blaze change.
 - Light and dark (decided 2026-10-29, built 2026-10-30 in
   `src/platform/color-mode.ts`): every color holds a light and a dark value,
   and the app follows the phone's setting unless someone picks light or dark,
-  which is kept on the device and applied as the app starts. Settings will
-  offer the choice.
+  which is kept on the device and applied as the app starts. Settings
+  offers the choice (built 2026-11-01).
 - Routing (decided 2026-10-25): the app answers at one address, its root,
   since it's an app rather than a website with pages to land on:
   - An address the app doesn't use is replaced with the root, so the address
@@ -1635,8 +1635,11 @@ the Blaze change.
   refused offer or acceptance says why without saying more about anyone's
   account, and focus lands on what replaces the button pressed once the
   group shows the change. The group list carries each group's standing
-  offer for this. The device's light or dark choice and notifications,
-  Google recovery, and the upgrade join Settings next. In every section, a
+  offer for this. A part for this phone follows: its appearance, matching
+  the phone, light, or dark, applied at once and kept on the device, and one
+  button that turns notifications on or off, its label saying what it will
+  do next, a blocked or unsupported browser saying what to do instead.
+  Google recovery and the upgrade join Settings next. In every section, a
   button that turns into a confirmation (removing a member, blocking,
   replacing the link, cancelling an event) puts focus on the
   confirmation's safe answer, and leaving it returns focus to the button. The Events
