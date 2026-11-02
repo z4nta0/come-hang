@@ -9,6 +9,7 @@ import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Wh
 import { ButBasCom    } from '../ui/button.tsx';     // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
 import { GroChaCom    } from './group-chat.tsx';     // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
 import { GroEveCom    } from './group-events.tsx';   // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
+import { GroMapCom    } from './group-map.tsx';      // What: Group Map Component. Why: The Map section shares locations and says who's on their way. How: The frame shows it when that section is open.
 import { GroPeoCom    } from './group-people.tsx';   // What: Group People Component. Why: The People section shows the group's link and members. How: The frame shows it when that section is open.
 import { GroSetCom    } from './group-settings.tsx'; // What: Group Settings Component. Why: The Settings section changes, leaves, or deletes the group. How: The frame shows it when that section is open.
 import { IcoSvgCom    } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
@@ -74,57 +75,6 @@ const SEC_TAB_ARR : SecTabTyp[] = [ // What: Section Tab Array. Why: Every group
 
 
 // #region Components
-
-type SscProTyp = { labStr : string }; // What: Section Soon Component Props Type. Why: The placeholder names its section. How: This types SecSooCom's one prop.
-
-// #region SecSooCom
-
-/**
- * SecSooCom = Section Soon Component
- *
- * @summary
- * Renders a section that isn't built yet: its name as a heading and a short
- * line saying it's on its way, so each tab leads somewhere while the
- * sections are built one at a time.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param props.labStr - Label String: The section's name.
- *
- * @returns The placeholder.
- *
- * @example
- * ```tsx
- * SecSooCom({ labStr : 'Map' }) // => <SecSooCom />
- * ```
- *
-*/
-
-function SecSooCom ( { labStr } : SscProTyp ) : React.JSX.Element {
-
-
-	return (
-
-
-		<div className={ cssModObj.secSooDiv }>{ /* What: Section Soon Div Element. Why: An unbuilt section still needs a heading and a word about it. How: This stacks them at the top of the content. */ }
-
-
-			<h2>{ labStr }</h2>{ /* What: Section Soon Heading Element. Why: The section is named for a screen reader and for sight. How: This shows its name. */ }
-
-			<p className={ cssModObj.secSooPar }>This part of the group is on its way.</p>{ /* What: Section Soon Paragraph Element. Why: An empty screen would read as broken. How: This says the section is coming. */ }
-
-
-		</div>
-
-
-	);
-
-
-}
-
-// #endregion SecSooCom
-
-
 
 type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, focuses it when asked, and hands on a group left or deleted. How: This types GroFraCom's props.
 
@@ -355,7 +305,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open section is the screen's main content. How: This holds it below the bar, filling the rest of the screen. */ }
 
 
-				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: Every section but the map is built, and the map is on its way. How: This shows the open section, or its placeholder.
+				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: Each section has its own component. How: This shows the open section, the chat first and the map last.
 
 
 					<GroChaCom
@@ -399,10 +349,14 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 					/> // What: Group Settings Component. Why: The group is changed, left, or deleted here. How: This shows the open group's Settings section.
 
 
-				) : ( // What: Placeholder Branch. Why: A section still to build should lead somewhere. How: This shows its placeholder.
+				) : ( // What: Map Branch. Why: The map is the one section left. How: This shows it.
 
 
-					<SecSooCom labStr={ SEC_TAB_ARR.find( ( secTabObj ) => secTabObj.icoNamStr === secNamStr )!.labStr } /> // What: Section Soon Component. Why: Each tab should lead somewhere while its section is built. How: This shows the open section's placeholder. // What: Non-Null Note. Why: Every section name has a tab. How: The ! reads the found tab as present.
+					<GroMapCom
+						key={ curGroObj.ideStr } // What: Map Key. Why: Another group's map has to start afresh. How: This remounts the section for each group.
+
+						curGroObj={ curGroObj }
+					/> // What: Group Map Component. Why: Members find each other on the day of an event here. How: This shows the open group's Map section.
 
 
 				) }

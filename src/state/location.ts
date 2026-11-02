@@ -7,6 +7,7 @@ import { Bytes           } from 'firebase/firestore';         // What: Bytes. Wh
 import { collection      } from 'firebase/firestore';         // What: Collection. Why: Every member's shared location is read together. How: This names the collection.
 import { decTexFun       } from '../platform/crypto.ts';      // What: Decrypt Text Function. Why: A position is stored encrypted. How: This decrypts one.
 import { deleteDoc       } from 'firebase/firestore';         // What: Delete Doc. Why: Stopping deletes the shared location at once. How: This deletes it.
+import { disMetFun       } from '../core/geo.ts';             // What: Distance Meters Function. Why: An update is due once the member has moved far enough. How: This measures the distance between two fixes.
 import { doc             } from 'firebase/firestore';         // What: Doc. Why: A shared location and its event are named by path. How: This builds a reference.
 import { encTexFun       } from '../platform/crypto.ts';      // What: Encrypt Text Function. Why: A position is shared encrypted. How: This encrypts it under the group key.
 import { firGetFun       } from '../platform/firebase.ts';    // What: Firebase Get Function. Why: Shared locations live in Firestore. How: This returns the services.
@@ -79,47 +80,6 @@ const UPD_GAP_NUM = 120000;  // What: Update Gap Number. Why: A still member is 
 
 // #region Helpers
 
-// #region disMetFun
-
-/**
- * disMetFun = Distance Meters Function
- *
- * @summary
- * Returns the distance between two positions in meters along the Earth's
- * surface, by the haversine formula on a sphere of the Earth's mean radius.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param posOneObj - Position One Object: The first position.
- * @param posTwoObj - Position Two Object: The second position.
- *
- * @returns The distance in meters.
- *
- * @example
- * ```ts
- * disMetFun({ latNum : 0, lngNum : 0 }, { latNum : 0, lngNum : 1 })
- * // => 111195
- * ```
- *
-*/
-
-const disMetFun = ( posOneObj : { latNum : number, lngNum : number }, posTwoObj : { latNum : number, lngNum : number } ) : number => { // What: Distance Meters Function. Why: An update is due once the member has moved far enough. How: This measures the distance between two fixes.
-
-
-	const radValFun = ( degValNum : number ) : number => degValNum * Math.PI / 180; // What: Radian Value Function. Why: The formula works in radians. How: This converts degrees.
-	const hafValNum = Math.sin( radValFun( posTwoObj.latNum - posOneObj.latNum ) / 2 ) ** 2 + Math.cos( radValFun( posOneObj.latNum ) ) * Math.cos( radValFun( posTwoObj.latNum ) ) * Math.sin( radValFun( posTwoObj.lngNum - posOneObj.lngNum ) / 2 ) ** 2; // What: Haversine Value Number. Why: The haversine of the central angle sets the distance. How: This combines the latitude and longitude differences.
-
-
-
-	return 2 * 6371008.8 * Math.asin( Math.sqrt( hafValNum ) ); // What: Distance Return. Why: The caller compares it with the threshold. How: This returns the arc length on the Earth's mean radius in meters.
-
-
-};
-
-// #endregion disMetFun
-
-
-
 // #region locDecFun
 
 /**
@@ -174,13 +134,13 @@ const locDecFun = async ( groKeyObj : CryptoKey, locDocObj : QueryDocumentSnapsh
 	return { // What: Record Return. Why: The caller shows the location. How: This returns its fields.
 
 
-		accNum    : locValObj.a as number,                                   // What: Accuracy Number. Why: A wide fix is shown as uncertain. How: This reads the accuracy in meters. // What: Type Assertion Note. Why: The check above proved it's a number. How: The as reads it as one.
-		arrBoo    : locValObj.r as boolean,                                  // What: Arrived Boolean. Why: An arrived member gets a badge. How: This reads the flag. // What: Type Assertion Note. Why: The check above proved it's a boolean. How: The as reads it as one.
-		eveIdeStr : locDocObj.get( 'eventId' ) as string,                    // What: Event Identifier String. Why: A share belongs to one event. How: This reads it. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
-		latNum    : locValObj.x as number,                                   // What: Latitude Number. Why: The member is placed on the map. How: This reads the latitude. // What: Type Assertion Note. Why: The check above proved it's a number. How: The as reads it as one.
-		lngNum    : locValObj.y as number,                                   // What: Longitude Number. Why: The member is placed on the map. How: This reads the longitude. // What: Type Assertion Note. Why: The check above proved it's a number. How: The as reads it as one.
-		uidValStr : locDocObj.id,                                            // What: UID Value String. Why: The location is shown under its member. How: This reads the document's ID, the sharer's UID.
-		updTimNum : ( locDocObj.get( 'updatedAt' ) as Timestamp ).toMillis() // What: Update Time Number. Why: Every location shows how old it is (Section 10). How: This reads the server's time of the update. // What: Type Assertion Note. Why: The rules store it as a timestamp. How: The as reads it as one.
+		accNum    : locValObj.a as number,                                                                      // What: Accuracy Number. Why: A wide fix is shown as uncertain. How: This reads the accuracy in meters. // What: Type Assertion Note. Why: The check above proved it's a number. How: The as reads it as one.
+		arrBoo    : locValObj.r as boolean,                                                                     // What: Arrived Boolean. Why: An arrived member gets a badge. How: This reads the flag. // What: Type Assertion Note. Why: The check above proved it's a boolean. How: The as reads it as one.
+		eveIdeStr : locDocObj.get( 'eventId' ) as string,                                                       // What: Event Identifier String. Why: A share belongs to one event. How: This reads it. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
+		latNum    : locValObj.x as number,                                                                      // What: Latitude Number. Why: The member is placed on the map. How: This reads the latitude. // What: Type Assertion Note. Why: The check above proved it's a number. How: The as reads it as one.
+		lngNum    : locValObj.y as number,                                                                      // What: Longitude Number. Why: The member is placed on the map. How: This reads the longitude. // What: Type Assertion Note. Why: The check above proved it's a number. How: The as reads it as one.
+		uidValStr : locDocObj.id,                                                                               // What: UID Value String. Why: The location is shown under its member. How: This reads the document's ID, the sharer's UID.
+		updTimNum : ( locDocObj.get( 'updatedAt', { serverTimestamps : 'estimate' } ) as Timestamp ).toMillis() // What: Update Time Number. Why: Every location shows how old it is (Section 10). How: This reads the server's time of the update, estimating it for this device's own write until the server's arrives. // What: Type Assertion Note. Why: The rules store it as a timestamp. How: The as reads it as one.
 
 
 	};
@@ -422,27 +382,31 @@ const locStoFun = async ( groIdeStr : string ) : Promise< void > => deleteDoc( d
  * comes back into view, throttled by locDueFun, and resolves with two
  * functions. One marks the member arrived and sends a fresh fix at once,
  * the flag staying on for the rest of the session, and the other stops the
- * session and deletes the share. A send the rules refuse, as once the event
- * has ended, is skipped.
+ * session and deletes the share. A session resumed after the member said
+ * they'd arrived starts with the flag on. A send the rules refuse, as once
+ * the event has ended, is skipped. A first fix the device can't get rejects
+ * with its GeolocationPositionError, before anything else starts.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param groIdeStr - Group Identifier String: The group's ID.
  * @param eveIdeStr - Event Identifier String: The event shared for.
+ * @param arrIniBoo - Arrived Initial Boolean: Whether the member already
+ *                    said they'd arrived, false by default.
  *
  * @returns A promise that resolves with the arrive and stop functions.
  *
  * @example
  * ```ts
- * locShaFun('Xk3...', 'Ev7...') // => { arrFun, stoFun }
+ * locShaFun('Xk3...', 'Ev7...', false) // => { arrFun, stoFun }
  * ```
  *
 */
 
-const locShaFun = async ( groIdeStr : string, eveIdeStr : string ) : Promise< { arrFun : () => Promise< void >, stoFun : () => Promise< void > } > => { // What: Location Share Function. Why: A member shares while the app is open, on each return to it, and on arrival, since browsers can't track in the background (Section 10). How: This runs the watch, the visibility listener, and the arrival.
+const locShaFun = async ( groIdeStr : string, eveIdeStr : string, arrIniBoo = false ) : Promise< { arrFun : () => Promise< void >, stoFun : () => Promise< void > } > => { // What: Location Share Function. Why: A member shares while the app is open, on each return to it, and on arrival, since browsers can't track in the background (Section 10). How: This runs the watch, the visibility listener, and the arrival.
 
 
-	let arrValBoo = false;                                                               // What: Arrived Value Boolean. Why: Once arrived, every later fix says so. How: This starts false.
+	let arrValBoo = arrIniBoo;                                                           // What: Arrived Value Boolean. Why: Once arrived, every later fix says so. How: This starts as the member left it.
 	let lasPosObj : { latNum : number, lngNum : number, timNum : number } | null = null; // What: Last Position Object. Why: The throttle compares each fix with the last one sent. How: This starts empty.
 
 

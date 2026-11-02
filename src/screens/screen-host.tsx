@@ -11,7 +11,10 @@ import { GroFraCom       } from './group-frame.tsx';   // What: Group Frame Comp
 import { groWatFun       } from '../state/groups.ts';  // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
 import { LoaScrCom       } from './loading.tsx';       // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
 import { scrReaFun       } from '../ui/scroll-top.ts'; // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
-import { useEffect       } from 'react';               // What: Use Effect. Why: The groups are watched while the host is shown, and a group that's gone is forgotten once the watch drops it. How: This starts and stops the watch and clears the group.
+import { shaEndFun       } from '../state/sharing.ts'; // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
+import { shaGetFun       } from '../state/sharing.ts'; // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
+import { shaResFun       } from '../state/sharing.ts'; // What: Sharing Resume Function. Why: Sharing kept from before a reload resumes as the app opens. How: This resumes it.
+import { useEffect       } from 'react';               // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing is checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing.
 import { useLayoutEffect } from 'react';               // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
 import { useScrOpeFun    } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
 import { useScrStaFun    } from '../ui/screen.ts';     // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
@@ -197,6 +200,27 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
+
+	useEffect( () => { // What: Sharing Check Effect. Why: Sharing kept from before a reload resumes once the groups are known, and sharing for a group the member is no longer in ends. How: This resumes the kept record, then ends a current one whose group isn't listed.
+
+
+		if ( groRecArr === null ) return; // What: Loading Guard. Why: The groups aren't known yet. How: This returns.
+
+
+
+		const groIdeArr = groRecArr.map( ( groRecObj ) => groRecObj.ideStr ); // What: Group Identifier Array. Why: Sharing belongs only to the member's groups. How: This lists their IDs.
+		const shaRecObj = shaGetFun();                                         // What: Sharing Record Object. Why: A current record may belong to a group that's gone. How: This reads it.
+
+
+		void shaResFun( groIdeArr ); // What: Resume Call. Why: Opening the app sends a fresh fix while sharing (Section 10). How: This resumes the kept record, once.
+
+		if ( shaRecObj && !groIdeArr.includes( shaRecObj.groIdeStr ) ) void shaEndFun( shaRecObj.groIdeStr ); // What: Gone End Call. Why: A member removed from a group stops sharing with it. How: This ends sharing for a group no longer listed.
+
+
+	}, [ groRecArr ] ); // What: Effect Dependency Array. Why: Sharing is checked against each report. How: groRecArr changes as the watch reports.
+
+
+
 	useEffect( () => { // What: Gone Clear Effect. Why: The group is hidden only until the watch drops it, so a group joined again later shows. How: This forgets it once the watch's groups no longer hold it.
 
 
@@ -242,6 +266,8 @@ function ScrHosCom () : React.JSX.Element {
 		setAnnMesStr( mesValStr ); // What: Announce Set Call. Why: The member hears what happened. How: This puts the message in the status.
 
 		setGonIdeStr( gonValStr ); // What: Gone Set Call. Why: The group shouldn't show again while the watch catches up. How: This hides it.
+
+		void shaEndFun( gonValStr ); // What: Sharing End Call. Why: Sharing with a group the member left or deleted has to stop. How: This ends it, when the record is that group's.
 
 
 		scrOpeFun( nexGroObj === undefined ? { focBoo : true, scrStr : 'group' } : { focBoo : true, groStr : nexGroObj.ideStr, scrStr : 'group' }, true ); // What: Screen Replace Call. Why: Back shouldn't return to a group that's gone. How: This replaces the entry with the next group's, or one naming none, each asking for focus.

@@ -491,8 +491,6 @@
 
 
 
-/* #region fraConMai */
-
 .fraConMai { /* What: Frame Content Main. Why: The open section fills the rest of the screen below the bar, and its own parts scroll inside it. How: This makes it a one-cell grid in its own area, allowed to shrink below its content. */
 
 
@@ -502,32 +500,6 @@
 
 
 }
-
-
-/* #region secSooDiv */
-
-.secSooDiv { /* What: Section Soon Div. Why: An unbuilt section's heading and note sit at the top of the content, inside the gutter. How: This stacks them a tier 3 space apart at the top, with the tier 2 space above and the gutter at the sides. */
-
-
-	align-content : start;
-	display       : grid;
-	padding       : var( --tie-ver-002 ) var( --gut-sid-pad ); /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
-	row-gap       : var( --tie-ver-003 );                      /* Tier Vertical 3 ~= 14.572px */
-
-
-}
-
-.secSooPar { /* What: Section Soon Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color. */
-
-
-	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
-
-
-}
-
-/* #endregion secSooDiv */
-
-/* #endregion fraConMai */
 
 
 

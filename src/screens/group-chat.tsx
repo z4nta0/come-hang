@@ -22,7 +22,8 @@ import { memLisFun       } from '../state/members.ts';       // What: Member Lis
 import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
 import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
 import { SheDiaCom       } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
-import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar wears their color. How: This names it.
+import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar and status dot wear their color. How: This names it.
+import { staKinFun       } from '../core/chat-status.ts';    // What: Status Kind Function. Why: A status post shows as a line rather than a message. How: This reads its kind.
 import { useEffect       } from 'react';                     // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
 import { useLayoutEffect } from 'react';                     // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
 import { useRef          } from 'react';                     // What: Use Reference. Why: The log's element and whether it sits at its bottom are read outside rendering. How: This holds both.
@@ -48,9 +49,11 @@ import type { SheHanTyp } from '../ui/sheet.tsx';           // What: Sheet Handl
  * as it arrives, and stays at its newest message while someone reads there.
  * Each message from another member shows their avatar in their own color,
  * their name, and its time, while the member's own messages sit on the other
- * side in the accent. A watch the rules refuse, as they do until the group's
- * membership mirror holds this member, starts again a second later, and a
- * group whose key is still waiting to be shared says so instead.
+ * side in the accent, and a status post, saying someone is on their way or
+ * has arrived, shows as a centered line. A watch the rules refuse, as they
+ * do until the group's membership mirror holds this member, starts again a
+ * second later, and a group whose key is still waiting to be shared says so
+ * instead.
  *
  * Sections:
  *  - Types
@@ -79,6 +82,18 @@ type ChaDatTyp = { chaErrStr : string, eveNexObj : EveRecTyp | null, memRecMap :
 const FAI_MES_STR = "The message couldn't be sent. Check your connection and try again."; // What: Failure Message String. Why: A failed send shouldn't leave someone guessing. How: This is the message the composer announces.
 const GAP_MIL_NUM = 300000;                                                                 // What: Gap Milliseconds Number. Why: Messages from one sender close together read as one run. How: This is five minutes, the gap that starts a new run.
 const RET_MIL_NUM = 1000;                                                                   // What: Retry Milliseconds Number. Why: A refused watch, as before the membership mirror catches up, should try again soon. How: This is how long it waits.
+
+
+
+const STA_LIN_OBJ = { // What: Status Line Object. Why: Each kind of status post reads as its own line, naming its sender, or "You" for the member's own. How: This maps each kind to a function of the sender's name, empty for the member themselves.
+
+
+	arr : ( namValStr : string ) : string => namValStr === '' ? 'You arrived' : `${ namValStr } arrived`,                                       // What: Arrived Line. Why: An arrival is said plainly. How: This names who arrived.
+	unk : ( namValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } posted an update this version of Come Hang can't show`, // What: Unknown Line. Why: A later version may post a kind this one doesn't know, which still shouldn't vanish. How: This says an update was posted.
+	way : ( namValStr : string ) : string => namValStr === '' ? "You're on the way" : `${ namValStr } is on the way`                            // What: Way Line. Why: Leaving is said plainly. How: This names who's on the way.
+
+
+};
 
 // #endregion Constants
 
@@ -335,12 +350,12 @@ type GccProTyp = { groIdeStr : string, groNamStr : string }; // What: Group Chat
  *
  * @summary
  * Renders the open group's chat: the pinned next event when there is one,
- * the log, which is a live region so new messages are announced, and the
- * composer. The log scrolls itself, staying at its newest message while
- * someone reads there and when they send one. Enter sends and Shift+Enter
- * starts a new line. A message with characters the chat refuses, or a send
- * that fails, is announced beside the composer, and the text stays to try
- * again. Key it by the group, so a new group starts afresh.
+ * the log, which is a live region so new messages and status lines are
+ * announced, and the composer. The log scrolls itself, staying at its newest
+ * message while someone reads there and when they send one. Enter sends and
+ * Shift+Enter starts a new line. A message with characters the chat
+ * refuses, or a send that fails, is announced beside the composer, and the
+ * text stays to try again. Key it by the group, so a new group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -524,11 +539,42 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 						{ mesRecArr.map( ( mesRecObj, mesIndNum ) => { // What: Message Map. Why: Each message gets its own entry. How: This renders one per message, joining a sender's messages close together into one run.
 
 
-							const memRecObj = memRecMap.get( mesRecObj.senUidStr );                                                                    // What: Member Record Object. Why: The message shows its sender. How: This looks them up, undefined for someone who left.
-							const preRecObj = mesRecArr[ mesIndNum - 1 ] as MesRecTyp | undefined;                                                     // What: Previous Record Object. Why: A message close after its sender's last continues their run. How: This reads the one before it. // What: Type Assertion Note. Why: The first message has none before it. How: The as reads it as possibly missing.
-							const conRunBoo = preRecObj?.senUidStr === mesRecObj.senUidStr && mesRecObj.sntTimNum - preRecObj.sntTimNum < GAP_MIL_NUM; // What: Continued Run Boolean. Why: A run shows its sender once. How: This is true when the message before it is the same sender's within five minutes.
-							const ownMesBoo = mesRecObj.senUidStr === uidValStr;                                                                       // What: Own Message Boolean. Why: The member's own messages sit on their side. How: This compares the sender with them.
-							const senNamStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' );                                     // What: Sender Name String. Why: A message names its sender, even one with no name yet or who left. How: This takes their name, or a stand-in.
+							const memRecObj = memRecMap.get( mesRecObj.senUidStr );                                // What: Member Record Object. Why: The message shows its sender. How: This looks them up, undefined for someone who left.
+							const ownMesBoo = mesRecObj.senUidStr === uidValStr;                                   // What: Own Message Boolean. Why: The member's own messages sit on their side. How: This compares the sender with them.
+							const preRecObj = mesRecArr[ mesIndNum - 1 ] as MesRecTyp | undefined;                 // What: Previous Record Object. Why: A message close after its sender's last continues their run. How: This reads the one before it. // What: Type Assertion Note. Why: The first message has none before it. How: The as reads it as possibly missing.
+							const senNamStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' ); // What: Sender Name String. Why: A message names its sender, even one with no name yet or who left. How: This takes their name, or a stand-in.
+							const staKinStr = staKinFun( mesRecObj.texValStr );                                    // What: Status Kind String. Why: A status post shows as a line rather than a message. How: This reads its kind, null for a typed message.
+
+
+							if ( staKinStr !== null ) return ( // What: Status Return. Why: A status post says who's on their way or has arrived, in a line of its own. How: This returns its list item.
+
+
+								<li
+									key={ mesRecObj.mesIdeStr }
+
+									className={ cssModObj.chaStaIte }
+								>{ /* What: Chat Status Item Element. Why: Leaving and arriving show at a glance in the chat (Section 10). How: This centers the sender's color dot beside the line and its time. */ }
+
+
+									<span
+										className={ cssModObj.staDotSpa }
+										style={{ backgroundColor : memRecObj ? sloColFun( memRecObj.colSloNum ) : undefined }} // What: Dot Color Note. Why: A status line wears its member's color, and someone who left keeps the plain look. How: This reads their slot's token.
+
+										aria-hidden='true'
+									/>{ /* What: Status Dot Span Element. Why: The member's color ties the line to them at a glance. How: This draws a small circle, hidden from screen readers, which read the name. */ }
+
+									<p className={ cssModObj.staTexPar }>{ STA_LIN_OBJ[ staKinStr ]( ownMesBoo ? '' : senNamStr ) } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when. How: This shows the line for its kind and the time after it. */ }
+
+
+								</li>
+
+
+							);
+
+
+
+							const preStaBoo = preRecObj !== undefined && staKinFun( preRecObj.texValStr ) !== null;                                                  // What: Previous Status Boolean. Why: A status line between two messages breaks their run. How: This is true when the one before is a status post.
+							const conRunBoo = !preStaBoo && preRecObj?.senUidStr === mesRecObj.senUidStr && mesRecObj.sntTimNum - preRecObj.sntTimNum < GAP_MIL_NUM; // What: Continued Run Boolean. Why: A run shows its sender once. How: This is true when the message before it is the same sender's, not a status post, within five minutes.
 
 
 

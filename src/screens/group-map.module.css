@@ -1,0 +1,480 @@
+
+
+
+/**
+ * group-map.module.css = Group Map Module
+ *
+ * @summary
+ * Styles for GroMapCom: the heading and its notes, the event's part with its
+ * hours, note, wrapping row of buttons, and the note that replaces a button,
+ * and the part listing everyone sharing, with the plot drawn around the
+ * member and a row per member of avatar, name with an Arrived badge,
+ * details, and a link. The status that announces a change is for screen
+ * readers alone, while a failure shows in the dark error color.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region groMapDiv */
+
+.groMapDiv { /* What: Group Map Div. Why: The heading and the parts read top to bottom inside the gutter, and scroll when they outgrow the content. How: This stacks them a tier 2 space apart at the top in one column of capped width, with the tier 2 space above and below and the gutter at the sides, scrolling on its own. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-columns : minmax( 0, calc( var( --ver-rhy-p14 ) * 1rem ) ); /* Vertical Rhythm Base Plus 14 ~= 746.867px */ /* What: Column Cap. Why: Rows stretched across a wide screen read poorly. How: The one column grows up to about 747px. */
+	min-height            : 0;
+	overflow-y            : auto;
+	padding               : var( --tie-ver-002 ) var( --gut-sid-pad );        /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-002 );                             /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.mapTitHea { /* What: Map Title Heading. Why: The heading names the section. How: This sets it at Base Plus 3. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+
+
+}
+
+.mapNotPar { /* What: Map Note Paragraph. Why: The note saying when sharing opens is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region mapEveSec */
+
+.mapEveSec { /* What: Map Event Section. Why: The event's heading, hours, note, and buttons read as one part. How: This stacks them a tier 3 space apart, in order since the note after a post comes and goes. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.eveTitHea { /* What: Event Title Heading. Why: The heading names the event. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.eveRanPar { /* What: Event Range Paragraph. Why: The hours sit just under the title, quieter than it. How: This sets them bold in the muted text color, pulled up to a tier 5 space below the title. */
+
+
+	color       : var( --tex-mut-col );                                /* Text Muted Color = #5A5D7E */
+	font-weight : 700;
+	margin-top  : calc( var( --tie-ver-005 ) - var( --tie-ver-003 ) ); /* Tier Vertical 5 ~= 4.732px, Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.eveNotPar { /* What: Event Note Paragraph. Why: How sharing works should read comfortably. How: This caps it at the base text width. */
+
+
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region eveActDiv */
+
+.eveActDiv { /* What: Event Actions Div. Why: The event's buttons sit together, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Sharing, leaving, and arriving are a row of equal actions, each a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion eveActDiv */
+
+
+.evePosPar { /* What: Event Post Paragraph. Why: What the member told the group stands out as done, and takes focus without a ring, since it isn't a control. How: This sets it bold in the dark success color and removes its focus outline. */
+
+
+	color       : var( --suc-dar-col ); /* Success Dark Color = #1D6B46 */
+	font-weight : 700;
+
+
+}
+.evePosPar:focus { /* What: Focused Event Post Paragraph. Why: Focus lands here only to keep the member's place after a button goes, and a ring would read as a control. How: This removes the outline. */
+
+
+	outline : none;
+
+
+}
+
+/* #endregion mapEveSec */
+
+
+
+/* #region mapPeoSec */
+
+.mapPeoSec { /* What: Map People Section. Why: The heading, the plot, and the list read as one part. How: This stacks them a tier 3 space apart, in order since the plot and its note take turns. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.peoTitHea { /* What: People Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.peoNotPar { /* What: People Note Paragraph. Why: A note in place of the list or the plot is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region mapPloFig */
+
+.mapPloFig { /* What: Map Plot Figure. Why: The plot and its caption read as one, centered in the part. How: This stacks them a tier 5 space apart, centered. */
+
+
+	display       : grid;
+	justify-items : center;
+	row-gap       : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+
+
+/* #region mapPloSvg */
+
+.mapPloSvg { /* What: Map Plot SVG. Why: The plot should fill a phone's width but not tower over a wide screen. How: This takes the full width up to Base Plus 11, square. */
+
+
+	aspect-ratio : 1;
+	max-width    : calc( var( --ver-rhy-p11 ) * 1rem ); /* Vertical Rhythm Base Plus 11 ~= 321.273px */
+	width        : 100%;
+
+
+}
+
+.ploRinCir { /* What: Plot Ring Circle. Why: The rings mark distance without competing with the dots. How: This draws an outline in the strong border color with no fill. */
+
+
+	fill   : none;
+	stroke : var( --bor-str-col ); /* Border Strong Color = #83869F */
+
+
+}
+
+.ploNorTex { /* What: Plot North Text. Why: The north mark labels the plot's top, quieter than the dots. How: This centers a small bold letter in the muted text color. */
+
+
+	dominant-baseline : central;
+	fill              : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-weight       : 700;
+	text-anchor       : middle;
+
+
+}
+
+.ploDotCir { /* What: Plot Dot Circle. Why: A dot in the member's color stands out on the page, plain for someone who left, and its edge keeps it from blending into the page. How: This fills it with the border color, which the member's own color replaces, outlined in the page color. */
+
+
+	fill   : var( --bor-mai-col ); /* Border Main Color = #E0E1EF */
+	stroke : var( --bac-pag-col ); /* Background Page Color = #F4F4FA */
+
+
+}
+
+.ploIniTex { /* What: Plot Initials Text. Why: The initials tell the dots apart and have to read on every member color. How: This centers them bold in the member text color, in the plot's own units. */
+
+
+	dominant-baseline : central;
+	fill              : var( --mem-tex-col ); /* Member Text Color = #221F1B */
+	font-weight       : 700;
+	text-anchor       : middle;
+
+
+}
+
+.ploOwnCir { /* What: Plot Own Circle. Why: The member is the plot's center and should read as the one place that isn't a member's dot. How: This fills it with the main accent, ringed in its tint. */
+
+
+	fill   : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	stroke : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+
+/* #endregion mapPloSvg */
+
+
+.ploCapFig { /* What: Plot Caption Figcaption. Why: The scale is a note under the plot. How: This sets it small in the muted text color. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+
+
+}
+
+/* #endregion mapPloFig */
+
+
+
+/* #region peoLisUno */
+
+.peoLisUno { /* What: People List Unordered List. Why: The rows read as one list, without bullets. How: This stacks them with no gap and no markers, since each row draws its own border and space. */
+
+
+	display    : grid;
+	list-style : none;
+
+
+}
+
+
+
+/* #region peoRowIte */
+
+.peoRowIte { /* What: People Row Item. Why: A member's avatar sits beside their name, details, and link. How: This lays them out in named areas a tier 4 space across and a tier 5 space down, with a tier 4 space above and below and a border below. */
+
+
+	align-items           : center;
+	border-bottom         : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-areas   : 'peoAvaSpa peoNamPar' 'peoAvaSpa peoDetPar' '. peoMapAnc';
+	grid-template-columns : auto minmax( 0, 1fr );
+	justify-items         : start;
+	padding               : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+	row-gap               : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.peoAvaSpa { /* What: People Avatar Span. Why: An avatar in the member's color ties the row to their dot, plain for someone who left. How: This draws a circle in the border color, which the member's own color replaces, with their initials bold, in its own area. */
+
+
+	background-color : var( --bor-mai-col );                /* Border Main Color = #E0E1EF */
+	border-radius    : 50%;
+	color            : var( --mem-tex-col );                /* Member Text Color = #221F1B */
+	display          : grid;
+	font-weight      : 700;
+	grid-area        : peoAvaSpa;
+	height           : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	place-items      : center;
+	width            : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+
+
+
+/* #region peoNamPar */
+
+.peoNamPar { /* What: People Name Paragraph. Why: The name leads the row, with the badge beside it. How: This sets it bold, wrapping long names anywhere, in its own area. */
+
+
+	font-weight   : 700;
+	grid-area     : peoNamPar;
+	overflow-wrap : anywhere;
+
+
+}
+
+.peoArrSpa { /* What: People Arrived Span. Why: An arrival should stand out at a glance. How: This draws a small pill in the success tint with the dark success text, a tier 5 space after the name. */
+
+
+	background-color : var( --suc-tin-col );                      /* Success Tint Color = #E3F5EC */
+	border-radius    : 999px;
+	color            : var( --suc-dar-col );                      /* Success Dark Color = #1D6B46 */
+	font-size        : var( --fon-siz-bas );                      /* Font Size Base = 11px */
+	margin-left      : var( --tie-hor-005 );                      /* Tier Horizontal 5, about 4.732px - 6.268px */
+	padding          : var( --spa-ver-m04 ) var( --spa-ver-m02 ); /* Spacing Vertical Base Minus 4 ~= 4.732px, Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Badge Padding Note. Why: A badge's own padding shapes the badge rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+
+
+}
+
+/* #endregion peoNamPar */
+
+
+.peoDetPar { /* What: People Details Paragraph. Why: Where the member is and how fresh it is are secondary to the name. How: This sets them small in the muted text color, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area : peoDetPar;
+
+
+}
+
+
+
+/* #region peoMapAnc */
+
+.peoMapAnc { /* What: People Map Anchor. Why: The link is a quiet text link under the details, still easy to tap. How: This sets bold accent text, at least a touch target tall, in its own area, and eases its hover color, press dim, and focus ring. */
+
+
+	align-content : center;
+	color         : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	display       : grid;
+	font-weight   : 700;
+	grid-area     : peoMapAnc;
+	min-height    : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	transition    : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.peoMapAnc:hover { /* What: Hovered People Map Anchor. Why: A text link shows it's live by color alone. How: This darkens its text a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.peoMapAnc:active { /* What: Pressed People Map Anchor. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion People Map Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.peoMapAnc { /* What: Motionless People Map Anchor. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.visHidSpa { /* What: Visually Hidden Span. Why: The link names whose spot it opens for a screen reader, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion peoMapAnc */
+
+/* #endregion peoRowIte */
+
+/* #endregion peoLisUno */
+
+/* #endregion mapPeoSec */
+
+
+.mapStaPar { /* What: Map Status Paragraph. Why: The page itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.mapErrPar { /* What: Map Error Paragraph. Why: A failed change should be clear below the parts. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.mapErrPar:empty { /* What: Empty Map Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the section's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-002 ) * -1 ); /* Tier Vertical 2 ~= -25.572px */
+
+
+}
+
+/* #endregion groMapDiv */
+
+

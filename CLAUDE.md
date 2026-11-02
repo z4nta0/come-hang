@@ -58,7 +58,12 @@ the members, and the Settings section. There the owner renames the group, sets
 its chat retention, offers the group to a member, who accepts or declines, and
 deletes it by name, a member leaves, and anyone picks light or dark and turns
 notifications on or off for their phone, links Google, and buys the upgrade.
-The welcome gets a linked member's groups back on a new phone.
+The welcome gets a linked member's groups back on a new phone. The Map
+section, drawn without a street map, shares a member's location for an event
+from 3 hours before it starts, lists everyone sharing with their distance,
+direction, and freshness around a plot, and posts "I'm on my way" and "I've
+arrived" to the chat as status lines, the sharing running across sections
+and resuming after a reload.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 

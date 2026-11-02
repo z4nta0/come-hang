@@ -42,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'member' | 'offered' | 'people' | 'requests' | 'settings' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'map' | 'member' | 'offered' | 'people' | 'requests' | 'settings' | 'sheet', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -65,8 +65,8 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
  * event sheets, an item's form, and the event form open on a phone, the
  * People section with two requests waiting, the owner's Settings, its
  * deletion's confirmation, a member's Settings with and without an offer of
- * the group, and the waiting screen
- * with its loader showing. Every row shares the {@link
+ * the group, the Map section while sharing, and the waiting screen with its
+ * loader showing. Every row shares the {@link
  * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
@@ -118,7 +118,9 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'settings-phone',       patStr : '/', widNum : 390,  steStr : 'settings'                   }, // What: Settings Phone State. Why: The owner's Settings section is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/', widNum : 390,  steStr : 'delete'                     }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/', widNum : 390,  steStr : 'member'                     }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
-	{ heiNum : 844, ideStr : 'offered-phone',        patStr : '/', widNum : 390,  steStr : 'offered'                    }  // What: Offered Phone State. Why: The member an offer names sees its answers. How: This opens Settings as a member offered another's group at 390px.
+	{ heiNum : 844, ideStr : 'offered-phone',        patStr : '/', widNum : 390,  steStr : 'offered'                    }, // What: Offered Phone State. Why: The member an offer names sees its answers. How: This opens Settings as a member offered another's group at 390px.
+	{ heiNum : 900, ideStr : 'map-desktop',          patStr : '/', widNum : 1440, steStr : 'map'                        }, // What: Map Desktop State. Why: The Map section is checked sharing at a desktop width. How: This shares beside an arrived member at 1,440px.
+	{ heiNum : 844, ideStr : 'map-phone',            patStr : '/', widNum : 390,  steStr : 'map'                        }  // What: Map Phone State. Why: The Map section is checked sharing at a phone width. How: This shares beside an arrived member at 390px.
 
 
 ];
@@ -335,25 +337,27 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  * Makes the page a member of someone else's group: an owner on a device of
  * their own creates Beach Day as Alice and opens its People section for the
  * link, the page asks to join through it as Sam, and the owner approves, then
- * offers the page the group when asked, the way the app does each step.
+ * for the offered steps offers the page the group, and for the map steps
+ * plans an event under way and shares their position there as arrived, the
+ * way the app does each step.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param curPagObj - Current Page Object: The page to make a member, with the
  *                    app loaded.
- * @param offValBoo - Offer Value Boolean: Whether the owner then offers the
- *                    page the group.
+ * @param steStr    - Steps String: The member steps, map, member, or
+ *                    offered.
  *
  * @returns A promise that settles once the page is a member, with no value.
  *
  * @example
  * ```ts
- * memSteFun(page, false) // => Promise<void>
+ * memSteFun(page, 'member') // => Promise<void>
  * ```
  *
 */
 
-const memSteFun = async ( curPagObj : Page, offValBoo : boolean ) : Promise< void > => { // What: Member Steps Function. Why: A member's view of a group needs an owner who isn't the page. How: This has another device create the group and approve the page.
+const memSteFun = async ( curPagObj : Page, steStr : 'map' | 'member' | 'offered' ) : Promise< void > => { // What: Member Steps Function. Why: A member's view of a group needs an owner who isn't the page. How: This has another device create the group and approve the page.
 
 
 	const ownConObj = await curPagObj.context().browser()!.newContext( { baseURL : new URL( curPagObj.url() ).origin } ); // What: Owner Context Object. Why: The owner needs an identity and storage of their own. How: This opens a new browser context on the same server. // What: Non-Null Note. Why: A page from Playwright's own launch always has its browser. How: The ! reads it as present.
@@ -388,9 +392,37 @@ const memSteFun = async ( curPagObj : Page, offValBoo : boolean ) : Promise< voi
 
 	await ownPagObj.evaluate( async ( [ modPatStr, groArgStr, uidArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).reqAppFun( groArgStr, uidArgStr ); }, [ '/src/state/joins.ts', groIdeStr, uidMemStr ] ); // What: Approval Call. Why: The owner lets the page in the way the app does. How: This approves its request with the joins module.
 
-	if ( offValBoo ) await ownPagObj.evaluate( async ( [ modPatStr, groArgStr, uidArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).offMakFun( groArgStr, uidArgStr ); }, [ '/src/state/ownership.ts', groIdeStr, uidMemStr ] ); // What: Offer Call. Why: The offered state shows the page an offer of the group. How: This offers it with the ownership module.
+	if ( steStr === 'offered' ) await ownPagObj.evaluate( async ( [ modPatStr, groArgStr, uidArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).offMakFun( groArgStr, uidArgStr ); }, [ '/src/state/ownership.ts', groIdeStr, uidMemStr ] ); // What: Offer Call. Why: The offered state shows the page an offer of the group. How: This offers it with the ownership module.
 
-	await ownConObj.close(); // What: Context Close Call. Why: The owner's device isn't needed again. How: This closes it.
+
+
+	if ( steStr === 'map' ) { // What: Map Share Block. Why: The map state shows another member sharing as arrived. How: This gives the owner's device a position, plans an event under way, and shares there as arrived.
+
+
+		await ownConObj.grantPermissions( [ 'geolocation' ] ); // What: Permission Call. Why: Sharing needs the position. How: This grants it to the owner's device.
+
+		await ownConObj.setGeolocation( { accuracy : 10, latitude : 51.5027, longitude : -0.12 } ); // What: Position Call. Why: The owner is a little north of the page. How: This places their device about 300m away.
+
+		await ownPagObj.evaluate( async ( [ evePatStr, locPatStr, groArgStr ] ) => { // What: Share Call. Why: The owner shares the way the app does. How: This plans the event and starts a session already arrived.
+
+
+			const staTimNum = Date.now() - 3600000; // What: Start Time Number. Why: The event is under way, so sharing is open. How: This starts it an hour ago.
+
+
+			const eveIdeStr : string = await ( await import( /* @vite-ignore */ evePatStr ) ).eveCreFun( groArgStr, { desTexStr : '', endTimNum : staTimNum + 4 * 3600000, locTexStr : 'Lake Park', staTimNum, titTexStr : 'Picnic' } ); // What: Event Identifier String. Why: The share belongs to the event. How: This plans a four-hour picnic.
+
+
+			await ( await import( /* @vite-ignore */ locPatStr ) ).locShaFun( groArgStr, eveIdeStr, true ); // What: Session Start Call. Why: The page sees the owner's share with its badge. How: This shares as arrived.
+
+
+		}, [ '/src/state/events.ts', '/src/state/location.ts', groIdeStr ] ); // What: Share Arguments. Why: The page can't read the test's variables. How: This passes both modules' paths and the group's ID.
+
+
+	}
+
+
+
+	await ownConObj.close(); // What: Context Close Call. Why: The owner's device isn't needed again, and its share stays until it expires. How: This closes it.
 
 
 };
@@ -472,9 +504,11 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
  * @summary
  * Takes a loaded page to the screen a state names by using the app as a person
  * would: the loading state waits for the loader on a page whose database is
- * held ({@link datHolFun}), and the member state joins Beach Day from another
- * device's group ({@link memSteFun}) and opens its Settings section, as does
- * the offered state once the group is offered to it. Otherwise the create
+ * held ({@link datHolFun}), the map state joins Beach Day from another
+ * device's group ({@link memSteFun}), where the owner shares as arrived, and
+ * shares from its Map section, and the member state joins it and opens its
+ * Settings section, as does the offered state once the group is offered to
+ * it. Otherwise the create
  * state opens the form for starting a group and reloads it, so it shows with
  * nothing focused, the group state creates a group named Beach Day, for the
  * chat state fills its chat ({@link chaSteFun}), as do the edit, event,
@@ -502,7 +536,7 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'member' | 'offered' | 'people' | 'requests' | 'settings' | 'sheet' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'loading' | 'map' | 'member' | 'offered' | 'people' | 'requests' | 'settings' | 'sheet' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -519,10 +553,42 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 
+	if ( steStr === 'map' ) { // What: Map Block. Why: The map state shows the page sharing beside a member who has arrived. How: This joins the page to the owner's group, gives it a position, shares from the Map section, reloads so nothing is focused, waits for the plot and the resumed share, and stops.
+
+
+		await memSteFun( curPagObj, 'map' ); // What: Member Steps Call. Why: The page needs another member sharing for an open event. How: This joins it to the owner's group, where the owner shares.
+
+		await curPagObj.context().grantPermissions( [ 'geolocation' ] ); // What: Permission Call. Why: Sharing needs the position. How: This grants it to the page.
+
+		await curPagObj.context().setGeolocation( { accuracy : 10, latitude : 51.5, longitude : -0.12 } ); // What: Position Call. Why: The page is a little south of the owner. How: This places it.
+
+		await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: The watch started before the identity existed, so the app opens afresh to show the group. How: This opens the app again.
+
+		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Map' } ).click(); // What: Map Click Call. Why: The section opens from its tab. How: This presses it.
+
+		await curPagObj.getByRole( 'button', { name : 'Share my location' } ).click(); // What: Share Click Call. Why: The plot is drawn around the page once it shares. How: This presses the button.
+
+		await curPagObj.getByRole( 'button', { name : 'Stop sharing' } ).waitFor(); // What: Sharing Wait. Why: The share has to start before the reload. How: This waits for the stop.
+
+		await curPagObj.reload(); // What: Section Reload Call. Why: The section is checked as it opens on a later visit, with nothing focused. How: This reloads it, which its history entry keeps, resuming the share.
+
+		await curPagObj.getByRole( 'img', { name : /^Everyone sharing/ } ).waitFor(); // What: Plot Wait. Why: The section has to show the plot before it's checked. How: This waits for it.
+
+		await curPagObj.getByRole( 'button', { name : 'Stop sharing' } ).waitFor(); // What: Resumed Wait. Why: The section has to show the resumed share before it's checked. How: This waits for the stop.
+
+
+
+		return; // What: Map Return. Why: The map state stops at the section. How: This returns.
+
+
+	}
+
+
+
 	if ( steStr === 'member' || steStr === 'offered' ) { // What: Member Block. Why: The member states open Settings in another's group, which they join rather than start, the offered state with the group offered to them. How: This joins through the owner's device, opens the app afresh, presses the tab, reloads the section so nothing is focused, waits for the leave, and stops.
 
 
-		await memSteFun( curPagObj, steStr === 'offered' ); // What: Member Steps Call. Why: The page has to be a member who isn't the owner, offered the group in the offered state. How: This joins it to another's group.
+		await memSteFun( curPagObj, steStr ); // What: Member Steps Call. Why: The page has to be a member who isn't the owner, offered the group in the offered state. How: This joins it to another's group.
 
 		await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: The watch started before the identity existed, so the app opens afresh to show the group. How: This opens the app again.
 

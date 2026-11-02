@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-02 (the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -739,7 +739,19 @@ in place of their name. Any member can reassign or release it (Section 11.5).
     is a tap, never detected, since the app can't watch a phone's position
     in the background (above). A status post is an ordinary chat message
     whose kind is marked inside its encryption (Section 11.7), so Firebase
-    can't tell it from any other message.
+    can't tell it from any other message. The chat shows each one as a line
+    of its own beside the member's color, naming "You" for the member's own
+    (built 2026-11-02).
+  - **No street map is drawn** (decided 2026-11-02): a street map needs
+    tiles from another site, and every tile request tells that site roughly
+    where someone is looking, which would undo keeping positions where
+    Firebase can't read them. The Map section draws everyone sharing around
+    the member instead, north up, the farthest on a ring whose distance the
+    caption gives, and lists each member's distance and compass direction,
+    how old their position is, an Arrived badge, and a link that opens their
+    spot in Google Maps, so a position reaches another site only when a
+    member asks. A street map can still come later, from a tile host the
+    group trusts.
   - Every displayed location shows a staleness timestamp ("updated 6 min
     ago") so an old ping is never presented as if it were live.
   - Users are told plainly, at the point they enable sharing, that
@@ -769,6 +781,8 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   requirement later, it would force revisiting the PWA-only decision
   entirely (Capacitor wrapper or native rewrite), this isn't something
   that can be incrementally improved within the PWA model.
+- Without a street map in the app, finding someone among streets takes a
+  tap out to Google Maps, which then learns that one position.
 
 ---
 
@@ -1049,7 +1063,7 @@ only kind of conversation is a group's own chat.
 |---|---|---|
 | `senderUid` | plaintext | Routing metadata. Always the sender's own UID. |
 | `sentAt` | plaintext number | The server's time when it was sent (milliseconds), for ordering, the join-time cutoff, and the TTL safety valve below. |
-| `ciphertext` / `iv` | base64 strings | Message content, AES-GCM under the group key. A status post (leaving or arriving, Section 10) marks its kind inside the encrypted content, so the stored fields look the same for every message (decided 2026-10-29, not built yet). The IV is 12 bytes (16 base64 characters), and the ciphertext holds 1 to 2,000 characters (Section 11.10) at 3 bytes each plus the 16-byte tag, so at most 8,024 base64 characters. |
+| `ciphertext` / `iv` | base64 strings | Message content, AES-GCM under the group key. A status post (leaving or arriving, Section 10) marks its kind inside the encrypted content, so the stored fields look the same for every message (decided 2026-10-29): its text is the control character U+0001 followed by its kind, `way` or `arr`, which a typed message can't hold, since the app refuses control characters in one, so a status post is never mistaken for a typed message, and one a member forges is only ever a status line under their own name (built 2026-11-02, `src/core/chat-status.ts`). The IV is 12 bytes (16 base64 characters), and the ciphertext holds 1 to 2,000 characters (Section 11.10) at 3 bytes each plus the 16-byte tag, so at most 8,024 base64 characters. |
 | `waitingOn` | plaintext map `{ uid: true }` | Who hasn't received the message yet (decided 2026-10-28, replacing a recipients snapshot plus an acknowledgement map): the sender lists every other member, so a member who joins later is never on it, and each member deletes their own entry once their device has the message. RTDB drops an empty map, so a message no one is waiting on has no `waitingOn` at all. |
 
 **The membership mirror** (decided 2026-10-28): RTDB's rules can't read
@@ -1598,9 +1612,7 @@ the Blaze change.
   bottom below 720px and down a column beside the content from 720px, and
   each opens its section as a new history entry, which records it, so back
   walks back through them; a group opens at its chat, as does an entry naming
-  a section this version doesn't know. The chat, Events, People, and
-  Settings sections are built, and the map shows a placeholder until its
-  section is.
+  a section this version doesn't know. Every section is built.
   The People section shows the invite link, which any member copies (or,
   where the browser won't copy, selects) and the owner replaces after
   confirming, and the members in name order, each with their avatar in their
@@ -1680,7 +1692,26 @@ the Blaze change.
   land, each change is announced, and a failure says why. An item's label
   opens a form in its row for its label and who's bringing it, "Open", the
   member, or any other member, which Escape or Cancel leaves; once it saves
-  or cancels, focus returns to the label. The status lines come next.
+  or cancels, focus returns to the label. A status post shows in the chat as
+  a centered line beside its member's color dot, "Sam is on the way" or
+  "Dana arrived", and "You're on the way" for the member's own, and it
+  breaks a run of one sender's messages.
+  The Map section (built 2026-11-02) works on the group's next event that
+  hasn't ended, once its window opens 3 hours before the start. Before
+  then it says when sharing opens, or that no event is coming. Within the
+  window it names the event and its hours, says plainly how sharing works
+  (Section 10), and offers one button that starts sharing and then stops
+  it, keeping focus as its label changes, beside "I'm on my way" and "I've
+  arrived", each offered until it's said and replaced by a note saying it,
+  which takes focus. A start can run alongside a post, since a first fix
+  can take a while. Below, everyone sharing for the event is listed, the
+  member first, each row with the avatar in their color, the name with an
+  Arrived badge, the distance and compass direction once the member shares
+  too, how old the position is, refreshed every 30 seconds, and "Open in
+  Google Maps" in a new tab; the plot draws them around the member once
+  they share. Blocked location, a fix that can't be found, and a failed
+  post each say why. The section's checks cover the window, two members
+  sharing and posting, blocked location, a reload, and a removal.
   On iOS the welcome will lead through the install screen first (Section 16),
   built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
@@ -1759,7 +1790,19 @@ the Blaze change.
   moves while the app is open, on each return to the app, and on arrival,
   throttled as Section 5 says. `src/platform/geolocation.ts` wraps the
   browser's position calls, and `public/_headers` allows geolocation to the
-  app's own origin alone.
+  app's own origin alone. `src/state/sharing.ts` (built 2026-11-02) is this
+  device's part in one event's sharing, kept apart from the screens so it
+  runs while the member moves between sections: whether they share, and
+  whether they've said they're on their way or have arrived, which posts
+  the status line and, on arriving, marks a running share. The record is
+  kept on the device, so opening the app again resumes a share with a
+  fresh fix (Section 10), and it ends at the event's end, when the member
+  leaves or deletes the group, and when the group drops out of their list,
+  as after a removal, each deleting the share at once. A share's update
+  time is read as the device's estimate until the server's arrives, so the
+  member's own new share shows at once. `src/core/geo.ts` holds the
+  distance, bearing, and their labels, worked out on the device after each
+  position is decrypted.
 - Under the emulator, the app, the Cloud Functions, and the tests share the
   Realtime Database's default instance, `demo-come-hang-default-rtdb`, where
   the emulator loads `database.rules.json`, as production's app and
