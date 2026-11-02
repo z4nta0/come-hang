@@ -37,9 +37,10 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * the welcome, and someone in groups sees the group the entry names, or the
  * first group by name when it names none or one they've left. Creating a group
  * restarts the watch, since a first group is also when the identity is made,
- * and opens the new group in place of the form. Leaving or deleting a group
- * opens the next group, or the welcome when none is left, and the host
- * announces the change through a status that stays across screens.
+ * and opens the new group in place of the form, and getting groups back from
+ * the welcome restarts it too. Leaving or deleting a group opens the next
+ * group, or the welcome when none is left, and the host announces the change
+ * through a status that stays across screens.
  *
  * Sections:
  *  - Hooks
@@ -149,13 +150,14 @@ const useGroLisFun = ( watVerNum : number ) : GroRecTyp[] | null => { // What: U
  *
  * @summary
  * Renders the screen the history entry and the groups call for: the waiting
- * screen while loading, the screen for starting a group, the welcome, or
- * the group frame, followed by a status region that stays as the screens
- * change. A created group restarts the watch and replaces the form's entry
- * with the new group's, marked to take focus. A group left or deleted is
- * hidden at once, before the watch drops it, its entry replaced with the next
- * group's, or with none when it was the last, marked to take focus, and the
- * status announces the change.
+ * screen while loading, the screen for starting a group, the welcome, or the
+ * group frame, followed by a status region that stays as the screens change. A
+ * created group restarts the watch and replaces the form's entry with the new
+ * group's, marked to take focus. A group left or deleted is hidden at once,
+ * before the watch drops it, its entry replaced with the next group's, or with
+ * none when it was the last, marked to take focus, and the status announces
+ * the change. Groups brought back from Google restart the watch, the first of
+ * them taking focus.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -251,6 +253,20 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
+	const recGroFun = () : void => { // What: Recover Groups Function. Why: An identity brought back from Google comes with its groups, which the running watch didn't know of. How: This restarts the watch, announces the sign-in, and asks the next screen to take focus.
+
+
+		setWatVerNum( ( preVerNum ) => preVerNum + 1 ); // What: Watch Restart Call. Why: The watch started before the identity came back. How: This starts a new run.
+
+		setAnnMesStr( 'Signed in with Google.' ); // What: Announce Set Call. Why: The welcome's button goes with the sign-in. How: This says it worked.
+
+		scrOpeFun( { focBoo : true, scrStr : 'group' }, true ); // What: Screen Replace Call. Why: The screen that follows, the first group or the welcome again, takes focus on its heading. How: This replaces the entry with one asking for focus.
+
+
+	};
+
+
+
 	const scrPicFun = () : React.JSX.Element => { // What: Screen Pick Function. Why: One screen shows at a time, beside the host's status. How: This returns the screen the entry and the groups call for.
 
 
@@ -262,7 +278,7 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-		if ( visGroArr.length === 0 ) return <WelScrCom focBoo={ scrStaObj?.focBoo === true } />; // What: Welcome Return. Why: Someone in no group starts at the welcome, which takes focus when it replaces the last group. How: This shows it, passing the entry's focus request.
+		if ( visGroArr.length === 0 ) return <WelScrCom focBoo={ scrStaObj?.focBoo === true } onRecFun={ recGroFun } />; // What: Welcome Return. Why: Someone in no group starts at the welcome, which takes focus when it replaces the last group and can bring groups back. How: This shows it, passing the entry's focus request and what to do once an identity comes back.
 
 
 
@@ -275,7 +291,7 @@ function ScrHosCom () : React.JSX.Element {
 
 			<GroFraCom
 				curGroObj={ curGroObj }
-				focBoo={ scrStaObj?.focBoo === true && curGroObj.ideStr === scrStaObj.groStr } // What: Focus Request. Why: Only a group opened by a creation, a leave, or a deletion takes focus, and only when it's the one shown. How: This is true for the entry that change opened.
+				focBoo={ scrStaObj?.focBoo === true && ( scrStaObj.groStr === undefined || curGroObj.ideStr === scrStaObj.groStr ) } // What: Focus Request. Why: Only a group opened by a creation, a leave, a deletion, or getting groups back takes focus, and only the one the entry names, or the first when it names none. How: This is true for the entry that change opened.
 				groRecArr={ visGroArr }
 				secNamStr={ scrStaObj?.groStr === curGroObj.ideStr ? scrStaObj.secStr ?? 'chat' : 'chat' } // What: Section Name Choice. Why: The entry names the open section, and a group opened without one, or one that's gone, starts at its chat. How: This reads the entry's section when it's for the group shown, else the chat.
 

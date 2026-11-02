@@ -10,6 +10,8 @@ import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Compone
 import { ideEnsFun } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member's own row offers a name change. How: This reads their UID.
 import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Function. Why: Each member's avatar shows their initials. How: This takes them from the name.
 import { invRotFun } from '../state/groups.ts';     // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
+import { keyLisFun } from '../state/key-share.ts';  // What: Key List Function. Why: Members see who's waiting on a new phone for the group's key (Section 6). How: This reads the standing requests.
+import { keyShaFun } from '../state/key-share.ts';  // What: Key Share Function. Why: Any member shares the key with someone on a new phone. How: This wraps it for their new key.
 import { memLisFun } from '../state/members.ts';    // What: Member List Function. Why: The section lists the group's members. How: This reads them.
 import { memRemFun } from '../state/members.ts';    // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
 import { mesTimFun } from '../utils/date.ts';       // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
@@ -26,9 +28,10 @@ import { useRef    } from 'react';                  // What: Use Reference. Why:
 import { useState  } from 'react';                  // What: Use State. Why: The members, the open form, and the messages change while the section is open. How: This holds each.
 
 
-import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The section shows one group's members and link. How: This types the group.
-import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Type. Why: The section lists the members. How: This types each.
-import type { ReqRecTyp } from '../state/joins.ts';   // What: Request Record Type. Why: The section lists the people waiting to join. How: This types each.
+import type { GroRecTyp } from '../state/groups.ts';    // What: Group Record Type. Why: The section shows one group's members and link. How: This types the group.
+import type { KeyReqTyp } from '../state/key-share.ts'; // What: Key Request Type. Why: The section lists the members waiting for the key. How: This types each.
+import type { MemRecTyp } from '../state/members.ts';   // What: Member Record Type. Why: The section lists the members. How: This types each.
+import type { ReqRecTyp } from '../state/joins.ts';     // What: Request Record Type. Why: The section lists the people waiting to join. How: This types each.
 
 // #endregion Imports
 
@@ -40,10 +43,11 @@ import type { ReqRecTyp } from '../state/joins.ts';   // What: Request Record Ty
  * @summary
  * The open group's People section: the invite link, which any member copies
  * and the owner can replace; the people waiting to join, whom any member
- * approves, declines, or blocks; and the members, each with their avatar in
- * their color, the member's own name changeable from their row, and anyone
- * else removable by the owner after confirming. Each change is announced,
- * and one that fails says why.
+ * approves, declines, or blocks; the members waiting on a new phone for the
+ * group's key, which any other member shares; and the members, each with their
+ * avatar in their color, the member's own name changeable from their row, and
+ * anyone else removable by the owner after confirming. Each change is
+ * announced, and one that fails says why.
  *
  * Sections:
  *  - Constants
@@ -83,13 +87,14 @@ type GpcProTyp = { curGroObj : GroRecTyp }; // What: Group People Component Prop
  * member already has that name, and any member approves, declines, or, after
  * confirming, blocks one, or declines them all after confirming; once a
  * request is gone, focus moves to the waiting list's heading, or the members'
- * when none is left. The members list in name order, the owner marked, the
- * member's own row offering to change their name in a form that takes and
- * returns focus, and each other row offering the owner a removal after
- * confirming, which also makes a new link. Changes are announced through a
- * status region and failures through an alert, and the members are read again
- * after each change and each change to the requests. Key it by the group, so
- * another group starts afresh.
+ * when none is left. Members waiting on a new phone for the group's key list
+ * next, each with a share, focus moving the same way once theirs is answered.
+ * The members list in name order, the owner marked, the member's own row
+ * offering to change their name in a form that takes and returns focus, and
+ * each other row offering the owner a removal after confirming, which also
+ * makes a new link. Changes are announced through a status region and failures
+ * through an alert, and the members are read again after each change and each
+ * change to the requests. Key it by the group, so another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -110,8 +115,10 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 	const ediButRef = useRef< HTMLButtonElement >( null );  // What: Edit Button Reference. Why: Leaving the name form returns focus to its button. How: This holds the button.
 	const focEdiRef = useRef( false );                      // What: Focus Edit Reference. Why: Focus returns to the button once the form has gone. How: This is true while that's owed.
 	const focTarRef = useRef( '' );                         // What: Focus Target Reference. Why: A button that opens a confirmation goes with it, and comes back when it closes, so focus has to wait for the control that replaces it. How: This names the control owed focus once it's drawn, empty when none is.
+	const focKeyRef = useRef( '' );                         // What: Focus Key Reference. Why: Sharing the key removes the button that did it, so focus is moved once its request is gone. How: This holds the UID being answered, empty when none is.
 	const focUidRef = useRef< string[] >( [] );             // What: Focus UID Reference. Why: Answering a request removes the button that did it, so focus is moved once its request is gone. How: This holds the UIDs being answered, empty when none is.
-	const invLinRef = useRef< HTMLInputElement >( null );   // What: Invite Link Reference. Why: Where the browser won't copy, the link is selected for the member to copy. How: This holds its box.
+	const invLinRef = useRef< HTMLInputElement >( null );
+	const keyHeaRef = useRef< HTMLHeadingElement >( null ); // What: Key Heading Reference. Why: Focus lands on the key list's heading once a request is answered and others wait. How: This holds it.   // What: Invite Link Reference. Why: Where the browser won't copy, the link is selected for the member to copy. How: This holds its box.
 	const memHeaRef = useRef< HTMLHeadingElement >( null ); // What: Member Heading Reference. Why: Focus lands on the members' heading once the last request is answered. How: This holds it.
 	const namInpRef = useRef< HTMLInputElement >( null );   // What: Name Input Reference. Why: The name form puts the member in its box. How: This holds the box.
 	const reqHeaRef = useRef< HTMLHeadingElement >( null ); // What: Request Heading Reference. Why: Focus lands on the waiting list's heading once a request is answered and others wait. How: This holds it.
@@ -123,6 +130,7 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 	const [ conRotBoo, setConRotBoo ] = useState( false );                      // What: Confirm Rotate Boolean And Setter. Why: A new link asks to confirm first. How: This is true while the confirmation shows.
 	const [ ediNamBoo, setEdiNamBoo ] = useState( false );                      // What: Edit Name Boolean And Setter. Why: The member's row turns into a name form. How: This is true while it shows.
 	const [ errMesStr, setErrMesStr ] = useState( '' );                         // What: Error Message String And Setter. Why: A failed change is announced. How: This holds the alert's text, empty when there's none.
+	const [ keyReqArr, setKeyReqArr ] = useState< KeyReqTyp[] >( [] ); // What: Key Request Array And Setter. Why: The section lists the members waiting for the key. How: This holds their requests, empty until any are read.
 	const [ lisVerNum, setLisVerNum ] = useState( 0 );                          // What: List Version Number And Setter. Why: A change reads the members again. How: This counts the reads asked for.
 	const [ memRecArr, setMemRecArr ] = useState< MemRecTyp[] | null >( null ); // What: Member Record Array And Setter. Why: The section lists the members. How: This holds them in name order, null until read.
 	const [ namTexStr, setNamTexStr ] = useState( '' );                         // What: Name Text String And Setter. Why: The name box shows what's typed. How: This holds it.
@@ -135,13 +143,15 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 
-	useEffect( () => { // What: Members Load Effect. Why: The section shows the members when it opens and after each change. How: This reads the UID and the members.
+	useEffect( () => { // What: Members Load Effect. Why: The section shows the members and the key requests when it opens and after each change. How: This reads the UID, the key requests, and the members.
 
 
 		let actValBoo = true; // What: Active Value Boolean. Why: A read finishing after a newer one began, or after the section closed, mustn't change it. How: This is true until the cleanup runs.
 
 
 		void ideEnsFun().then( ( ideRecObj ) => { if ( actValBoo ) setUidValStr( ideRecObj.uidValStr ); } ); // What: UID Read Call. Why: The member's own row is marked. How: This reads the UID.
+
+		void keyLisFun( curGroObj.ideStr ).then( ( lisReqArr ) => { if ( actValBoo ) setKeyReqArr( lisReqArr ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Key Requests Read Call. Why: A member on a new phone waits for someone to share the key. How: This reads the standing requests, logging a failure.
 
 		void memLisFun( curGroObj.ideStr ).then( ( lisRecArr ) => { if ( actValBoo ) setMemRecArr( [ ...lisRecArr ].sort( ( memOneObj, memTwoObj ) => memOneObj.namTexStr.localeCompare( memTwoObj.namTexStr ) ) ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Members Read Call. Why: The section lists everyone by name. How: This reads the members and sorts them, logging a failure.
 
@@ -172,6 +182,23 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 	}, [ reqRecArr ] ); // What: Effect Dependency Array. Why: Focus moves once the requests change. How: reqRecArr changes then.
+
+
+
+	useEffect( () => { // What: Key Focus Effect. Why: The button that shared the key goes with its request, and focus mustn't fall to the page. How: Once the request answered is gone, this focuses the key list's heading, or the members' when none is left.
+
+
+		if ( focKeyRef.current === '' || keyReqArr.some( ( keyReqObj ) => keyReqObj.uidValStr === focKeyRef.current ) ) return; // What: Waiting Guard. Why: Focus moves only once the answered request has left the list. How: This returns while none is owed or it still shows.
+
+
+
+		focKeyRef.current = ''; // What: Focus Clear Assignment. Why: The move is owed once. How: This clears the debt.
+
+
+		( keyReqArr.length > 0 ? keyHeaRef : memHeaRef ).current?.focus(); // What: Heading Focus Call. Why: The next Tab carries on from the part that changed. How: This focuses the key list's heading while others wait, else the members'.
+
+
+	}, [ keyReqArr ] ); // What: Effect Dependency Array. Why: Focus moves once the key requests change. How: keyReqArr changes when they're read again.
 
 
 
@@ -805,6 +832,81 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 					) }
+
+
+				</section>
+
+
+			) }
+
+
+
+			{ keyReqArr.some( ( keyReqObj ) => keyReqObj.uidValStr !== uidValStr ) && ( // What: Key Requests Check. Why: The key list shows only while someone else waits for the key, since a member can't answer their own request. How: This shows it when any other member's request stands.
+
+
+				<section
+					className={ cssModObj.keyLisSec }
+
+					aria-labelledby='keyLisHea'
+				>{ /* What: Key List Section Element. Why: The members waiting on a new phone read as one part. How: This holds the heading, the note, and the list. */ }
+
+
+					<h3
+						ref={ keyHeaRef }
+						id='keyLisHea'
+
+						className={ cssModObj.keyTitHea }
+
+						tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here once a request is answered and others wait, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
+					>{ "Waiting for the group's key" }</h3>{ /* What: Key Title Heading Element. Why: The part needs a heading. How: This names it. */ }
+
+					<p className={ cssModObj.keyIntPar }>These members got their account back on a new phone. Share the key so they can read the group again.</p>{ /* What: Key Intro Paragraph Element. Why: The member should know why someone is waiting (Section 6). How: This says it. */ }
+
+
+
+					<ul className={ cssModObj.keyLisUno }>{ /* What: Key List Unordered List Element. Why: The requests read as one list. How: This stacks a row for each. */ }
+
+
+						{ keyReqArr.filter( ( keyReqObj ) => keyReqObj.uidValStr !== uidValStr ).map( ( keyReqObj ) => { // What: Key Row Map. Why: Each other member waiting gets their own row. How: This renders one per request, leaving out the member's own.
+
+
+							const keyNamStr = memRecArr?.find( ( memRecObj ) => memRecObj.uidValStr === keyReqObj.uidValStr )?.namTexStr || 'A member'; // What: Key Name String. Why: The member recognizes whom they're sharing with. How: This finds their name, or says a member when it's unread.
+
+
+
+							return (
+
+
+								<li
+									key={ keyReqObj.uidValStr }
+
+									className={ cssModObj.keyRowIte }
+								>{ /* What: Key Row Item Element. Why: A request shows who is waiting, since when, and the share. How: This stacks them down the row. */ }
+
+
+									<span className={ cssModObj.keyNamSpa }>{ keyNamStr }</span>{ /* What: Key Name Span Element. Why: The member is known by their name. How: This shows it. */ }
+
+									<span className={ cssModObj.keyTimSpa }>{ `Asked ${ mesTimFun( keyReqObj.reqTimNum, Date.now() ) }` }</span>{ /* What: Key Time Span Element. Why: A request's age helps place it. How: This says when it was made, as the chat labels its messages. */ }
+
+									<button
+										className={ cssModObj.actPlaBut }
+
+										type='button'
+
+										onClick={ () => { if ( actReqBoo ) return; focKeyRef.current = keyReqObj.uidValStr; void actRunFun( () => keyShaFun( curGroObj.ideStr, keyReqObj.uidValStr ), `Shared the key with ${ keyNamStr }.` ).then( ( lanValBoo ) => { if ( !lanValBoo ) focKeyRef.current = ''; } ); } } // What: Share Handler. Why: The member on a new phone reads the group again once the key is shared, and the button goes with the request. How: This owes focus a heading, shares the key, and announces it, clearing the debt should it fail.
+									>Share the key<span className={ cssModObj.actHidSpa }>{ ` with ${ keyNamStr }` }</span></button>{ /* What: Action Plain Button Element. Why: Sharing is done on purpose, and a screen reader hears with whom. How: This shares the key. */ }
+
+
+								</li>
+
+
+							);
+
+
+						} ) }
+
+
+					</ul>
 
 
 				</section>

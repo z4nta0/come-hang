@@ -51,13 +51,14 @@ group frame with its rail, its switcher and sheet, and the group chat with
 its next event, pinned as a card that opens a sheet below 1,100px and shown in
 a panel beside the chat from 1,100px, each with the live bring-list, the
 section tabs, the Events section with its form for planning, changing,
-and cancelling events, and the People section with the invite link, the
-people waiting to join, whom any member approves, declines, or blocks, and the
-members, and the Settings section, where the owner renames the group, sets
+and cancelling events, the People section with the invite link, the people
+waiting to join, whom any member approves, declines, or blocks, the members
+waiting on a new phone for the group's key, which any other member shares, and
+the members, and the Settings section. There the owner renames the group, sets
 its chat retention, offers the group to a member, who accepts or declines, and
-deletes the group by name, a member leaves, and anyone picks light or dark
-and turns notifications on or off for their phone, links Google, and buys
-the upgrade.
+deletes it by name, a member leaves, and anyone picks light or dark and turns
+notifications on or off for their phone, links Google, and buys the upgrade.
+The welcome gets a linked member's groups back on a new phone.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 

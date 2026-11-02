@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1645,8 +1645,14 @@ the Blaze change.
   groups back on a new phone; then the upgrade, saying what it costs and
   gives, needing Google linked first, and once linked a button that opens
   Polar's checkout, or saying it's bought. A refused link or purchase says
-  why. Getting the groups back on a new phone, from the welcome, comes next,
-  with sharing the group's key from the People section. In every section, a
+  why. The welcome offers "Get my groups back" under its start button,
+  which signs in with Google through its popup and restarts the group list,
+  so the recovered groups show, the first taking focus while the screen
+  host announces the sign-in; a closed or blocked sign-in says so. Each
+  group's chat then says its key is waiting, and the People section lists
+  the members waiting for the key on a new phone, each with a share, which
+  any other member presses, focus then landing on a heading as it does
+  after answering a join request. In every section, a
   button that turns into a confirmation (removing a member, blocking,
   replacing the link, cancelling an event) puts focus on the
   confirmation's safe answer, and leaving it returns focus to the button. The Events

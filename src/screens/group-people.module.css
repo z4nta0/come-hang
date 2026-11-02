@@ -7,7 +7,8 @@
  * @summary
  * Styles for GroPeoCom: the heading, the invite part with its note, its read-
  * only link box, and its buttons, the waiting list, each request a row of its
- * name, time, any warning or note, and answers, and the members part, each
+ * name, time, any warning or note, and answers, the members waiting for the
+ * key, each a row of their name, time, and share, and the members part, each
  * member a row with their avatar in their color beside their name and actions,
  * or their name form across the row while it's open. Confirmations take a line
  * of their own above their answers. The status that announces a change is for
@@ -417,6 +418,110 @@
 /* #endregion reqAllDiv */
 
 /* #endregion reqLisSec */
+
+
+
+/* #region keyLisSec */
+
+.keyLisSec { /* What: Key List Section. Why: The heading, the note, and the list read as one part. How: This stacks them in named areas a tier 3 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'keyTitHea' 'keyIntPar' 'keyLisUno';
+	row-gap             : var( --tie-ver-003 );                    /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.keyTitHea { /* What: Key Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2 in its own area. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : keyTitHea;
+
+
+}
+.keyTitHea:focus { /* What: Focused Key Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.keyIntPar { /* What: Key Intro Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : keyIntPar;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region keyLisUno */
+
+.keyLisUno { /* What: Key List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below, in its own area. */
+
+
+	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display    : grid;
+	grid-area  : keyLisUno;
+	list-style : none;
+
+
+}
+
+
+
+/* #region keyRowIte */
+
+.keyRowIte { /* What: Key Row Item. Why: A request's name, time, and share read down one row. How: This stacks them a tier 5 space apart in order, since the share's button shares its class with other parts, each at its own width, with a tier 4 space above and below and a border below. */
+
+
+	border-bottom : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display       : grid;
+	justify-items : start;
+	padding       : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+	row-gap       : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.keyNamSpa { /* What: Key Name Span. Why: The member is known by their name, and a long one shouldn't run off the row. How: This sets it bold, breaking a long word where it has to. */
+
+
+	font-weight   : 700;
+	overflow-wrap : anywhere;
+
+
+}
+
+.keyTimSpa { /* What: Key Time Span. Why: The time is quieter than the name. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+/* #region actPlaBut */
+
+/* What: Action Plain Button Pointer. Why: Sharing the key uses the outlined pill. How: Its rule sits in the invActDiv region. */
+
+/* What: Action Hidden Span Pointer. Why: A screen reader hears with whom the key is shared. How: Its rule sits in the reqActSpa region. */
+
+/* #endregion actPlaBut */
+
+/* #endregion keyRowIte */
+
+/* #endregion keyLisUno */
+
+/* #endregion keyLisSec */
 
 
 

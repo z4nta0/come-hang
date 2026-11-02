@@ -6,8 +6,9 @@
  *
  * @summary
  * Styles for WelScrCom: a main area filling the screen as one centered
- * column, the mark above the wordmark and tagline a tier 3 space apart, and
- * the start button a tier 2 space below them.
+ * column, the mark above the wordmark and tagline a tier 3 space apart, the
+ * start button a tier 2 space below them, then the outlined button that gets
+ * groups back, and the alert for a sign-in that doesn't go through.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -22,7 +23,7 @@
 
 	align-content       : center;
 	display             : grid;
-	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut';
+	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut' 'welRecBut' 'welErrPar';
 	justify-items       : center;
 	min-height          : 100vh;
 	padding             : var( --tie-ver-001 ) var( --gut-sid-pad );       /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
@@ -75,6 +76,68 @@
 
 	grid-area  : welStaBut;
 	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.welRecBut { /* What: Welcome Recover Button. Why: Getting groups back on a new phone is a lighter action than starting one, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, in its own area, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	grid-area        : welRecBut;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.welRecBut:hover { /* What: Hovered Welcome Recover Button. Why: The button shows it's live under the pointer. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.welRecBut:active { /* What: Pressed Welcome Recover Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Welcome Recover Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.welRecBut { /* What: Motionless Welcome Recover Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.welErrPar { /* What: Welcome Error Paragraph. Why: A sign-in that doesn't go through should be clear below the buttons. How: This sets it bold in the dark error color, capped at the small text width, in its own area. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+	grid-area   : welErrPar;
+	max-width   : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+.welErrPar:empty { /* What: Empty Welcome Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the screen's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
 
 
 }
