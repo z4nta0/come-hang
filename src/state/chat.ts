@@ -27,10 +27,12 @@ import { remove          } from 'firebase/database';         // What: Remove. Wh
 import { serverTimestamp } from 'firebase/database';         // What: Server Timestamp. Why: The rules require a message's time to be the server's. How: This asks the server to fill it in.
 import { set             } from 'firebase/database';         // What: Set. Why: A message is written under an ID drawn first. How: This writes it there.
 import { startAt         } from 'firebase/database';         // What: Start At. Why: The rules let a member read from their own join time exactly. How: This starts the query there.
+import { staTexFun       } from '../core/chat-status.ts';    // What: Status Text Function. Why: A status post is sent as a message's text. How: This builds it.
 
 
 import type { DataSnapshot } from 'firebase/database';         // What: Data Snapshot. Why: Each message arrives as one. How: This types it.
 import type { MesRecTyp    } from '../platform/chat-store.ts'; // What: Message Record Type. Why: A handled message is stored and handed on as a record. How: This types it.
+import type { StaKinTyp    } from '../core/chat-status.ts';    // What: Status Kind Type. Why: A status post names its kind. How: This types it.
 import type { Timestamp    } from 'firebase/firestore';        // What: Timestamp. Why: The join time comes back as a timestamp. How: This types it.
 
 // #endregion Imports
@@ -41,15 +43,16 @@ import type { Timestamp    } from 'firebase/firestore';        // What: Timestam
  * chat.ts = Chat
  *
  * @summary
- * A group's chat (ARCHITECTURE.md Sections 5 and 11.7). A message is tidied,
- * checked as visible text, encrypted under the group key, and sent with a
- * waiting-on list naming every other member, and the sender's device keeps
- * its own copy. A member reads only from their own join time, as the rules
- * require, by a one-time sync or by watching the chat. Each message read is
- * decrypted and kept on the device, takes this member off its waiting-on
- * list, takes off members who've left, and is deleted from the server once
- * nobody is waiting on it or it's older than the group's chat retention. A
- * message that won't decrypt isn't kept, but is still acknowledged.
+ * A group's chat (ARCHITECTURE.md Sections 5 and 11.7). A message is tidied
+ * and checked as visible text, or built as a status post, then encrypted
+ * under the group key and sent with a waiting-on list naming every other
+ * member, and the sender's device keeps its own copy. A member reads only
+ * from their own join time, as the rules require, by a one-time sync or by
+ * watching the chat. Each message read is decrypted and kept on the device,
+ * takes this member off its waiting-on list, takes off members who've left,
+ * and is deleted from the server once nobody is waiting on it or it's older
+ * than the group's chat retention. A message that won't decrypt isn't kept,
+ * but is still acknowledged.
  *
  * Sections:
  *  - Types
@@ -241,48 +244,40 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
 
 
 
-// #region chaSenFun
+// #region mesSenFun
 
 /**
- * chaSenFun = Chat Send Function
+ * mesSenFun = Message Send Function
  *
  * @summary
- * Sends a message to a group's chat, tidied and checked as visible text,
- * encrypted under the group key, stamped with the server's time, and
- * waiting on every other member. While the server decides on it, this
+ * Sends a message's text to a group's chat as given, encrypted under the
+ * group key, stamped with the server's time, and waiting on every other
+ * member. While the server decides on it, this
  * device's own watch skips it, so a refused message is never shown or kept.
  * Once it's accepted, the sender's device keeps its own copy, and a message
  * nobody waits on, in a group of one, is deleted from the server.
- * Resolves with the message's ID. A message outside its limits rejects with
- * a RangeError before anything is sent.
+ * Resolves with the message's ID.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param groIdeStr - Group Identifier String: The group's ID.
- * @param mesTexStr - Message Text String: The message, as typed.
+ * @param mesTexStr - Message Text String: The message's text, as sent.
  *
  * @returns A promise that resolves with the message's ID.
  *
  * @example
  * ```ts
- * chaSenFun('Xk3...', 'On my way') // => '-Nx...'
+ * mesSenFun('Xk3...', 'On my way') // => '-Nx...'
  * ```
  *
 */
 
-const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Chat Send Function. Why: Members talk in the group's chat (Section 11.7). How: This checks, encrypts, and sends the message, then keeps a copy.
-
-
-	const mesNorStr = linNorFun( mesTexStr ); // What: Message Normalized String. Why: The message is sent tidied. How: This normalizes it, keeping its line breaks.
-
-
-	if ( !chaMesFun( mesNorStr ) ) throw new RangeError( 'The message is outside its limits.' ); // What: Message Guard. Why: The rules can only cap an encrypted message's size. How: This rejects it here.
-
+const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
 
 
 	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The message names its sender. How: This reads the identity.
 
-	const mesEncObj = await encTexFun( await keyLoaFun( groIdeStr ), mesNorStr );                             // What: Message Encrypted Object. Why: Firebase only ever sees ciphertext. How: This encrypts it under the group key.
+	const mesEncObj = await encTexFun( await keyLoaFun( groIdeStr ), mesTexStr );                             // What: Message Encrypted Object. Why: Firebase only ever sees ciphertext. How: This encrypts it under the group key.
 	const othUidArr = [ ...await memUidFun( groIdeStr ) ].filter( ( memUidStr ) => memUidStr !== uidValStr ); // What: Other UID Array. Why: The message waits on every other member. How: This lists them.
 
 	const mesRefObj = push( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ) ); // What: Message Reference Object. Why: The message is sent under a new time-ordered ID, known before it's written. How: This draws the ID without writing.
@@ -326,7 +321,7 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 		mesIdeStr : mesKeyStr,         // What: Message Identifier String. Why: A later sync of the same message replaces this copy. How: This uses the server's ID.
 		senUidStr : uidValStr,         // What: Sender UID String. Why: The chat shows who sent it. How: This names this identity.
 		sntTimNum : await srvTimFun(), // What: Sent Time Number. Why: The history is ordered by time. How: This uses the device's clock corrected by its offset from the server's, since a phone's clock can be minutes off.
-		texValStr : mesNorStr          // What: Text Value String. Why: The history shows the text. How: This keeps the tidied message.
+		texValStr : mesTexStr          // What: Text Value String. Why: The history shows the text. How: This keeps the text as sent.
 
 
 	});
@@ -338,7 +333,55 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 };
 
+// #endregion mesSenFun
+
+
+
+// #region chaSenFun
+
+/**
+ * chaSenFun = Chat Send Function
+ *
+ * @summary
+ * Sends a typed message to a group's chat, tidied and checked as visible
+ * text, then sent as mesSenFun sends it. Resolves with the message's ID. A
+ * message outside its limits rejects with a RangeError before anything is
+ * sent.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param mesTexStr - Message Text String: The message, as typed.
+ *
+ * @returns A promise that resolves with the message's ID.
+ *
+ * @example
+ * ```ts
+ * chaSenFun('Xk3...', 'On my way') // => '-Nx...'
+ * ```
+ *
+*/
+
+const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Chat Send Function. Why: Members talk in the group's chat (Section 11.7). How: This tidies and checks the message, then sends it.
+
+
+	const mesNorStr = linNorFun( mesTexStr ); // What: Message Normalized String. Why: The message is sent tidied. How: This normalizes it, keeping its line breaks.
+
+
+	if ( !chaMesFun( mesNorStr ) ) throw new RangeError( 'The message is outside its limits.' ); // What: Message Guard. Why: The rules can only cap an encrypted message's size. How: This rejects it here.
+
+
+
+	return mesSenFun( groIdeStr, mesNorStr ); // What: Send Return. Why: The caller shows the message by its ID. How: This sends the tidied text and returns its ID.
+
+
+};
+
 // #endregion chaSenFun
+
+
+
+const chaStaFun = async ( groIdeStr : string, staKinStr : StaKinTyp ) : Promise< string > => mesSenFun( groIdeStr, staTexFun( staKinStr ) ); // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat (Section 10). How: This sends the status post's text and returns its ID.
 
 
 
@@ -461,7 +504,7 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 // #region Exports
 
-export { chaSenFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The chat screen sends, catches up, and watches through these. How: This exports the functions.
+export { chaSenFun, chaStaFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The screens send messages and status posts, catch up, and watch through these. How: This exports the functions.
 
 // #endregion Exports
 

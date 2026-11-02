@@ -27,7 +27,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * card opens a sheet with the event's details, where an item is added,
  * claimed, let go, and removed, each change announced; from 1,100px wide a
  * panel replaces the card; a label outside its limits is refused with an
- * alert; and another member's claim shows in the panel as it lands.
+ * alert; another member's claim shows in the panel as it lands; and an
+ * item's label opens a form that relabels and reassigns it.
  *
  * Sections:
  *  - Module State
@@ -283,6 +284,62 @@ pagTesObj( "another member's claim shows in the panel as it lands, in their name
 
 
 } );
+
+
+pagTesObj( "an item's label opens a form that relabels and reassigns it, and Escape leaves the form open in its sheet", async ( { page : curPagObj, secPagObj } ) => { // What: Item Edit Test. Why: Any member relabels or reassigns an item (Section 11.5), and leaving the form shouldn't lose the sheet. How: This opens the form from the label, leaves it with Escape, refuses an empty label, then saves a new label and another member, checking the focus, the status, and the row.
+
+
+	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: The form sits in the event's sheet on a phone. How: This sizes the page as one.
+
+	await curPagObj.goto( '/' ); // What: Owner Page Load Call. Why: The owner's device needs the app's modules. How: This opens the app.
+
+
+	const { groIdeStr } = await memSetFun( eveEnvObj, curPagObj, secPagObj ); // What: Group Identifier String. Why: The item is reassigned to the member. How: This creates the group with an owner and a member.
+
+
+	await evePlaFun( curPagObj, groIdeStr ); // What: Event Plan Call. Why: The test edits the event's open item. How: This plans the event and opens the app.
+
+	await curPagObj.getByRole( 'button', { name : /Picnic/ } ).click(); // What: Card Click Call. Why: The list is edited in the event's sheet. How: This opens it.
+
+
+	const sheDiaObj = curPagObj.getByRole( 'dialog', { name : 'Picnic' } ); // What: Sheet Dialog Object. Why: The checks work in the sheet. How: This finds it.
+
+
+	await sheDiaObj.getByRole( 'button', { name : 'Lemonade (change)' } ).click(); // What: Label Click Call. Why: The label opens the item's form. How: This presses it.
+
+	await expect( sheDiaObj.getByLabel( 'Item', { exact : true } ) ).toBeFocused();             // What: Box Focus Assertion. Why: The form puts the member in its box. How: This expects the box focused.
+	await expect( sheDiaObj.getByLabel( 'Item', { exact : true } ) ).toHaveValue( 'Lemonade' ); // What: Box Value Assertion. Why: The form starts from the item's label. How: This reads the box.
+
+	await curPagObj.keyboard.press( 'Escape' ); // What: Escape Press Call. Why: Escape leaves the form. How: This presses it.
+
+	await expect( sheDiaObj.getByRole( 'button', { name : 'Lemonade (change)' } ) ).toBeFocused(); // What: Label Return Assertion. Why: Leaving the form puts focus back on the label, inside the sheet still open. How: This expects the label focused.
+
+	await sheDiaObj.getByRole( 'button', { name : 'Lemonade (change)' } ).click(); // What: Label Reopen Call. Why: The edit is made this time. How: This opens the form again.
+
+	await sheDiaObj.getByLabel( 'Item', { exact : true } ).fill( '' ); // What: Empty Fill Call. Why: An empty label is refused. How: This clears the box.
+
+	await sheDiaObj.getByRole( 'button', { name : 'Save' } ).click(); // What: Empty Save Call. Why: The refusal is checked. How: This presses Save.
+
+	await expect( sheDiaObj.getByRole( 'alert' ).filter( { hasText : 'characters' } ) ).toHaveText( 'Use 1 to 50 characters.' ); // What: Empty Alert Assertion. Why: A label outside its limits says so. How: This reads the alert.
+	await expect( sheDiaObj.getByLabel( 'Item', { exact : true } ) ).toBeVisible();                                              // What: Form Kept Assertion. Why: A failed save keeps the form to fix. How: This expects the box still shown.
+
+	await sheDiaObj.getByLabel( 'Item', { exact : true } ).fill( 'Pink lemonade' ); // What: Label Fill Call. Why: The item is relabeled. How: This types the new label.
+
+	await sheDiaObj.getByLabel( "Who's bringing it" ).selectOption( { label : 'Dana Lee' } ); // What: Member Choice Call. Why: The item is given to the member. How: This chooses them.
+
+	await sheDiaObj.getByRole( 'button', { name : 'Save' } ).click(); // What: Save Click Call. Why: The edit is saved. How: This presses Save.
+
+
+	const pinIteObj = sheDiaObj.getByRole( 'listitem' ).filter( { hasText : 'Pink lemonade' } ); // What: Pink Item Object. Why: The checks read the edited row. How: This finds it.
+
+
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'Saved' } ) ).toHaveText( 'Saved Pink lemonade.' ); // What: Saved Status Assertion. Why: The edit is announced. How: This reads the status.
+	await expect( pinIteObj ).toContainText( 'Dana Lee' );                                                                // What: Reassigned Assertion. Why: The item now names the member. How: This waits for their name in the row.
+	await expect( pinIteObj.getByRole( 'button', { name : 'Pink lemonade (change)' } ) ).toBeFocused();                   // What: Saved Focus Assertion. Why: Saving puts focus back on the label. How: This expects the renamed label focused.
+
+
+} );
+
 
 // #endregion Module Init
 

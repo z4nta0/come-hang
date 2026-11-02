@@ -207,7 +207,7 @@ pagTesObj( 'a request is checked before it is sent, leaves out an empty note, an
 
 	expect( await runPagFun( secPagObj, joiModStr, 'invGetFun', 'groups/x' ) ).toBeNull();                                           // What: Bad Token Form. Why: A token can't name another path. How: This expects null without a read.
 	expect( await runPagFun( secPagObj, joiModStr, 'invGetFun', 'A'.repeat( 22 ) ) ).toBeNull();                                     // What: Missing Invite. Why: A rotated link opens nothing. How: This expects null.
-	expect( await runPagFun( secPagObj, joiModStr, 'reqCreFun', 'A'.repeat( 22 ), 'Dana', '' ) ).toBe( 'error:Error' );              // What: Dead Link Refused. Why: A request needs a working invite. How: This expects an Error.
+	expect( await runPagFun( secPagObj, joiModStr, 'reqCreFun', 'A'.repeat( 22 ), 'Dana', '' ) ).toBe( 'error:invite/not-found' );   // What: Dead Link Refused. Why: A request needs a working invite. How: This expects an Error coded invite/not-found.
 	expect( await runPagFun( secPagObj, joiModStr, 'reqCreFun', tokValStr, 'Dana 2', '' ) ).toBe( 'error:RangeError' );              // What: Bad Name Refused. Why: A name is letters, so a number fails. How: This expects a RangeError.
 	expect( await runPagFun( secPagObj, joiModStr, 'reqCreFun', tokValStr, 'Dana', '🎉' ) ).toBe( 'error:RangeError' );               // What: Emoji Note Refused. Why: A note allows no emoji. How: This expects a RangeError.
 	expect( await runPagFun( secPagObj, joiModStr, 'reqCreFun', tokValStr, 'Dana', 'a'.repeat( 151 ) ) ).toBe( 'error:RangeError' ); // What: Long Note Refused. Why: A note has at most 150 characters. How: This expects a RangeError.

@@ -288,38 +288,31 @@ const runPagFun = ( pagValObj : Page, modPatStr : string, funNamStr : string, ..
 
 
 
-// #region gooRunFun
+// #region popFilFun
 
 /**
- * gooRunFun = Google Run Function
+ * popFilFun = Popup Fill Function
  *
  * @summary
- * Runs one of the identity module's Google functions in a page and signs in
- * through the Auth emulator's popup it opens: picking the account with the
- * email when the popup lists it, or adding it otherwise. Resolves with what
- * runPagFun returns, the function's result or its error's code.
+ * Signs in through the Auth emulator's Google popup once it's open: picking
+ * the account with the email when the popup lists it, or adding it
+ * otherwise.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param pagValObj - Page Value Object: The phone's page.
- * @param funNamStr - Function Name String: gooLinFun or gooRecFun.
+ * @param popPagObj - Popup Page Object: The sign-in popup.
  * @param emaValStr - Email Value String: The Google account's email.
  *
- * @returns A promise that resolves with the result or the error's code.
+ * @returns A promise that settles once the account is chosen, with no value.
  *
  * @example
  * ```ts
- * gooRunFun(page, 'gooLinFun', 'dana@example.com') // => undefined
+ * popFilFun(popPagObj, 'dana@example.com') // => Promise<void>
  * ```
  *
 */
 
-const gooRunFun = async ( pagValObj : Page, funNamStr : string, emaValStr : string ) : Promise< unknown > => { // What: Google Run Function. Why: Google sign-in only happens through its popup. How: This runs the function and fills the popup in.
-
-
-	const popPagPro = pagValObj.waitForEvent( 'popup' );                           // What: Popup Page Promise. Why: The function opens the popup. How: This waits for it.
-	const runResPro = runPagFun( pagValObj, '/src/state/identity.ts', funNamStr ); // What: Run Result Promise. Why: The function opens the popup and waits on it. How: This runs it, settling with its value or its error's code.
-	const popPagObj = await popPagPro;                                             // What: Popup Page Object. Why: The account is chosen there. How: This waits for the popup.
+const popFilFun = async ( popPagObj : Page, emaValStr : string ) : Promise< void > => { // What: Popup Fill Function. Why: Google sign-in only happens through its popup, opened by a function or a button. How: This picks or adds the account.
 
 
 	await popPagObj.waitForLoadState(); // What: Popup Load Wait. Why: The widget lists its accounts once loaded. How: This waits for it.
@@ -348,6 +341,48 @@ const gooRunFun = async ( pagValObj : Page, funNamStr : string, emaValStr : stri
 
 
 	}
+
+
+};
+
+// #endregion popFilFun
+
+
+
+// #region gooRunFun
+
+/**
+ * gooRunFun = Google Run Function
+ *
+ * @summary
+ * Runs one of the identity module's Google functions in a page and signs in
+ * through the Auth emulator's popup it opens ({@link popFilFun}). Resolves
+ * with what runPagFun returns, the function's result or its error's code.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param pagValObj - Page Value Object: The phone's page.
+ * @param funNamStr - Function Name String: gooLinFun or gooRecFun.
+ * @param emaValStr - Email Value String: The Google account's email.
+ *
+ * @returns A promise that resolves with the result or the error's code.
+ *
+ * @example
+ * ```ts
+ * gooRunFun(page, 'gooLinFun', 'dana@example.com') // => undefined
+ * ```
+ *
+*/
+
+const gooRunFun = async ( pagValObj : Page, funNamStr : string, emaValStr : string ) : Promise< unknown > => { // What: Google Run Function. Why: Google sign-in only happens through its popup. How: This runs the function and fills the popup in.
+
+
+	const popPagPro = pagValObj.waitForEvent( 'popup' );                           // What: Popup Page Promise. Why: The function opens the popup. How: This waits for it.
+	const runResPro = runPagFun( pagValObj, '/src/state/identity.ts', funNamStr ); // What: Run Result Promise. Why: The function opens the popup and waits on it. How: This runs it, settling with its value or its error's code.
+	const popPagObj = await popPagPro;                                             // What: Popup Page Object. Why: The account is chosen there. How: This waits for the popup.
+
+
+	await popFilFun( popPagObj, emaValStr ); // What: Popup Fill Call. Why: The function waits until an account is chosen. How: This signs in through the popup.
 
 
 
@@ -457,7 +492,7 @@ const senPolFun = async ( pagValObj : Page, groIdeStr : string, mesTexStr : stri
 
 // #region Exports
 
-export { decNamFun, docReaFun, gooRunFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
+export { decNamFun, docReaFun, gooRunFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, popFilFun, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
 
 // #endregion Exports
 

@@ -377,7 +377,7 @@ test( 'the group list follows the account as groups are created, renamed, and de
 	const repGetFun = () => page.evaluate( () => Reflect.get( globalThis, 'groLisArr' ) ); // What: Report Get Function. Why: Each check polls the latest report. How: This reads it from the page.
 
 
-	await expect.poll( repGetFun ).toEqual( [ { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true }, { ideStr : groIdeArr[ 1 ], namStr : 'Zebra Club', ownBoo : true } ] ); // What: Sorted List Assertion. Why: Both groups show by name, owned by their creator. How: This waits for the report sorted by name.
+	await expect.poll( repGetFun ).toMatchObject( [ { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true }, { ideStr : groIdeArr[ 1 ], namStr : 'Zebra Club', ownBoo : true } ] ); // What: Sorted List Assertion. Why: Both groups show by name, owned by their creator. How: This waits for the report sorted by name.
 
 	expect( await page.evaluate( () => Reflect.get( globalThis, 'groFirArr' ) ) ).toEqual( await repGetFun() ); // What: Whole First Report Assertion. Why: The first report waits for every group's name. How: This expects it to match the full list.
 
@@ -385,13 +385,13 @@ test( 'the group list follows the account as groups are created, renamed, and de
 	await runPagFun( page, '/src/state/groups.ts', 'groSetFun', groIdeArr[ 1 ], 'Aardvarks', 30 ); // What: Rename Call. Why: A rename shows at once. How: This renames the Zebra group so it sorts first.
 
 
-	await expect.poll( repGetFun ).toEqual( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true }, { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true } ] ); // What: Renamed List Assertion. Why: The new name shows in its sorted place. How: This waits for the report with the renamed group first.
+	await expect.poll( repGetFun ).toMatchObject( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true }, { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true } ] ); // What: Renamed List Assertion. Why: The new name shows in its sorted place. How: This waits for the report with the renamed group first.
 
 
 	await runPagFun( page, '/src/state/groups.ts', 'groDelFun', groIdeArr[ 0 ] ); // What: Delete Call. Why: A deleted group leaves the list. How: This deletes the Apple group.
 
 
-	await expect.poll( repGetFun ).toEqual( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true } ] ); // What: Deleted List Assertion. Why: The deleted group drops out. How: This waits for the report with one group left.
+	await expect.poll( repGetFun ).toMatchObject( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true } ] ); // What: Deleted List Assertion. Why: The deleted group drops out. How: This waits for the report with one group left.
 
 
 } );

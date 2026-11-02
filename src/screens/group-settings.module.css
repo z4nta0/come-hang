@@ -1,0 +1,737 @@
+
+
+
+/**
+ * group-settings.module.css = Group Settings Module
+ *
+ * @summary
+ * Styles for GroSetCom: the heading, the group's part with the owner's form,
+ * each field's label, box or choice, hint, and problem stacked, or the values
+ * paired for everyone else, the handover's note, buttons, and offer form, this
+ * phone's appearance choices and button, the account's notes and buttons, and
+ * the part for leaving or deleting, its note, its buttons, and the deletion's
+ * confirmation with its own box. The forms place their children in order,
+ * since their fields share classes. The status that announces a change is for
+ * screen readers alone, while a failure shows in the dark error color.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region groSetDiv */
+
+.groSetDiv { /* What: Group Settings Div. Why: The heading and the two parts read top to bottom inside the gutter, and scroll when they outgrow the content. How: This stacks them a tier 2 space apart at the top in one column of capped width, with the tier 2 space above and below and the gutter at the sides, scrolling on its own. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-columns : minmax( 0, calc( var( --ver-rhy-p14 ) * 1rem ) ); /* Vertical Rhythm Base Plus 14 ~= 746.867px */ /* What: Column Cap. Why: Fields stretched across a wide screen read poorly. How: The one column grows up to about 747px. */
+	min-height            : 0;
+	overflow-y            : auto;
+	padding               : var( --tie-ver-002 ) var( --gut-sid-pad );        /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-002 );                             /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.setTitHea { /* What: Settings Title Heading. Why: The heading names the section. How: This sets it at Base Plus 3. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+
+
+}
+
+
+
+/* #region detSetSec */
+
+.detSetSec { /* What: Details Settings Section. Why: The heading and the form, or the values, read as one part. How: This stacks them a tier 3 space apart, in order since the part holds either the form or the note and values. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.detTitHea { /* What: Details Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+
+
+/* #region detSetFor */
+
+.detSetFor { /* What: Details Settings Form. Why: The two fields and the button read down one column. How: This stacks them a tier 3 space apart, in order. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+
+/* #region detFieDiv */
+
+.detFieDiv { /* What: Details Field Div. Why: A field's label, box or choice, hint, and problem belong together. How: This stacks them a tier 5 space apart by auto placement, since one field holds a box and the other a choice, which named areas in one shared rule can't both name. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.fieNamLab { /* What: Field Name Label. Why: The label names the field above its box. How: This sets it bold. */
+
+
+	font-weight : 700;
+
+
+}
+
+.fieValInp { /* What: Field Value Input. Why: A box should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.fieValInp:hover { /* What: Hovered Field Value Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.fieValInp[aria-invalid='true'] { /* What: Invalid Field Value Input. Why: A box with a problem should stand out beside its message. How: This turns its border the error color. */
+
+
+	border-color : var( --err-mai-col ); /* Error Main Color = #D14343 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Field Value Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fieValInp { /* What: Motionless Field Value Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.fieValSel { /* What: Field Value Select. Why: A choice should be easy to hit and its boundary easy to see. How: This draws a rounded choice on the surface color with a strong border, at least a touch target tall, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.fieValSel:hover { /* What: Hovered Field Value Select. Why: A choice should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Field Value Select. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fieValSel { /* What: Motionless Field Value Select. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.fieHinPar { /* What: Field Hint Paragraph. Why: The hint is secondary to the label and box. How: This sets it small in the muted text color, capped at the small text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+
+.fieErrPar { /* What: Field Error Paragraph. Why: A field's problem should be clear beside it. How: This sets it small and bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-size   : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	font-weight : 700;
+
+
+}
+.fieErrPar:empty { /* What: Empty Field Error Paragraph. Why: A field with no problem shouldn't keep a gap for one, and its box reads the message through its description, not as an alert. How: This hides it while it's empty. */
+
+
+	display : none;
+
+
+}
+
+/* #endregion detFieDiv */
+
+
+.detSavBut { /* What: Details Save Button. Why: The button sits at its own width below the fields rather than stretching across them. How: This aligns it to the start. */
+
+
+	justify-self : start;
+
+
+}
+
+/* #endregion detSetFor */
+
+
+.detNotPar { /* What: Details Note Paragraph. Why: The note is quieter than the values. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region detValDes */
+
+.detValDes { /* What: Details Value Description List. Why: Each value reads beside its name, and a long name or value shouldn't run off the screen. How: This lays the pairs out in two columns a tier 4 space apart by auto placement, since every pair repeats the same two classes, the names sized to the longest one. */
+
+
+	column-gap            : var( --tie-hor-004 );                  /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-columns : auto minmax( 0, 1fr );
+	row-gap               : var( --tie-ver-004 );                  /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.detKeyTer { /* What: Details Key Term. Why: A value's name reads lighter than the value. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+.detValDet { /* What: Details Value Details. Why: The value is what the member came to read, and a long one shouldn't run off the screen. How: This sets it bold, breaking a long word where it has to. */
+
+
+	font-weight   : 700;
+	overflow-wrap : anywhere;
+
+
+}
+
+/* #endregion detValDes */
+
+/* #endregion detSetSec */
+
+
+
+/* #region hanSetSec */
+
+.hanSetSec { /* What: Handover Settings Section. Why: The heading, note, and controls read as one part. How: This stacks them a tier 3 space apart, in order since the controls change with the offer. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.hanTitHea { /* What: Handover Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.hanTitHea:focus { /* What: Focused Handover Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.hanNotPar { /* What: Handover Note Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+.endActDiv { /* What: End Actions Div. Why: A part's buttons sit together, or a question and its answers in their place, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Declining, withdrawing, offering, and opening or leaving a confirmation are lighter actions, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion endActDiv */
+
+
+
+/* #region hanOffFor */
+
+.hanOffFor { /* What: Handover Offer Form. Why: The choice and the button read down one column. How: This stacks them a tier 4 space apart, in order, since the label and choice share classes with the settings form. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+/* What: Field Name Label Pointer. Why: The offer's label is set like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+/* What: Field Value Select Pointer. Why: The offer's choice is drawn like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The offer's button sits in the same wrapping row as the part's other buttons. How: Its rule sits in the hanSetSec region. */
+
+/* What: Action Plain Button Pointer. Why: Offering uses the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion hanOffFor */
+
+/* #endregion hanSetSec */
+
+
+
+/* #region devSetSec */
+
+.devSetSec { /* What: Device Settings Section. Why: The heading, the appearance choice, the note, and the button read as one part. How: This stacks them a tier 3 space apart, in order, since the button's row shares its class with the other parts. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.devTitHea { /* What: Device Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+
+
+/* #region devAppFie */
+
+.devAppFie { /* What: Device Appearance Fieldset. Why: The legend and the three choices read down one column, without the browser's frame around them. How: This stacks them a tier 5 space apart by auto placement, since the choices repeat one class, with no border, padding, or margin. */
+
+
+	border    : 0;
+	display   : grid;
+	margin    : 0;
+	min-width : 0;
+	padding   : 0;
+	row-gap   : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.devAppLeg { /* What: Device Appearance Legend. Why: The legend names the choices above them, set like a field's label. How: This sets it bold with no padding, a tier 5 space above the first choice. */
+
+
+	font-weight   : 700;
+	margin-bottom : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+	padding       : 0;
+
+
+}
+
+
+
+/* #region devChoLab */
+
+.devChoLab { /* What: Device Choice Label. Why: A whole row picks its mode, at least a touch target tall, and shows it's live under the pointer. How: This lays the circle beside its name a tier 5 space apart, rounds the row, and eases its hover background and focus ring. */
+
+
+	align-items           : center;
+	border-radius         : var( --rad-bor-med );                       /* Radius Border Medium = 11px */
+	column-gap            : var( --tie-hor-005 );                       /* Tier Horizontal 5, about 4.732px - 6.268px */
+	cursor                : pointer;
+	display               : grid;
+	grid-template-columns : auto minmax( 0, 1fr );
+	min-height            : calc( var( --ver-rhy-p04 ) * 1rem );        /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding               : 0 var( --spa-ver-m02 );                     /* Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A row's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition            : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease */
+
+
+}
+.devChoLab:hover { /* What: Hovered Device Choice Label. Why: A row in a list of choices shows it's live by color, since a lift would jostle the list. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Device Choice Label. Why: Someone who asked for less motion should see the tint switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.devChoLab { /* What: Motionless Device Choice Label. Why: The hover tint should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.devChoInp { /* What: Device Choice Input. Why: The circle should be easy to see and drawn in the brand's accent. How: This sizes it at the base rhythm step with no margin, filled in the main accent when chosen. */
+
+
+	accent-color : var( --acc-mai-col );                 /* Accent Main Color = #4A4FC9 */
+	height       : calc( var( --ver-rhy-bas ) * 1rem );  /* Vertical Rhythm Base ~= 14.572px */
+	margin       : 0;
+	width        : calc( var( --ver-rhy-bas ) * 1rem );  /* Vertical Rhythm Base ~= 14.572px */
+
+
+}
+
+/* #endregion devChoLab */
+
+/* #endregion devAppFie */
+
+
+.devNotPar { /* What: Device Note Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The notifications button sits in the same wrapping row as the other parts' buttons. How: Its rule sits in the hanSetSec region. */
+
+/* What: Action Plain Button Pointer. Why: The notifications button uses the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion devSetSec */
+
+
+
+/* #region accSetSec */
+
+.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.accTitHea { /* What: Account Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.accTitHea:focus { /* What: Focused Account Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.accNotPar { /* What: Account Note Paragraph. Why: The notes are quieter than the heading. How: This sets them in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The link's and the upgrade's buttons sit in the same wrapping row as the other parts' buttons. How: Its rule sits in the hanSetSec region. */
+
+/* What: Action Plain Button Pointer. Why: Linking Google uses the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion accSetSec */
+
+
+
+/* #region endSetSec */
+
+.endSetSec { /* What: End Settings Section. Why: The heading, note, and controls read as one part. How: This stacks them a tier 3 space apart, in order since the controls change with the confirmation. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.endTitHea { /* What: End Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.endTitHea:focus { /* What: Focused End Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.endNotPar { /* What: End Note Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region delConFor */
+
+.delConFor { /* What: Delete Confirm Form. Why: The question, the box, its problem, and the answers read down one column. How: This stacks them a tier 4 space apart, in order, since the label, box, and problem share classes with the settings form. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.conAskPar { /* What: Confirm Ask Paragraph. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row. */
+
+
+	flex-basis  : 100%;
+	font-weight : 700;
+
+
+}
+
+/* What: Field Name Label Pointer. Why: The confirmation's label is set like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+/* What: Field Value Input Pointer. Why: The confirmation's box is drawn like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+/* What: Field Error Paragraph Pointer. Why: The confirmation's problem is set like the settings form's. How: Its rule sits in the detFieDiv region. */
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The confirmation's answers sit in the same wrapping row as the handover's buttons. How: Its rule sits in the hanSetSec region. */
+
+.actDanBut { /* What: Action Danger Button. Why: Confirming a leave or a deletion is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actDanBut:hover { /* What: Hovered Action Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
+
+
+	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
+
+
+}
+.actDanBut:active { /* What: Pressed Action Danger Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actDanBut { /* What: Motionless Action Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* What: Action Plain Button Pointer. Why: Keeping the group uses the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion delConFor */
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The deletion's button, and the leave with its question and answers, sit in the same wrapping row as the handover's buttons. How: Its rule sits in the hanSetSec region. */
+
+/* What: Confirm Ask Paragraph Pointer. Why: The leave's question reads before its answers, as the deletion's does. How: Its rule sits in the delConFor region. */
+
+/* What: Action Danger Button Pointer. Why: Confirming a leave uses the danger pill. How: Its rule sits in the endActDiv region inside delConFor. */
+
+/* What: Action Plain Button Pointer. Why: Opening a confirmation and staying use the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion endSetSec */
+
+
+.setStaPar { /* What: Settings Status Paragraph. Why: The page itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.setErrPar { /* What: Settings Error Paragraph. Why: A failed change should be clear below the parts. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.setErrPar:empty { /* What: Empty Settings Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the section's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-002 ) * -1 ); /* Tier Vertical 2 ~= -25.572px */
+
+
+}
+
+/* #endregion groSetDiv */
+
+

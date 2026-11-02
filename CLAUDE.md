@@ -49,7 +49,23 @@ linking and recovery with the group keys shared again, and buying the upgrade.
 The first screens are built: the welcome, the form for starting a group, the
 group frame with its rail, its switcher and sheet, and the group chat with
 its next event, pinned as a card that opens a sheet below 1,100px and shown in
-a panel beside the chat from 1,100px, each with the live bring-list.
+a panel beside the chat from 1,100px, each with the live bring-list, the
+section tabs, the Events section with its form for planning, changing,
+and cancelling events, the People section with the invite link, the people
+waiting to join, whom any member approves, declines, or blocks, the members
+waiting on a new phone for the group's key, which any other member shares, and
+the members, and the Settings section. There the owner renames the group, sets
+its chat retention, offers the group to a member, who accepts or declines, and
+deletes it by name, a member leaves, and anyone picks light or dark and turns
+notifications on or off for their phone, links Google, and buys the upgrade.
+The welcome gets a linked member's groups back on a new phone. The Map
+section, drawn without a street map, shares a member's location for an event
+from 3 hours before it starts, lists everyone sharing with their distance,
+direction, and freshness around a plot, and posts "I'm on my way" and "I've
+arrived" to the chat as status lines, the sharing running across sections
+and resuming after a reload. An invite link opens the join screen, which asks
+for a joiner's name and an optional note, waits for a member's approval,
+offers to withdraw the request, and opens the group once they're let in.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 
@@ -181,13 +197,14 @@ emulators need Java, 21 installed.
 - **Main content** (per the skip link rule): each screen holds its content
   in `<main>`, rendered by `MaiAreCom` in `src/ui/main-area.tsx`. On the
   welcome and the form for starting a group that's the whole screen; in the
-  group frame it's the open group's content, past the rail and the bar, and
-  it stays past the tab bar once that joins.
+  group frame it's the open section, past the rail, the bar, and the section
+  tabs.
 - **Breakpoints** (per the breakpoint rule): 720px, where the group frame
-  switches from the phone's bar and sheet to the wide screen's rail, and
-  1100px (decided 2026-10-30), where the next-event panel joins beside the
-  chat, replacing the event pinned above it. Layout queries measure the app
-  container, `appRooDiv` in `src/app.module.css`.
+  switches from the phone's bar, sheet, and bottom tabs to the wide screen's
+  rail and column of sections, and 1100px (decided 2026-10-30), where the
+  next-event panel joins beside the chat, replacing the event pinned above
+  it. Layout queries measure the app container, `appRooDiv` in
+  `src/app.module.css`.
 - **Scroll restoring** (an addition to the scroll position rule, decided
   2026-10-30): a screen renders once the app has checked for groups, a
   moment after load, so a reload's restore waits for the screen host's ready
@@ -229,8 +246,9 @@ emulators need Java, 21 installed.
     first screens.
   - **Entry addresses** carry something in from outside, such as an invite
     link (`/join/<token>`) or a notification's target: the app reads one as
-    it starts, acts on it, then replaces the address with the root. Each is
-    built with the feature it serves.
+    it starts, acts on it, then replaces the address with the root. The
+    invite link is built; a notification's target is built with that
+    feature.
 - **Legal pages** (decided 2026-10-25): the privacy policy and terms get fixed
   addresses, `/privacy` and `/terms`, as static pages in `public/`, which
   Netlify serves ahead of its every-path rewrite. Google's sign-in

@@ -15,6 +15,7 @@ import { getDocs         } from 'firebase/firestore';      // What: Get Docs. Wh
 import { ideEnsFun       } from './identity.ts';           // What: Identity Ensure Function. Why: Asking to join is a first group action, and every other step acts as this identity. How: This makes sure it exists.
 import { joiNotFun       } from '../core/text-limits.ts';  // What: Join Note Function. Why: A note is checked before it's sent. How: This applies the limits.
 import { keyLoaFun       } from './groups.ts';             // What: Key Load Function. Why: An approver wraps the group's key for the joiner. How: This loads it.
+import { onSnapshot      } from 'firebase/firestore';      // What: On Snapshot. Why: The review shows a new request, or one another member answered, at once. How: This listens to the requests.
 import { perNamFun       } from '../core/text-limits.ts';  // What: Person Name Function. Why: A name is checked before it's sent. How: This applies the limits.
 import { runTransaction  } from 'firebase/firestore';      // What: Run Transaction. Why: An approval reads the count it raises. How: This runs the reads and writes together.
 import { serverTimestamp } from 'firebase/firestore';      // What: Server Timestamp. Why: The rules require the server's time on a request and a membership. How: This asks the server to fill it in.
@@ -24,6 +25,9 @@ import { Timestamp       } from 'firebase/firestore';      // What: Timestamp. W
 import { wraKeyFun       } from '../platform/crypto.ts';   // What: Wrap Key Function. Why: The joiner's membership holds the group key wrapped for them. How: This wraps it.
 import { writeBatch      } from 'firebase/firestore';      // What: Write Batch. Why: A block and the request's end land together. How: This groups the writes.
 
+
+import type { QuerySnapshot } from 'firebase/firestore'; // What: Query Snapshot. Why: A read and a watch of the requests both turn a snapshot into records. How: This types it.
+
 // #endregion Imports
 
 
@@ -32,16 +36,16 @@ import { writeBatch      } from 'firebase/firestore';      // What: Write Batch.
  * joins.ts = Joins
  *
  * @summary
- * Joining a group through its invite link (ARCHITECTURE.md Sections 9 and
- * 17). A joiner reads the invite to see the group's name, then files a join
- * request with their name and an optional note, which they can withdraw or
- * check on. Any member lists the pending requests and answers one: an
- * approval is one transaction that wraps the group key for the joiner's
- * published public key, creates their membership with their name encrypted
- * under the group key, adds the group to their account, counts them, and
- * ends the request; a decline ends it, and a block also puts the joiner on
- * the group's blocklist. Once in, the joiner reads the group's key from
- * their own wrap with groups.ts's keyLoaFun.
+ * Joining a group through its invite link (ARCHITECTURE.md Sections 9 and 17).
+ * A joiner reads the invite to see the group's name, then files a join request
+ * with their name and an optional note, which they can withdraw, check on, or
+ * watch until it's answered. Any member lists or watches the pending requests
+ * and answers one: an approval is one transaction that wraps the group key
+ * for the joiner's published public key, creates their membership with their
+ * name encrypted under the group key, adds the group to their account, counts
+ * them, and ends the request; a decline ends it, and a block also puts the
+ * joiner on the group's blocklist. Once in, the joiner reads the group's key
+ * from their own wrap with groups.ts's keyLoaFun.
  *
  * Sections:
  *  - Constants
@@ -133,8 +137,9 @@ const invGetFun = async ( tokValStr : string ) : Promise< InvRecTyp | null > => 
  * Files this identity's request to join the group an invite token opens,
  * with a 7-day expiry, and resolves with the group's ID. The name and note
  * are tidied first, and either outside its limits rejects with a RangeError
- * before anything is written. A token with no invite rejects with an Error.
- * The rules refuse a joiner who is blocked, already in, or out of slots.
+ * before anything is written. A token with no invite rejects with an Error
+ * coded invite/not-found. The rules refuse a joiner who is blocked, already
+ * in, or out of slots.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -170,7 +175,7 @@ const reqCreFun = async ( tokValStr : string, perNamStr : string, notValStr : st
 	const invRecObj = await invGetFun( tokValStr ); // What: Invite Record Object. Why: The request goes to the group the link opens. How: This reads the invite.
 
 
-	if ( !invRecObj ) throw new Error( 'The invite link is no longer valid.' ); // What: Invite Guard. Why: A rotated link opens nothing. How: This rejects.
+	if ( !invRecObj ) throw Object.assign( new Error( 'The invite link is no longer valid.' ), { code : 'invite/not-found' } ); // What: Invite Guard. Why: A rotated link opens nothing, and the join screen tells this apart from other failures. How: This rejects with an Error coded invite/not-found.
 
 
 
@@ -286,35 +291,116 @@ const reqWitFun = async ( groIdeStr : string ) : Promise< void > => deleteDoc( d
 
 
 
-type ReqRecTyp = { namTexStr : string, notTexStr : string, reqTimNum : number, uidValStr : string }; // What: Request Record Type. Why: An approver sees who is asking, their note, and when. How: This types one pending request as reqLisFun lists it.
-
-// #region reqLisFun
+// #region joiWatFun
 
 /**
- * reqLisFun = Request List Function
+ * joiWatFun = Join Watch Function
  *
  * @summary
- * Resolves with a group's pending join requests, oldest first, for a member
- * to review. A request past its expiry is left out, since its TTL deletion
- * can run a day late.
+ * Watches where this identity's join stands in a group, calling back with
+ * the status {@link reqStaFun} reads, at first and after each change to the
+ * request: 'pending' while its unexpired request waits, then 'member' once
+ * an approval has added the group to the account, or 'ended' once the
+ * request is gone without one. A request that isn't in the device's cache
+ * yet waits for the server rather than reading as gone. A refused watch or
+ * account read calls the error callback. Resolves with the function that
+ * stops the watch.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param groIdeStr - Group Identifier String: The group asked to join.
+ * @param onStaFun  - On Status Function: Called with the join's status.
+ * @param onErrFun  - On Error Function: Called when the watch fails, by
+ *                    default nothing.
  *
- * @returns A promise that resolves with the pending requests.
+ * @returns A promise that resolves with a function that stops the watch.
  *
  * @example
  * ```ts
- * reqLisFun('Xk3...') // => [ { namTexStr : 'Dana Lee', ... } ]
+ * joiWatFun('Xk3...', setJoiStaStr) // => () => void
  * ```
  *
 */
 
-const reqLisFun = async ( groIdeStr : string ) : Promise< ReqRecTyp[] > => { // What: Request List Function. Why: Any member may answer a request (Section 17). How: This reads the group's requests and keeps the unexpired ones.
+const joiWatFun = async ( groIdeStr : string, onStaFun : ( joiStaStr : JoiStaTyp ) => void, onErrFun : ( errValObj : Error ) => void = () => {} ) : Promise< () => void > => { // What: Join Watch Function. Why: The joiner's screen opens the group as soon as a member lets them in, and says so when the request ends without that. How: This listens to the joiner's own request, then reads the account once it's gone.
 
 
-	const reqSnaObj = await getDocs( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/joinRequests` ) );                     // What: Requests Snapshot Object. Why: Every pending request is in the group's collection. How: This reads it.
+	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The joiner's request and account are under their UID. How: This reads the identity.
+
+	const { fstDatObj } = firGetFun(); // What: Firestore Data Object. Why: The watch and the read go to Firestore. How: This reads the service.
+
+	let actValBoo = true; // What: Active Value Boolean. Why: An account read finishing after the watch stops mustn't report. How: This is true until the stop runs.
+
+
+	const stoSnaFun = onSnapshot( doc( fstDatObj, `groups/${ groIdeStr }/joinRequests/${ uidValStr }` ), { includeMetadataChanges : true }, ( reqSnaObj ) => { // What: Stop Snapshot Function. Why: Each change to the request may be the answer. How: This listens to it, hearing when a cached snapshot is confirmed by the server, and keeps the stop.
+
+
+		if ( !reqSnaObj.exists() && reqSnaObj.metadata.fromCache ) return; // What: Cache Guard. Why: A request the device hasn't cached reads as missing until the server answers. How: This waits for the server's word on a missing request.
+
+
+
+		if ( reqSnaObj.exists() && ( reqSnaObj.get( 'expireAt' ) as Timestamp ).toMillis() > Date.now() ) { onStaFun( 'pending' ); return; } // What: Pending Guard. Why: An unexpired request is still waiting. How: This reports pending and returns. // What: Type Assertion Note. Why: The rules store the expiry as a timestamp. How: The as reads it as one.
+
+
+
+		getDoc( doc( fstDatObj, `accounts/${ uidValStr }` ) ).then( ( accSnaObj ) => { // What: Account Read Call. Why: With the request gone, the account says whether it ended in a membership. How: This reads it and reports member or ended.
+
+
+			if ( actValBoo ) onStaFun( accSnaObj.get( new FieldPath( 'memberGroups', groIdeStr ) ) === true ? 'member' : 'ended' ); // What: Status Report Call. Why: An approval adds the group to the account in the same transaction that ends the request. How: This reports member when the account holds the group, and ended otherwise, while the watch runs.
+
+
+		}, onErrFun );
+
+
+	}, onErrFun );
+
+
+
+	return () => { // What: Stop Return. Why: The watch shouldn't outlive the screen. How: This returns the function that stops it.
+
+
+		actValBoo = false; // What: Inactive Set. Why: A late account read mustn't report. How: This marks the watch stopped.
+
+		stoSnaFun(); // What: Snapshot Stop Call. Why: The listener closes. How: This stops it.
+
+
+	};
+
+
+};
+
+// #endregion joiWatFun
+
+
+
+type ReqRecTyp = { namTexStr : string, notTexStr : string, reqTimNum : number, uidValStr : string }; // What: Request Record Type. Why: An approver sees who is asking, their note, and when. How: This types one pending request as reqLisFun and reqWatFun report it.
+
+// #region reqRecFun
+
+/**
+ * reqRecFun = Request Records Function
+ *
+ * @summary
+ * Reads a snapshot of a group's join requests into records, oldest first,
+ * for a member to review. A request past its expiry is left out, since its
+ * TTL deletion can run a day late.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param reqSnaObj - Requests Snapshot Object: The group's requests.
+ *
+ * @returns The pending requests.
+ *
+ * @example
+ * ```ts
+ * reqRecFun(reqSnaObj) // => [ { namTexStr : 'Dana Lee', ... } ]
+ * ```
+ *
+*/
+
+const reqRecFun = ( reqSnaObj : QuerySnapshot ) : ReqRecTyp[] => { // What: Request Records Function. Why: A read and a watch of the requests report them the same way. How: This keeps the unexpired requests and reads each into a record.
+
+
 	const reqDocArr = reqSnaObj.docs.filter( ( reqDocObj ) => ( reqDocObj.get( 'expireAt' ) as Timestamp ).toMillis() > Date.now() ); // What: Request Document Array. Why: An expired request is over. How: This keeps the unexpired ones. // What: Type Assertion Note. Why: The rules store the expiry as a timestamp. How: The as reads it as one.
 
 
@@ -342,7 +428,69 @@ const reqLisFun = async ( groIdeStr : string ) : Promise< ReqRecTyp[] > => { // 
 
 };
 
+// #endregion reqRecFun
+
+
+
+// #region reqLisFun
+
+/**
+ * reqLisFun = Request List Function
+ *
+ * @summary
+ * Resolves with a group's pending join requests, oldest first, as
+ * {@link reqRecFun} reads them.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ *
+ * @returns A promise that resolves with the pending requests.
+ *
+ * @example
+ * ```ts
+ * reqLisFun('Xk3...') // => [ { namTexStr : 'Dana Lee', ... } ]
+ * ```
+ *
+*/
+
+const reqLisFun = async ( groIdeStr : string ) : Promise< ReqRecTyp[] > => reqRecFun( await getDocs( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/joinRequests` ) ) ); // What: Request List Function. Why: Any member may answer a request (Section 17). How: This reads the group's requests into records.
+
 // #endregion reqLisFun
+
+
+
+// #region reqWatFun
+
+/**
+ * reqWatFun = Request Watch Function
+ *
+ * @summary
+ * Watches a group's pending join requests, calling back with them, oldest
+ * first, as {@link reqRecFun} reads them, at first and after each change,
+ * such as a new request or one another member answered. A refused watch
+ * calls the error callback, and the watch stops. The returned function
+ * stops the watch.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param onReqFun  - On Requests Function: Called with the requests.
+ * @param onErrFun  - On Error Function: Called when the watch fails, by
+ *                    default nothing.
+ *
+ * @returns A function that stops the watch.
+ *
+ * @example
+ * ```ts
+ * reqWatFun('Xk3...', setReqRecArr) // => () => void
+ * ```
+ *
+*/
+
+const reqWatFun = ( groIdeStr : string, onReqFun : ( reqRecArr : ReqRecTyp[] ) => void, onErrFun : ( errValObj : Error ) => void = () => {} ) : () => void => onSnapshot( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/joinRequests` ), ( reqSnaObj ) => onReqFun( reqRecFun( reqSnaObj ) ), onErrFun ); // What: Request Watch Function. Why: A request shows to every member as it arrives, and leaves once anyone answers it. How: This listens to the group's requests and reports them as records.
+
+// #endregion reqWatFun
 
 
 
@@ -519,7 +667,7 @@ const reqBloFun = async ( groIdeStr : string, joiUidStr : string ) : Promise< vo
 
 // #region Exports
 
-export { invGetFun, type JoiStaTyp, reqAppFun, reqBloFun, reqCreFun, reqDecFun, reqLisFun, type ReqRecTyp, reqStaFun, reqWitFun }; // What: Named Exports. Why: The invite, join, and review screens drive joining through these. How: This exports the functions and their record types.
+export { invGetFun, type JoiStaTyp, joiWatFun, reqAppFun, reqBloFun, reqCreFun, reqDecFun, reqLisFun, type ReqRecTyp, reqStaFun, reqWatFun, reqWitFun }; // What: Named Exports. Why: The invite, join, and review screens drive joining through these. How: This exports the functions and their record types.
 
 // #endregion Exports
 

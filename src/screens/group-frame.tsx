@@ -6,18 +6,23 @@
 import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Why: The frame is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom    } from '../ui/button.tsx';    // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
-import { GroChaCom    } from './group-chat.tsx';    // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
-import { IcoSvgCom    } from '../ui/icon.tsx';      // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
-import { iniTexFun    } from '../utils/text.ts';    // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
-import { MaiAreCom    } from '../ui/main-area.tsx'; // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
-import { SheDiaCom    } from '../ui/sheet.tsx';     // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
-import { useEffect    } from 'react';               // What: Use Effect. Why: A group just created takes focus on its heading. How: This moves focus once it's drawn.
-import { useRef       } from 'react';               // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
-import { useScrOpeFun } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This returns the function that opens one.
+import { ButBasCom    } from '../ui/button.tsx';     // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
+import { GroChaCom    } from './group-chat.tsx';     // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
+import { GroEveCom    } from './group-events.tsx';   // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
+import { GroMapCom    } from './group-map.tsx';      // What: Group Map Component. Why: The Map section shares locations and says who's on their way. How: The frame shows it when that section is open.
+import { GroPeoCom    } from './group-people.tsx';   // What: Group People Component. Why: The People section shows the group's link and members. How: The frame shows it when that section is open.
+import { GroSetCom    } from './group-settings.tsx'; // What: Group Settings Component. Why: The Settings section changes, leaves, or deletes the group. How: The frame shows it when that section is open.
+import { IcoSvgCom    } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
+import { iniTexFun    } from '../utils/text.ts';     // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
+import { MaiAreCom    } from '../ui/main-area.tsx';  // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
+import { SheDiaCom    } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
+import { useEffect    } from 'react';                // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This moves focus once it's drawn.
+import { useRef       } from 'react';                // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
+import { useScrOpeFun } from '../ui/screen.ts';      // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
+import type { SecNamTyp } from '../ui/screen.ts';    // What: Section Name Type. Why: The frame shows one of the group's sections. How: This types its name.
 import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type. Why: The frame opens and closes the group sheet. How: This types its handle.
 
 // #endregion Imports
@@ -32,11 +37,14 @@ import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type.
  * group's name, which opens a sheet listing every group and offering to start
  * one; from 720px up, a rail of every group, by initials, sits down the left
  * beside the bar, the name there plain text, and the rail holds the button
- * that starts a group. The group's content fills the main area below the bar,
- * its chat for now. Choosing a group or starting one opens it as a new history
- * entry, and a group just created takes focus on its heading.
+ * that starts a group. The group's sections, from its chat to its settings,
+ * run along the bottom below 720px and down a column beside the rail from
+ * 720px, and the open section fills the main area below the bar. Choosing a
+ * group, a section, or starting a group opens it as a new history entry, and
+ * a group just created takes focus on its heading.
  *
  * Sections:
+ *  - Constants
  *  - Components
  *  - Exports
  *
@@ -46,9 +54,29 @@ import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type.
 
 
 
+// #region Constants
+
+type SecTabTyp = { icoNamStr : SecNamTyp, labStr : string }; // What: Section Tab Type. Why: Each tab names its section and label. How: This types one row of SEC_TAB_ARR.
+
+const SEC_TAB_ARR : SecTabTyp[] = [ // What: Section Tab Array. Why: Every group has the same sections, in the same order. How: Each row names a section, which is also its icon's name, and its label.
+
+
+	{ icoNamStr : 'chat',     labStr : 'Chat'     }, // What: Chat Tab. Why: The chat is where a group talks. How: This names it.
+	{ icoNamStr : 'events',   labStr : 'Events'   }, // What: Events Tab. Why: Events are planned there. How: This names it.
+	{ icoNamStr : 'map',      labStr : 'Map'      }, // What: Map Tab. Why: Members find each other there on the day. How: This names it.
+	{ icoNamStr : 'people',   labStr : 'People'   }, // What: People Tab. Why: The members and joining live there. How: This names it.
+	{ icoNamStr : 'settings', labStr : 'Settings' }  // What: Settings Tab. Why: The group's settings live there. How: This names it.
+
+
+];
+
+// #endregion Constants
+
+
+
 // #region Components
 
-type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[] }; // What: Group Frame Component Props Type. Why: The frame shows one group among every group, and focuses it when it's new. How: This types GroFraCom's props.
+type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, focuses it when asked, and hands on a group left or deleted. How: This types GroFraCom's props.
 
 // #region GroFraCom
 
@@ -57,7 +85,8 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  *
  * @summary
  * Renders the frame around the open group: the rail, the bar with the
- * group's name as the screen's one h1, the main area, and the group sheet,
+ * group's name as the screen's one h1, the section tabs, the main area
+ * showing the open section, and the group sheet,
  * a modal sheet that slides up from the bottom. The sheet closes on its
  * close button, on Escape, on a tap of the dimmed page, or once a group is
  * chosen, sliding back down first. When focBoo is true, the heading takes
@@ -68,37 +97,42 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  *
  * @param props.curGroObj - Current Group Object: The open group.
  * @param props.focBoo    - Focus Boolean: Whether the heading takes focus,
- *                          as it does for a group just created.
+ *                          as it does for a group just created, or one
+ *                          opened after another was left or deleted.
  * @param props.groRecArr - Group Record Array: Every group, sorted by name.
+ * @param props.onGonFun  - On Gone Function: Called with a group's ID and
+ *                          what to announce once Settings leaves or deletes
+ *                          it.
+ * @param props.secNamStr - Section Name String: The section to show.
  *
  * @returns The frame.
  *
  * @example
  * ```tsx
- * GroFraCom({ curGroObj, focBoo, groRecArr }) // => <GroFraCom />
+ * GroFraCom({ curGroObj, focBoo, groRecArr, ... }) // => <GroFraCom />
  * ```
  *
 */
 
-function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.Element {
+function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
 
 
-	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group just created takes focus on its heading. How: This holds the heading.
+	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This holds the heading.
 	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This reads the function that opens one.
 	const sheHanRef = useRef< SheHanTyp >( null );          // What: Sheet Handle Reference. Why: The switcher opens the group sheet and a choice closes it. How: This holds the sheet's handle.
 
 
 
-	useEffect( () => { // What: Heading Focus Effect. Why: A group just created replaces the form that made it, so focus should land on what replaced it. How: This focuses the heading when asked, then clears the request from the history entry.
+	useEffect( () => { // What: Heading Focus Effect. Why: A group just created replaces the form that made it, and one opened after a leave or a deletion replaces the section that did it, so focus should land on what replaced them. How: This focuses the heading when asked, then clears the request from the history entry.
 
 
-		if ( !focBoo ) return; // What: No Request Guard. Why: Only a group just created takes focus. How: This returns otherwise.
+		if ( !focBoo ) return; // What: No Request Guard. Why: Only a group opened by one of those changes takes focus. How: This returns otherwise.
 
 
 
 		heaEleRef.current?.focus(); // What: Focus Call. Why: The new group is announced and the next Tab starts from it. How: This focuses the heading.
 
-		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of creation, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
+		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of the change, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
 
 
 	}, [ curGroObj.ideStr, focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curGroObj.ideStr changes when another group opens, focBoo when the request to focus does, and scrOpeFun only if the router's navigate does.
@@ -227,15 +261,105 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr } : GfcProTyp ) : React.JSX.
 
 
 
-			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open group's content is the screen's main content. How: This holds its chat below the bar, filling the rest of the screen. */ }
+			<nav
+				className={ cssModObj.fraSecNav }
+
+				aria-label='Group sections'
+			>{ /* What: Frame Section Nav Element. Why: Every part of the group sits one tap away. How: This lists a button for each section, along the bottom below 720px wide and down a column beside the rail from 720px. */ }
 
 
-				<GroChaCom
-					key={ curGroObj.ideStr } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages. How: This remounts the chat for each group.
+				{ SEC_TAB_ARR.map( ( secTabObj ) => ( // What: Section Tab Map. Why: Each section gets its own button. How: This renders one per section.
 
-					groIdeStr={ curGroObj.ideStr }
-					groNamStr={ curGroObj.namStr }
-				/>{ /* What: Group Chat Component. Why: The chat is the group's first part. How: This shows the open group's chat. */ }
+
+					<button
+						key={ secTabObj.icoNamStr }
+
+						className={ cssModObj.secTabBut }
+
+						type='button'
+
+						aria-current={ secTabObj.icoNamStr === secNamStr ? 'page' : undefined } // What: Section Current State. Why: The open section should be marked, to sight and to a screen reader. How: This sets aria-current on its button.
+
+						onClick={ () => scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group', secStr : secTabObj.icoNamStr } ) }
+					>{ /* What: Section Tab Button Element. Why: A section opens with a tap, and back returns to the last one. How: This opens the section as a new history entry. */ }
+
+
+						<IcoSvgCom
+							icoNamStr={ secTabObj.icoNamStr }
+							sizSteStr='p01'
+						/>{ /* What: Section Icon SVG Component. Why: An icon makes each tab quick to find. How: This draws the section's icon at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
+
+						{ secTabObj.labStr }
+
+
+					</button>
+
+
+				) ) }
+
+
+			</nav>
+
+
+
+			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open section is the screen's main content. How: This holds it below the bar, filling the rest of the screen. */ }
+
+
+				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: Each section has its own component. How: This shows the open section, the chat first and the map last.
+
+
+					<GroChaCom
+						key={ curGroObj.ideStr } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages. How: This remounts the chat for each group.
+
+						groIdeStr={ curGroObj.ideStr }
+						groNamStr={ curGroObj.namStr }
+					/> // What: Group Chat Component. Why: The chat is the group's first section. How: This shows the open group's chat.
+
+
+				) : secNamStr === 'events' ? ( // What: Events Section Check. Why: The Events section is built. How: This shows it.
+
+
+					<GroEveCom
+						key={ curGroObj.ideStr } // What: Events Key. Why: Another group's events have to start afresh. How: This remounts the section for each group.
+
+						groIdeStr={ curGroObj.ideStr }
+						ownBoo={ curGroObj.ownBoo }
+					/> // What: Group Events Component. Why: The group plans its events here. How: This shows the open group's Events section.
+
+
+				) : secNamStr === 'people' ? ( // What: People Section Check. Why: The People section is built. How: This shows it.
+
+
+					<GroPeoCom
+						key={ curGroObj.ideStr } // What: People Key. Why: Another group's people have to start afresh. How: This remounts the section for each group.
+
+						curGroObj={ curGroObj }
+					/> // What: Group People Component. Why: The group's link and members live here. How: This shows the open group's People section.
+
+
+				) : secNamStr === 'settings' ? ( // What: Settings Section Check. Why: The Settings section is built. How: This shows it.
+
+
+					<GroSetCom
+						key={ curGroObj.ideStr } // What: Settings Key. Why: Another group's settings have to start afresh rather than keep this one's draft. How: This remounts the section for each group.
+
+						curGroObj={ curGroObj }
+
+						onGonFun={ onGonFun }
+					/> // What: Group Settings Component. Why: The group is changed, left, or deleted here. How: This shows the open group's Settings section.
+
+
+				) : ( // What: Map Branch. Why: The map is the one section left. How: This shows it.
+
+
+					<GroMapCom
+						key={ curGroObj.ideStr } // What: Map Key. Why: Another group's map has to start afresh. How: This remounts the section for each group.
+
+						curGroObj={ curGroObj }
+					/> // What: Group Map Component. Why: Members find each other on the day of an event here. How: This shows the open group's Map section.
+
+
+				) }
 
 
 			</MaiAreCom>

@@ -7,7 +7,9 @@
  * @summary
  * Turns times in milliseconds into the short labels a screen shows, in the
  * visitor's own language and clock: a message's time, which grows a weekday
- * or a date as it gets older, and an event's date block and time range.
+ * or a date as it gets older, an event's date block and time range, and how
+ * long ago something was updated. It also turns a time into a date and time
+ * field's value and back.
  *
  * Sections:
  *  - Helpers
@@ -20,6 +22,54 @@
 
 
 // #region Helpers
+
+// #region ageTexFun
+
+/**
+ * ageTexFun = Age Text Function
+ *
+ * @summary
+ * Says how long ago something was updated, in whole minutes: "just now"
+ * under a minute, then "1 min ago" up to "59 min ago", then "over an hour
+ * ago".
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param updTimNum - Update Time Number: When it was updated, in
+ *                    milliseconds.
+ * @param nowTimNum - Now Time Number: The time now, in milliseconds.
+ *
+ * @returns The label.
+ *
+ * @example
+ * ```ts
+ * ageTexFun(updTimNum, Date.now()) // => '6 min ago'
+ * ```
+ *
+*/
+
+const ageTexFun = ( updTimNum : number, nowTimNum : number ) : string => { // What: Age Text Function. Why: A shared location shows how old it is, so an old one never passes for live (Section 10). How: This counts whole minutes since the update.
+
+
+	const minAgoNum = Math.floor( ( nowTimNum - updTimNum ) / 60000 ); // What: Minutes Ago Number. Why: The label counts whole minutes. How: This divides the age by a minute.
+
+
+	if ( minAgoNum < 1 ) return 'just now'; // What: Fresh Guard. Why: Under a minute reads as now. How: This returns "just now".
+
+
+
+	if ( minAgoNum < 60 ) return `${ minAgoNum } min ago`; // What: Minutes Guard. Why: Within the hour, the minutes say it. How: This returns them.
+
+
+
+	return 'over an hour ago'; // What: Old Return. Why: A share lasts at most an hour past its update, so anything older is past counting. How: This says it's over an hour.
+
+
+};
+
+// #endregion ageTexFun
+
+
 
 const dayKeyFun = ( timValNum : number ) : string => new Date( timValNum ).toDateString(); // What: Day Key Function. Why: Two times on the same calendar day share a label's form. How: This names a time's local day.
 
@@ -78,6 +128,48 @@ const mesTimFun = ( sntTimNum : number, nowTimNum : number ) : string => { // Wh
 
 
 
+// #region datInpFun
+
+/**
+ * datInpFun = Date Input Function
+ *
+ * @summary
+ * Formats a time as a local date and time field's value, the form
+ * YYYY-MM-DDTHH:MM in the visitor's own time zone, so a field shows the time
+ * it holds.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param timValNum - Time Value Number: The time, in milliseconds.
+ *
+ * @returns The field's value.
+ *
+ * @example
+ * ```ts
+ * datInpFun(staTimNum) // => '2026-11-08T18:00'
+ * ```
+ *
+*/
+
+const datInpFun = ( timValNum : number ) : string => { // What: Date Input Function. Why: A field changing an event shows the event's times. How: This writes the local date and time in the field's form.
+
+
+	const timDatObj = new Date( timValNum ); // What: Time Date Object. Why: The parts are read in local time. How: This wraps the time.
+
+
+	const padTwoFun = ( parValNum : number ) : string => String( parValNum ).padStart( 2, '0' ); // What: Pad Two Function. Why: The field's form writes each part in two digits. How: This pads a part with a leading zero.
+
+
+
+	return `${ timDatObj.getFullYear() }-${ padTwoFun( timDatObj.getMonth() + 1 ) }-${ padTwoFun( timDatObj.getDate() ) }T${ padTwoFun( timDatObj.getHours() ) }:${ padTwoFun( timDatObj.getMinutes() ) }`; // What: Value Return. Why: The field reads this form. How: This joins the year, month, day, hours, and minutes.
+
+
+};
+
+// #endregion datInpFun
+
+
+
 // #region eveBloFun
 
 /**
@@ -122,8 +214,11 @@ const eveBloFun = ( staTimNum : number, nowTimNum : number ) : { botStr : string
 
 
 
+const dayDatFun = ( timValNum : number ) : string => new Intl.DateTimeFormat( undefined, { day : 'numeric', month : 'long', weekday : 'long' } ).format( timValNum );                                                                           // What: Day Date Function. Why: A day a deadline falls on reads in full. How: This formats it with the weekday and month spelled out.
+const dayTimFun = ( timValNum : number ) : string => new Intl.DateTimeFormat( undefined, { hour : 'numeric', minute : '2-digit', weekday : 'long' } ).format( timValNum );                                                                      // What: Day Time Function. Why: A time later this week reads by its weekday and hour. How: This formats it with the weekday spelled out.
 const eveDatFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { day : 'numeric', hour : 'numeric', minute : '2-digit', month : 'long', weekday : 'long' } ).formatRange( staTimNum, endTimNum ); // What: Event Date Function. Why: An event's details give its full date and hours. How: This formats the start and end as one range, with the weekday and month spelled out, repeating the date only when it changes.
 const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Intl.DateTimeFormat( undefined, { hour : 'numeric', minute : '2-digit', weekday : 'short' } ).formatRange( staTimNum, endTimNum );                                 // What: Event Range Function. Why: An event's line says the day and the hours it runs. How: This formats the start and end as one range, which repeats the day only when it changes.
+const inpDatFun = ( inpValStr : string ) : number => inpValStr === '' ? Number.NaN : new Date( inpValStr ).getTime();                                                                                                                           // What: Input Date Function. Why: A date and time field's value becomes a time to check and save. How: This reads it as local time, or not a number when it's empty.
 
 // #endregion Helpers
 
@@ -131,7 +226,7 @@ const eveRanFun = ( staTimNum : number, endTimNum : number ) : string => new Int
 
 // #region Exports
 
-export { eveBloFun, eveDatFun, eveRanFun, mesTimFun }; // What: Named Exports. Why: The chat and the event details label messages and events with these. How: This exports the helpers.
+export { ageTexFun, datInpFun, dayDatFun, dayTimFun, eveBloFun, eveDatFun, eveRanFun, inpDatFun, mesTimFun }; // What: Named Exports. Why: The screens label messages, events, deadlines, and updates with these. How: This exports the helpers.
 
 // #endregion Exports
 

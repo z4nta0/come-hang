@@ -1,0 +1,190 @@
+
+
+
+/**
+ * event-form.module.css = Event Form Module
+ *
+ * @summary
+ * Styles for EveForCom and its fields: each field stacks its bold label, a
+ * rounded box with a strong border, a small hint, and its problem in the
+ * dark error color, the fields a tier 2 space apart, with the save button at
+ * the form's start edge.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region eveForFor */
+
+.eveForFor { /* What: Event Form Form. Why: The fields, the alert, and the button read top to bottom as the form's steps. How: This stacks them a tier 2 space apart, placed in order rather than by name, since its fields share one class. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-002 ); /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+
+/* #region forFieDiv */
+
+.forFieDiv { /* What: Form Field Div. Why: A field's label, control, hint, and problem belong together. How: This stacks them a tier 5 space apart, placed in order rather than by name, since the control is an input in some fields and a textarea in one. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.fieNamLab { /* What: Field Name Label. Why: The label names the field above its box. How: This sets it bold. */
+
+
+	font-weight : 700;
+
+
+}
+
+.fieValInp { /* What: Field Value Input. Why: A box should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall,, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.fieValInp:hover { /* What: Hovered Field Value Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.fieValInp[aria-invalid='true'] { /* What: Invalid Field Value Input. Why: A box with a problem should stand out beside its message. How: This turns its border the error color. */
+
+
+	border-color : var( --err-mai-col ); /* Error Main Color = #D14343 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Field Value Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fieValInp { /* What: Motionless Field Value Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.fieValTex { /* What: Field Value Textarea. Why: A box for several lines should be easy to hit and its boundary easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, that someone can make taller, in its own area, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	resize           : vertical;
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.fieValTex:hover { /* What: Hovered Field Value Textarea. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.fieValTex[aria-invalid='true'] { /* What: Invalid Field Value Textarea. Why: A box with a problem should stand out beside its message. How: This turns its border the error color. */
+
+
+	border-color : var( --err-mai-col ); /* Error Main Color = #D14343 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Field Value Textarea. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fieValTex { /* What: Motionless Field Value Textarea. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.fieHinPar { /* What: Field Hint Paragraph. Why: The hint is secondary to the label and box. How: This sets it small in the muted text color. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+
+
+}
+
+.fieErrPar { /* What: Field Error Paragraph. Why: A field's problem should be clear beside it. How: This sets it small and bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-size   : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	font-weight : 700;
+
+
+}
+.fieErrPar:empty { /* What: Empty Field Error Paragraph. Why: A field with no problem shouldn't keep a gap for one, and its field reads the message through its description, not as an alert. How: This hides it while it's empty. */
+
+
+	display : none;
+
+
+}
+
+/* #endregion forFieDiv */
+
+
+.forErrPar { /* What: Form Error Paragraph. Why: A failed save should be clear above the button. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.forErrPar:empty { /* What: Empty Form Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap above the button. How: This pulls it up by the form's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-002 ) * -1 ); /* Tier Vertical 2 ~= -25.572px */
+
+
+}
+
+.forSubBut { /* What: Form Submit Button. Why: The button sits at the form's start edge rather than stretching across it. How: This aligns it to the start of its row. */
+
+
+	justify-self : start;
+
+
+}
+
+/* #endregion eveForFor */
+
+

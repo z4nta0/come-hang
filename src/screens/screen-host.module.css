@@ -1,0 +1,31 @@
+
+
+
+/**
+ * screen-host.module.css = Screen Host Module
+ *
+ * @summary
+ * Styles for ScrHosCom's status, which announces a group left or deleted
+ * whatever screen replaces it. The screen that replaces the group shows the
+ * change to sight, so the status is for screen readers alone.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+.hosStaPar { /* What: Host Status Paragraph. Why: The new screen shows the change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+
