@@ -11,7 +11,11 @@ import { Route        } from 'react-router';                // What: Route. Why:
 import { Routes       } from 'react-router';                // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
 import { ScrHosCom    } from './screens/screen-host.tsx';   // What: Screen Host Component. Why: The app's root address shows whichever screen the visit is on. How: The root route renders it.
 import { SkiLinCom    } from './ui/skip-link.tsx';          // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the screen.
+import { useParams    } from 'react-router';                // What: Use Params. Why: An invite link carries its token in its path. How: The join route reads it.
 import { useScrTopFun } from './ui/scroll-top.ts';          // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
+
+
+import type { ScrStaTyp } from './ui/screen.ts'; // What: Screen State Type. Why: An invite link opens the join screen through a history entry. How: This types the entry's state.
 
 // #endregion Imports
 
@@ -25,9 +29,10 @@ import { useScrTopFun } from './ui/scroll-top.ts';          // What: Use Scroll 
  * link every screen opens with, then the screen host in the container every
  * screen's layout measures. The app answers at one address, its root: any
  * other path is replaced with the root, so the screen host renders and the
- * address bar never keeps a path the app doesn't use. It also opens each
- * screen at its top after a navigation and at the earlier position on back,
- * forward, and a reload.
+ * address bar never keeps a path the app doesn't use. An invite link,
+ * /join/<token>, is replaced with the root the same way, its entry opening
+ * the join screen for the token. It also opens each screen at its top after
+ * a navigation and at the earlier position on back, forward, and a reload.
  *
  * Sections:
  *  - Components
@@ -40,6 +45,56 @@ import { useScrTopFun } from './ui/scroll-top.ts';          // What: Use Scroll 
 
 
 // #region Components
+
+// #region JoiEntCom
+
+/**
+ * JoiEntCom = Join Entry Component
+ *
+ * @summary
+ * Handles an invite link, /join/<token>, an entry address read once as the
+ * app starts (ARCHITECTURE.md Section 14): renders a redirect that replaces
+ * the address with the root, adding no history entry, while the entry's state
+ * opens the join screen for the link's token.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param props - This component does not use any props.
+ *
+ * @returns The redirect to the root.
+ *
+ * @example
+ * ```tsx
+ * JoiEntCom() // => <JoiEntCom />
+ * ```
+ *
+*/
+
+function JoiEntCom () : React.JSX.Element {
+
+
+	const joiStaObj : ScrStaTyp = { scrStr : 'join', tokStr : useParams().tokStr ?? '' }; // What: Join State Object. Why: The root shows the join screen for the link's token. How: This records the screen and the token from the path, empty if it's somehow missing.
+
+
+
+	return (
+
+
+		<Navigate
+			replace
+			state={ joiStaObj }
+			to='/'
+		/> // What: Join Redirect Navigate. Why: The invite link's path shouldn't stay in the bar or be returned to. How: This replaces the address with the root, carrying the join screen in the entry's state.
+
+
+	);
+
+
+}
+
+// #endregion JoiEntCom
+
+
 
 // #region AppRooCom
 
@@ -96,6 +151,13 @@ function AppRooCom () : React.JSX.Element {
 						element={ <ScrHosCom /> }
 						path='/'
 					/>{ /* What: Root Route. Why: The app's one address shows its screens. How: This renders ScrHosCom at the root path. */ }
+
+
+
+					<Route
+						element={ <JoiEntCom /> }
+						path='/join/:tokStr'
+					/>{ /* What: Join Route. Why: An invite link opens the join screen, while the address bar keeps only the root. How: This renders JoiEntCom for /join/ and a token. */ }
 
 
 

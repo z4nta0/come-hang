@@ -9,11 +9,13 @@ import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Wh
 import { CreGroCom       } from './create-group.tsx';  // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
 import { GroFraCom       } from './group-frame.tsx';   // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
 import { groWatFun       } from '../state/groups.ts';  // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
+import { JoiGroCom       } from './join-group.tsx';    // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
 import { LoaScrCom       } from './loading.tsx';       // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
 import { scrReaFun       } from '../ui/scroll-top.ts'; // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
 import { shaEndFun       } from '../state/sharing.ts'; // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
 import { shaGetFun       } from '../state/sharing.ts'; // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
 import { shaResFun       } from '../state/sharing.ts'; // What: Sharing Resume Function. Why: Sharing kept from before a reload resumes as the app opens. How: This resumes it.
+import { useCallback     } from 'react';               // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
 import { useEffect       } from 'react';               // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing is checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing.
 import { useLayoutEffect } from 'react';               // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
 import { useScrOpeFun    } from '../ui/screen.ts';     // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
@@ -41,9 +43,12 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * first group by name when it names none or one they've left. Creating a group
  * restarts the watch, since a first group is also when the identity is made,
  * and opens the new group in place of the form, and getting groups back from
- * the welcome restarts it too. Leaving or deleting a group opens the next
- * group, or the welcome when none is left, and the host announces the change
- * through a status that stays across screens.
+ * the welcome restarts it too. The join screen an invite link opens shows
+ * whatever the groups, and once its joiner is in, or leaves it, the watch
+ * restarts, since opening the invite made the identity, and the group or the
+ * default screen opens in its place. Leaving or deleting a group opens the
+ * next group, or the welcome when none is left, and the host announces the
+ * change through a status that stays across screens.
  *
  * Sections:
  *  - Hooks
@@ -293,10 +298,70 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
+	const tokValStr = scrStaObj?.tokStr; // What: Token Value String. Why: The join screen's entry keeps its token as it changes. How: This reads it, undefined for any other screen.
+
+
+	const joiEntFun = useCallback( ( groIdeStr? : string, groNamStr? : string ) : void => scrOpeFun( { groStr : groIdeStr, namStr : groNamStr, scrStr : 'join', tokStr : tokValStr }, true ), [ scrOpeFun, tokValStr ] ); // What: Join Entry Function. Why: A reload of the join screen should find a request sent, even after the link changes, and forget one taken back. How: This replaces the entry with the join screen's, holding the group and its name or neither.
+
+
+
+	const joiGroFun = useCallback( ( groIdeStr : string, mesValStr : string ) : void => { // What: Join Group Function. Why: A joiner let in sees their group, which the running watch may not know of, since opening the invite made the identity. How: This restarts the watch, announces the message, and replaces the entry with the group's, asking for focus.
+
+
+		setWatVerNum( ( preVerNum ) => preVerNum + 1 ); // What: Watch Restart Call. Why: The watch may have started before the identity existed. How: This starts a new run.
+
+		setAnnMesStr( mesValStr ); // What: Announce Set Call. Why: The join screen goes with the change. How: This puts the message in the status.
+
+		scrOpeFun( { focBoo : true, groStr : groIdeStr, scrStr : 'group' }, true ); // What: Screen Replace Call. Why: Back shouldn't return to the join screen. How: This replaces the entry with the group's, asking for focus.
+
+
+	}, [ scrOpeFun ] ); // What: Callback Dependency Array. Why: The function only changes with the opener. How: scrOpeFun stays the same while the router's navigate does.
+
+
+
+	const joiLeaFun = useCallback( () : void => { // What: Join Leave Function. Why: Someone leaving the join screen goes to the app, whose watch may predate the identity the invite made, and a group they're let in later should show. How: This restarts the watch and replaces the entry with the default screen's, asking for focus.
+
+
+		setWatVerNum( ( preVerNum ) => preVerNum + 1 ); // What: Watch Restart Call. Why: The watch may have started before the identity existed. How: This starts a new run.
+
+		scrOpeFun( { focBoo : true, scrStr : 'group' }, true ); // What: Screen Replace Call. Why: The back button is gone, and back shouldn't return to the join screen. How: This replaces the entry with the default screen's, asking for focus.
+
+
+	}, [ scrOpeFun ] ); // What: Callback Dependency Array. Why: The function only changes with the opener. How: scrOpeFun stays the same while the router's navigate does.
+
+
+
 	const scrPicFun = () : React.JSX.Element => { // What: Screen Pick Function. Why: One screen shows at a time, beside the host's status. How: This returns the screen the entry and the groups call for.
 
 
 		if ( visGroArr === null ) return <LoaScrCom />; // What: Loading Return. Why: The screen can't be chosen before the groups are known. How: This shows the waiting screen, whose loader appears only if the wait runs long.
+
+
+
+		if ( scrStaObj?.scrStr === 'join' && tokValStr !== undefined ) { // What: Join Block. Why: An invite link opens its screen whatever groups someone is in. How: This shows it for the entry's token.
+
+
+			return (
+
+
+				<JoiGroCom
+					key={ tokValStr }
+
+					groIdeStr={ scrStaObj.groStr }
+					groNamStr={ scrStaObj.namStr }
+					tokValStr={ tokValStr }
+
+					onAnnFun={ setAnnMesStr }
+					onEntFun={ joiEntFun }
+					onJoiFun={ joiGroFun }
+					onLeaFun={ joiLeaFun }
+				/> // What: Join Group Component. Why: The join screen runs the request for the link, starting afresh for another one. How: This shows it keyed by the token, with the group the entry remembers and what to do as the join goes on.
+
+
+			);
+
+
+		}
 
 
 

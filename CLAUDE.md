@@ -63,7 +63,9 @@ section, drawn without a street map, shares a member's location for an event
 from 3 hours before it starts, lists everyone sharing with their distance,
 direction, and freshness around a plot, and posts "I'm on my way" and "I've
 arrived" to the chat as status lines, the sharing running across sections
-and resuming after a reload.
+and resuming after a reload. An invite link opens the join screen, which asks
+for a joiner's name and an optional note, waits for a member's approval,
+offers to withdraw the request, and opens the group once they're let in.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 
@@ -244,8 +246,9 @@ emulators need Java, 21 installed.
     first screens.
   - **Entry addresses** carry something in from outside, such as an invite
     link (`/join/<token>`) or a notification's target: the app reads one as
-    it starts, acts on it, then replaces the address with the root. Each is
-    built with the feature it serves.
+    it starts, acts on it, then replaces the address with the root. The
+    invite link is built; a notification's target is built with that
+    feature.
 - **Legal pages** (decided 2026-10-25): the privacy policy and terms get fixed
   addresses, `/privacy` and `/terms`, as static pages in `public/`, which
   Netlify serves ahead of its every-path rewrite. Google's sign-in

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-02 (the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-02 (joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1564,8 +1564,8 @@ the Blaze change.
     root.
   - Entry addresses bring something in from outside and are read once as
     the app starts, then replaced with the root: an invite link
-    (`/join/<token>`) opens the invite screen, and a notification's target
-    opens its screen. Each is built with the feature it serves.
+    (`/join/<token>`) opens the join screen (built 2026-11-02), and a
+    notification's target opens its screen, built with that feature.
   - The legal pages, `/privacy` and `/terms`, are static pages served at
     fixed addresses, outside the app, since Google's sign-in verification
     and app listings link to them.
@@ -1712,12 +1712,29 @@ the Blaze change.
   they share. Blocked location, a fix that can't be found, and a failed
   post each say why. The section's checks cover the window, two members
   sharing and posting, blocked location, a reload, and a removal.
+  The join screen (built 2026-11-02) is what an invite link opens: the
+  link's address is replaced with the root, its history entry naming the
+  screen and the token, and the screen shows whatever groups the visitor is
+  in. It reads the invite to name the group, or says the link no longer
+  works and leads to the app. Someone not yet asking gives their full name
+  and an optional note, each checked beside its box as the start form's
+  are, and a request the rules refuse says the likely reasons, since the
+  rules can't say which. A sent request is remembered in the entry with its
+  group and name, so a reload still finds it waiting after the link is
+  replaced. While it waits, the screen says any member can let them in and
+  offers to withdraw it, and it watches the request: an approval restarts
+  the group list and opens the group, announcing it, and an end without one
+  (a decline, a block, or the 7 days running out) says so, with a way to ask
+  again. A member opening a link lands in the group. Each change of part
+  moves focus to its heading, and the back button leads to the app,
+  restarting the group list, since opening the invite made the identity.
   On iOS the welcome will lead through the install screen first (Section 16),
   built with that screen.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
-  name and note, the joiner's view of where it stands, withdrawing it, and
-  for members, listing the unexpired requests oldest first, approving one,
+  name and note, the joiner's view of where it stands, a watch of it that
+  reports the answer once the request is gone, withdrawing it, and for
+  members, listing the unexpired requests oldest first, approving one,
   declining one, and declining and blocking its sender. An approval is one
   transaction that rereads the request and the count, wraps the group key
   for the joiner's published public key, encrypts the requested name, and
