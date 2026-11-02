@@ -8,6 +8,7 @@ import { expect                    } from '@playwright/test';             // Wha
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The checks read Firestore past the rules. How: This connects to the emulator.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: A leave needs a member who isn't the owner. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: The member leaves from a device of their own. How: This declares a test with a second page.
+import { popFilFun                 } from '../support/client.ts';         // What: Popup Fill Function. Why: Linking Google signs in through the Auth emulator's popup. How: This picks or adds the account there.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Groups are made the way the app makes them. How: This calls the app's functions in a page.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each behavior is its own test. How: This declares them.
 
@@ -34,7 +35,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * member declines one offer and accepts the next, focus landing on what
  * replaces each button pressed, while an offer to a member who can't own
  * another group is refused, saying why; and this phone's appearance applies
- * at once and stays, while one button turns notifications on and off.
+ * at once and stays, while one button turns notifications on and off; and
+ * the account links Google through its popup, then offers the upgrade.
  *
  * Sections:
  *  - Module State
@@ -408,6 +410,44 @@ test( "this phone's appearance applies at once and stays, and one button turns n
 
 	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are off for this phone.' ); // What: Off Status Assertion. Why: The change is announced. How: This reads the status.
 	await expect( notButObj ).toHaveText( 'Turn on notifications' );                                                       // What: Off Button Assertion. Why: The button says what it will do next. How: This reads it.
+
+
+} );
+
+
+
+test( 'the account links Google through its popup, focus landing on its heading, then offers the upgrade', async ( { page : curPagObj } ) => { // What: Account Test. Why: Linking Google is how a member gets their groups back on a new phone, and the upgrade needs it first (Sections 8 and 18). How: This checks the unlinked notes, links through the popup, then presses Buy the upgrade, checking each note, the status, the focus, and the refusal while purchases aren't set up.
+
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ); // What: Group Create Call. Why: Settings belong to a group's screen. How: This creates one.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The account is in the Settings section. How: This opens it.
+
+	await expect( curPagObj.getByText( 'Link a Google account so you can get your groups back on a new phone.', { exact : false } ) ).toBeVisible(); // What: Unlinked Note Assertion. Why: The member learns what linking is for. How: This waits for the note.
+	await expect( curPagObj.getByText( 'Buying it needs a linked Google account', { exact : false } ) ).toBeVisible();                             // What: Upgrade Needs Assertion. Why: The upgrade needs Google linked first. How: This waits for the note.
+	await expect( curPagObj.getByRole( 'button', { name : 'Buy the upgrade' } ) ).toHaveCount( 0 );                                                 // What: No Buy Assertion. Why: An unlinked account can't buy. How: This expects no button.
+
+
+	const popPagPro = curPagObj.waitForEvent( 'popup' ); // What: Popup Page Promise. Why: The link opens Google's sign-in. How: This waits for the popup.
+
+
+	await curPagObj.getByRole( 'button', { name : 'Link Google account' } ).click(); // What: Link Click Call. Why: The member links Google. How: This presses the button.
+
+	await popFilFun( await popPagPro, `alice-${ crypto.randomUUID() }@example.com` ); // What: Popup Fill Call. Why: The link waits until an account is chosen, and the Auth emulator keeps each account for the whole run. How: This signs in with a new account's email.
+
+	await curPagObj.bringToFront(); // What: Front Call. Why: A browser hands focus back to the app's window once the sign-in closes, which headless Firefox sometimes skips under load, holding the page's focus until it does (measured 2026-11-01). How: This brings the app's page to the front, as closing the popup would.
+
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Linked your Google account.' ); // What: Linked Status Assertion. Why: The link is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Your account' } ) ).toBeFocused();           // What: Heading Focus Assertion. Why: The button went with the link. How: This expects the part's heading focused.
+	await expect( curPagObj.getByText( 'Your account is linked to Google.', { exact : false } ) ).toBeVisible();      // What: Linked Note Assertion. Why: The member learns how to use the link. How: This waits for the note.
+
+	await curPagObj.getByRole( 'button', { name : 'Buy the upgrade' } ).click(); // What: Buy Click Call. Why: A linked account can buy. How: This presses the button.
+
+	await expect( curPagObj.getByRole( 'alert' ).filter( { hasText : 'Purchases' } ) ).toHaveText( "Purchases aren't open yet. Try again later." ); // What: Unavailable Alert Assertion. Why: The emulator has no Polar token, so the function refuses as unavailable, which says why. How: This reads the alert.
 
 
 } );

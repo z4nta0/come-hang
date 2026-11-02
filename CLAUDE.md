@@ -56,7 +56,8 @@ people waiting to join, whom any member approves, declines, or blocks, and the
 members, and the Settings section, where the owner renames the group, sets
 its chat retention, offers the group to a member, who accepts or declines, and
 deletes the group by name, a member leaves, and anyone picks light or dark
-and turns notifications on or off for their phone.
+and turns notifications on or off for their phone, links Google, and buys
+the upgrade.
 Its one service worker opens the app offline and shows pushes. Next steps are
 in ARCHITECTURE.md's Section 14.
 

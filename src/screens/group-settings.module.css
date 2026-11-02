@@ -7,7 +7,8 @@
  * @summary
  * Styles for GroSetCom: the heading, the group's part with the owner's form,
  * each field's label, box or choice, hint, and problem stacked, or the values
- * paired for everyone else, the handover's note, buttons, and offer form, and
+ * paired for everyone else, the handover's note, buttons, and offer form, this
+ * phone's appearance choices and button, the account's notes and buttons, and
  * the part for leaving or deleting, its note, its buttons, and the deletion's
  * confirmation with its own box. The forms place their children in order,
  * since their fields share classes. The status that announces a change is for
@@ -515,6 +516,55 @@
 /* #endregion endActDiv */
 
 /* #endregion devSetSec */
+
+
+
+/* #region accSetSec */
+
+.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.accTitHea { /* What: Account Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.accTitHea:focus { /* What: Focused Account Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.accNotPar { /* What: Account Note Paragraph. Why: The notes are quieter than the heading. How: This sets them in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The link's and the upgrade's buttons sit in the same wrapping row as the other parts' buttons. How: Its rule sits in the hanSetSec region. */
+
+/* What: Action Plain Button Pointer. Why: Linking Google uses the outlined pill. How: Its rule sits in the hanSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion accSetSec */
 
 
 
