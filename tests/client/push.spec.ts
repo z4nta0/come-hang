@@ -243,6 +243,22 @@ pagTesObj( 'a member with notifications on gets the push when removed', async ( 
 
 } );
 
+
+
+pagTesObj( "a push's data becomes the address a tap opens, and data out of form opens the app", async ( { page } ) => { // What: Target Test. Why: A tap opens a push's group and section, and nothing else should reach the address (Section 11.1). How: This builds addresses from well-formed and malformed data, checking each one.
+
+
+	const tarModStr = '/src/core/push-target.ts'; // What: Target Module String. Why: The builder runs there. How: This names its path.
+
+
+	expect( await runPagFun( page, tarModStr, 'tarPatFun', { groupId : 'gro1', section : 'people' } ) ).toBe( '/open/gro1/people' ); // What: Target Assertion. Why: A push naming both opens them. How: This expects the entry address.
+	expect( await runPagFun( page, tarModStr, 'tarPatFun', { groupId : '../x', section : 'chat' } ) ).toBe( '/' );                  // What: Bad Group Assertion. Why: A group ID out of form mustn't reach the address. How: This expects the root.
+	expect( await runPagFun( page, tarModStr, 'tarPatFun', { groupId : 'gro1' } ) ).toBe( '/' );                                    // What: No Section Assertion. Why: A push naming no section opens the app. How: This expects the root.
+	expect( await runPagFun( page, tarModStr, 'tarPatFun', null ) ).toBe( '/' );                                                     // What: No Data Assertion. Why: A push with no data, such as a removal, opens the app. How: This expects the root.
+
+
+} );
+
 // #endregion Module Init
 
 

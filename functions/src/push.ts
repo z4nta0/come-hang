@@ -18,13 +18,13 @@ import type { Message } from 'firebase-admin/messaging'; // What: Message. Why: 
  *
  * @summary
  * Sends one push to one identity's phone, through the single token stored
- * under their account (ARCHITECTURE.md Section 14). A push carries only the
- * group's name as its title and a fixed sentence for its kind, since
- * messages and display names are encrypted where the server can't read
- * them. Sending is best effort: an identity with no token gets nothing, a
- * failure is logged rather than thrown, so the notice written beside the
- * push still stands, and a token FCM rejects as no longer registered is
- * deleted, unless the app has replaced it since.
+ * under their account (ARCHITECTURE.md Section 14). A push carries the group's
+ * name as its title and a fixed sentence for its kind, since messages and
+ * display names are encrypted where the server can't read them, and the
+ * group's ID with the section a tap opens. Sending is best effort: an identity
+ * with no token gets nothing, a failure is logged rather than thrown, so the
+ * notice written beside the push still stands, and a token FCM rejects as no
+ * longer registered is deleted, unless the app has replaced it since.
  *
  * There's no FCM emulator, so under the Functions emulator each push is
  * written to an emulatorPushes collection instead of sent, where the tests
@@ -79,6 +79,38 @@ const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why:
 
 };
 
+/**
+ * PUS_SEC_OBJ = Push Section Object
+ *
+ * @summary
+ * Each push kind mapped to the section of its group that a tap on it opens:
+ * the chat for a message and for history someone missed, People for
+ * someone asking to join or waiting for the key, and Settings for anything
+ * about ownership. A kind left out, such as a removal or a deletion, has no
+ * group left to open, so its tap opens the app.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+const PUS_SEC_OBJ : Record< string, string > = { // What: Push Section Object. Why: A tap on a push opens where the news is. How: This maps each kind to its section.
+
+
+	chatMessage      : 'chat',
+	claimMade        : 'settings',
+	historyRequest   : 'chat',
+	joinRequest      : 'people',
+	keyRequest       : 'people',
+	offerAccepted    : 'settings',
+	offerDeclined    : 'settings',
+	offerLapsed      : 'settings',
+	offerLeft        : 'settings',
+	offerMade        : 'settings',
+	ownershipClaimed : 'settings'
+
+
+};
+
 const STA_COD_ARR = [ 'messaging/invalid-registration-token', 'messaging/registration-token-not-registered' ]; // What: Stale Code Array. Why: Only these errors mean the token itself is dead, rather than FCM having a bad moment. How: This lists FCM's codes for a token it no longer accepts.
 
 // #endregion Constants
@@ -97,7 +129,7 @@ const DEF_SEN_FUN = process.env.FUNCTIONS_EMULATOR === 'true' // What: Default S
 
 // #region Helpers
 
-type PusOptTyp = { bodStr? : string, senValFun? : ( mesValObj : Message ) => Promise< void >, tagStr? : string }; // What: Push Options Type. Why: Some pushes carry their own sentence or replace earlier ones, and tests replace the sender. How: This types the optional settings pusSenFun takes.
+type PusOptTyp = { bodStr? : string, groIdeStr? : string, senValFun? : ( mesValObj : Message ) => Promise< void >, tagStr? : string }; // What: Push Options Type. Why: Some pushes carry their own sentence, open their group, or replace earlier ones, and tests replace the sender. How: This types the optional settings pusSenFun takes.
 
 // #region pusSenFun
 
@@ -116,7 +148,8 @@ type PusOptTyp = { bodStr? : string, senValFun? : ( mesValObj : Message ) => Pro
  *                    sentence from {@link PUS_TEX_OBJ}.
  * @param groNamStr - Group Name String: The group's name, as the title.
  * @param pusOptObj - Push Options Object: An optional sentence replacing
- *                    the kind's, an optional tag that replaces an earlier
+ *                    the kind's, the group's ID, which a tap opens at the
+ *                    kind's section, an optional tag that replaces an earlier
  *                    push with the same one on the phone, and an optional
  *                    sender, FCM by default, or the outbox under the
  *                    emulator, which tests replace. Defaults to none.
@@ -150,6 +183,7 @@ const pusSenFun = async ( uidValStr : string, kinValStr : string, groNamStr : st
 			notification : { body : pusOptObj.bodStr ?? PUS_TEX_OBJ[ kinValStr ], title : groNamStr }, // What: Notification. Why: The phone shows the group's name over the sentence. How: This uses the given sentence, or the kind's.
 			token        : tokSnaObj.get( 'token' ),                                                   // What: Token. Why: The push goes to the identity's phone. How: This names its token.
 
+			...( pusOptObj.groIdeStr === undefined || PUS_SEC_OBJ[ kinValStr ] === undefined ? {} : { data : { groupId : pusOptObj.groIdeStr, section : PUS_SEC_OBJ[ kinValStr ] } } ), // What: Data Spread. Why: A tap on the push opens its group at the section the news is in. How: This adds the group's ID and the kind's section, when the push has a group to open.
 			...( pusOptObj.tagStr === undefined ? {} : { webpush : { notification : { tag : pusOptObj.tagStr } } } ) // What: Web Push Spread. Why: A tagged push replaces the phone's earlier one with the same tag, so activity shows as one notification. How: This adds the tag only when there is one, since the emulator's outbox can't store an empty field.
 
 

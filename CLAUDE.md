@@ -70,7 +70,8 @@ The welcome and the group list also join with a pasted invite link. On an
 iPhone or iPad in Safari an install screen comes first, keeping an invite's
 link to copy, with a way to carry on in Safari, and where a browser offers its
 own install prompt, a note on the first screens and Settings offer it.
-Its one service worker opens the app offline and shows pushes. In development,
+Its one service worker opens the app offline and shows pushes, a tap on one
+opening its group at the section its news is in. In development,
 a member switcher on the screen's edge acts as the members of a demo group it
 seeds, one tab per member. Next steps are in ARCHITECTURE.md's Section 14.
 
@@ -251,9 +252,10 @@ emulators need Java, 21 installed.
     first screens.
   - **Entry addresses** carry something in from outside, such as an invite
     link (`/join/<token>`) or a notification's target: the app reads one as
-    it starts, acts on it, then replaces the address with the root. The
-    invite link is built; a notification's target is built with that
-    feature.
+    it starts, acts on it, then replaces the address with the root. Both
+    are built: a tapped push leads to `/open/<group>/<section>`, which
+    opens the group at the section, and when the app is already open the
+    service worker sends it that address instead.
 - **Legal pages** (decided 2026-10-25): the privacy policy and terms get fixed
   addresses, `/privacy` and `/terms`, as static pages in `public/`, which
   Netlify serves ahead of its every-path rewrite. Google's sign-in

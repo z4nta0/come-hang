@@ -82,6 +82,49 @@ const pusLisFun = async ( envTesObj : RulesTestEnvironment, tokValStr : string )
 
 
 
+// #region pusTarFun
+
+/**
+ * pusTarFun = Push Target Function
+ *
+ * @summary
+ * Reads every push the emulator kept for one token, with the rules off, and
+ * returns what a tap on each one opens: its data, holding the group's ID and
+ * section, or undefined for a push with nothing to open.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param envTesObj - Environment Test Object: The suite's environment.
+ * @param tokValStr - Token Value String: The phone's token.
+ *
+ * @returns A promise that resolves with each push's data, in no set order.
+ *
+ * @example
+ * ```ts
+ * pusTarFun(funEnvObj, 'tok-carol') // => [ { groupId, section } ]
+ * ```
+ *
+*/
+
+const pusTarFun = async ( envTesObj : RulesTestEnvironment, tokValStr : string ) : Promise< ( { groupId : string, section : string } | undefined )[] > => { // What: Push Target Function. Why: A spec checks where a tap on each push leads. How: This reads the emulator's kept pushes' data for one token.
+
+
+	let tarLisArr : ( { groupId : string, section : string } | undefined )[] = []; // What: Target List Array. Why: The read happens inside the rules-off callback. How: This carries its result out.
+
+
+	await envTesObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { tarLisArr = ( await getDocs( collection( cotAdmObj.firestore(), 'emulatorPushes' ) ) ).docs.filter( ( pusSnaObj ) => pusSnaObj.get( 'token' ) === tokValStr ).map( ( pusSnaObj ) => pusSnaObj.get( 'data' ) ); } ); // What: Target Read Call. Why: No rule opens the collection. How: This reads it with the rules off and keeps each of the token's pushes' data.
+
+
+
+	return tarLisArr; // What: Target List Return. Why: The spec compares them. How: This returns them.
+
+
+};
+
+// #endregion pusTarFun
+
+
+
 const tokSetFun = ( envTesObj : RulesTestEnvironment, uidValStr : string, tokValStr : string ) => envTesObj.withSecurityRulesDisabled( ( cotAdmObj ) => setDoc( doc( cotAdmObj.firestore(), `accounts/${ uidValStr }/pushToken/current` ), { expireAt : Timestamp.fromMillis( Date.now() + 60 * 86400000 ), token : tokValStr, updatedAt : Timestamp.now() } ) ); // What: Token Set Function. Why: A push only goes to someone with a stored token. How: This seeds the identity's token, expiring 60 days out, with the rules off.
 
 // #endregion Helpers
@@ -90,7 +133,7 @@ const tokSetFun = ( envTesObj : RulesTestEnvironment, uidValStr : string, tokVal
 
 // #region Exports
 
-export { pusLisFun, tokSetFun }; // What: Named Exports. Why: Every functions spec checks pushes this way. How: This exports both helpers.
+export { pusLisFun, pusTarFun, tokSetFun }; // What: Named Exports. Why: Every functions spec checks pushes this way. How: This exports the helpers.
 
 // #endregion Exports
 

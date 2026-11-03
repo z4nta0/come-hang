@@ -118,7 +118,7 @@ const decOffFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The notice has to land. How: This commits it.
 
-	await pusSenFun( notSnaObj.get( 'ownerUid' ), 'offerDeclined', notSnaObj.get( 'name' ) ); // What: Declined Push Call. Why: The owner is told at once too. How: This sends their push, best effort.
+	await pusSenFun( notSnaObj.get( 'ownerUid' ), 'offerDeclined', notSnaObj.get( 'name' ), { groIdeStr } ); // What: Declined Push Call. Why: The owner is told at once too. How: This sends their push, best effort.
 
 
 } );

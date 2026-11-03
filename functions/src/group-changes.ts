@@ -200,7 +200,7 @@ const groChaFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The notices land together. How: This commits them, which does nothing for an update that called for none.
 
-	await Promise.all( pusQueArr.map( ( [ uidValStr, kinValStr ] ) => pusSenFun( uidValStr, kinValStr, groNamStr ) ) ); // What: Push Send Call. Why: Each person told is reached on their phone too. How: This sends every queued push, each one best effort.
+	await Promise.all( pusQueArr.map( ( [ uidValStr, kinValStr ] ) => pusSenFun( uidValStr, kinValStr, groNamStr, { groIdeStr } ) ) ); // What: Push Send Call. Why: Each person told is reached on their phone too. How: This sends every queued push, each one best effort.
 
 
 

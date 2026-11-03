@@ -10,6 +10,7 @@ import { initializeApp           } from 'firebase/app';          // What: Initia
 import { NavigationRoute         } from 'workbox-routing';       // What: Navigation Route. Why: Opening any of the app's addresses is a page navigation. How: This matches them.
 import { precacheAndRoute        } from 'workbox-precaching';    // What: Precache And Route. Why: The app opens without a connection. How: This caches the build's files and serves them from the cache.
 import { registerRoute           } from 'workbox-routing';       // What: Register Route. Why: Navigations are served by the app's page. How: This adds the route.
+import { tarPatFun               } from './core/push-target.ts'; // What: Target Path Function. Why: A tap on a push opens where its news is. How: This builds the address from the push's data.
 
 
 import type { FirebaseOptions } from 'firebase/app'; // What: Firebase Options. Why: The web config has a known shape. How: This types it.
@@ -28,7 +29,8 @@ import type { FirebaseOptions } from 'firebase/app'; // What: Firebase Options. 
  * answers every navigation with the app's page, as Netlify does, apart from
  * the legal pages, which are pages of their own. In a production build it
  * also receives FCM's pushes and shows each one, and a tap on one brings the
- * app forward, opening it when it isn't open. The app hands this worker's
+ * app forward where the push leads, its group and section, opening it there
+ * when it isn't open. The app hands this worker's
  * registration to FCM, so FCM never registers a second worker of its own.
  *
  * Sections:
@@ -67,33 +69,48 @@ const PRO_CON_STR = import.meta.env.VITE_FIREBASE_CONFIG; // What: Production Co
  * appOpeFun = App Open Function
  *
  * @summary
- * Brings the app forward after a tap on a push: focuses a window of the app
- * that's already open, or opens one at its root when none is.
+ * Brings the app forward after a tap on a push, at the address the push
+ * leads to: an open window of the app is focused and told the address in a
+ * message, which the app follows without reloading, and with none open, a
+ * window is opened at the address.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param void - This function takes no parameters.
+ * @param patValStr - Path Value String: The address the push leads to, the
+ *                    root or an /open/ entry address.
  *
  * @returns A promise that settles once the app is in front, with no value.
  *
  * @example
  * ```ts
- * appOpeFun() // => Promise<void>
+ * appOpeFun('/open/gro1/chat') // => Promise<void>
  * ```
  *
 */
 
-const appOpeFun = async () : Promise< void > => { // What: App Open Function. Why: A push is read by opening the app. How: This focuses an open window, or opens one.
+const appOpeFun = async ( patValStr : string ) : Promise< void > => { // What: App Open Function. Why: A push is read by opening the app where its news is. How: This focuses an open window and tells it where to go, or opens one there.
 
 
 	const winCliArr = await self.clients.matchAll( { includeUncontrolled : true, type : 'window' } ); // What: Window Client Array. Why: An open window is reused rather than doubled. How: This lists the app's windows.
 
 
-	if ( winCliArr.length > 0 ) { await winCliArr[ 0 ].focus(); return; } // What: Open Window Guard. Why: The app is already open. How: This focuses its first window.
+	if ( winCliArr.length > 0 ) { // What: Open Window Block. Why: The app is already open, and a reload would lose its place. How: This brings its first window forward and tells it the address.
+
+
+		await winCliArr[ 0 ].focus(); // What: Focus Call. Why: The app comes forward. How: This focuses its first window.
+
+		winCliArr[ 0 ].postMessage( { patStr : patValStr } ); // What: Address Message Call. Why: The app opens the push's group and section itself. How: This sends it the address.
 
 
 
-	await self.clients.openWindow( '/' ); // What: Window Open Call. Why: The app isn't open. How: This opens it at its root.
+		return; // What: Open Window Return. Why: No second window is needed. How: This stops.
+
+
+	}
+
+
+
+	await self.clients.openWindow( patValStr ); // What: Window Open Call. Why: The app isn't open. How: This opens it at the address, which it reads as it starts.
 
 
 };
@@ -111,7 +128,7 @@ self.addEventListener( 'notificationclick', ( cliEveObj ) => { // What: Notifica
 
 	cliEveObj.notification.close(); // What: Notification Close Call. Why: A read push shouldn't linger. How: This closes it.
 
-	cliEveObj.waitUntil( appOpeFun() ); // What: Open Wait Call. Why: The browser keeps the worker alive only while it's told to wait. How: This waits for the app to come forward.
+	cliEveObj.waitUntil( appOpeFun( tarPatFun( Reflect.get( Object( Reflect.get( Object( cliEveObj.notification.data ), 'FCM_MSG' ) ), 'data' ) ) ) ); // What: Open Wait Call. Why: The browser keeps the worker alive only while it's told to wait. How: This reads the push's data, which FCM keeps under FCM_MSG on the notification it showed, and waits for the app to come forward where it leads.
 
 
 } );
