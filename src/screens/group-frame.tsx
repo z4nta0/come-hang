@@ -35,13 +35,14 @@ import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type.
  * @summary
  * The frame around an open group. Below 720px wide it has a bar with the
  * group's name, which opens a sheet listing every group and offering to start
- * one; from 720px up, a rail of every group, by initials, sits down the left
- * beside the bar, the name there plain text, and the rail holds the button
- * that starts a group. The group's sections, from its chat to its settings,
- * run along the bottom below 720px and down a column beside the rail from
- * 720px, and the open section fills the main area below the bar. Choosing a
- * group, a section, or starting a group opens it as a new history entry, and
- * a group just created takes focus on its heading.
+ * one or join one with an invite link; from 720px up, a rail of every group,
+ * by initials, sits down the left beside the bar, the name there plain text,
+ * and the rail holds the buttons that start a group and join one with a link.
+ * The group's sections, from its chat to its settings, run along the bottom
+ * below 720px and down a column beside the rail from 720px, and the open
+ * section fills the main area below the bar. Choosing a group, a section,
+ * starting a group, or joining one opens it as a new history entry, and a
+ * group just created takes focus on its heading.
  *
  * Sections:
  *  - Constants
@@ -118,7 +119,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 
 	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This holds the heading.
-	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group or starting one opens a screen. How: This reads the function that opens one.
+	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group, starting one, or joining one with a link opens a screen. How: This reads the function that opens one.
 	const sheHanRef = useRef< SheHanTyp >( null );          // What: Sheet Handle Reference. Why: The switcher opens the group sheet and a choice closes it. How: This holds the sheet's handle.
 
 
@@ -161,7 +162,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 				className={ cssModObj.fraRaiNav }
 
 				aria-label='Your groups'
-			>{ /* What: Frame Rail Nav Element. Why: On a wide screen every group sits one click away. How: This lists each group by its initials, then the button that starts a group, down the left at 720px wide and up, and hides below that. */ }
+			>{ /* What: Frame Rail Nav Element. Why: On a wide screen every group sits one click away. How: This lists each group by its initials, then the buttons that start a group and join one with a link, down the left at 720px wide and up, and hides below that. */ }
 
 
 				{ groRecArr.map( ( groRecObj ) => ( // What: Rail Group Map. Why: Each group gets its own button. How: This renders one per group.
@@ -209,6 +210,28 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 						icoNamStr='plus'
 						sizSteStr='p01'
 					/>{ /* What: Plus Icon SVG Component. Why: A plus says the button adds a group. How: This draws it at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
+
+
+				</button>
+
+
+
+				<button
+					className={ cssModObj.raiNewBut }
+
+					type='button'
+
+					aria-label='Join with an invite link'
+					title='Join with an invite link'
+
+					onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
+				>{ /* What: Rail New Button Element. Why: Joining another group with a link someone sent is always at hand, beside starting one. How: This opens the screen for pasting the link. */ }
+
+
+					<IcoSvgCom
+						icoNamStr='link'
+						sizSteStr='p01'
+					/>{ /* What: Link Icon SVG Component. Why: A chain link says the button joins with an invite link. How: This draws it at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
 
 
 				</button>
@@ -371,7 +394,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 				ideStr='groSheHea'
 				titStr='Your groups'
-			>{ /* What: Group Sheet Dialog Component. Why: On a phone, every group and starting a new one sit in a sheet over the page. How: This holds the group list and the start button. */ }
+			>{ /* What: Group Sheet Dialog Component. Why: On a phone, every group, starting a new one, and joining one with a link sit in a sheet over the page. How: This holds the group list and the start and join buttons. */ }
 
 
 				<ul className={ cssModObj.sheGroUno }>{ /* What: Sheet Group Unordered List Element. Why: Every group is listed by name. How: This stacks a button for each. */ }
@@ -409,6 +432,14 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 					onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
 				>Start a group</ButBasCom>{ /* What: Sheet New Button Component. Why: Starting another group is offered beside the list. How: This opens the screen for starting one. */ }
+
+				<button
+					className={ cssModObj.sheJoiBut }
+
+					type='button'
+
+					onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
+				>Join with an invite link</button>{ /* What: Sheet Join Button Element. Why: Joining another group with a link someone sent is offered beside starting one. How: This opens the screen for pasting the link. */ }
 
 
 			</SheDiaCom>

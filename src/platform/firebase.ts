@@ -35,18 +35,18 @@ import type { Functions       } from 'firebase/functions'; // What: Functions. W
  * firebase.ts = Firebase Services
  *
  * @summary
- * Creates the app's Firebase services the first time something asks for
- * them, never on page load, so a visitor who hasn't acted yet makes no
- * connection, and on iOS nothing is created before the app is installed
- * (ARCHITECTURE.md Section 16). Development, the Vite dev server, always
- * runs against the local Emulator Suite under the demo project, which can
- * never reach a real one (Section 13). A production build reads its web
- * config, which is public by design, from the VITE_FIREBASE_CONFIG
- * environment variable Netlify sets for each environment, and fails with a
- * clear error when it's missing. Everything runs in us-central1, and
- * Firestore keeps its offline cache in IndexedDB. In development, each member
- * the switcher can act as gets an app of its own, so its sign-in and cache
- * stay apart.
+ * Creates the app's Firebase services the first time something asks for them,
+ * never on page load, so a visitor who hasn't acted yet makes no connection,
+ * and on iOS nothing is created in Safari unless someone chooses to carry on
+ * there rather than install (ARCHITECTURE.md Section 16). Development, the
+ * Vite dev server, always runs against the local Emulator Suite under the demo
+ * project, which can never reach a real one (Section 13). A production build
+ * reads its web config, which is public by design, from the
+ * VITE_FIREBASE_CONFIG environment variable Netlify sets for each environment,
+ * and fails with a clear error when it's missing. Everything runs in
+ * us-central1, and Firestore keeps its offline cache in IndexedDB. In
+ * development, each member the switcher can act as gets an app of its own, so
+ * its sign-in and cache stay apart.
  *
  * Sections:
  *  - Types

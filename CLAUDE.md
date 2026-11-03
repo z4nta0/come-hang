@@ -66,6 +66,10 @@ arrived" to the chat as status lines, the sharing running across sections
 and resuming after a reload. An invite link opens the join screen, which asks
 for a joiner's name and an optional note, waits for a member's approval,
 offers to withdraw the request, and opens the group once they're let in.
+The welcome and the group list also join with a pasted invite link. On an
+iPhone or iPad in Safari an install screen comes first, keeping an invite's
+link to copy, with a way to carry on in Safari, and where a browser offers its
+own install prompt, a note on the first screens and Settings offer it.
 Its one service worker opens the app offline and shows pushes. In development,
 a member switcher on the screen's edge acts as the members of a demo group it
 seeds, one tab per member. Next steps are in ARCHITECTURE.md's Section 14.

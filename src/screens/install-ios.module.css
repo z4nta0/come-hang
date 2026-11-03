@@ -1,0 +1,282 @@
+
+
+
+/**
+ * install-ios.module.css = Install On iOS Module
+ *
+ * @summary
+ * Styles for InsIosCom: one column at the base text width, centered in the
+ * screen, holding the mark, the heading, and its parts a tier 2 space apart.
+ * Each part stacks its heading and content a tier 3 space apart. The invite's
+ * link sits in a read-only box like the People section's, the lists keep
+ * their markers inside the column, and carrying on in Safari is an outlined
+ * button, quieter than copying the link.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region insScrMai */
+
+.insScrMai { /* What: Install Screen Main. Why: The steps read as one column at a comfortable width, whatever the screen. How: This stacks the screen's parts a tier 2 space apart at the base text width, centered, with the frame tier above and below and the gutter at the sides, placed in order since the invite's part shows only for an invite, and a named area for it would leave a gap without one. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-columns : minmax( 0, var( --tex-wid-bas ) );         /* Text Width Base ~= 29.207em */
+	justify-content       : center;
+	min-height            : 100vh;
+	padding               : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-002 );                      /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.insMarSvg { /* What: Install Mark SVG. Why: The mark leads the screen without crowding it. How: This sets it square at a rhythm step. */
+
+
+	height : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+	width  : calc( var( --ver-rhy-p05 ) * 1rem ); /* Vertical Rhythm Base Plus 5 ~= 59.447px */
+
+
+}
+
+.insTitHea { /* What: Install Title Heading. Why: The heading says what to do. How: This sets it at Base Plus 4. */
+
+
+	font-size : var( --fon-siz-p04 ); /* Font Size Base Plus 4 ~= 33.876px */
+
+
+}
+
+
+
+/* #region insInvSec */
+
+.insInvSec { /* What: Install Invite Section. Why: The invite's heading, note, link, button, and status read as one part. How: This stacks them a tier 3 space apart, in order. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.insInvHea { /* What: Install Invite Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.insNotPar { /* What: Install Note Paragraph. Why: A note explains a part rather than leading it. How: This sets it in muted text. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+.insLinLab { /* What: Install Link Label. Why: The label names the box below it. How: This sets it bold. */
+
+
+	font-weight : 700;
+
+
+}
+
+.insLinInp { /* What: Install Link Input. Why: The link should be easy to select and its box easy to see. How: This draws a rounded box on the surface color with a strong border, at least a touch target tall, and eases its border color and focus ring. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-str-col ); /* Border Width Base ~= 1.160px, Border Strong Color = #83869F */
+	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
+	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
+	font             : inherit;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	min-width        : 0;
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.insLinInp:hover { /* What: Hovered Install Link Input. Why: A box should show it's live under the pointer. How: This darkens its border to the main text color. */
+
+
+	border-color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Install Link Input. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.insLinInp { /* What: Motionless Install Link Input. Why: The border and focus ring should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.insCopBut { /* What: Install Copy Button. Why: The button sits at its own width below the link rather than stretching across the column. How: This aligns it to the start. */
+
+
+	justify-self : start;
+
+
+}
+
+.insStaPar { /* What: Install Status Paragraph. Why: A copy's result reads quieter than the controls. How: This sets it in muted text. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+/* #endregion insInvSec */
+
+
+
+/* #region insWhySec */
+
+.insWhySec { /* What: Install Why Section. Why: The heading and the reasons read as one part. How: This stacks them a tier 3 space apart, in order. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.insWhyHea { /* What: Install Why Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.insWhyUno { /* What: Install Why Unordered List. Why: The reasons read as a list whose bullets stay inside the column. How: This indents it by the vertical spacing base and spaces its items a tier 4 space apart. */
+
+
+	display      : grid;
+	padding-left : var( --spa-ver-bas ); /* Spacing Vertical Base ~= 14.572px */
+	row-gap      : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+/* #endregion insWhySec */
+
+
+
+/* #region insSteSec */
+
+.insSteSec { /* What: Install Steps Section. Why: The heading and the steps read as one part. How: This stacks them a tier 3 space apart, in order. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.insSteHea { /* What: Install Steps Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.insSteOrd { /* What: Install Steps Ordered List. Why: The steps read in order, their numbers inside the column. How: This indents it by the vertical spacing base, spaces its items a tier 4 space apart, and sits the share icon on its line. */
+
+
+	display      : grid;
+	padding-left : var( --spa-ver-bas ); /* Spacing Vertical Base ~= 14.572px */
+	row-gap      : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+/* #endregion insSteSec */
+
+
+
+/* #region insSafSec */
+
+.insSafSec { /* What: Install Safari Section. Why: The heading, the warning, and the button read as one part. How: This stacks them a tier 3 space apart, in order. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.insSafHea { /* What: Install Safari Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+/* What: Install Note Paragraph Pointer. Why: The warning is set like the invite's note. How: Its rule sits in the insInvSec region. */
+
+.insSafBut { /* What: Install Safari Button. Why: Carrying on in Safari is the quieter choice, still a full touch target, at its own width. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, aligned to the start, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	justify-self     : start;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.insSafBut:hover { /* What: Hovered Install Safari Button. Why: The button shows it's live under the pointer, and a lift would jostle the column. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.insSafBut:active { /* What: Pressed Install Safari Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Install Safari Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.insSafBut { /* What: Motionless Install Safari Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion insSafSec */
+
+/* #endregion insScrMai */
+
+

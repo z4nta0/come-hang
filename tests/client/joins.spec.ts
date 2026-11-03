@@ -295,6 +295,25 @@ pagTesObj( 'an expired request is left out of the review, no longer waits, and c
 
 } );
 
+
+
+pagTesObj( 'an invite token is read from a whole link or on its own, and from nothing else', async ( { page } ) => { // What: Token Read Test. Why: Someone joins by pasting the link they were sent, which must reach a document path only in a token's form (Section 16). How: This reads tokens from links, a bare token, and text that holds none, checking each result.
+
+
+	const tokValStr = 'q2W_e-R4tY6uI8oP0aS3dF';   // What: Token Value String. Why: Every check reads the same token. How: This is 22 base64url characters.
+	const tokModStr = '/src/core/invite-link.ts'; // What: Token Module String. Why: The reader runs there. How: This names its path.
+
+
+	expect( await runPagFun( page, tokModStr, 'invTokFun', `https://comehang.app/join/${ tokValStr }` ) ).toBe( tokValStr );       // What: Link Assertion. Why: Most pastes are the whole link. How: This expects its token.
+	expect( await runPagFun( page, tokModStr, 'invTokFun', ` http://localhost:5200/join/${ tokValStr }?x=1\n` ) ).toBe( tokValStr ); // What: Padded Link Assertion. Why: A paste brings spaces and may end in a query. How: This expects the token from a link with both.
+	expect( await runPagFun( page, tokModStr, 'invTokFun', ` ${ tokValStr }\n` ) ).toBe( tokValStr );                             // What: Bare Token Assertion. Why: A token alone is enough, often pasted with spaces. How: This expects it back without them.
+	expect( await runPagFun( page, tokModStr, 'invTokFun', `https://comehang.app/join/${ tokValStr }x` ) ).toBeNull();             // What: Long Token Assertion. Why: A token holds exactly 22 characters. How: This expects one with a 23rd refused.
+	expect( await runPagFun( page, tokModStr, 'invTokFun', 'https://comehang.app/join/groups' ) ).toBeNull();                       // What: Short Token Assertion. Why: Anything else after /join/ could name another path. How: This expects it refused.
+	expect( await runPagFun( page, tokModStr, 'invTokFun', 'See you at the beach' ) ).toBeNull();                                   // What: Text Assertion. Why: Text with no link holds no token. How: This expects none.
+
+
+} );
+
 // #endregion Module Init
 
 

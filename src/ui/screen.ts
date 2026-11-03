@@ -42,12 +42,12 @@ type SecNamTyp = 'chat' | 'events' | 'map' | 'people' | 'settings'; // What: Sec
 type ScrStaTyp = { // What: Screen State Type. Why: Each history entry records the screen it shows. How: This types the state an entry holds.
 
 
-	focBoo? : boolean,                     // What: Focus Boolean. Why: A screen that replaces a group just created, left, or deleted takes focus on its heading. How: This is true on the entry that change opens.
-	groStr? : string,                      // What: Group String. Why: A group's screen shows one group, and a join screen remembers the group it asked to join. How: This is the group's ID.
-	namStr? : string,                      // What: Name String. Why: A join screen still names the group it's waiting on after its link changes. How: This is the group's name as the invite gave it.
-	scrStr  : 'create' | 'group' | 'join', // What: Screen String. Why: The entry names its screen. How: This is the screen's name.
-	secStr? : SecNamTyp,                   // What: Section String. Why: A group's screen shows one section, its chat when none is named. How: This is the section's name.
-	tokStr? : string                       // What: Token String. Why: A join screen opens one invite. How: This is the token from the invite link.
+	focBoo? : boolean,                               // What: Focus Boolean. Why: A screen that replaces a group just created, left, or deleted takes focus on its heading. How: This is true on the entry that change opens.
+	groStr? : string,                                // What: Group String. Why: A group's screen shows one group, and a join screen remembers the group it asked to join. How: This is the group's ID.
+	namStr? : string,                                // What: Name String. Why: A join screen still names the group it's waiting on after its link changes. How: This is the group's name as the invite gave it.
+	scrStr  : 'create' | 'group' | 'join' | 'paste', // What: Screen String. Why: The entry names its screen. How: This is the screen's name.
+	secStr? : SecNamTyp,                             // What: Section String. Why: A group's screen shows one section, its chat when none is named. How: This is the section's name.
+	tokStr? : string                                 // What: Token String. Why: A join screen opens one invite. How: This is the token from the invite link.
 
 
 };
@@ -58,7 +58,7 @@ type ScrStaTyp = { // What: Screen State Type. Why: Each history entry records t
 
 // #region Constants
 
-const SCR_NAM_ARR : ScrStaTyp[ 'scrStr' ][] = [ 'create', 'group', 'join' ];              // What: Screen Name Array. Why: A history entry's screen is checked against the ones this version knows. How: This lists them.
+const SCR_NAM_ARR : ScrStaTyp[ 'scrStr' ][] = [ 'create', 'group', 'join', 'paste' ];          // What: Screen Name Array. Why: A history entry's screen is checked against the ones this version knows. How: This lists them.
 const SEC_NAM_ARR : SecNamTyp[]             = [ 'chat', 'events', 'map', 'people', 'settings' ]; // What: Section Name Array. Why: A history entry's section is checked against the ones this version knows. How: This lists them.
 
 // #endregion Constants
