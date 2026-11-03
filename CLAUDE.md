@@ -40,42 +40,44 @@ and offer notices, the offer decline, the daily run, and the pushes, with the
 push token rules, including the activity pushes for chat, join requests,
 history requests, and key requests, and the purchase's Polar checkout and
 webhook. The app has its Firebase services, created on first use, the identity
-bootstrap, the group key encryption, group creation and the group list, joining
-through an invite with a member's approval, the membership changes (names,
-activity, leaving, removal, link rotation, and settings), and ownership offers
-and notices, events with their bring-lists, chat with its on-device history,
-presence, history requests, location sharing, push notifications, Google
-linking and recovery with the group keys shared again, and buying the upgrade.
-The first screens are built: the welcome, the form for starting a group, the
-group frame with its rail, its switcher and sheet, and the group chat with
-its next event, pinned as a card that opens a sheet below 1,100px and shown in
-a panel beside the chat from 1,100px, each with the live bring-list, the
-section tabs, the Events section with its form for planning, changing,
-and cancelling events, the People section with the invite link, the people
-waiting to join, whom any member approves, declines, or blocks, the members
-waiting on a new phone for the group's key, which any other member shares, and
-the members, and the Settings section. There the owner renames the group, sets
-its chat retention, offers the group to a member, who accepts or declines, and
-deletes it by name, a member leaves, and anyone picks light or dark and turns
-notifications on or off for their phone, links Google, and buys the upgrade.
-The welcome gets a linked member's groups back on a new phone. The Map
-section, drawn without a street map, shares a member's location for an event
-from 3 hours before it starts, lists everyone sharing with their distance,
-direction, and freshness around a plot, and posts "I'm on my way" and "I've
-arrived" to the chat as status lines, the sharing running across sections
-and resuming after a reload. An invite link opens the join screen, which asks
-for a joiner's name and an optional note, waits for a member's approval,
-offers to withdraw the request, and opens the group once they're let in.
-A member whose phone is missing a group's chat asks for it from a banner atop
-the chat, and another member whose phone holds it sends it from People.
+bootstrap, the group key encryption, group creation and the group list,
+joining through an invite with a member's approval, the membership changes
+(names, activity, leaving, removal, link rotation, and settings), and
+ownership offers and notices, events with their bring-lists, chat with its
+on-device history, presence, history requests, location sharing, push
+notifications, Google linking and recovery with the group keys shared again,
+and buying the upgrade. The first screens are built: the welcome, the form for
+starting a group, the group frame with its rail, its switcher and sheet, and
+the group chat with its next event, pinned as a card that opens a sheet below
+1,100px and shown in a panel beside the chat from 1,100px, each with the live
+bring-list, the section tabs, the Events section with its form for planning,
+changing, and cancelling events, the People section with the invite link, the
+people waiting to join, whom any member approves, declines, or blocks, the
+members waiting on a new phone for the group's key, which any other member
+shares, and the members, and the Settings section. There the owner renames the
+group, sets its chat retention, offers the group to a member, who accepts or
+declines, and deletes it by name, a member leaves, and anyone picks light or
+dark and turns notifications on or off for their phone, links Google, and buys
+the upgrade. The welcome gets a linked member's groups back on a new phone.
+The Map section, drawn without a street map, shares a member's location for an
+event from 3 hours before it starts, lists everyone sharing with their
+distance, direction, and freshness around a plot, and posts "I'm on my way"
+and "I've arrived" to the chat as status lines, the sharing running across
+sections and resuming after a reload. An invite link opens the join screen,
+which asks for a joiner's name and an optional note, waits for a member's
+approval, offers to withdraw the request, and opens the group once they're let
+in. A member whose phone is missing a group's chat asks for it from a banner
+atop the chat, and another member whose phone holds it sends it from People.
 The welcome and the group list also join with a pasted invite link. On an
 iPhone or iPad in Safari an install screen comes first, keeping an invite's
 link to copy, with a way to carry on in Safari, and where a browser offers its
-own install prompt, a note on the first screens and Settings offer it.
-Its one service worker opens the app offline and shows pushes, a tap on one
-opening its group at the section its news is in. In development,
-a member switcher on the screen's edge acts as the members of a demo group it
-seeds, one tab per member. Next steps are in ARCHITECTURE.md's Section 14.
+own install prompt, a note on the first screens and Settings offer it. The
+privacy policy and terms are written, as static pages at `/privacy` and
+`/terms` and in a sheet from Settings, and the welcome and the join form link
+both. The app's one service worker opens it offline and shows pushes, a tap on
+one opening its group at the section its news is in. In development, a member
+switcher on the screen's edge acts as the members of a demo group it seeds,
+one tab per member. Next steps are in ARCHITECTURE.md's Section 14.
 
 **Design tokens**: the chosen design's colors, fonts, and text widths are
 in `src/styles/styles.css`, with no placeholders left.
@@ -159,7 +161,7 @@ emulators need Java, 21 installed.
   (decided 2026-10-30): "Come Hang: plan get-togethers with your group",
   described as "Plan get-togethers with your group in one place: chat, set
   the date, see who's bringing what, and find each other on the day." The
-  sitemap lists the root, and the legal pages join it when they're written.
+  sitemap lists the root and the legal pages.
   The social preview card is `public/og-image.png`, rendered from
   `design/og-image/card.html` by `npm run og-image`.
 - **Support email**: support@comehang.app.
@@ -186,10 +188,12 @@ emulators need Java, 21 installed.
 - **Client storage**: raw IndexedDB, no wrapper library.
 - **Security suite** (per the security testing rule): the baseline lives in
   `tests/security/`, checking `public/_headers` and the production build. The
-  policy is strict while the app talks to no other origin: the Firebase work
-  adds its addresses to the Content-Security-Policy and turns the secret
-  search's Google key pattern into an allowance for the Firebase web config's
-  browser key (named here when it lands), each in the change that needs it.
+  build fills in `_headers` and `_redirects` for its own Firebase project
+  (`deploy-files.ts`, from `VITE_FIREBASE_CONFIG`), so the policy opens only
+  that project's addresses, and the suite checks the files filled in for a
+  stand-in project and for none, as its own build has none. Its secret search
+  runs on that project-less build, so the Firebase web config's browser key,
+  public by design, never meets its Google key pattern.
   Location sharing opened `geolocation` to the app's own origin
   (`geolocation=(self)`), which the headers spec checks.
 - **Firestore SDK override**: the Firestore SDK's Node build pins
@@ -258,11 +262,21 @@ emulators need Java, 21 installed.
     are built: a tapped push leads to `/open/<group>/<section>`, which
     opens the group at the section, and when the app is already open the
     service worker sends it that address instead.
-- **Legal pages** (decided 2026-10-25): the privacy policy and terms get fixed
-  addresses, `/privacy` and `/terms`, as static pages in `public/`, which
-  Netlify serves ahead of its every-path rewrite. Google's sign-in
-  verification and app listings ask for those URLs. They're written before
-  Google sign-in is set up.
+- **Legal pages** (decided 2026-10-25, built 2026-11-03, following
+  ease-my-life): the privacy policy and terms have fixed addresses,
+  `/privacy` and `/terms`, which Google's sign-in verification and app
+  listings ask for. The text lives once, in `src/legal/text.tsx`.
+  `privacy.html` and `terms.html` at the repo root are Vite build inputs
+  using the app's fonts and colors, the build rendering each document into
+  its page so it reads without JavaScript, and `_redirects` serves each at
+  its extensionless address ahead of the every-path rewrite. Settings opens
+  each in a sheet, offline too, where a link from one document to the other
+  switches the sheet, and the welcome and the join form link both
+  under their first step. Their facts: Gary S. Walton, an individual in
+  Missouri, runs Come Hang; Missouri law governs the terms; users must be
+  18 or older; the upgrade is refunded in full on request within 14 days;
+  support@comehang.app is the contact for privacy too. A change to how
+  data is kept or shared updates the policy in the same change.
 - **Horizontal sizing** (decided 2026-10-25): every horizontal size, widths
   and spacing alike, reads the horizontal rhythm, `--hor-rhy-*` (the
   viewport width divided by powers of the core design number). There's no

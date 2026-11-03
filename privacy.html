@@ -1,0 +1,127 @@
+
+
+
+<!doctype html> <!-- What: Document Type Declaration. Why: Browsers render the page in standards mode only with a doctype. How: This declares HTML5. -->
+
+
+
+<html lang='en'> <!-- What: Root HTML Element. Why: Screen readers and translation tools need the page's language. How: This marks the document as English. -->
+
+
+	<head> <!-- What: Document Head Element. Why: The page's metadata loads before the body paints. How: This holds it in the sections below. -->
+
+
+		<!-- #region Document -->
+
+		<meta charset='UTF-8' />                                                 <!-- What: Character Set Meta. Why: The browser has to decode the page as UTF-8 before it reads anything else. How: This sits first in the head, inside the first 1,024 bytes the browser checks. -->
+		<meta name='viewport' content='width=device-width, initial-scale=1.0' /> <!-- What: Viewport Meta. Why: Phones should lay the page out at device width instead of a zoomed-out desktop width. How: This sets the layout width to the device's and starts at no zoom. -->
+		<title>Come Hang Privacy Policy</title>                                  <!-- What: Page Title Element. Why: The tab, bookmarks, and search results name the page by its title. How: This names the document and the app it belongs to. -->
+
+		<!-- #endregion Document -->
+
+
+		<!-- #region Search -->
+
+		<meta name='author' content='Come Hang' />                   <!-- What: Author Meta. Why: Search engines and link tools can credit who made the app. How: This names the app itself, as a real product. -->
+		<meta name='description' content="How Come Hang handles your information: what it collects, what's encrypted, who else handles it, and how long it's kept." /> <!-- What: Description Meta. Why: Search results show this summary, and link checkers read it from this file. How: This says what the policy covers in 120 characters. -->
+		<link href='https://comehang.app/privacy' rel='canonical' /> <!-- What: Canonical Link. Why: Variants of this address, such as one with its .html, should be indexed as one page. How: This names the policy's live address. -->
+
+		<!-- #endregion Search -->
+
+
+		<!-- #region Web App -->
+
+		<meta name='theme-color' content='#F4F4FA' media='(prefers-color-scheme: light)' /> <!-- What: Light Theme Color Meta. Why: Mobile browsers tint their bars around the page. How: This sets the page background for a phone in light mode. -->
+		<meta name='theme-color' content='#12132A' media='(prefers-color-scheme: dark)' />  <!-- What: Dark Theme Color Meta. Why: The tinted bars should match the dark page too. How: This sets the page background for a phone in dark mode. -->
+
+		<!-- #endregion Web App -->
+
+
+		<!-- #region Icons -->
+
+		<link href='/favicon.svg' rel='icon' type='image/svg+xml' /> <!-- What: SVG Favicon Link. Why: Modern browsers draw a vector favicon sharp at every size. How: This points at the one-dot mark in public/. -->
+		<link href='/favicon.ico' rel='icon' />                      <!-- What: ICO Favicon Link. Why: Browsers without SVG favicons fall back to the ICO. How: This points at the ICO in public/. -->
+
+		<!-- #endregion Icons -->
+
+
+	</head>
+
+
+
+	<body class='legPagBod'> <!-- What: Legal Page Body Element. Why: This holds the skip link, the bar, the document, and its footer. How: The build fills the document from the same component Settings shows. -->
+
+
+		<a
+			class='skiLinAnc'
+
+			data-element-name-hook='skiLinAnc'
+
+			href='#main'
+		>Skip to main content</a> <!-- What: Skip Link Anchor Element. Why: A keyboard user's first Tab should offer a way straight to the document. How: page.ts finds it by its hook and focuses the main on a plain click, keeping the hash out of the address. -->
+
+
+
+		<header class='legPagHed'> <!-- What: Legal Page Header Element. Why: The page opens with the app's mark and name, leading back to the app. How: This holds the brand link. -->
+
+
+			<a
+				class='braHomAnc'
+				href='/'
+			><img class='braMarIma' height='32' src='/favicon.svg' width='32' alt='' />Come Hang</a> <!-- What: Brand Home Anchor Element. Why: Someone who arrives here should be able to reach the app itself. How: This links to the app's root, its mark beside its name, the mark's empty alt leaving the name to say where the link goes. -->
+
+
+		</header>
+
+
+
+		<main
+			id='main'
+
+			class='legPagMai'
+
+			tabindex='-1'
+		> <!-- What: Legal Page Main Element. Why: The document is the page's main content and the skip link's landing spot. How: Its id is kept plain as the skip link's target, and its tabindex of -1 lets it take focus without joining the Tab order. -->
+
+
+			<h1 class='legTitHea'>Privacy Policy</h1> <!-- What: Legal Title Heading Element. Why: The page's one heading names the document. How: This sets it above the document's body. -->
+
+			<article
+				class='legDocArt'
+
+				data-legal-document-body='privacy'
+			></article> <!-- What: Legal Document Article Element. Why: The policy's text lives in one place, shared with Settings. How: The legal pages plugin in vite.config.ts renders the policy into it, chosen by this attribute. -->
+
+
+		</main>
+
+
+
+		<footer class='legPagFoo'> <!-- What: Legal Page Footer Element. Why: The reader needs a way to the other document and back to the app. How: This holds a row of links. -->
+
+
+			<a
+				class='legLinAnc'
+				href='/terms'
+			>Terms of Service</a> <!-- What: Legal Link Anchor Element. Why: The terms sit beside the policy. How: This links to the terms' own page. -->
+
+			<a
+				class='legLinAnc'
+				href='/'
+			>Open Come Hang</a> <!-- What: Legal Link Anchor Element. Why: The footer ends with the way back to the app. How: This links to the app's root. -->
+
+
+		</footer>
+
+		<script
+			src='/src/legal/page.ts'
+			type='module'
+		>/* What: Legal Page Script Element. Why: The page's stylesheets, its light or dark choice, and its skip link handler load through one module. How: Vite replaces it with the built, hashed bundle and its stylesheet at build time. */</script>
+
+
+	</body>
+
+
+</html>
+
+

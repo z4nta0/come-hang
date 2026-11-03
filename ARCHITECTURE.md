@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-03 (the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-03 (the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1591,7 +1591,18 @@ the Blaze change.
     the section (built 2026-11-03, Section 11.1).
   - The legal pages, `/privacy` and `/terms`, are static pages served at
     fixed addresses, outside the app, since Google's sign-in verification
-    and app listings link to them.
+    and app listings link to them. Built 2026-11-03 as in ease-my-life:
+    the documents' text lives once in `src/legal/text.tsx`; `privacy.html`
+    and `terms.html` are Vite build inputs with the app's fonts and colors,
+    a build plugin rendering each document into its page so it reads
+    without JavaScript; `_redirects` serves each at its extensionless
+    address; Settings opens each in a sheet, which works offline, where a
+    link from one document to the other switches the sheet rather than
+    leaving the app, a modified click still opening the page; and the
+    welcome and the join form say starting, joining, or asking to join
+    means agreeing to both, linking each. The terms set a minimum age of
+    18, Missouri law, and a full refund of the upgrade on request within 14
+    days (Section 18).
 
 **App's Firebase wiring, built 2026-10-28**:
 - `src/platform/firebase.ts` creates the services the first time something
@@ -1899,6 +1910,13 @@ the Blaze change.
     a production build holds none of it, which the security suite checks.
 
 **App structure, still open**:
+- Deleting one's own identity (found 2026-11-03, writing the privacy
+  policy): nothing in the app deletes an identity's `/users` and
+  `/accounts` documents or its Auth record, and nothing removes an identity
+  left unused. The policy offers deletion by email, which can find an
+  identity only through a linked Google account. An in-app "Delete my
+  data" in Settings, a callable that leaves or hands over each group and
+  deletes the rest, would close the gap, and app stores ask for one.
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's
@@ -1917,9 +1935,24 @@ the Blaze change.
   it's served. Server code runs as Firebase Cloud Functions, since it's
   triggered by database writes, which a Netlify Function can't listen
   for. Setup carries ease-my-life's lessons: the site's domains in
-  Firebase Auth's authorized domains, the API key's website restrictions
-  (including the project's `firebaseapp.com` address used for Google
-  sign-in), and Firebase's addresses in the CSP's `connect-src`.
+  Firebase Auth's authorized domains, the API key's website restrictions,
+  and Firebase's addresses in the Content-Security-Policy.
+- Built 2026-11-03 (`deploy-files.ts`): each build fills in the hosting
+  files for its own Firebase project, read from `VITE_FIREBASE_CONFIG`.
+  The policy's `connect-src` names that project's functions and database
+  along with Firestore, Auth, Storage, FCM, and App Check, the Realtime
+  Database's own servers under `firebaseio.com`, and nothing else; a build
+  without a project, such as the test suites', keeps the strict policy.
+  Google sign-in runs on the app's own domain (decided 2026-11-03), since
+  Safari, the installed iPhone app included, blocks the storage a sign-in
+  page on `firebaseapp.com` needs: `_redirects` passes `/__/auth/` through
+  to the project's `firebaseapp.com`, ahead of the app's fallback, the app
+  sets its sign-in domain to the site's own host, frame-src allows only
+  the app itself, and the service worker leaves `/__/` alone. App Check
+  starts with reCAPTCHA Enterprise in a production build that has
+  `VITE_APPCHECK_SITE_KEY`, which also opens reCAPTCHA's script and frame
+  addresses in the policy. A config missing its project or database fails
+  the build.
 - App Check moves from "later" to launch, given the concern about bots
   and abuse (Section 15).
 - Location (decided 2026-10-28): every service in us-central1, so Cloud
@@ -1984,16 +2017,29 @@ the Blaze change.
       `functions/src/setup.ts`.
 - [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
       after upload (Section 11.9).
-- [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
+- [ ] App Check: a reCAPTCHA Enterprise site key for each project's
+      domain, set as `VITE_APPCHECK_SITE_KEY` in Netlify for that
+      environment, the app registered with App Check, then enforcement
+      turned on for Firestore, RTDB, Storage, and Functions once tokens are
+      seen arriving in the console's metrics.
 - [ ] Firestore TTL policies on the `expireAt` field of every collection
       group that has one (`liveLocations`, `events`, `assignments`,
       `historyRequests`, `notices`, `pushToken`, `polarEvents`), since a
       TTL policy is set per collection group in the console, not by the
       rules.
-- [ ] Authorized domains, API key restrictions, and CSP, per the hosting
-      bullet above, the CSP's `connect-src` including FCM's token
-      addresses (`fcmregistrations.googleapis.com` and
-      `firebaseinstallations.googleapis.com`).
+- [ ] `VITE_FIREBASE_CONFIG` set in Netlify for each environment, the
+      project's web config as JSON, which the build reads its policy and
+      sign-in passthrough from.
+- [ ] Sign-in on the app's own domain: the site's domains in Firebase
+      Auth's authorized domains, and each domain's
+      `https://<domain>/__/auth/handler` added as an authorized redirect
+      URI on the project's Google OAuth client. Deploy previews change
+      their address each time, so Google sign-in is tried on a fixed
+      staging address.
+- [ ] The API key restricted to the site's domains.
+- [ ] Once staging is up, a real check that Google sign-in, App Check,
+      chat, and pushes all work under the built policy, which the test
+      suites can't cover without a project.
 - [ ] Polar: the upgrade's product made in the sandbox (staging) and live
       (live), each project's `POLAR_ACCESS_TOKEN` and
       `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,
@@ -2004,9 +2050,10 @@ the Blaze change.
 - [ ] The web push (VAPID) key pair generated in each project's Cloud
       Messaging settings, its public key set as `VITE_FIREBASE_VAPID_KEY`
       in Netlify for that environment.
-- [ ] The privacy policy and terms written and published at `/privacy` and
-      `/terms`, before Google sign-in is set up (its verification asks for
-      both URLs).
+- [x] The privacy policy and terms written (2026-11-03), published at
+      `/privacy` and `/terms` with the first deploy, before Google sign-in
+      is set up (its verification asks for both URLs). Worth a lawyer's
+      look before launch.
 
 **Lower priority, not needed before launch**:
 - Testing follows the global rules (Playwright in Chromium, Firefox, and
@@ -2248,6 +2295,11 @@ paywall is switched on before launch.
 - **Over a limit never removes anything.** Whenever a group or a user
   ends up over a cap (a transfer below, a refund), everything already
   there stays; only adding more is blocked until it's back under.
+
+**Refunds (decided 2026-11-03)**: the terms promise a full refund of the
+upgrade on request within 14 days of buying, for any reason, by writing to
+support@comehang.app. The refund is made in Polar, whose `order.refunded`
+webhook removes the flag, and the "over a limit" rule above applies.
 
 **Buying (decided 2026-10-22)**:
 - Requires linking Google sign-in (Section 8). Paid status is tied to the

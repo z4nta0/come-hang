@@ -92,29 +92,31 @@ async function pngSizFun ( reqCotObj : APIRequestContext, patValStr : string ) :
  * rawHeaFun = Raw Head Function
  *
  * @summary
- * Fetches the page's HTML as a scraper would, without running its scripts,
- * and resolves with what its head says: the title, every description, and
- * the canonical address. The text is parsed in the page's own HTML parser.
+ * Fetches a page's HTML as a scraper would, without running its scripts,
+ * and resolves with what its head says, the title, every description, and
+ * the canonical address, plus the text of its article, empty when it has
+ * none. The text is parsed in the page's own HTML parser.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param pagValObj - Page Value Object: The page whose parser reads the HTML.
+ * @param patValStr - Path Value String: The page's path on the server.
  * @param reqCotObj - Request Context Object: The client to fetch with.
  *
- * @returns A promise that resolves with the head's title, descriptions, and
- *          canonical address.
+ * @returns A promise that resolves with the article's text and the head's
+ *          title, descriptions, and canonical address.
  *
  * @example
  * ```ts
- * rawHeaFun(page, request) // => { canHreStr, desTexArr, titTexStr }
+ * rawHeaFun(page, '/privacy', request) // => { artTexStr, canHreStr, ... }
  * ```
  *
 */
 
-async function rawHeaFun ( pagValObj : Page, reqCotObj : APIRequestContext ) : Promise< { canHreStr : string | null, desTexArr : string[], titTexStr : string } > {
+async function rawHeaFun ( pagValObj : Page, patValStr : string, reqCotObj : APIRequestContext ) : Promise< { artTexStr : string, canHreStr : string | null, desTexArr : string[], titTexStr : string } > {
 
 
-	const rawHtmStr = await ( await reqCotObj.get( '/' ) ).text(); // What: Raw HTML String. Why: Link checkers and many crawlers read the file and never run the app. How: This fetches it as text.
+	const rawHtmStr = await ( await reqCotObj.get( patValStr ) ).text(); // What: Raw HTML String. Why: Link checkers and many crawlers read the file and never run its scripts. How: This fetches it as text.
 
 
 
@@ -128,6 +130,7 @@ async function rawHeaFun ( pagValObj : Page, reqCotObj : APIRequestContext ) : P
 		return { // What: Head Fields Return. Why: The test checks each field. How: This returns them.
 
 
+			artTexStr : docValObj.querySelector( 'article' )?.textContent ?? '',                                                                          // What: Article Text String. Why: A legal page's document has to be in the file itself. How: This reads the article's text, empty when there's none.
 			canHreStr : docValObj.querySelector( "link[rel='canonical']" )?.getAttribute( 'href' ) ?? null,                                                // What: Canonical Href String. Why: Search engines credit the page to this address. How: This reads it, or null when missing.
 			desTexArr : [ ...docValObj.querySelectorAll( "meta[name='description']" ) ].map( ( metCurEle ) => metCurEle.getAttribute( 'content' ) ?? '' ), // What: Description Text Array. Why: There should be exactly one description. How: This lists every one.
 			titTexStr : docValObj.title // What: Title Text String. Why: Scrapers show this title. How: This reads it.
@@ -155,7 +158,7 @@ test( 'the raw page carries the full title, one description of 120 to 125 charac
 	await page.goto( '/' ); // What: Home Visit. Why: The raw HTML is parsed in a page. How: This opens the app.
 
 
-	const rawHeaObj = await rawHeaFun( page, request ); // What: Raw Head Object. Why: The checks read the head as a scraper does. How: This fetches and parses it.
+	const rawHeaObj = await rawHeaFun( page, '/', request ); // What: Raw Head Object. Why: The checks read the head as a scraper does. How: This fetches and parses it.
 
 
 	expect( rawHeaObj.titTexStr ).toBe( 'Come Hang: plan get-togethers with your group' ); // What: Title Assertion. Why: Search results and cards name the app and what it's for. How: This reads the raw title.
@@ -166,6 +169,34 @@ test( 'the raw page carries the full title, one description of 120 to 125 charac
 
 
 } );
+
+
+
+for ( const [ patValStr, titTexStr, heaTexStr ] of [ [ '/privacy', 'Come Hang Privacy Policy', 'The short version' ], [ '/terms', 'Come Hang Terms of Service', 'Who can use Come Hang' ] ] ) { // What: Legal Page Loop. Why: Each legal page is read by Google's verification and by crawlers, which never run its script. How: This declares a test per page, with its title and a heading from its document.
+
+
+	test( `${ patValStr } carries its own title, one description of 120 to 125 characters, its canonical address, and its document`, async ( { page, request } ) => { // What: Legal Page Test. Why: The page has to read as itself, its document included, to a reader that runs nothing. How: This reads the raw page and checks its head and its article's text.
+
+
+		await page.goto( patValStr ); // What: Page Visit. Why: The raw HTML is parsed in a page. How: This opens the legal page.
+
+
+		const rawHeaObj = await rawHeaFun( page, patValStr, request ); // What: Raw Head Object. Why: The checks read the page as a scraper does. How: This fetches and parses it.
+
+
+		expect( rawHeaObj.titTexStr ).toBe( titTexStr );                                       // What: Title Assertion. Why: The tab and search results name the document. How: This reads the raw title.
+		expect( rawHeaObj.desTexArr.length ).toBe( 1 );                                        // What: One Description Assertion. Why: Two descriptions leave a scraper to guess. How: This counts them.
+		expect( rawHeaObj.desTexArr[ 0 ].length ).toBeGreaterThanOrEqual( 120 );               // What: Description Minimum Assertion. Why: Preview checkers flag a description under 120 characters as short. How: This checks its length.
+		expect( rawHeaObj.desTexArr[ 0 ].length ).toBeLessThanOrEqual( 125 );                  // What: Description Maximum Assertion. Why: Phone cards cut a summary off around 125 characters. How: This checks its length.
+		expect( rawHeaObj.canHreStr ).toBe( `https://comehang.app${ patValStr }` );            // What: Canonical Assertion. Why: Search engines credit the page to its live address. How: This reads the canonical address.
+		expect( rawHeaObj.artTexStr ).toContain( heaTexStr );                                  // What: Document Assertion. Why: The build has to render the document into the file. How: This checks a heading from it is in the article.
+		expect( rawHeaObj.artTexStr ).toContain( 'support@comehang.app' );                     // What: Contact Assertion. Why: Each document names where to write. How: This checks the address is in the article.
+
+
+	} );
+
+
+}
 
 
 
@@ -197,7 +228,7 @@ test( 'the social preview tags are all present with absolute addresses, and the 
 
 
 
-test( 'robots.txt lets crawlers in and names the sitemap, which lists the canonical root', async ( { request } ) => { // What: Crawler Files Test. Why: Search engines read these two files before the pages. How: This fetches both and checks what each says.
+test( 'robots.txt lets crawlers in and names the sitemap, which lists the canonical root and the legal pages', async ( { request } ) => { // What: Crawler Files Test. Why: Search engines read these two files before the pages. How: This fetches both and checks what each says.
 
 
 	const robTexStr = await ( await request.get( '/robots.txt' ) ).text();  // What: Robots Text String. Why: Crawlers obey this file. How: This fetches it.
@@ -207,6 +238,8 @@ test( 'robots.txt lets crawlers in and names the sitemap, which lists the canoni
 	expect( robTexStr ).toContain( 'Allow: /' );                                  // What: Allow Assertion. Why: The public addresses should be found. How: This checks the allow line.
 	expect( robTexStr ).toContain( 'Sitemap: https://comehang.app/sitemap.xml' ); // What: Sitemap Line Assertion. Why: Crawlers find the sitemap through robots.txt. How: This checks its absolute address.
 	expect( sitTexStr ).toContain( '<loc>https://comehang.app/</loc>' );          // What: Root Entry Assertion. Why: The sitemap lists the canonical root. How: This checks its entry.
+	expect( sitTexStr ).toContain( '<loc>https://comehang.app/privacy</loc>' );   // What: Privacy Entry Assertion. Why: The privacy policy is a public page worth finding. How: This checks its entry.
+	expect( sitTexStr ).toContain( '<loc>https://comehang.app/terms</loc>' );     // What: Terms Entry Assertion. Why: The terms are a public page worth finding. How: This checks their entry.
 
 
 } );

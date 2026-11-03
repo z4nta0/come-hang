@@ -10,6 +10,7 @@ import { BraMarCom    } from '../ui/brand-mark.tsx';   // What: Brand Mark Compo
 import { ButBasCom    } from '../ui/button.tsx';       // What: Button Base Component. Why: Starting a group is the welcome's one action. How: This draws it as the main action button.
 import { gooRecFun    } from '../state/identity.ts';   // What: Google Recover Function. Why: Someone on a new phone gets their groups back (Section 8). How: This signs in with Google and remakes the phone's key pair.
 import { InsNotCom    } from '../ui/install-note.tsx'; // What: Install Note Component. Why: A browser that can install the app suggests it here. How: This shows the note while the browser offers its prompt.
+import { LegLinCom    } from '../legal/links.tsx';     // What: Legal Links Component. Why: Starting or joining a group means agreeing to the terms and the policy. How: This draws the line linking both.
 import { MaiAreCom    } from '../ui/main-area.tsx';    // What: Main Area Component. Why: The welcome is the screen's main content. How: This holds it in the main landmark.
 import { useEffect    } from 'react';                  // What: Use Effect. Why: The welcome takes focus when it replaces a group just left or deleted. How: This moves focus once it's drawn.
 import { useRef       } from 'react';                  // What: Use Reference. Why: The heading takes focus. How: This holds it.
@@ -29,8 +30,9 @@ import { useState     } from 'react';                  // What: Use State. Why: 
  * one that joins with an invite link, centered in the screen. Nothing on it
  * starts Firebase, so a first visit makes no connection until the visitor
  * acts. Someone who has used the app on another phone gets their groups back
- * through Google instead. A browser that can install the app with one tap
- * suggests it in a note below.
+ * through Google instead. A line below the buttons says starting or joining
+ * means agreeing to the terms and the privacy policy, linking both, and a
+ * browser that can install the app with one tap suggests it in a note below.
  *
  * Sections:
  *  - Components
@@ -61,7 +63,9 @@ type WscProTyp = { focBoo : boolean, onRecFun : () => void }; // What: Welcome S
  * asks, so a reload doesn't take focus again. Get my groups back signs in with
  * Google through its popup, its label reading "Signing in…" meanwhile, then
  * calls onRecFun; a sign-in that doesn't go through is announced through the
- * alert, saying why where it can.
+ * alert, saying why where it can. Below the buttons, a line says starting or
+ * joining a group means agreeing to the terms and the privacy policy, linking
+ * both.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -225,6 +229,14 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 
 				role='alert'
 			>{ errMesStr }</p>{ /* What: Welcome Error Paragraph Element. Why: A sign-in that doesn't go through has to be told at once, and an alert added only when it speaks is often missed. How: This is in the page and empty from the start, and gains the message when one fails. */ }
+
+
+
+			<LegLinCom
+				className={ cssModObj.welLegPar }
+
+				actStr='starting or joining a group'
+			/>{ /* What: Legal Links Component. Why: The welcome is where someone first starts or joins a group, and the home page has to link the privacy policy. How: This says doing so means agreeing to the terms and the policy, linking both, below the buttons. */ }
 
 
 

@@ -1,0 +1,329 @@
+
+
+
+/**
+ * page.css = Legal Page
+ *
+ * @summary
+ * Styles for the static /privacy and /terms pages: one centered column at the
+ * base text width holding the bar with the app's mark and name, the
+ * document's title and body, and a footer of links, plus the skip link above
+ * them. The document's prose is styled through tag selectors on its article,
+ * since the build renders it in as plain headings, paragraphs, and lists.
+ * The pages aren't React, so their classes are plain rather than a module's.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region legPagBod */
+
+.legPagBod { /* What: Legal Page Body. Why: The bar, the document, and the footer read top to bottom at a comfortable width, whatever the screen. How: This lays them out in named areas, the frame tier apart, in one column at the base text width centered in the screen, with the frame tier above and below and the gutter at the sides. */
+
+
+	display               : grid;
+	grid-template-areas   : 'legPagHed' 'legPagMai' 'legPagFoo';
+	grid-template-columns : minmax( 0, var( --tex-wid-bas ) );         /* Text Width Base ~= 29.207em */
+	justify-content       : center;
+	min-height            : 100vh;
+	padding               : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-001 );                      /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+
+.skiLinAnc { /* What: Skip Link Anchor. Why: A keyboard user should be able to jump to the document, and the link shouldn't show until it's needed. How: This draws a pill in the main accent with bold text, fixed just above the screen's top edge at the side gutter, outside the grid, and eases its slide back out on the accelerating curve, along with its hover color, hover lift, press scale, and focus ring. */
+
+
+	background-color : var( --acc-mai-col );                                   /* Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                                   /* Text Accent Color = #FFFFFF */
+	font-weight      : 700;
+	left             : var( --gut-sid-pad );                                   /* Gutter Side Padding, about 19.304px - 44.876px */
+	padding          : var( --spa-ver-bas ) clamp( calc( var( --ver-rhy-p01 ) * 1rem ), var( --hor-rhy-013 ), calc( var( --ver-rhy-p03 ) * 1rem ) ); /* Spacing Vertical Base ~= 14.572px, Vertical Rhythm Base Plus 1 ~= 19.304px, Horizontal Rhythm 13 ~= 37.460px @ 1,920px width, Vertical Rhythm Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing and rhythm steps directly, outside the tiers, its sides holding horizontal rhythm step 13 between the vertical rhythm's p01 and p03 steps. */
+	position         : fixed;
+	top              : var( --spa-ver-m02 );                                   /* Spacing Vertical Base Minus 2 ~= 8.304px */
+	transform        : translateY( calc( -100% - var( --spa-ver-m02 ) * 2 ) ); /* Spacing Vertical Base Minus 2 ~= -16.608px */ /* What: Hidden Offset. Why: The link waits just above the screen until it's focused, clear of the edge so no rounded sliver of it shows. How: This raises it by its own height plus twice its top offset, leaving its bottom edge a top offset above the screen. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-acc-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ), Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	z-index          : 1;                                                      /* What: Skip Link Layer. Why: The shown link has to sit above the page's content. How: This sets it one layer above it. */
+
+
+}
+.skiLinAnc:focus { /* What: Focused Skip Link Anchor. Why: The link has to come into view however focus reaches it. How: This slides it down into view on the decelerating curve, still easing its hover color, hover lift, press scale, and focus ring, on :focus rather than :focus-visible so a script's focus shows it too. */
+
+
+	transform  : translateY( 0 );
+	transition : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.skiLinAnc:hover { /* What: Hovered Skip Link Anchor. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the pill 2px. */
+
+
+	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+	transform        : translateY( calc( var( --spa-ver-m07 ) * -1 ) );         /* Spacing Vertical Base Minus 7 ~= -2.035px */
+
+
+}
+.skiLinAnc:active { /* What: Pressed Skip Link Anchor. Why: A press should register before focus moves. How: This presses the pill in slightly, which also undoes its hover lift. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Skip Link Anchor. Why: Someone who asked for less motion shouldn't see the link slide. How: This applies only when the reduced-motion preference is set. */
+
+
+	.skiLinAnc,
+	.skiLinAnc:focus { /* What: Motionless Skip Link Anchor. Why: The link should simply appear and its hover, press, and focus looks switch at once, the lift and press still applying instantly. How: This turns the transition off on both the hidden and the focused rule, since the focused rule outranks the base. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+
+
+/* #region legPagHed */
+
+.legPagHed { /* What: Legal Page Header. Why: The bar sits at the top of the column. How: This places it in its own area. */
+
+
+	grid-area : legPagHed;
+
+
+}
+
+
+/* #region braHomAnc */
+
+.braHomAnc { /* What: Brand Home Anchor. Why: The app's mark and name lead back to the app, as a full touch target. How: This lays the mark and the name out in a row a tier 5 space apart, centered on each other, by auto placement since the name is bare text with no element to name an area for, in the brand font's extra bold at Base Plus 2, at least a touch target tall, and eases its hover color, press dim, and focus ring. */
+
+
+	align-items     : center;
+	color           : var( --tex-mai-col );                /* Text Main Color = #1D1E33 */
+	column-gap      : var( --tie-hor-005 );                /* Tier Horizontal 5, about 4.732px - 6.268px */
+	display         : inline-grid;
+	font-family     : var( --fon-fam-bra );                /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size       : var( --fon-siz-p02 );                /* Font Size Base Plus 2 ~= 19.304px */
+	font-weight     : 800;
+	grid-auto-flow  : column;
+	min-height      : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.braHomAnc:hover { /* What: Hovered Brand Home Anchor. Why: A link in the bar shows it's live by color alone, since a lift would jostle the bar. How: This turns the name the main accent. */
+
+
+	color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+
+
+}
+.braHomAnc:active { /* What: Pressed Brand Home Anchor. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Brand Home Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.braHomAnc { /* What: Motionless Brand Home Anchor. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.braMarIma { /* What: Brand Mark Image. Why: The mark makes the app recognizable beside its name. How: This sets it square at a rhythm step. */
+
+
+	height : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	width  : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+
+/* #endregion braHomAnc */
+
+/* #endregion legPagHed */
+
+
+
+/* #region legPagMai */
+
+.legPagMai { /* What: Legal Page Main. Why: The title and the document read as one part. How: This stacks them a tier 2 space apart in its own area. */
+
+
+	display   : grid;
+	grid-area : legPagMai;
+	row-gap   : var( --tie-ver-002 ); /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.legTitHea { /* What: Legal Title Heading. Why: The document's title is the page's biggest text. How: This sets it at Base Plus 4. */
+
+
+	font-size : var( --fon-siz-p04 ); /* Font Size Base Plus 4 ~= 33.876px */
+
+
+}
+
+
+/* #region legDocArt */
+
+.legDocArt { /* What: Legal Document Article. Why: The document's headings, paragraphs, and lists read top to bottom with room between them. How: This stacks them a tier 3 space apart, in order, since they're plain elements the build renders in. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+.legDocArt h2 { /* What: Document Section Heading. Why: Each section starts a new part of the document, so it stands further apart than the lines within one. How: This sets it at Base Plus 2 and adds the tier 2 space less the tier 3 gap above it. */
+
+
+	font-size  : var( --fon-siz-p02 );                                 /* Font Size Base Plus 2 ~= 19.304px */
+	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+
+
+}
+.legDocArt h3 { /* What: Document Subsection Heading. Why: A subsection's title sits between a section's and the body text. How: This sets it at Base Plus 1. */
+
+
+	font-size : var( --fon-siz-p01 ); /* Font Size Base Plus 1 ~= 14.572px */
+
+
+}
+.legDocArt ul { /* What: Document List. Why: A list's points read as separate items, their bullets inside the column. How: This stacks them a tier 4 space apart and indents them a tier 3 space for their bullets. */
+
+
+	display              : grid;
+	padding-inline-start : var( --tie-hor-003 ); /* Tier Horizontal 3, about 14.572px - 19.304px */
+	row-gap              : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+.legDocArt li::marker { /* What: Document List Item Bullet. Why: The bullets mark the points without competing with them. How: This sets them in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+.legDocArt a { /* What: Document Links. Why: A link in a sentence has to stand out from the words around it by more than color. How: This sets it in the main accent, underlined, and eases its hover color, press dim, and focus ring. */
+
+
+	color           : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	overflow-wrap   : anywhere;
+	text-decoration : underline;
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.legDocArt a:hover { /* What: Hovered Document Links. Why: A text link shows it's live by color alone. How: This darkens it a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.legDocArt a:active { /* What: Pressed Document Links. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Document Links. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.legDocArt a { /* What: Motionless Document Links. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion legDocArt */
+
+/* #endregion legPagMai */
+
+
+
+/* #region legPagFoo */
+
+.legPagFoo { /* What: Legal Page Footer. Why: The links sit together at the foot of the column, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 3 space apart in its own area, since its links keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	column-gap : var( --tie-hor-003 ); /* Tier Horizontal 3, about 14.572px - 19.304px */
+	display    : flex;
+	flex-wrap  : wrap;
+	grid-area  : legPagFoo;
+
+
+}
+
+.legLinAnc { /* What: Legal Link Anchor. Why: The footer's links are quiet text links, still easy to tap. How: This sets bold accent text, at least a touch target tall, and eases its hover color, press dim, and focus ring. */
+
+
+	align-content : center;
+	color         : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	display       : grid;
+	font-weight   : 700;
+	min-height    : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	transition    : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.legLinAnc:hover { /* What: Hovered Legal Link Anchor. Why: A text link shows it's live by color alone. How: This darkens its text a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.legLinAnc:active { /* What: Pressed Legal Link Anchor. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Legal Link Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.legLinAnc { /* What: Motionless Legal Link Anchor. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion legPagFoo */
+
+/* #endregion legPagBod */
+
+

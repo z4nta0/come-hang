@@ -397,7 +397,8 @@ async function stoInfFun () : Promise< StoInfTyp | null > {
 	// #region Stop Geometry And Label
 
 	const recCurObj = actCurEle.getBoundingClientRect();                                                                       // What: Rect Current Object. Why: A focused stop has to be on screen and uncovered. How: This measures the stop.
-	const topCurEle = document.elementFromPoint( recCurObj.left + recCurObj.width / 2, recCurObj.top + recCurObj.height / 2 ); // What: Top Current Element. Why: Whatever is drawn on top at the stop's center is what a person sees there. How: This asks the page which element sits at that point.
+	const linRecObj = actCurEle.getClientRects()[ 0 ] ?? recCurObj;                                                            // What: Line Rect Object. Why: A link wrapping onto a second line leaves its whole box's center on the words beside it, not on the link. How: This measures the stop's first box, which is its whole box when it doesn't wrap.
+	const topCurEle = document.elementFromPoint( linRecObj.left + linRecObj.width / 2, linRecObj.top + linRecObj.height / 2 ); // What: Top Current Element. Why: Whatever is drawn on top at the stop's center is what a person sees there. How: This asks the page which element sits at the center of the stop's first box.
 
 
 

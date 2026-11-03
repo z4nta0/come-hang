@@ -10,5 +10,21 @@
 
 	</url>
 
+	<url><!-- What: Privacy URL Element. Why: The privacy policy is a public page worth finding. How: This lists it by its canonical address. -->
+
+
+		<loc>https://comehang.app/privacy</loc><!-- What: Privacy Location Element. Why: The entry has to name the page's address. How: This gives the canonical address, matching the page's canonical link. -->
+
+
+	</url>
+
+	<url><!-- What: Terms URL Element. Why: The terms of service are a public page worth finding. How: This lists them by their canonical address. -->
+
+
+		<loc>https://comehang.app/terms</loc><!-- What: Terms Location Element. Why: The entry has to name the page's address. How: This gives the canonical address, matching the page's canonical link. -->
+
+
+	</url>
+
 
 </urlset>

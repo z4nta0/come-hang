@@ -1,2 +1,13 @@
+# What: Sign-In Passthrough Rule. Why: Google sign-in runs on the app's own domain, since Safari, the installed iPhone app included, blocks the storage a sign-in page on Firebase's domain needs. How: This passes /__/auth/ through to the project's firebaseapp.com domain, which the build names in place of the placeholder, or drops this line for a build without a project (deploy-files.ts), ahead of the fallback below.
+/__/auth/*    %FIREBASE_AUTH_HOST%/__/auth/:splat   200
+
+
+
+# What: Legal Page Rules. Why: The privacy policy and terms need fixed addresses of their own, for Google's sign-in verification and app listings. How: These serve each page's built file at its extensionless address with a 200 status, ahead of the app's fallback below.
+/privacy    /privacy.html   200
+/terms      /terms.html     200
+
+
+
 # What: Single Page App Fallback Rule. Why: The site routes every page in the browser through React Router and has no server routes, so any path without a file of its own has to load the one page. How: This rewrites every such path to index.html with a 200 status rather than redirecting, while real files keep being served first.
 /*    /index.html   200

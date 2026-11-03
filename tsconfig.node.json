@@ -23,6 +23,7 @@
 		"verbatimModuleSyntax": true
 	},
 	"include": [
+		"deploy-files.ts",
 		"eslint.config.ts",
 		"vite.config.ts"
 	]

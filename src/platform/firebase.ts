@@ -13,10 +13,12 @@ import { getDatabase                  } from 'firebase/database';  // What: Get 
 import { getFunctions                 } from 'firebase/functions'; // What: Get Functions. Why: Some actions go through callables. How: This returns the app's Functions instance in the functions' region.
 import { getStorage                   } from 'firebase/storage';   // What: Get Storage. Why: History transfers live in Storage. How: This returns the app's Storage.
 import { initializeApp                } from 'firebase/app';       // What: Initialize App. Why: Every service hangs off one Firebase app. How: This creates it from the web config.
+import { initializeAppCheck           } from 'firebase/app-check'; // What: Initialize App Check. Why: The project's services refuse requests without an App Check token. How: This starts App Check for the app.
 import { initializeFirestore          } from 'firebase/firestore'; // What: Initialize Firestore. Why: Firestore keeps an offline copy on the device. How: This creates Firestore with its local cache.
 import { persistentLocalCache         } from 'firebase/firestore'; // What: Persistent Local Cache. Why: The app works through a dropped connection. How: This keeps Firestore's cache in IndexedDB.
 import { persistentMultipleTabManager } from 'firebase/firestore'; // What: Persistent Multiple Tab Manager. Why: Two tabs of the app may be open at once. How: This lets them share the cache.
 import { proKeyFun                    } from './dev-profile.ts';   // What: Profile Key Function. Why: Each development member needs a Firebase app of its own. How: This names the app for this page's member.
+import { ReCaptchaEnterpriseProvider  } from 'firebase/app-check'; // What: reCAPTCHA Enterprise Provider. Why: App Check proves the app is real through reCAPTCHA on the web. How: This names the provider with the site key.
 
 
 import type { Auth            } from 'firebase/auth';      // What: Auth. Why: The services record holds Auth. How: This types it.
@@ -43,10 +45,12 @@ import type { Functions       } from 'firebase/functions'; // What: Functions. W
  * project, which can never reach a real one (Section 13). A production build
  * reads its web config, which is public by design, from the
  * VITE_FIREBASE_CONFIG environment variable Netlify sets for each environment,
- * and fails with a clear error when it's missing. Everything runs in
- * us-central1, and Firestore keeps its offline cache in IndexedDB. In
- * development, each member the switcher can act as gets an app of its own, so
- * its sign-in and cache stay apart.
+ * and fails with a clear error when it's missing. It signs in through the
+ * site's own domain, whose /__/auth/ Netlify passes through to Firebase, and
+ * starts App Check with reCAPTCHA Enterprise when VITE_APPCHECK_SITE_KEY is
+ * set. Everything runs in us-central1, and Firestore keeps its offline cache
+ * in IndexedDB. In development, each member the switcher can act as gets an
+ * app of its own, so its sign-in and cache stay apart.
  *
  * Sections:
  *  - Types
@@ -126,7 +130,11 @@ const firGetFun = () : FirSerTyp => { // What: Firebase Get Function. Why: Every
 
 
 
-	const appValObj = initializeApp( import.meta.env.DEV ? EMU_CON_OBJ : JSON.parse( proConStr! ) as FirebaseOptions, proKeyFun( '[DEFAULT]' ) ); // What: App Value Object. Why: Every service belongs to one app, and each development member signs in and caches apart. How: This creates it from the demo config in development and the environment's in production, named after the default app with any member's profile appended. // What: Non-Null Note. Why: The guard above threw for a production build without the config. How: The ! says it's here. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as reads it as a web config.
+	const appValObj = initializeApp( import.meta.env.DEV ? EMU_CON_OBJ : { ...JSON.parse( proConStr! ) as FirebaseOptions, authDomain : window.location.host }, proKeyFun( '[DEFAULT]' ) ); // What: App Value Object. Why: Every service belongs to one app, each development member signs in and caches apart, and a production build signs in through its own domain, since Safari blocks the storage a sign-in page on Firebase's domain needs. How: This creates it from the demo config in development, or the environment's with the site's own host as its sign-in domain, which Netlify passes through to Firebase, named after the default app with any member's profile appended. // What: Non-Null Note. Why: The guard above threw for a production build without the config. How: The ! says it's here. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as reads it as a web config.
+
+
+
+	if ( !import.meta.env.DEV && import.meta.env.VITE_APPCHECK_SITE_KEY ) initializeAppCheck( appValObj, { isTokenAutoRefreshEnabled : true, provider : new ReCaptchaEnterpriseProvider( import.meta.env.VITE_APPCHECK_SITE_KEY ) } ); // What: App Check Call. Why: Only the real app should reach the project's services, which App Check enforces against bots and scripts (Section 15). How: This starts App Check with reCAPTCHA Enterprise before any service is used, in a production build that has a site key, keeping its token fresh.
 
 	const autValObj = getAuth( appValObj ); // What: Auth Value Object. Why: Identities sign in through it. How: This creates it.
 	const funValObj = getFunctions( appValObj, 'us-central1' );                                                                                   // What: Functions Value Object. Why: The functions run in us-central1. How: This creates the instance there.
