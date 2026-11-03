@@ -6,13 +6,14 @@
 import cssModObj from './app.module.css'; // What: CSS Module Object. Why: The screen's container is styled in the app's own module, whose class names Vite hashes. How: The container reads its class from this object.
 
 
-import { Navigate     } from 'react-router';                // What: Navigate. Why: An address the app doesn't use should give way to the root. How: The catch-all route renders it to replace the address.
-import { Route        } from 'react-router';                // What: Route. Why: Each path the app answers is matched to what it renders. How: This declares one route per path.
-import { Routes       } from 'react-router';                // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
-import { ScrHosCom    } from './screens/screen-host.tsx';   // What: Screen Host Component. Why: The app's root address shows whichever screen the visit is on. How: The root route renders it.
-import { SkiLinCom    } from './ui/skip-link.tsx';          // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the screen.
-import { useParams    } from 'react-router';                // What: Use Params. Why: An invite link carries its token in its path. How: The join route reads it.
-import { useScrTopFun } from './ui/scroll-top.ts';          // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
+import { Navigate     } from 'react-router';              // What: Navigate. Why: An address the app doesn't use should give way to the root. How: The catch-all route renders it to replace the address.
+import { Route        } from 'react-router';              // What: Route. Why: Each path the app answers is matched to what it renders. How: This declares one route per path.
+import { Routes       } from 'react-router';              // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
+import { ScrHosCom    } from './screens/screen-host.tsx'; // What: Screen Host Component. Why: The app's root address shows whichever screen the visit is on. How: The root route renders it.
+import { SkiLinCom    } from './ui/skip-link.tsx';        // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the screen.
+import { useParams    } from 'react-router';              // What: Use Params. Why: An invite link carries its token in its path. How: The join route reads it.
+import { usePusOpeFun } from './ui/push-open.ts';         // What: Use Push Open Function. Why: A push tapped while the app is open opens its group and section. How: This follows the service worker's messages.
+import { useScrTopFun } from './ui/scroll-top.ts';        // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
 
 
 import type { ScrStaTyp } from './ui/screen.ts'; // What: Screen State Type. Why: An invite link opens the join screen through a history entry. How: This types the entry's state.
@@ -31,7 +32,10 @@ import type { ScrStaTyp } from './ui/screen.ts'; // What: Screen State Type. Why
  * other path is replaced with the root, so the screen host renders and the
  * address bar never keeps a path the app doesn't use. An invite link,
  * /join/<token>, is replaced with the root the same way, its entry opening
- * the join screen for the token. It also opens each screen at its top after
+ * the join screen for the token, and so is a tapped push's address,
+ * /open/<group>/<section>, whose entry opens the group at the section,
+ * which a push tapped while the app is open reaches through the service
+ * worker's message. It also opens each screen at its top after
  * a navigation and at the earlier position on back, forward, and a reload.
  *
  * Sections:
@@ -96,6 +100,61 @@ function JoiEntCom () : React.JSX.Element {
 
 
 
+// #region PusEntCom
+
+/**
+ * PusEntCom = Push Entry Component
+ *
+ * @summary
+ * Handles the address a tap on a push leads to, /open/<group>/<section>, an
+ * entry address like an invite link's (ARCHITECTURE.md Section 11.1):
+ * renders a redirect that replaces the address with the root, while the
+ * entry's state opens the group at the section. A group the identity isn't
+ * in opens its first group instead, and a section this version doesn't know
+ * opens the default screen, as any entry's state would.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param props - This component does not use any props.
+ *
+ * @returns The redirect to the root.
+ *
+ * @example
+ * ```tsx
+ * PusEntCom() // => <PusEntCom />
+ * ```
+ *
+*/
+
+function PusEntCom () : React.JSX.Element {
+
+
+	const { groStr, secStr } = useParams(); // What: Group String. Why: The push names its group. How: This reads it from the path. // What: Section String. Why: The push names the section its news is in. How: This reads it from the path.
+
+
+	const pusStaObj = { groStr, scrStr : 'group', secStr }; // What: Push State Object. Why: The root shows the group at the section. How: This records the screen, the group, and the section, which the screen host checks.
+
+
+
+	return (
+
+
+		<Navigate
+			replace
+			state={ pusStaObj }
+			to='/'
+		/> // What: Push Redirect Navigate. Why: The push's address shouldn't stay in the bar or be returned to. How: This replaces the address with the root, carrying the group and section in the entry's state.
+
+
+	);
+
+
+}
+
+// #endregion PusEntCom
+
+
+
 // #region AppRooCom
 
 /**
@@ -109,7 +168,8 @@ function JoiEntCom () : React.JSX.Element {
  * than adding a history entry. Each screen holds its own main element, the
  * skip link's target. It calls useScrTopFun once, so every navigation opens
  * the new screen at its top, and back, forward, and a reload return to the
- * earlier position.
+ * earlier position, and usePusOpeFun, so a push tapped while the app is open
+ * opens its group and section.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -126,6 +186,8 @@ function JoiEntCom () : React.JSX.Element {
 
 function AppRooCom () : React.JSX.Element {
 
+
+	usePusOpeFun(); // What: Push Open Call. Why: A push tapped while the app is open should open its group and section. How: This follows the service worker's messages from the root, which stays mounted.
 
 	useScrTopFun(); // What: Scroll Top Call. Why: Every link to another page should open it at its top, and back, forward, and a reload should return to the earlier position. How: This runs the hook once from the root, which stays mounted across every route.
 
@@ -158,6 +220,13 @@ function AppRooCom () : React.JSX.Element {
 						element={ <JoiEntCom /> }
 						path='/join/:tokStr'
 					/>{ /* What: Join Route. Why: An invite link opens the join screen, while the address bar keeps only the root. How: This renders JoiEntCom for /join/ and a token. */ }
+
+
+
+					<Route
+						element={ <PusEntCom /> }
+						path='/open/:groStr/:secStr'
+					/>{ /* What: Push Route. Why: A tapped push opens its group and section, while the address bar keeps only the root. How: This renders PusEntCom for /open/, a group, and a section. */ }
 
 
 

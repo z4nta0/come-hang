@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-03 (the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-03 (history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -873,8 +873,16 @@ development stores a stand-in token of the same form, and the Functions
 emulator records what would be pushed to it. A push that arrives while
 the app is open and in front goes to the page rather than the phone's
 notifications, and the app doesn't show it, since the screens will show
-the same activity as it happens. A tap on a push brings the app forward,
-opening it at its root when it isn't open.
+the same activity as it happens. A tap on a push opens where its news is
+(built 2026-11-03): each push carries its group's ID and a section in its
+data, the chat for messages and history requests, People for join and key
+requests, and Settings for anything about ownership, while a removal or a
+deletion carries none, having no group left to open. The service worker
+turns that into an entry address, `/open/<group>/<section>`
+(`src/core/push-target.ts`), opens a window there when the app isn't open,
+and otherwise brings it forward and sends it the address, which the app
+follows inside its router (`src/ui/push-open.ts`), so the screen it was on
+stays one step back.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -1563,7 +1571,8 @@ the Blaze change.
   - Entry addresses bring something in from outside and are read once as
     the app starts, then replaced with the root: an invite link
     (`/join/<token>`) opens the join screen (built 2026-11-02), and a
-    notification's target opens its screen, built with that feature.
+    tapped push's address (`/open/<group>/<section>`) opens its group at
+    the section (built 2026-11-03, Section 11.1).
   - The legal pages, `/privacy` and `/terms`, are static pages served at
     fixed addresses, outside the app, since Google's sign-in verification
     and app listings link to them.
@@ -1874,6 +1883,12 @@ the Blaze change.
     a production build holds none of it, which the security suite checks.
 
 **App structure, still open**:
+- History requests have no screen yet (found 2026-11-03).
+  `src/state/history.ts` files, lists, claims, sends, and receives them
+  (Section 11.9), and the server pushes members about each one, but nothing
+  in the app asks for missed history, lists the open requests, or offers to
+  fill one, so a tap on that push opens the group's chat for now. Building
+  that screen, and pointing the push at it, is still to do.
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's

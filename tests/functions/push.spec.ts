@@ -131,6 +131,28 @@ test( 'a push goes to the stored token with the group as its title, and nobody w
 
 
 
+test( 'a push names its group and the section a tap opens, and one with no group to open names none', async () => { // What: Target Test. Why: A tap on a push should open where its news is, and a removal or deletion has no group left to open. How: This sends pushes of several kinds through a recording stand-in and compares the data each carries.
+
+
+	const senMesArr : { data? : unknown }[] = [];                                                              // What: Sent Message Array. Why: The stand-in records what it was handed. How: This collects each message.
+	const senValFun = async ( mesValObj : object ) : Promise< void > => { senMesArr.push( mesValObj ); }; // What: Send Value Function. Why: Each send is recorded rather than sent. How: This keeps the message.
+
+
+	await tokSetFun( funEnvObj, 'bob', 'tok-bob' ); // What: Token Seed Call. Why: Bob's phone is registered. How: This stores its token.
+
+	await pusSenFun( 'bob', 'chatMessage', 'Picnic', { groIdeStr : 'gro1', senValFun } ); // What: Chat Send Call. Why: A message opens the chat. How: This sends a chat push for gro1.
+	await pusSenFun( 'bob', 'joinRequest', 'Picnic', { groIdeStr : 'gro1', senValFun } ); // What: Join Send Call. Why: A request opens People. How: This sends a join push for gro1.
+	await pusSenFun( 'bob', 'offerMade', 'Picnic', { groIdeStr : 'gro1', senValFun } );   // What: Offer Send Call. Why: An offer opens Settings. How: This sends an offer push for gro1.
+	await pusSenFun( 'bob', 'removed', 'Picnic', { groIdeStr : 'gro1', senValFun } );     // What: Removal Send Call. Why: A removal has no group left to open. How: This sends a removal push naming gro1 anyway.
+	await pusSenFun( 'bob', 'chatMessage', 'Picnic', { senValFun } );                     // What: No Group Send Call. Why: A push given no group has nothing to open. How: This sends a chat push without one.
+
+	expect( senMesArr.map( ( mesValObj ) => mesValObj.data ) ).toEqual( [ { groupId : 'gro1', section : 'chat' }, { groupId : 'gro1', section : 'people' }, { groupId : 'gro1', section : 'settings' }, undefined, undefined ] ); // What: Targets Check. Why: Each kind opens its own section, and the last two open nothing. How: This compares each message's data in order.
+
+
+} );
+
+
+
 test( 'a token FCM rejects as dead is deleted, while any other failure or a token replaced during the send is kept', async () => { // What: Stale Token Test. Why: A dead token would fail every push, but a passing failure or a fresh token mustn't be thrown away (Section 14). How: This sends through stand-ins that fail in each way and reads the token after each.
 
 

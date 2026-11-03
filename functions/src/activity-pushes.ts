@@ -100,7 +100,7 @@ const chaPusFun = onValueCreated( { ...FUN_OPT_OBJ, ref : '/chats/{conIdeStr}/me
 
 
 
-	await Promise.all( awaUidArr.map( ( awaUidStr ) => pusSenFun( awaUidStr, 'chatMessage', groNamStr, { tagStr : `chat-${ conIdeStr }` } ) ) ); // What: Push Send Calls. Why: Each away member learns the chat moved on, as one notification however busy it is. How: This pushes each, tagged by the chat.
+	await Promise.all( awaUidArr.map( ( awaUidStr ) => pusSenFun( awaUidStr, 'chatMessage', groNamStr, { groIdeStr : conIdeStr, tagStr : `chat-${ conIdeStr }` } ) ) ); // What: Push Send Calls. Why: Each away member learns the chat moved on, as one notification however busy it is. How: This pushes each, tagged by the chat.
 
 
 } );
@@ -146,7 +146,7 @@ const hisPusFun = onDocumentWritten( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 
 
-	await Promise.all( othUidArr.map( ( othUidStr ) => pusSenFun( othUidStr, 'historyRequest', groNamStr ) ) ); // What: Push Send Calls. Why: Each member may be the one who can help. How: This pushes each.
+	await Promise.all( othUidArr.map( ( othUidStr ) => pusSenFun( othUidStr, 'historyRequest', groNamStr, { groIdeStr : eveValObj.params.groIdeStr } ) ) ); // What: Push Send Calls. Why: Each member may be the one who can help. How: This pushes each.
 
 
 } );
@@ -196,7 +196,7 @@ const joiPusFun = onDocumentCreated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 	const bodTexStr = reqCouNum === 1 ? 'Someone wants to join.' : `${ reqCouNum } people want to join.`;                                                                                        // What: Body Text String. Why: The push says how many are waiting. How: This words one request or a count.
 
 
-	await Promise.all( ( await memUidFun( groIdeStr ) ).map( ( memUidStr ) => pusSenFun( memUidStr, 'joinRequest', groNamStr, { bodStr : bodTexStr, tagStr : `join-${ groIdeStr }` } ) ) ); // What: Push Send Calls. Why: Every member can approve, and the phone shows one count however many requests arrive. How: This pushes each member the count, tagged by the group.
+	await Promise.all( ( await memUidFun( groIdeStr ) ).map( ( memUidStr ) => pusSenFun( memUidStr, 'joinRequest', groNamStr, { bodStr : bodTexStr, groIdeStr, tagStr : `join-${ groIdeStr }` } ) ) ); // What: Push Send Calls. Why: Every member can approve, and the phone shows one count however many requests arrive. How: This pushes each member the count, tagged by the group.
 
 
 } );
@@ -245,7 +245,7 @@ const keyPusFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 
 
-	await Promise.all( othUidArr.map( ( othUidStr ) => pusSenFun( othUidStr, 'keyRequest', groNamStr ) ) ); // What: Push Send Calls. Why: Any member online can share the key. How: This pushes each.
+	await Promise.all( othUidArr.map( ( othUidStr ) => pusSenFun( othUidStr, 'keyRequest', groNamStr, { groIdeStr : eveValObj.params.groIdeStr } ) ) ); // What: Push Send Calls. Why: Any member online can share the key. How: This pushes each.
 
 
 } );

@@ -9,6 +9,7 @@ import { doc                       } from 'firebase/firestore';           // Wha
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the right members were pushed. How: This asserts on the pushes the emulator kept.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests write as the app would, past the rules. How: This connects to the emulators.
 import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The pushes are checked. How: This reads what reached a token.
+import { pusTarFun                 } from '../support/pushes.ts';         // What: Push Target Function. Why: A tap on each push should open where its news is. How: This reads each kept push's group and section.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Chat and presence are seeded by path. How: This builds a reference.
 import { set                       } from 'firebase/database';            // What: Set. Why: A message and presence are seeded. How: This writes them.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: Groups, members, and requests are seeded. How: This writes them.
@@ -137,6 +138,8 @@ test( 'a history request becoming pending pushes every other member, and a claim
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'A member is asking for chat history they missed.', title : 'Picnic' } ] ); // What: Alice Pushed. Why: Alice may be the one who can help. How: This waits for her push.
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toHaveLength( 1 );                                                                              // What: Carol Pushed. Why: Carol may help too. How: This waits for her push.
 
+	expect( await pusTarFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { groupId : 'gro1', section : 'chat' } ] ); // What: History Target Check. Why: A tap opens the chat, where the history is read. How: This expects the push to name the group and its chat.
+
 	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/historyRequests/bob' ), { status : 'claimed' } ) ); // What: Claim Call. Why: A claimed request needs no more help. How: This claims it.
 
 	await new Promise( ( resValFun ) => setTimeout( resValFun, 2000 ) ); // What: Claim Settle Wait. Why: A push from the claim would arrive within this time. How: This waits 2 seconds.
@@ -169,6 +172,8 @@ test( 'a join request pushes every member a count that replaces the last, and an
 
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-bob' ) ).toEqual( [ { body : 'Someone wants to join.', tag : 'join-gro1', title : 'Picnic' } ] ); // What: First Push. Why: Every member can approve, and the expired request isn't counted or pushed. How: This waits for one push saying someone wants to join.
 
+	expect( await pusTarFun( funEnvObj, 'tok-bob' ) ).toEqual( [ { groupId : 'gro1', section : 'people' } ] ); // What: Join Target Check. Why: A tap opens People, where requests are answered. How: This expects the push to name the group and People.
+
 	await docSetFun( 'groups/gro1/joinRequests/erin', { expireAt : Timestamp.fromMillis( Date.now() + 86400000 ) } ); // What: Second Request Call. Why: Erin asks too. How: This files her request.
 
 	await expect.poll( async () => ( await pusLisFun( funEnvObj, 'tok-alice' ) ).map( ( pusValObj ) => pusValObj.body ).sort() ).toEqual( [ '2 people want to join.', 'Someone wants to join.' ] ); // What: Count Push. Why: The second push replaces the first with the count. How: This waits for both of Alice's pushes.
@@ -200,6 +205,8 @@ test( 'a chat message pushes each waiting member away from the group, and nobody
 
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-bob' ) ).toEqual( [ { body : 'New messages.', tag : 'chat-gro1', title : 'Picnic' } ] ); // What: Bob Pushed. Why: Bob is away and waiting. How: This waits for one tagged push.
 
+	expect( await pusTarFun( funEnvObj, 'tok-bob' ) ).toEqual( [ { groupId : 'gro1', section : 'chat' } ] ); // What: Chat Target Check. Why: A tap opens the chat with the new messages. How: This expects the push to name the group and its chat.
+
 
 	expect( await pusLisFun( funEnvObj, 'tok-carol' ) ).toEqual( [] ); // What: Carol Not Pushed. Why: Carol has the group open. How: This expects none for her.
 	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [] ); // What: Sender Not Pushed. Why: Alice isn't waiting on her own message. How: This expects none for her.
@@ -218,6 +225,8 @@ test( 'a key request pushes every other member, and other membership changes pus
 
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : "A member on a new phone is waiting for this group's key.", title : 'Picnic' } ] ); // What: Alice Pushed Check. Why: Alice holds the key to share. How: This waits for her push.
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toHaveLength( 1 );                                                                                      // What: Carol Pushed Check. Why: Carol can share it too. How: This waits for her push.
+
+	expect( await pusTarFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { groupId : 'gro1', section : 'people' } ] ); // What: Key Target Check. Why: A tap opens People, where the key is shared. How: This expects the push to name the group and People.
 
 	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/members/bob' ), { lastActiveAt : Timestamp.now() } ) ); // What: Activity Call. Why: A change while the request stands asks nothing new. How: This marks Bob active.
 	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/members/bob' ), { keyRequestedAt : deleteField() } ) ); // What: Answer Call. Why: An answer asks nothing. How: This ends the request.
