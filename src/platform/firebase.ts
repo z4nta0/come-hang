@@ -16,6 +16,7 @@ import { initializeApp                } from 'firebase/app';       // What: Init
 import { initializeFirestore          } from 'firebase/firestore'; // What: Initialize Firestore. Why: Firestore keeps an offline copy on the device. How: This creates Firestore with its local cache.
 import { persistentLocalCache         } from 'firebase/firestore'; // What: Persistent Local Cache. Why: The app works through a dropped connection. How: This keeps Firestore's cache in IndexedDB.
 import { persistentMultipleTabManager } from 'firebase/firestore'; // What: Persistent Multiple Tab Manager. Why: Two tabs of the app may be open at once. How: This lets them share the cache.
+import { proKeyFun                    } from './dev-profile.ts';   // What: Profile Key Function. Why: Each development member needs a Firebase app of its own. How: This names the app for this page's member.
 
 
 import type { Auth            } from 'firebase/auth';      // What: Auth. Why: The services record holds Auth. How: This types it.
@@ -43,7 +44,9 @@ import type { Functions       } from 'firebase/functions'; // What: Functions. W
  * config, which is public by design, from the VITE_FIREBASE_CONFIG
  * environment variable Netlify sets for each environment, and fails with a
  * clear error when it's missing. Everything runs in us-central1, and
- * Firestore keeps its offline cache in IndexedDB.
+ * Firestore keeps its offline cache in IndexedDB. In development, each member
+ * the switcher can act as gets an app of its own, so its sign-in and cache
+ * stay apart.
  *
  * Sections:
  *  - Types
@@ -123,7 +126,7 @@ const firGetFun = () : FirSerTyp => { // What: Firebase Get Function. Why: Every
 
 
 
-	const appValObj = initializeApp( import.meta.env.DEV ? EMU_CON_OBJ : JSON.parse( proConStr! ) as FirebaseOptions ); // What: App Value Object. Why: Every service belongs to one app. How: This creates it from the demo config in development and the environment's in production. // What: Non-Null Note. Why: The guard above threw for a production build without the config. How: The ! says it's here. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as reads it as a web config.
+	const appValObj = initializeApp( import.meta.env.DEV ? EMU_CON_OBJ : JSON.parse( proConStr! ) as FirebaseOptions, proKeyFun( '[DEFAULT]' ) ); // What: App Value Object. Why: Every service belongs to one app, and each development member signs in and caches apart. How: This creates it from the demo config in development and the environment's in production, named after the default app with any member's profile appended. // What: Non-Null Note. Why: The guard above threw for a production build without the config. How: The ! says it's here. // What: Type Assertion Note. Why: JSON.parse returns any. How: The as reads it as a web config.
 
 	const autValObj = getAuth( appValObj ); // What: Auth Value Object. Why: Identities sign in through it. How: This creates it.
 	const funValObj = getFunctions( appValObj, 'us-central1' );                                                                                   // What: Functions Value Object. Why: The functions run in us-central1. How: This creates the instance there.

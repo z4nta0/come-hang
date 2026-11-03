@@ -8,6 +8,7 @@ import { firGetFun    } from './firebase.ts';      // What: Firebase Get Functio
 import { getMessaging } from 'firebase/messaging'; // What: Get Messaging. Why: Tokens come from FCM's Messaging service. How: This returns it for the app.
 import { getToken     } from 'firebase/messaging'; // What: Get Token. Why: The phone is reached through its FCM token. How: This asks FCM for it.
 import { isSupported  } from 'firebase/messaging'; // What: Is Supported. Why: Some browsers can't receive web pushes. How: This asks FCM whether this one can.
+import { proKeyFun    } from './dev-profile.ts';   // What: Profile Key Function. Why: Each development member keeps its own stand-in token. How: This names the key for this page's member.
 
 // #endregion Imports
 
@@ -39,7 +40,7 @@ import { isSupported  } from 'firebase/messaging'; // What: Is Supported. Why: S
 
 // #region Constants
 
-const DEV_TOK_KEY = 'come-hang-dev-push-token'; // What: Development Token Key. Why: The stand-in token lasts as long as a real one would, until it's deleted. How: This names where development keeps it in local storage.
+const DEV_TOK_KEY = proKeyFun( 'come-hang-dev-push-token' ); // What: Development Token Key. Why: The stand-in token lasts as long as a real one would, until it's deleted. How: This names where development keeps it in local storage, apart for each member.
 
 // #endregion Constants
 

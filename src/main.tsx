@@ -25,7 +25,9 @@ import './styles/styles.css'; // What: Styles Stylesheet Import. Why: This is th
  * nowhere else. It applies the light or dark choice kept on this device, then
  * creates the single React root on index.html's appMouDiv element and renders
  * AppRooCom into it, wrapped in StrictMode for development checks and
- * BrowserRouter for the URL-based routing between the pages.
+ * BrowserRouter for the URL-based routing between the pages. In development,
+ * outside a browser driven by a test, it also mounts the member switcher on a
+ * root of its own after the app's, which a production build never loads.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -54,5 +56,20 @@ createRoot( document.getElementById( 'appMouDiv' )! ).render( // What: Root Rend
 
 
 );
+
+
+
+if ( import.meta.env.DEV && !navigator.webdriver ) void import( './dev/switcher.tsx' ).then( ( { DevSwiCom } ) => { // What: Switcher Mount Block. Why: Trying the app as several people needs the switcher, which the suites' driven browsers would only trip over and a production build must never hold. How: This loads it only in development outside a driven browser, a branch the build drops, then renders it on a root of its own.
+
+
+	const devRooDiv = document.createElement( 'div' ); // What: Development Root Div. Why: The switcher sits apart from the app, after it in the page. How: This creates its mount element.
+
+
+	document.body.append( devRooDiv ); // What: Append Call. Why: The switcher comes after the app in the page and in the Tab order. How: This adds the mount element at the body's end.
+
+	createRoot( devRooDiv ).render( <DevSwiCom /> ); // What: Switcher Render Call. Why: The switcher is its own small app. How: This renders it into its mount element.
+
+
+} );
 
 

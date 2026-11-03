@@ -3,9 +3,10 @@
 
 // #region Imports
 
-import { chaStaFun } from './chat.ts';           // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat. How: This sends one.
-import { jsoObjFun } from '../utils/json.ts';    // What: JSON Object Function. Why: The kept record may be damaged or from an older version. How: This parses it safely.
-import { locShaFun } from './location.ts';       // What: Location Share Function. Why: Sharing runs as a session of fixes. How: This starts one.
+import { chaStaFun } from './chat.ts';                  // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat. How: This sends one.
+import { jsoObjFun } from '../utils/json.ts';           // What: JSON Object Function. Why: The kept record may be damaged or from an older version. How: This parses it safely.
+import { locShaFun } from './location.ts';              // What: Location Share Function. Why: Sharing runs as a session of fixes. How: This starts one.
+import { proKeyFun } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps its own record. How: This names the key for this page's member.
 
 
 import type { StaKinTyp } from '../core/chat-status.ts'; // What: Status Kind Type. Why: Leaving and arriving post the same way. How: This types which one.
@@ -52,7 +53,7 @@ type ShaRecTyp = { arrBoo : boolean, endTimNum : number, eveIdeStr : string, gro
 
 // #region Constants
 
-const SHA_STO_STR = 'come-hang-sharing'; // What: Sharing Storage String. Why: The record has to survive a reload. How: This is the local storage key it's kept under.
+const SHA_STO_STR = proKeyFun( 'come-hang-sharing' ); // What: Sharing Storage String. Why: The record has to survive a reload. How: This is the local storage key it's kept under, apart for each development member.
 
 // #endregion Constants
 

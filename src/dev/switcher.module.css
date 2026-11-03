@@ -1,0 +1,176 @@
+
+
+
+/**
+ * switcher.module.css = Member Switcher Module
+ *
+ * @summary
+ * Styles for DevSwiCom: the toggle, a dark tab held to the middle of the
+ * screen's end edge above the app, and the sheet's content, the note in muted
+ * text, the members as a column of outlined buttons with the current one
+ * filled, the seed button at its own width, and the status below it.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region devSwiAsi */
+
+.devSwiAsi { /* What: Development Switcher Aside. Why: The landmark only holds the toggle and the sheet, which place themselves. How: This takes no room of its own. */
+
+
+	display : contents;
+
+
+}
+
+.swiTogBut { /* What: Switcher Toggle Button. Why: The tools stay in reach on every screen without covering the bar or the tabs, and should never pass for part of the app. How: This holds a dark tab to the middle of the end edge, rounded on its open side, at least a touch target tall, above the app's moving parts, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color  : var( --bac-inv-col );                      /* Background Inverse Color = #1D1E33 */
+	border            : 0;
+	border-radius     : 999px 0 0 999px;
+	color             : var( --bac-pag-col );                      /* Background Page Color = #F4F4FA */
+	font              : inherit;
+	font-size         : var( --fon-siz-bas );                      /* Font Size Base = 11px */
+	font-weight       : 700;
+	inset-block-start : 50%;
+	inset-inline-end  : 0;
+	min-height        : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding           : var( --spa-ver-m04 ) var( --spa-ver-m02 ); /* Spacing Vertical Base Minus 4 ~= 4.732px, Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	position          : fixed;
+	transition        : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), scale var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	translate         : 0 -50%;
+	z-index           : 1;                                         /* What: Toggle Layer. Why: A page element that moves, such as a lifted button, paints above a later fixed element at the same level. How: Layer 1 keeps the toggle above it, the same as the skip link. */
+
+
+}
+.swiTogBut:hover { /* What: Hovered Switcher Toggle Button. Why: The toggle should respond to the pointer, and a lift would pull it off its edge. How: This lightens the tab. */
+
+
+	background-color : oklch( from var( --bac-inv-col ) calc( l + 0.12 ) c h ); /* Background Inverse Color = #1D1E33, lightened by 0.12 lightness */
+
+
+}
+.swiTogBut:active { /* What: Pressed Switcher Toggle Button. Why: A press should register before anything else happens. How: This presses the tab in slightly. */
+
+
+	scale : 0.97; /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Switcher Toggle Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.swiTogBut { /* What: Motionless Switcher Toggle Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.swiNotPar { /* What: Switcher Note Paragraph. Why: The note explains rather than leads. How: This sets it in muted text at the small text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+
+
+
+/* #region swiMemUno */
+
+.swiMemUno { /* What: Switcher Member Unordered List. Why: The members read down one column, a part's worth apart. How: This stacks the rows a tier 4 space apart with no bullets. */
+
+
+	display    : grid;
+	list-style : none;
+	row-gap    : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.swiMemBut { /* What: Switcher Member Button. Why: Each member is a full-width choice, still a full touch target. How: This draws an accent outlined pill with bold accent text at the start, at least a touch target tall, and eases every change between its looks and its focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	text-align       : start;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : 100%;
+
+
+}
+.swiMemBut:hover { /* What: Hovered Switcher Member Button. Why: A row in a column of choices shows it's live by color, since a lift would jostle the column. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.swiMemBut:active { /* What: Pressed Switcher Member Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+.swiMemBut[aria-current='true'] { /* What: Current Switcher Member Button. Why: The member the tab acts as should stand out from the others. How: This fills it with the accent and sets its text in the accent's text color. */
+
+
+	background-color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	color            : var( --tex-acc-col ); /* Text Accent Color = #FFFFFF */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Switcher Member Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.swiMemBut { /* What: Motionless Switcher Member Button. Why: The hover, press, current, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion swiMemUno */
+
+
+
+.swiSeeBut { /* What: Switcher Seed Button. Why: The button sits at its own width below the members rather than stretching across the sheet. How: This aligns it to the start. */
+
+
+	justify-self : start;
+
+
+}
+
+.swiStaPar { /* What: Switcher Status Paragraph. Why: Each stage of the seed shows below its button, quieter than the controls. How: This sets it in muted text. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+/* #endregion devSwiAsi */
+
+

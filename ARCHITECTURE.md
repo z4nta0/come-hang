@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-02 (joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1844,6 +1844,35 @@ the Blaze change.
 - The browser suite in `tests/client/` (`npm run test:client`) checks
   this in Chromium, Firefox, and WebKit against the emulators, since
   WebCrypto and IndexedDB differ between engines.
+- The member switcher (built 2026-11-02, development only) lets one browser
+  act as several members, which is safe since the dev server only ever
+  reaches the emulators:
+  - **Per member storage**: a page's member comes from a `dev-member`
+    address parameter or, failing that, the tab's session storage, which the
+    switcher sets, so each tab can be someone else. Each member keeps its
+    own Firebase app, so its own sign-in and Firestore cache, its own
+    IndexedDB database, and its own local storage keys
+    (`src/platform/dev-profile.ts`), while the device's own identity keeps
+    the names it always had.
+  - **The switcher**: a toggle on the screen's end edge
+    (`src/dev/switcher.tsx`) names whom the tab acts as and opens a sheet
+    listing You, Alex Kim, Sam Ortiz, and Priya Nair. Choosing one reloads
+    the tab as them.
+  - **The seed**: a button in the sheet (`src/dev/seed.ts`) builds Lake
+    Weekend in the emulators. Alex starts it, Sam and Priya join through
+    the invite and Alex's approval, Jordan Lee's request is left waiting,
+    Alex plans a picnic starting about 2 hours ahead with a partly claimed
+    bring-list, Sam plans a game night on the next Friday, and the three of
+    them chat. Each member acts in a hidden frame of its own through the
+    app's own functions, so their keys stay in the browser for the switcher.
+    The frames run one at a time, since each Firestore client holds
+    connections to the emulator, and with four frames open the browser's
+    limit of 6 connections to a host left requests waiting a minute
+    (measured 2026-11-02). Seeding starts the seeded members afresh. It's a
+    button rather than an npm script, since a script's members would keep
+    their keys in a browser other than the one the switcher runs in.
+  - **Kept out**: the switcher isn't mounted in a browser a test drives, and
+    a production build holds none of it, which the security suite checks.
 
 **App structure, still open**:
 - The exact hook API/conventions (naming, loading/error state shape, how
