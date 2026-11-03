@@ -22,6 +22,7 @@ import { insProFun            } from '../platform/install.ts';    // What: Insta
 import { insSubFun            } from '../platform/install.ts';    // What: Install Subscribe Function. Why: The Install button follows the prompt as it comes and goes. How: This subscribes to it.
 import { isaInsFun            } from '../platform/install.ts';    // What: Is-An Installed Function. Why: An installed app needs no install part. How: This checks whether it runs installed.
 import { isaIosFun            } from '../platform/install.ts';    // What: Is-An iOS Function. Why: An iPhone installs through Safari's own menu. How: This checks for an iPhone or iPad.
+import { LegDocCom            } from '../legal/docs.tsx';         // What: Legal Documents Component. Why: Settings holds the privacy policy and the terms. How: This draws their part and its sheet.
 import { memLisFun            } from '../state/members.ts';       // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
 import { OFF_LIF_NUM          } from '../state/ownership.ts';     // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
 import { offAccFun            } from '../state/ownership.ts';     // What: Offer Accept Function. Why: The member offered the group can take it. How: This makes them its owner.
@@ -57,11 +58,12 @@ import type { MemRecTyp } from '../state/members.ts';       // What: Member Reco
  * and everyone else reads; handing the group over, which the owner offers to a
  * member and the member accepts or declines; this phone's appearance,
  * notifications, and how to install the app until it's installed; the
- * account's Google link and upgrade; then the way out of the group, a leave
- * for a member and a deletion, confirmed by typing the group's name, for the
- * owner. Each change is announced, a field with a problem says so beside it,
- * and a change that fails says why. A leave or deletion hands the group to the
- * screen host, which opens what's left.
+ * account's Google link and upgrade; the privacy policy and the terms, each
+ * opening in a sheet; then the way out of the group, a leave for a member and
+ * a deletion, confirmed by typing the group's name, for the owner. Each change
+ * is announced, a field with a problem says so beside it, and a change that
+ * fails says why. A leave or deletion hands the group to the screen host,
+ * which opens what's left.
  *
  * Sections:
  *  - Constants
@@ -1165,6 +1167,10 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 			</section>
+
+
+
+			<LegDocCom />{ /* What: Legal Documents Component. Why: The privacy policy and the terms should be readable from inside the app, offline too. How: This draws their part above the way out of the group. */ }
 
 
 

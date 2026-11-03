@@ -43,7 +43,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	iosBoo? : boolean,                       // What: iOS Boolean. Why: An iPhone in Safari shows the install steps first. How: This makes the page report an iPhone's Safari when true.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -72,7 +72,8 @@ const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Appl
  * People section with two requests waiting, the owner's Settings, its
  * deletion's confirmation, a member's Settings with and without an offer of
  * the group, the Map section while sharing, the join form an invite link
- * opens, a sent request waiting, and the waiting screen with its loader
+ * opens, a sent request waiting, the privacy policy's sheet in Settings, the
+ * static privacy and terms pages, and the waiting screen with its loader
  * showing. Every row shares the {@link
  * StaRecTyp} shape, so its fields carry no comments of their own:
  *
@@ -127,6 +128,7 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 900, ideStr : 'settings-desktop',     patStr : '/',         widNum : 1440, steStr : 'settings'                 }, // What: Settings Desktop State. Why: The owner's Settings section is checked at a desktop width. How: This opens it in a new group at 1,440px.
 	{ heiNum : 844, ideStr : 'settings-phone',       patStr : '/',         widNum : 390,  steStr : 'settings'                 }, // What: Settings Phone State. Why: The owner's Settings section is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/',         widNum : 390,  steStr : 'delete'                   }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
+	{ heiNum : 844, ideStr : 'legal-phone',          patStr : '/',         widNum : 390,  steStr : 'legal'                    }, // What: Legal Phone State. Why: The privacy policy opens in a sheet from Settings. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/',         widNum : 390,  steStr : 'member'                   }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
 	{ heiNum : 844, ideStr : 'history-phone',        patStr : '/',         widNum : 390,  steStr : 'history'                  }, // What: History Phone State. Why: A fresh joiner of an older group is offered its earlier chat in a banner atop the chat. How: This joins another's group, made older, at 390px.
 	{ heiNum : 844, ideStr : 'helping-phone',        patStr : '/',         widNum : 390,  steStr : 'helping'                  }, // What: Helping Phone State. Why: A member who can help sees another's request in People. How: This joins another's group whose owner asks for history, at 390px.
@@ -138,7 +140,11 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'waiting-phone',        patStr : '/',         widNum : 390,  steStr : 'waiting'                  }, // What: Waiting Phone State. Why: A sent request's waiting part is checked with its withdrawal. How: This asks through another's link at 390px.
 	{ heiNum : 844, ideStr : 'install-phone',        patStr : '/',         widNum : 390,  iosBoo : true                       }, // What: Install Phone State. Why: An iPhone in Safari shows the install steps before anything else. How: This opens the app as an iPhone's Safari at 390px.
 	{ heiNum : 900, ideStr : 'install-tablet',       patStr : '/',         widNum : 1024, iosBoo : true                       }, // What: Install Tablet State. Why: An iPad shows the same steps at a wider width. How: This opens the app as an iPad's Safari at 1,024px.
-	{ heiNum : 844, ideStr : 'invited-phone',        patStr : INV_PAT_STR, widNum : 390,  iosBoo : true                       }  // What: Invited Phone State. Why: An invite link opened in an iPhone's Safari keeps its link to copy before the steps. How: This opens a link as an iPhone's Safari at 390px.
+	{ heiNum : 844, ideStr : 'invited-phone',        patStr : INV_PAT_STR, widNum : 390,  iosBoo : true                       }, // What: Invited Phone State. Why: An invite link opened in an iPhone's Safari keeps its link to copy before the steps. How: This opens a link as an iPhone's Safari at 390px.
+	{ heiNum : 900, ideStr : 'privacy-desktop',      patStr : '/privacy',  widNum : 1440                                      }, // What: Privacy Desktop State. Why: The static privacy policy page is checked at a desktop width. How: This loads /privacy at 1,440px.
+	{ heiNum : 844, ideStr : 'privacy-phone',        patStr : '/privacy',  widNum : 390                                       }, // What: Privacy Phone State. Why: The policy's page is checked at a phone width. How: This loads /privacy at 390px.
+	{ heiNum : 900, ideStr : 'terms-desktop',        patStr : '/terms',    widNum : 1440                                      }, // What: Terms Desktop State. Why: The static terms page is checked at a desktop width. How: This loads /terms at 1,440px.
+	{ heiNum : 844, ideStr : 'terms-phone-dark',     patStr : '/terms',    widNum : 390,  schStr : 'dark'                     }  // What: Terms Phone Dark State. Why: The legal pages' dark colors are checked too. How: This loads /terms at 390px with the phone set to dark.
 
 
 ];
@@ -680,7 +686,7 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -922,7 +928,7 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 
-	if ( steStr === 'delete' || steStr === 'settings' ) { // What: Settings Block. Why: The settings states open the owner's Settings section, and the delete state the deletion's confirmation too. How: This presses the tab, reloads the section so nothing is focused, waits for its form, opens the confirmation for the delete state, and stops.
+	if ( steStr === 'delete' || steStr === 'legal' || steStr === 'settings' ) { // What: Settings Block. Why: The settings states open the owner's Settings section, the delete state the deletion's confirmation too, and the legal state the privacy policy's sheet. How: This presses the tab, reloads the section so nothing is focused, waits for its form, opens the confirmation or the sheet for those states, and stops.
 
 
 		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The section opens from its tab. How: This presses it.
@@ -933,6 +939,18 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 		if ( steStr === 'delete' ) await curPagObj.getByRole( 'button', { name : 'Delete group' } ).click(); // What: Delete Click Call. Why: The delete state shows the confirmation. How: This opens it.
+
+
+
+		if ( steStr === 'legal' ) { // What: Legal Block. Why: The legal state shows the privacy policy's sheet. How: This opens it and waits for its text.
+
+
+			await curPagObj.getByRole( 'button', { name : 'Privacy Policy' } ).click(); // What: Privacy Click Call. Why: The sheet opens from its button. How: This presses it.
+
+			await curPagObj.getByRole( 'dialog', { name : 'Privacy Policy' } ).getByRole( 'heading', { name : 'The short version' } ).waitFor(); // What: Sheet Wait. Why: The sheet has to be open with the policy in it before it's checked. How: This waits for its first section's heading.
+
+
+		}
 
 
 

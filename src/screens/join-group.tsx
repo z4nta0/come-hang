@@ -12,6 +12,7 @@ import { InsNotCom } from '../ui/install-note.tsx'; // What: Install Note Compon
 import { invGetFun } from '../state/joins.ts';      // What: Invite Get Function. Why: The screen names the group its link opens. How: This reads the invite.
 import { joiNotFun } from '../core/text-limits.ts'; // What: Join Note Function. Why: A note outside its limits is caught before anything is sent. How: This checks it.
 import { joiWatFun } from '../state/joins.ts';      // What: Join Watch Function. Why: The group opens as soon as a member lets the joiner in. How: This watches the request.
+import { LegLinCom } from '../legal/links.tsx';     // What: Legal Links Component. Why: Asking to join means agreeing to the terms and the policy. How: This draws the line linking both.
 import { MaiAreCom } from '../ui/main-area.tsx';    // What: Main Area Component. Why: The invite is the screen's main content. How: This holds it in the main landmark.
 import { perNamFun } from '../core/text-limits.ts'; // What: Person Name Function. Why: A name outside its limits is caught before anything is sent. How: This checks it.
 import { reqCreFun } from '../state/joins.ts';      // What: Request Create Function. Why: Sending the form asks to join. How: This files the request.
@@ -31,17 +32,18 @@ import { useState  } from 'react';                  // What: Use State. Why: The
  *
  * @summary
  * The screen an invite link opens (ARCHITECTURE.md Sections 9 and 17): a back
- * button and a heading over the part the join has reached. It opens the
- * invite to name its group, or says the link no longer works, or that it
- * couldn't be opened with a way to try again. Someone not yet asking gives
- * their full name and an optional note, each checked against its limits
- * before anything is sent, and a request the group refuses says why. While a
- * request waits the screen says a member will let them in, offers to
- * withdraw it, and watches it: an approval opens the group, and a request
- * that ends without one says so, with a way to ask again. A link opened by
- * a member, or by a joiner already let in, opens the group. Each change of
- * part moves focus to the heading, since the button pressed is gone. A
- * browser that can install the app with one tap suggests it in a note below.
+ * button and a heading over the part the join has reached. It opens the invite
+ * to name its group, or says the link no longer works, or that it couldn't be
+ * opened with a way to try again. Someone not yet asking gives their full name
+ * and an optional note, each checked against its limits before anything is
+ * sent, above a line saying that asking means agreeing to the terms and the
+ * privacy policy, and a request the group refuses says why. While a request
+ * waits the screen says a member will let them in, offers to withdraw it, and
+ * watches it: an approval opens the group, and a request that ends without one
+ * says so, with a way to ask again. A link opened by a member, or by a joiner
+ * already let in, opens the group. Each change of part moves focus to the
+ * heading, since the button pressed is gone. A browser that can install the
+ * app with one tap suggests it in a note below.
  *
  * Sections:
  *  - Types
@@ -751,6 +753,12 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 
 							</div>
+
+
+
+							<LegLinCom actStr='asking to join' />{ /* What: Legal Links Component. Why: Someone arriving through an invite link never sees the welcome, so the form says what asking means. How: This says asking means agreeing to the terms and the policy, linking both, above the button. */ }
+
+
 
 							<ButBasCom
 								className={ cssModObj.joiActBut }

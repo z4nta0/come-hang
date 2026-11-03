@@ -8,7 +8,8 @@
  * Styles for WelScrCom: a main area filling the screen as one centered
  * column, the mark above the wordmark and tagline a tier 3 space apart, the
  * start button a tier 2 space below them, then the outlined button that gets
- * groups back, and the alert for a sign-in that doesn't go through.
+ * groups back, the alert for a sign-in that doesn't go through, and the
+ * agreement line a tier 2 space below them.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -23,7 +24,7 @@
 
 	align-content       : center;
 	display             : grid;
-	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut' 'welJoiBut' 'welRecBut' 'welErrPar';
+	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut' 'welJoiBut' 'welRecBut' 'welErrPar' 'welLegPar';
 	justify-items       : center;
 	min-height          : 100vh;
 	padding             : var( --tie-ver-001 ) var( --gut-sid-pad );       /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
@@ -157,6 +158,15 @@
 
 
 	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+.welLegPar { /* What: Welcome Legal Paragraph. Why: The agreement line sits below the buttons, apart from them. How: This places it in its own area, the tier 2 space less the tier 3 gap below what's above it. */
+
+
+	grid-area  : welLegPar;
+	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
 
 
 }

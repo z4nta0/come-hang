@@ -64,7 +64,8 @@ Each group has five:
   new phone for the group's key, requests for history, and the members.
 - **Settings:** the group's name, its chat retention, handing it to another
   member, leaving, and deleting it, plus this phone's light or dark mode and
-  notifications, linking Google, and the upgrade.
+  notifications, linking Google, the upgrade, and the privacy policy and
+  terms.
 
 ## Running it locally
 
@@ -139,6 +140,7 @@ src/
   screens/           each screen, with its CSS module beside it
   ui/                shared components and hooks
   utils/             small app-agnostic helpers
+  legal/             the privacy policy and terms, their pages, and their sheet
   dev/               the development member switcher and its demo seed
   styles/            global CSS (fonts, tokens, base styles)
   assets/            the self-hosted fonts and shared images
@@ -146,6 +148,8 @@ functions/           the Cloud Functions, with their own package.json
 tests/               the test suites and their helpers
 public/              files served at fixed addresses, such as the icons
 design/              the brand artwork and its renderers, not shipped
+privacy.html         the privacy policy's page, the document built into it
+terms.html           the terms' page, the document built into it
 deploy-files.ts      fills in the hosting files for a build's Firebase project
 firestore.rules      who may read and write each Firestore document
 database.rules.json  who may read and write chat and presence
