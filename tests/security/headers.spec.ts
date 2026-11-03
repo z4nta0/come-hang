@@ -26,9 +26,10 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
  * headers public/_headers sends have to hold the app to its own strict policy,
  * such as refusing framing. The production build, which the security suite's
  * preview server builds before the run, has to hold no private key or provider
- * token. npm audit has to find no high or critical advisory in the shipped
- * dependencies of the app or the Cloud Functions, and skips with a message
- * when npm's registry can't be reached.
+ * token, and none of the development member switcher or its seed. npm audit
+ * has to find no high or critical advisory in the shipped dependencies of the
+ * app or the Cloud Functions, and skips with a message when npm's registry
+ * can't be reached.
  *
  * Sections:
  *  - Constants
@@ -65,6 +66,16 @@ const SEC_PAT_ARR = [ // What: Secret Pattern Array. Why: A key pasted into the 
 	/gh[opsu]_[0-9A-Za-z]{36}/,           // What: GitHub Token Pattern. Why: A GitHub token opens with a short type prefix. How: This matches a personal, OAuth, app, or user token.
 	/sk_live_[0-9A-Za-z]{20,}/,           // What: Stripe Key Pattern. Why: A live Stripe secret key opens with sk_live_. How: This matches one.
 	/xox[abprs]-[0-9A-Za-z-]{10,}/        // What: Slack Token Pattern. Why: A Slack token opens with xox and a type letter. How: This matches one.
+
+
+];
+
+const DEV_MAR_ARR = [ // What: Development Marker Array. Why: The member switcher and its seed belong to the dev server alone. How: Each entry is text only they hold.
+
+
+	'come-hang-dev-member', // What: Profile Key Marker. Why: The switcher keeps the tab's member under this key. How: This names it.
+	'Seed demo group',      // What: Seed Button Marker. Why: The switcher's seed button reads this. How: This names it.
+	'seed-frame'            // What: Seed Frame Marker. Why: The seed loads its frames from this page. How: This names it.
 
 
 ];
@@ -151,6 +162,37 @@ test( 'the built app holds no secrets', () => { // What: Secret Search Test. Why
 
 
 	expect( proLisArr ).toEqual( [] ); // What: No Secrets Assertion. Why: The build should hold none. How: This checks the list stayed empty.
+
+
+} );
+
+
+
+test( 'the built app holds none of the development tools', () => { // What: Development Tools Test. Why: The member switcher acts as other people and resets them, which no visitor should reach. How: This searches every built text file for the tools' own text and checks that no file holds any.
+
+
+	const proLisArr : string[] = []; // What: Problem List Array. Why: Every match is reported at once. How: This collects one entry per match.
+
+
+	for ( const filEntObj of readdirSync( DIS_DIR_STR, { recursive : true, withFileTypes : true } ) ) { // What: Built Entry Loop. Why: Any built file could hold the tools. How: This walks every file and folder in the build.
+
+
+		if ( !filEntObj.isFile() || BIN_EXT_REG.test( filEntObj.name ) ) continue; // What: Text File Guard. Why: Folders, images, and fonts hold no text to search. How: This skips folders and files with a binary extension.
+
+
+
+		const filPatStr = join( filEntObj.parentPath, filEntObj.name ); // What: File Path String. Why: The file is read, and reported, by its path. How: This joins the entry's folder and name.
+		const filTexStr = readFileSync( filPatStr, 'utf8' );            // What: File Text String. Why: Each marker is searched in the file's text. How: This reads the built file.
+
+
+		for ( const devMarStr of DEV_MAR_ARR ) if ( filTexStr.includes( devMarStr ) ) proLisArr.push( `${ relative( DIS_DIR_STR, filPatStr ) } holds "${ devMarStr }"` ); // What: Marker Loop. Why: Each part of the tools is searched for. How: This records the file and the marker it holds.
+
+
+	}
+
+
+
+	expect( proLisArr ).toEqual( [] ); // What: No Tools Assertion. Why: The build should hold none of the tools. How: This checks the list stayed empty.
 
 
 } );

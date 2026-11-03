@@ -66,8 +66,9 @@ arrived" to the chat as status lines, the sharing running across sections
 and resuming after a reload. An invite link opens the join screen, which asks
 for a joiner's name and an optional note, waits for a member's approval,
 offers to withdraw the request, and opens the group once they're let in.
-Its one service worker opens the app offline and shows pushes. Next steps are
-in ARCHITECTURE.md's Section 14.
+Its one service worker opens the app offline and shows pushes. In development,
+a member switcher on the screen's edge acts as the members of a demo group it
+seeds, one tab per member. Next steps are in ARCHITECTURE.md's Section 14.
 
 **Design tokens**: the chosen design's colors, fonts, and text widths are
 in `src/styles/styles.css`, with no placeholders left.

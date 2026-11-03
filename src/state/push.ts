@@ -3,19 +3,20 @@
 
 // #region Imports
 
-import { deleteDoc       } from 'firebase/firestore';       // What: Delete Doc. Why: Turning notifications off removes the stored token. How: This deletes it.
-import { doc             } from 'firebase/firestore';       // What: Doc. Why: The token has one fixed document. How: This builds its reference.
-import { firGetFun       } from '../platform/firebase.ts';  // What: Firebase Get Function. Why: The token is stored in Firestore. How: This returns the services.
-import { getDoc          } from 'firebase/firestore';       // What: Get Doc. Why: A refresh compares with what's stored. How: This reads it.
-import { ideEnsFun       } from './identity.ts';            // What: Identity Ensure Function. Why: The token is stored under the identity's account. How: This reads the identity.
-import { notSupFun       } from '../platform/messaging.ts'; // What: Notification Supported Function. Why: Notifications are offered only where they work. How: This checks the browser.
-import { perAskFun       } from '../platform/messaging.ts'; // What: Permission Ask Function. Why: Turning notifications on asks the person. How: This asks the browser.
-import { perStaFun       } from '../platform/messaging.ts'; // What: Permission State Function. Why: A refresh checks the person still allows them. How: This reads the answer.
-import { serverTimestamp } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules accept only the server's time for a refresh. How: This stamps it.
-import { setDoc          } from 'firebase/firestore';       // What: Set Doc. Why: The token is stored whole. How: This writes it.
-import { Timestamp       } from 'firebase/firestore';       // What: Timestamp. Why: The token's expiry is a timestamp. How: This builds it.
-import { tokDelFun       } from '../platform/messaging.ts'; // What: Token Delete Function. Why: Turning notifications off retires the token. How: This deletes it.
-import { tokGetFun       } from '../platform/messaging.ts'; // What: Token Get Function. Why: The phone is reached by its token. How: This gets it.
+import { deleteDoc       } from 'firebase/firestore';         // What: Delete Doc. Why: Turning notifications off removes the stored token. How: This deletes it.
+import { doc             } from 'firebase/firestore';         // What: Doc. Why: The token has one fixed document. How: This builds its reference.
+import { firGetFun       } from '../platform/firebase.ts';    // What: Firebase Get Function. Why: The token is stored in Firestore. How: This returns the services.
+import { getDoc          } from 'firebase/firestore';         // What: Get Doc. Why: A refresh compares with what's stored. How: This reads it.
+import { ideEnsFun       } from './identity.ts';              // What: Identity Ensure Function. Why: The token is stored under the identity's account. How: This reads the identity.
+import { notSupFun       } from '../platform/messaging.ts';   // What: Notification Supported Function. Why: Notifications are offered only where they work. How: This checks the browser.
+import { perAskFun       } from '../platform/messaging.ts';   // What: Permission Ask Function. Why: Turning notifications on asks the person. How: This asks the browser.
+import { perStaFun       } from '../platform/messaging.ts';   // What: Permission State Function. Why: A refresh checks the person still allows them. How: This reads the answer.
+import { proKeyFun       } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps its own choice. How: This names the key for this page's member.
+import { serverTimestamp } from 'firebase/firestore';         // What: Server Timestamp. Why: The rules accept only the server's time for a refresh. How: This stamps it.
+import { setDoc          } from 'firebase/firestore';         // What: Set Doc. Why: The token is stored whole. How: This writes it.
+import { Timestamp       } from 'firebase/firestore';         // What: Timestamp. Why: The token's expiry is a timestamp. How: This builds it.
+import { tokDelFun       } from '../platform/messaging.ts';   // What: Token Delete Function. Why: Turning notifications off retires the token. How: This deletes it.
+import { tokGetFun       } from '../platform/messaging.ts';   // What: Token Get Function. Why: The phone is reached by its token. How: This gets it.
 
 
 import type { DocumentReference } from 'firebase/firestore'; // What: Document Reference. Why: The token's reference is built in one place. How: This types it.
@@ -51,9 +52,9 @@ import type { DocumentReference } from 'firebase/firestore'; // What: Document R
 
 // #region Constants
 
-const DAY_MIL_NUM = 86400000;                 // What: Day Milliseconds Number. Why: The token is refreshed at most once a day. How: This is one day in milliseconds.
-const PUS_ENA_KEY = 'come-hang-push-enabled'; // What: Push Enabled Key. Why: Whether notifications are on is the device's choice, kept apart from a token the server may drop. How: This names where local storage keeps it.
-const TOK_LIF_NUM = 60 * DAY_MIL_NUM;         // What: Token Lifetime Number. Why: A token nobody refreshed for 60 days is presumed dead, as Firebase advises. How: This is the expiry's distance in milliseconds.
+const DAY_MIL_NUM = 86400000;                              // What: Day Milliseconds Number. Why: The token is refreshed at most once a day. How: This is one day in milliseconds.
+const PUS_ENA_KEY = proKeyFun( 'come-hang-push-enabled' ); // What: Push Enabled Key. Why: Whether notifications are on is the device's choice, kept apart from a token the server may drop. How: This names where local storage keeps it, apart for each development member.
+const TOK_LIF_NUM = 60 * DAY_MIL_NUM;                      // What: Token Lifetime Number. Why: A token nobody refreshed for 60 days is presumed dead, as Firebase advises. How: This is the expiry's distance in milliseconds.
 
 // #endregion Constants
 
