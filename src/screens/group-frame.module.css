@@ -9,7 +9,7 @@
  * the group's name as a switcher above the content, and the section tabs
  * along the bottom. From 720px up a rail of group tiles runs down the left,
  * the bar's name turns to plain text, and the sections become a column of
- * rows beside the content. The group sheet's list and button are styled here,
+ * rows beside the content. The group sheet's list and buttons are styled here,
  * while the sheet itself is the shared sheet's.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -158,7 +158,7 @@
 /* #endregion raiGroBut */
 
 
-.raiNewBut { /* What: Rail New Button. Why: Starting a group sits apart from the groups as a lighter tile. How: This draws a dashed rounded square at the touch target size in the muted text color, and eases its hover colors, press scale, and focus ring. */
+.raiNewBut { /* What: Rail New Button. Why: Starting a group and joining one with a link sit apart from the groups as lighter tiles. How: This draws a dashed rounded square at the touch target size in the muted text color, and eases its hover colors, press scale, and focus ring. */
 
 
 	background-color : transparent;
@@ -173,7 +173,7 @@
 
 
 }
-.raiNewBut:hover { /* What: Hovered Rail New Button. Why: The tile shows it's live by color alone, like the group tiles. How: This fills it with the accent tint and darkens its plus to the main text color. */
+.raiNewBut:hover { /* What: Hovered Rail New Button. Why: The tile shows it's live by color alone, like the group tiles. How: This fills it with the accent tint and darkens its icon to the main text color. */
 
 
 	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
@@ -581,6 +581,50 @@
 
 
 	justify-self : start;
+
+
+}
+
+.sheJoiBut { /* What: Sheet Join Button. Why: Joining with an invite link is a lighter action than starting a group, still a full touch target, below it at the sheet's start edge. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, aligned to the start, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	justify-self     : start;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.sheJoiBut:hover { /* What: Hovered Sheet Join Button. Why: The button shows it's live under the pointer, and a lift would jostle the sheet's column. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.sheJoiBut:active { /* What: Pressed Sheet Join Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Sheet Join Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.sheJoiBut { /* What: Motionless Sheet Join Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
 
 
 }

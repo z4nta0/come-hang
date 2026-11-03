@@ -110,7 +110,7 @@ test( 'the invite link shows and copies, and the owner replaces it after confirm
 	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The link is in the People section. How: This opens it.
 
 
-	const linInpObj = curPagObj.getByLabel( 'Invite link' ); // What: Link Input Object. Why: The checks read the link's box. How: This finds it.
+	const linInpObj = curPagObj.getByLabel( 'Invite link', { exact : true } ); // What: Link Input Object. Why: The checks read the link's box. How: This finds it.
 	const oldLinStr = await linInpObj.inputValue();          // What: Old Link String. Why: A new link has to differ from it. How: This reads the box.
 
 
@@ -204,7 +204,7 @@ pagTesObj( 'the owner removes a member after confirming, which changes the link,
 	await secOpeFun( curPagObj ); // What: Owner Section Call. Why: Removal is in the People section. How: This opens it.
 
 
-	const oldLinStr = await curPagObj.getByLabel( 'Invite link' ).inputValue(); // What: Old Link String. Why: A removal has to change the link. How: This reads it first.
+	const oldLinStr = await curPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue(); // What: Old Link String. Why: A removal has to change the link. How: This reads it first.
 
 
 	await curPagObj.getByRole( 'button', { name : 'Remove Dana Lee' } ).click(); // What: Remove Click Call. Why: The owner removes the member. How: This asks to confirm.
@@ -223,7 +223,7 @@ pagTesObj( 'the owner removes a member after confirming, which changes the link,
 	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Removed Dana Lee. The invite link changed.' ); // What: Removed Status Assertion. Why: The removal is announced with its new link. How: This reads the status.
 	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (1)' } ) ).toBeVisible();                            // What: Count Assertion. Why: The member is gone from the list. How: This waits for the count.
 	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Members (1)' } ) ).toBeFocused();                            // What: Members Focus Assertion. Why: The removed member's row went with its buttons. How: This expects the members' heading focused.
-	await expect( curPagObj.getByLabel( 'Invite link' ) ).not.toHaveValue( oldLinStr );                                             // What: Changed Link Assertion. Why: A removal replaces the link. How: This waits for the box to change.
+	await expect( curPagObj.getByLabel( 'Invite link', { exact : true } ) ).not.toHaveValue( oldLinStr );                                             // What: Changed Link Assertion. Why: A removal replaces the link. How: This waits for the box to change.
 
 
 } );

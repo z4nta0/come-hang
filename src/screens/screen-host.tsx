@@ -11,6 +11,7 @@ import { GroFraCom       } from './group-frame.tsx';   // What: Group Frame Comp
 import { groWatFun       } from '../state/groups.ts';  // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
 import { JoiGroCom       } from './join-group.tsx';    // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
 import { LoaScrCom       } from './loading.tsx';       // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
+import { PasInvCom       } from './paste-invite.tsx';  // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
 import { scrReaFun       } from '../ui/scroll-top.ts'; // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
 import { shaEndFun       } from '../state/sharing.ts'; // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
 import { shaGetFun       } from '../state/sharing.ts'; // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
@@ -366,6 +367,10 @@ function ScrHosCom () : React.JSX.Element {
 
 
 		if ( scrStaObj?.scrStr === 'create' ) return <CreGroCom onCreFun={ ( groIdeStr ) => { setWatVerNum( ( preVerNum ) => preVerNum + 1 ); scrOpeFun( { focBoo : true, groStr : groIdeStr, scrStr : 'group' }, true ); } } />; // What: Create Screen Return. Why: The entry asks for the form, and a created group opens in its place. How: This shows the form, which restarts the watch and replaces its entry with the new group's, asking for focus, when it's done.
+
+
+
+		if ( scrStaObj?.scrStr === 'paste' ) return <PasInvCom />; // What: Paste Return. Why: Joining with an invite link has its own screen. How: This shows it when the entry asks for it.
 
 
 

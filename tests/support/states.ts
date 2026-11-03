@@ -42,7 +42,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'offered' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -99,6 +99,8 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'loading-phone',        patStr : '/', widNum : 390,  steStr : 'loading'                    }, // What: Loading Phone State. Why: The loader is checked at a phone width. How: This holds the app's check at 390px.
 	{ heiNum : 900, ideStr : 'create-desktop',       patStr : '/', widNum : 1440, steStr : 'create'                     }, // What: Create Desktop State. Why: The form for starting a group is checked at a desktop width. How: This opens it at 1,440px.
 	{ heiNum : 844, ideStr : 'create-phone',         patStr : '/', widNum : 390,  steStr : 'create'                     }, // What: Create Phone State. Why: The form is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'paste-desktop',        patStr : '/', widNum : 1440, steStr : 'paste'                      }, // What: Paste Desktop State. Why: The screen for joining with an invite link is checked at a desktop width. How: This opens it from the welcome at 1,440px.
+	{ heiNum : 844, ideStr : 'paste-phone',          patStr : '/', widNum : 390,  steStr : 'paste'                      }, // What: Paste Phone State. Why: The paste screen is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 900, ideStr : 'group-desktop',        patStr : '/', widNum : 1440, steStr : 'group'                      }, // What: Group Desktop State. Why: The group frame is checked with its rail. How: This opens a new group at 1,440px.
 	{ heiNum : 844, ideStr : 'group-phone',          patStr : '/', widNum : 390,  steStr : 'group'                      }, // What: Group Phone State. Why: The group frame is checked with its switcher. How: This opens a new group at 390px.
 	{ heiNum : 900, ideStr : 'chat-desktop',         patStr : '/', widNum : 1440, steStr : 'chat'                       }, // What: Chat Desktop State. Why: A chat with an event and a message is checked at a desktop width. How: This fills a new group's chat at 1,440px.
@@ -379,7 +381,7 @@ const memSteFun = async ( curPagObj : Page, steStr : 'map' | 'member' | 'offered
 	await ownPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: The link shows in the People section. How: This presses its tab.
 
 
-	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link' ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The page asks through the group's link. How: This reads the link and takes the token from its end.
+	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The page asks through the group's link. How: This reads the link and takes the token from its end.
 
 	const uidMemStr = await curPagObj.evaluate( async ( [ joiPatStr, idePatStr, tokArgStr ] ) => { // What: UID Member String. Why: The owner approves the page by its UID. How: This files the page's request through the joins module, then reads its identity.
 
@@ -477,7 +479,7 @@ const joiSteFun = async ( curPagObj : Page, steStr : 'join' | 'waiting' ) : Prom
 	await ownPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: The link shows in the People section. How: This presses its tab.
 
 
-	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link' ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The page opens the group's link. How: This reads the link and takes the token from its end.
+	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The page opens the group's link. How: This reads the link and takes the token from its end.
 
 
 	await ownConObj.close(); // What: Context Close Call. Why: The owner's device isn't needed again. How: This closes it.
@@ -543,7 +545,7 @@ const joiSteFun = async ( curPagObj : Page, steStr : 'join' | 'waiting' ) : Prom
 const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Requests Steps Function. Why: The waiting list is checked with people waiting, one of them reusing a member's name. How: This files two requests through the group's link, each from a new device.
 
 
-	const linValStr = await curPagObj.getByLabel( 'Invite link' ).inputValue(); // What: Link Value String. Why: A joiner asks through the group's link. How: This reads it from the section.
+	const linValStr = await curPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue(); // What: Link Value String. Why: A joiner asks through the group's link. How: This reads it from the section.
 	const tokValStr = linValStr.split( '/join/' )[ 1 ];                       // What: Token Value String. Why: A request names the invite it used. How: This takes the token from the link's end.
 
 
@@ -620,7 +622,7 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'offered' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -638,6 +640,24 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 	if ( steStr === 'join' || steStr === 'waiting' ) { await joiSteFun( curPagObj, steStr ); return; } // What: Join Guard. Why: The join states open another's invite link rather than start a group. How: This runs the join steps and returns.
+
+
+
+	if ( steStr === 'paste' ) { // What: Paste Block. Why: The paste state is checked as the screen opens on a reload, with nothing focused, rather than with focus on the heading opening it gave. How: This opens it from the welcome, reloads it, and stops.
+
+
+		await curPagObj.getByRole( 'button', { name : 'Join with an invite link' } ).click(); // What: Join Click Call. Why: The screen opens from the welcome. How: This presses its button.
+
+		await curPagObj.reload(); // What: Screen Reload Call. Why: The screen is checked as a fresh load, which its history entry keeps. How: This reloads it.
+
+		await curPagObj.getByRole( 'heading', { level : 1, name : 'Join with an invite link' } ).waitFor(); // What: Reloaded Screen Wait. Why: The screen shows once the app has checked for groups. How: This waits for its heading.
+
+
+
+		return; // What: Paste Return. Why: The paste state stops at the screen. How: This returns.
+
+
+	}
 
 
 

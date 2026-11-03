@@ -22,6 +22,7 @@ import { serverTimestamp } from 'firebase/firestore';      // What: Server Times
 import { setDoc          } from 'firebase/firestore';      // What: Set Doc. Why: A joiner files their request. How: This writes it.
 import { texNorFun       } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: A typed name and note are tidied before they're checked. How: This normalizes them.
 import { Timestamp       } from 'firebase/firestore';      // What: Timestamp. Why: A request's expiry is a time the client sets. How: This builds and reads it.
+import { TOK_FOR_REG     } from '../core/invite-link.ts';  // What: Token Form Regular Expression. Why: A token pasted from anywhere becomes part of a document path. How: This checks a token has the form every one does.
 import { wraKeyFun       } from '../platform/crypto.ts';   // What: Wrap Key Function. Why: The joiner's membership holds the group key wrapped for them. How: This wraps it.
 import { writeBatch      } from 'firebase/firestore';      // What: Write Batch. Why: A block and the request's end land together. How: This groups the writes.
 
@@ -60,8 +61,7 @@ import type { QuerySnapshot } from 'firebase/firestore'; // What: Query Snapshot
 
 // #region Constants
 
-const DAY_MIL_NUM = 86400000;              // What: Day Milliseconds Number. Why: A request lasts 7 days. How: This is one day in milliseconds.
-const TOK_FOR_REG = /^[A-Za-z0-9_-]{22}$/; // What: Token Form Regular Expression. Why: A token pasted from anywhere becomes part of a document path. How: This allows only the 22 base64url characters every token has (Section 11.6).
+const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: A request lasts 7 days. How: This is one day in milliseconds.
 
 // #endregion Constants
 

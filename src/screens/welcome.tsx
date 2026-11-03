@@ -24,10 +24,11 @@ import { useState     } from 'react';                // What: Use State. Why: Th
  *
  * @summary
  * The screen someone sees before they belong to any group: the app's mark,
- * its name, a line on what it's for, and a button that starts a group,
- * centered in the screen. Nothing on it starts Firebase, so a first visit
- * makes no connection until the visitor acts. Someone who has used the
- * app on another phone gets their groups back through Google instead.
+ * its name, a line on what it's for, and a button that starts a group, then
+ * one that joins with an invite link, centered in the screen. Nothing on it
+ * starts Firebase, so a first visit makes no connection until the visitor
+ * acts. Someone who has used the app on another phone gets their groups back
+ * through Google instead.
  *
  * Sections:
  *  - Components
@@ -50,14 +51,15 @@ type WscProTyp = { focBoo : boolean, onRecFun : () => void }; // What: Welcome S
  *
  * @summary
  * Renders the welcome in the screen's main area: the mark, the name as the
- * screen's one h1, the tagline, and the start button, which opens the screen
- * for starting a group as a new history entry. When focBoo is true, as when
- * the welcome replaces the last group, left or deleted, the heading takes
+ * screen's one h1, the tagline, the start button, which opens the screen for
+ * starting a group as a new history entry, and the join button, which opens
+ * the screen for pasting an invite link the same way. When focBoo is true, as
+ * when the welcome replaces the last group, left or deleted, the heading takes
  * focus once drawn, and the history entry is replaced with one that no longer
- * asks, so a reload doesn't take focus again. Get my groups back signs in
- * with Google through its popup, its label reading "Signing in…" meanwhile,
- * then calls onRecFun; a sign-in that doesn't go through is announced
- * through the alert, saying why where it can.
+ * asks, so a reload doesn't take focus again. Get my groups back signs in with
+ * Google through its popup, its label reading "Signing in…" meanwhile, then
+ * calls onRecFun; a sign-in that doesn't go through is announced through the
+ * alert, saying why where it can.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -200,7 +202,13 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 				onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
 			>Start a group</ButBasCom>{ /* What: Welcome Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
 
+			<button
+				className={ cssModObj.welJoiBut }
 
+				type='button'
+
+				onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
+			>Join with an invite link</button>{ /* What: Welcome Join Button Element. Why: Someone sent a link can join with it here, which on an installed iPhone app is the only way an invite reaches the app. How: This opens the screen for pasting the link. */ }
 
 			<button
 				className={ cssModObj.welRecBut }

@@ -87,7 +87,7 @@ const invSetFun = async ( ownPagObj : Page ) : Promise< { groIdeStr : string, to
 	await ownPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: The link shows in the People section, where requests are answered. How: This presses its tab.
 
 
-	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link' ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The joiner opens the group's link. How: This reads the link and takes the token from its end.
+	const tokValStr = ( await ownPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue() ).split( '/join/' )[ 1 ]; // What: Token Value String. Why: The joiner opens the group's link. How: This reads the link and takes the token from its end.
 
 
 
@@ -185,7 +185,7 @@ pagTesObj( 'an invite link opens the join screen at the root, and an approval op
 	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeFocused(); // What: Group Focus Assertion. Why: An approval opens the group for the joiner, focus landing on its heading. How: This expects the group's heading focused.
 	await expect( secPagObj.getByRole( 'status' ).filter( { hasText : "You're in" } ) ).toHaveText( "You're in Beach Day." ); // What: Join Status Assertion. Why: The change is announced. How: This expects the host's status.
 
-	const newTokStr = ( await ownPagObj.getByLabel( 'Invite link' ).inputValue() ).split( '/join/' )[ 1 ]; // What: New Token String. Why: A member opening the group's current link should land in the group. How: This reads the replaced link's token.
+	const newTokStr = ( await ownPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue() ).split( '/join/' )[ 1 ]; // What: New Token String. Why: A member opening the group's current link should land in the group. How: This reads the replaced link's token.
 
 
 	await secPagObj.goto( `/join/${ newTokStr }` ); // What: Link Reopen Call. Why: A member may open the link again. How: This opens the current one.
@@ -212,6 +212,47 @@ test( 'a dead link says so and leads to the app', async ( { page } ) => { // Wha
 	await page.getByRole( 'button', { name : 'Go to Come Hang' } ).click(); // What: Leave Click Call. Why: Someone with a dead link still has somewhere to go. How: This presses the button.
 
 	await expect( page.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeFocused(); // What: Welcome Focus Assertion. Why: Someone in no group lands on the welcome, focus on its heading, since the button went. How: This expects the welcome's heading focused.
+
+
+} );
+
+
+
+pagTesObj( "a pasted invite link opens its join screen, and a paste that holds none says what's wrong", async ( { page : ownPagObj, secPagObj } ) => { // What: Paste Test. Why: An installed iPhone app reaches an invite only through a pasted link, and anyone may join that way (Section 16). How: This opens the paste screen from the welcome, sends it empty and with plain text, checking each problem, then pastes the whole link and checks the join screen opens, with back skipping the paste.
+
+
+	const { tokValStr } = await invSetFun( ownPagObj ); // What: Token Value String. Why: The joiner pastes the group's link. How: This starts the group and reads its token.
+
+
+	const linInpLoc = secPagObj.getByLabel( 'Invite link', { exact : true } ); // What: Link Input Locator. Why: The checks read and fill the field. How: This finds it by its label.
+
+
+	await secPagObj.goto( '/' ); // What: Welcome Open Call. Why: The paste starts from the welcome. How: This opens the app.
+
+	await secPagObj.getByRole( 'button', { name : 'Join with an invite link' } ).click(); // What: Join Click Call. Why: The welcome offers joining with a link. How: This presses its button.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join with an invite link' } ) ).toBeFocused(); // What: Heading Focus Assertion. Why: The button that opened the screen is gone, so focus lands on the heading. How: This expects it focused.
+
+	await secPagObj.getByRole( 'button', { name : 'Continue' } ).click(); // What: Empty Continue Call. Why: A paste needs a link. How: This sends the form empty.
+
+	await expect( linInpLoc ).toBeFocused();                                                          // What: Empty Focus Assertion. Why: Focus lands on the field with the problem. How: This expects the field focused.
+	await expect( linInpLoc ).toHaveAccessibleDescription( /Paste the invite link you were sent\./ ); // What: Empty Error Assertion. Why: The field says what's missing. How: This expects the message in its description.
+
+	await linInpLoc.fill( 'See you at the beach' ); // What: Text Fill Call. Why: A paste of the wrong thing holds no token. How: This types a message instead of a link.
+
+	await secPagObj.getByRole( 'button', { name : 'Continue' } ).click(); // What: Text Continue Call. Why: The paste is read. How: This sends the form.
+
+	await expect( linInpLoc ).toHaveAccessibleDescription( /That isn't an invite link\./ ); // What: Wrong Paste Assertion. Why: A paste holding no link says so. How: This expects that message in the field's description.
+
+	await linInpLoc.fill( ` https://comehang.app/join/${ tokValStr } ` ); // What: Link Fill Call. Why: A paste often brings spaces, and the link may name the live address. How: This pastes the whole link with spaces around it.
+
+	await secPagObj.getByRole( 'button', { name : 'Continue' } ).click(); // What: Link Continue Call. Why: The link opens its invite. How: This sends the form.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ) ).toBeVisible(); // What: Join Screen Assertion. Why: The pasted link opens the group's join screen. How: This expects the heading naming the group.
+
+	await secPagObj.goBack(); // What: Back Call. Why: The join screen took the paste's place, so back returns to where it was opened. How: This steps back.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: Back skips the paste screen. How: This expects the welcome's heading.
 
 
 } );

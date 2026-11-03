@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-03 (joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1462,9 +1462,10 @@ real, and the app is built against both:
   alternative, the key in the link's `#fragment` for instant access, was
   set aside: anyone holding a leaked link would also hold the key.
 - **Partly resolved (2026-10-22): carrying an invite across an iOS
-  install.** A "Paste invite link" option is built in regardless, see
-  Section 16; the real-iPhone test of the invite address still decides
-  whether it's the main path or only the backup. Also still open, for
+  install.** A "Join with an invite link" option is built in regardless
+  (built 2026-11-03), see Section 16; the real-iPhone test of the invite
+  address still decides whether it's the main path or only the backup.
+  Also still open, for
   the invite screen's design: whether the invite page shown in Safari
   before the install names the group. Reading an invite needs a sign-in,
   and the app's invite read runs the identity bootstrap, which would leave
@@ -1729,7 +1730,8 @@ the Blaze change.
   moves focus to its heading, and the back button leads to the app,
   restarting the group list, since opening the invite made the identity.
   On iOS the welcome will lead through the install screen first (Section 16),
-  built with that screen.
+  built with that screen. The paste screen (built 2026-11-03, Section 16)
+  reaches the same join screen from a link pasted into the app.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
   name and note, the joiner's view of where it stands, a watch of it that
@@ -2067,7 +2069,12 @@ the app**, not only an install workaround. The installed app's first
 screen offers it, and so does the group list for existing users, who
 paste a link someone sent them instead of opening it in the browser
 (which, on iOS, would land in Safari's separate storage rather than the
-installed app). The invite screen offers to copy its link before
+installed app). Built 2026-11-03: the welcome, the rail, and the phone's
+group sheet each open a screen with one field
+(`src/screens/paste-invite.tsx`), which reads the token from the whole
+link, on any address, or a bare token (`src/core/invite-link.ts`), and
+opens the join screen in its place, so back returns to where the paste
+began. Anything else says it isn't an invite link. The invite screen offers to copy its link before
 showing the install steps, so the paste is ready once the app opens.
 
 **Pros**: protects the identity and history the whole design relies on;
