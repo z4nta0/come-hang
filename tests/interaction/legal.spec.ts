@@ -16,12 +16,12 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
  * legal.spec.ts = Legal Spec
  *
  * @summary
- * Checks the privacy policy and the terms where people meet them, in
- * whichever engine the project runs: the welcome and the join form link both
- * static pages in a new tab, Settings opens each document in a sheet that
- * hands focus back to its button when it closes, and a static page follows a
- * light or dark choice kept by the app and links to the other page and back
- * to the app.
+ * Checks the privacy policy and the terms where people meet them, in whichever
+ * engine the project runs: the welcome and the join form link both static
+ * pages in a new tab, Settings opens each document in a sheet that hands focus
+ * back to its button when it closes, a link between the documents there
+ * switches the sheet, and a static page follows a light or dark choice kept by
+ * the app and links to the other page and back to the app.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -83,6 +83,45 @@ test( 'Settings opens each document in a sheet that hands focus back to its butt
 	await page.getByRole( 'button', { name : 'Terms of Service' } ).click(); // What: Terms Click Call. Why: The terms open from their button. How: This presses it.
 
 	await expect( page.getByRole( 'dialog', { name : 'Terms of Service' } ).getByRole( 'heading', { name : 'Who can use Come Hang' } ) ).toBeVisible(); // What: Terms Shown Assertion. Why: The same sheet shows the terms when they're asked for. How: This checks their first section's heading is showing.
+
+
+} );
+
+
+
+test( 'in Settings, a link from one document to the other switches the sheet, while a Ctrl or Cmd click opens the page', async ( { page } ) => { // What: Sheet Link Test. Why: Reading the documents in the app shouldn't leave it, while a modified click still works as on any link. How: This opens the terms, Ctrl or Cmd clicks their link to the policy and catches the new tab, then clicks it plainly and checks the sheet.
+
+
+	await opeStaFun( page, STA_REC_ARR.find( ( staRecObj ) => staRecObj.ideStr === 'settings-phone' )! ); // What: Settings Open Call. Why: The documents' part is in Settings. How: This opens the owner's Settings. // What: Non-Null Note. Why: The shared states list settings-phone. How: The ! says it's there.
+
+	await page.getByRole( 'button', { name : 'Terms of Service' } ).click(); // What: Terms Click Call. Why: The terms link to the policy. How: This opens them in the sheet.
+
+
+	const terDiaObj = page.getByRole( 'dialog', { name : 'Terms of Service' } ); // What: Terms Dialog Object. Why: The link is pressed inside the terms' sheet. How: This finds the sheet by its name.
+	const newTabPro = page.context().waitForEvent( 'page' );                     // What: New Tab Promise. Why: A modified click opens the static page in a new tab. How: This waits for the tab the click opens.
+
+
+	await terDiaObj.getByRole( 'link', { name : 'Privacy Policy' } ).click( { modifiers : [ 'ControlOrMeta' ] } ); // What: Modified Click Call. Why: A Ctrl or Cmd click should be left to the browser. How: This clicks the link with Ctrl, or Cmd on a Mac.
+
+
+	const newTabObj = await newTabPro; // What: New Tab Object. Why: The tab is checked once it opens. How: This awaits it.
+
+
+	await expect( newTabObj ).toHaveURL( /\/privacy$/ ); // What: New Tab Address Assertion. Why: The new tab shows the static policy. How: This checks its address.
+
+	await newTabObj.close(); // What: New Tab Close Call. Why: The rest of the test works in the app's tab. How: This closes the new one.
+
+	await page.bringToFront(); // What: Front Call. Why: Headless Firefox may not refocus the window after another tab. How: This brings the app's tab back.
+
+	await terDiaObj.getByRole( 'link', { name : 'Privacy Policy' } ).click(); // What: Plain Click Call. Why: A plain click should switch the sheet. How: This clicks the link.
+
+
+	const priDiaObj = page.getByRole( 'dialog', { name : 'Privacy Policy' } ); // What: Privacy Dialog Object. Why: The sheet now holds the policy. How: This finds the sheet by its new name.
+
+
+	await expect( priDiaObj.getByRole( 'heading', { name : 'The short version' } ) ).toBeInViewport(); // What: Policy Top Assertion. Why: The policy should open at its top. How: This checks its first section's heading is on screen.
+	await expect( priDiaObj.getByRole( 'article', { name : 'Privacy Policy' } ) ).toBeFocused();       // What: Article Focus Assertion. Why: Focus moves to the new document, named by the sheet's title, since the link is gone. How: This checks the article has focus.
+	await expect( page ).toHaveURL( /\/$/ );                                                           // What: Address Assertion. Why: The app stays where it was. How: This checks the address is still the root.
 
 
 } );

@@ -1596,7 +1596,9 @@ the Blaze change.
     and `terms.html` are Vite build inputs with the app's fonts and colors,
     a build plugin rendering each document into its page so it reads
     without JavaScript; `_redirects` serves each at its extensionless
-    address; Settings opens each in a sheet, which works offline; and the
+    address; Settings opens each in a sheet, which works offline, where a
+    link from one document to the other switches the sheet rather than
+    leaving the app, a modified click still opening the page; and the
     welcome and the join form say starting, joining, or asking to join
     means agreeing to both, linking each. The terms set a minimum age of
     18, Missouri law, and a full refund of the upgrade on request within 14

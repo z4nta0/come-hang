@@ -121,6 +121,13 @@
 
 
 }
+.legDocArt:focus { /* What: Focused Legal Document Article. Why: Focus moves to the document only so a switch is announced and the next Tab continues into it, and a ring around the whole document would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
 .legDocArt h2 { /* What: Document Section Heading. Why: Each section starts a new part of the document, so it stands further apart than the lines within one. How: This sets it at Base Plus 2 and adds the tier 2 space less the tier 3 gap above it. */
 
 

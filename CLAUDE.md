@@ -270,7 +270,8 @@ emulators need Java, 21 installed.
   using the app's fonts and colors, the build rendering each document into
   its page so it reads without JavaScript, and `_redirects` serves each at
   its extensionless address ahead of the every-path rewrite. Settings opens
-  each in a sheet, offline too, and the welcome and the join form link both
+  each in a sheet, offline too, where a link from one document to the other
+  switches the sheet, and the welcome and the join form link both
   under their first step. Their facts: Gary S. Walton, an individual in
   Missouri, runs Come Hang; Missouri law governs the terms; users must be
   18 or older; the upgrade is refunded in full on request within 14 days;

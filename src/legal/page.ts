@@ -4,6 +4,7 @@
 // #region Imports
 
 import { colModAppFun } from '../platform/color-mode.ts'; // What: Color Mode Apply Function. Why: A light or dark choice made in the app should hold on these pages too. How: This is called once below, before the page paints.
+import { modCliFun    } from '../utils/click.ts';         // What: Modified Click Function. Why: A modified click on the skip link is left to the browser. How: This checks the click first in its listener.
 
 
 import '../styles/fonts.css';  // What: Fonts Stylesheet Import. Why: The page's stylesheets assume the self-hosted font faces are already registered. How: This is imported first, purely for its side effect, so its @font-face rules register before the others.
@@ -37,17 +38,7 @@ colModAppFun(); // What: Color Mode Apply Call. Why: The page should open in the
 document.querySelector< HTMLAnchorElement >( '[data-element-name-hook~="skiLinAnc"]' )?.addEventListener( 'click', ( cliEveObj ) => { // What: Skip Link Click Listener. Why: The skip link should move focus to the main content without leaving a hash in the address. How: This handles a plain click on the skip link and leaves any other to the browser.
 
 
-	const altKeyBoo = cliEveObj.altKey;       // What: Alt Key Boolean. Why: Alt-click downloads the link in some browsers. How: This reads whether Alt was held.
-	const conKeyBoo = cliEveObj.ctrlKey;      // What: Control Key Boolean. Why: Ctrl-click opens a new tab elsewhere. How: This reads whether Ctrl was held.
-	const metKeyBoo = cliEveObj.metaKey;      // What: Meta Key Boolean. Why: Cmd-click opens a new tab on a Mac. How: This reads whether Cmd was held.
-	const othButBoo = cliEveObj.button !== 0; // What: Other Button Boolean. Why: A click with any button but the main one should be left to the browser. How: This checks the click wasn't made with the main button, as a safeguard.
-	const shiKeyBoo = cliEveObj.shiftKey;     // What: Shift Key Boolean. Why: Shift-click opens a new window. How: This reads whether Shift was held.
-
-	const modCliBoo = metKeyBoo || conKeyBoo || shiKeyBoo || altKeyBoo || othButBoo; // What: Modified Click Boolean. Why: Any one of these means the visitor asked the browser to open the link its own way. How: This combines them.
-
-
-
-	if ( modCliBoo ) return; // What: Modified Click Guard. Why: A modified click should open the link the browser's usual way. How: This leaves any such click alone.
+	if ( modCliFun( cliEveObj ) ) return; // What: Modified Click Guard. Why: A click with another button or a modifier key held should open the link the browser's usual way. How: This leaves any such click alone.
 
 
 
