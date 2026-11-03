@@ -243,6 +243,32 @@ pagTesObj( 'a newer member asks for chat from before they joined and gets only t
 
 
 
+pagTesObj( 'history is offered only to a phone without the chat: a backlog to a fresh joiner, a recovery later, and nothing to the creator', async ( { page, secPagObj } ) => { // What: Offer Test. Why: The chat offers history only when it's missing, of the kind that fits (Section 11.9). How: This checks the creator and a fresh joiner, moves the group's start and the join back past the day, and stores a message, checking the offer each time.
+
+
+	const { groIdeStr, uidMemStr } = await memSetFun( hisEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a creator and a joiner. How: This sets them up.
+
+
+	expect( await runPagFun( page, HIS_MOD_STR, 'hisProFun', groIdeStr ) ).toBeNull();      // What: Creator Assertion. Why: Nothing came before the group's creator. How: This expects no offer.
+	expect( await runPagFun( secPagObj, HIS_MOD_STR, 'hisProFun', groIdeStr ) ).toBeNull(); // What: Same Minute Assertion. Why: A group begun within a minute of the join has nothing before it. How: This expects no offer.
+
+	await hisEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { await updateDoc( doc( cotAdmObj.firestore(), `groups/${ groIdeStr }` ), { createdAt : Timestamp.fromMillis( Date.now() - 30 * 86400000 ) } ); } ); // What: Old Group Call. Why: A backlog needs a group older than the join. How: This moves the group's start 30 days back.
+
+	expect( await runPagFun( secPagObj, HIS_MOD_STR, 'hisProFun', groIdeStr ) ).toMatchObject( { kinValStr : 'backlog' } ); // What: Backlog Assertion. Why: A fresh joiner may want what came before. How: This expects a backlog offered.
+
+	await hisEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { await updateDoc( doc( cotAdmObj.firestore(), `groups/${ groIdeStr }/members/${ uidMemStr }` ), { joinedAt : Timestamp.fromMillis( Date.now() - 2 * 86400000 ) } ); } ); // What: Old Join Call. Why: A phone without chat two days after the join isn't the one that joined. How: This moves the join 2 days back.
+
+	expect( await runPagFun( secPagObj, HIS_MOD_STR, 'hisProFun', groIdeStr ) ).toMatchObject( { kinValStr : 'recovery' } ); // What: Recovery Assertion. Why: The member is on another phone. How: This expects a recovery offered.
+
+	await runPagFun( secPagObj, STO_MOD_STR, 'mesPutFun', { groIdeStr, mesIdeStr : 'one', senUidStr : uidMemStr, sntTimNum : Date.now(), texValStr : 'Hi' } ); // What: Message Seed Call. Why: A phone holding chat needs no history. How: This stores one message.
+
+	expect( await runPagFun( secPagObj, HIS_MOD_STR, 'hisProFun', groIdeStr ) ).toBeNull(); // What: Held Assertion. Why: Only a phone without the chat is offered history. How: This expects no offer.
+
+
+} );
+
+
+
 pagTesObj( 'a bundle is untrusted, so only well-formed messages in the range are kept', async ( { page, secPagObj } ) => { // What: Untrusted Bundle Test. Why: A bundle comes from another member, so the asker checks every entry (Section 11.11). How: This checks an empty device lacks coverage, claims a request as the owner, seeds a forged bundle with bad entries, and collects it as the member.
 
 

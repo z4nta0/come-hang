@@ -7,6 +7,7 @@ import cssModObj from './group-people.module.css'; // What: CSS Module Object. W
 
 
 import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Copying the link and saving a name are the section's leading actions. How: This draws their buttons.
+import { HisReqCom } from './history-requests.tsx'; // What: History Requests Component. Why: Members see who is asking for chat history and can send it. How: This shows the list in People.
 import { ideEnsFun } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member's own row offers a name change. How: This reads their UID.
 import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Function. Why: Each member's avatar shows their initials. How: This takes them from the name.
 import { invRotFun } from '../state/groups.ts';     // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
@@ -44,10 +45,11 @@ import type { ReqRecTyp } from '../state/joins.ts';     // What: Request Record 
  * The open group's People section: the invite link, which any member copies
  * and the owner can replace; the people waiting to join, whom any member
  * approves, declines, or blocks; the members waiting on a new phone for the
- * group's key, which any other member shares; and the members, each with their
- * avatar in their color, the member's own name changeable from their row, and
- * anyone else removable by the owner after confirming. Each change is
- * announced, and one that fails says why.
+ * group's key, which any other member shares; the members asking for chat
+ * history, which a member whose phone holds it sends; and the members, each
+ * with their avatar in their color, the member's own name changeable from
+ * their row, and anyone else removable by the owner after confirming. Each
+ * change is announced, and one that fails says why.
  *
  * Sections:
  *  - Constants
@@ -910,6 +912,22 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 				</section>
+
+
+			) }
+
+
+
+			{ uidValStr !== '' && ( // What: History Requests Check. Why: The list leaves out the member's own request, so it waits for the member's UID. How: This shows it once the UID is known.
+
+
+				<HisReqCom
+					groIdeStr={ curGroObj.ideStr }
+					memRecArr={ memRecArr }
+					uidValStr={ uidValStr }
+
+					onAnnFun={ ( mesValStr ) => { setStaMesStr( '' ); window.setTimeout( () => setStaMesStr( mesValStr ), 0 ); } } // What: Announce Handler. Why: A message repeated from before should still be heard. How: This empties the status, then sets the message a moment later.
+				/> // What: History Requests Component. Why: Members see who is missing chat history and can send it (Section 11.9). How: This shows the list, announcing through the section's status.
 
 
 			) }

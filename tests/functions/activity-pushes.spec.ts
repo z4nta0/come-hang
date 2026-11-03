@@ -138,7 +138,7 @@ test( 'a history request becoming pending pushes every other member, and a claim
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'A member is asking for chat history they missed.', title : 'Picnic' } ] ); // What: Alice Pushed. Why: Alice may be the one who can help. How: This waits for her push.
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toHaveLength( 1 );                                                                              // What: Carol Pushed. Why: Carol may help too. How: This waits for her push.
 
-	expect( await pusTarFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { groupId : 'gro1', section : 'chat' } ] ); // What: History Target Check. Why: A tap opens the chat, where the history is read. How: This expects the push to name the group and its chat.
+	expect( await pusTarFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { groupId : 'gro1', section : 'people' } ] ); // What: History Target Check. Why: A tap opens People, where requests are answered. How: This expects the push to name the group and People.
 
 	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/historyRequests/bob' ), { status : 'claimed' } ) ); // What: Claim Call. Why: A claimed request needs no more help. How: This claims it.
 
