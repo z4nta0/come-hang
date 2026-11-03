@@ -84,10 +84,10 @@ const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why:
  *
  * @summary
  * Each push kind mapped to the section of its group that a tap on it opens:
- * the chat for a message and for history someone missed, People for
- * someone asking to join or waiting for the key, and Settings for anything
- * about ownership. A kind left out, such as a removal or a deletion, has no
- * group left to open, so its tap opens the app.
+ * the chat for a message, People for someone asking for history they missed,
+ * to join, or for the key, and Settings for anything about ownership. A kind
+ * left out, such as a removal or a deletion, has no group left to open, so its
+ * tap opens the app.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -98,7 +98,7 @@ const PUS_SEC_OBJ : Record< string, string > = { // What: Push Section Object. W
 
 	chatMessage      : 'chat',
 	claimMade        : 'settings',
-	historyRequest   : 'chat',
+	historyRequest   : 'people',
 	joinRequest      : 'people',
 	keyRequest       : 'people',
 	offerAccepted    : 'settings',

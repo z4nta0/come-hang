@@ -17,6 +17,7 @@ import { ideEnsFun       } from './identity.ts';             // What: Identity E
 import { keyLoaFun       } from './groups.ts';               // What: Key Load Function. Why: A bundle is encrypted with the group key. How: This loads it.
 import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: A helper shares what their device holds, and coverage is checked against it. How: This reads the history.
 import { mesPutFun       } from '../platform/chat-store.ts'; // What: Message Put Function. Why: Received history joins the device's own. How: This stores a message.
+import { onSnapshot      } from 'firebase/firestore';        // What: On Snapshot. Why: The prompts follow the requests as they change. How: This watches the collection.
 import { ref             } from 'firebase/storage';          // What: Ref. Why: A bundle's file is named by path. How: This builds its reference.
 import { runTransaction  } from 'firebase/firestore';        // What: Run Transaction. Why: A claim takes a request only while it's pending. How: This reads and writes it together.
 import { serverTimestamp } from 'firebase/firestore';        // What: Server Timestamp. Why: The rules require the server's time on a request and a claim. How: This asks the server to fill it in.
@@ -26,7 +27,8 @@ import { updateDoc       } from 'firebase/firestore';        // What: Update Doc
 import { uploadBytes     } from 'firebase/storage';          // What: Upload Bytes. Why: A helper sends the bundle. How: This uploads it.
 
 
-import type { MesRecTyp } from '../platform/chat-store.ts'; // What: Message Record Type. Why: A bundle carries message records. How: This types them.
+import type { MesRecTyp     } from '../platform/chat-store.ts'; // What: Message Record Type. Why: A bundle carries message records. How: This types them.
+import type { QuerySnapshot } from 'firebase/firestore';        // What: Query Snapshot. Why: A read and a watch both turn a snapshot of the requests into records. How: This types it.
 
 // #endregion Imports
 
@@ -45,7 +47,9 @@ import type { MesRecTyp } from '../platform/chat-store.ts'; // What: Message Rec
  * its history decrypted. The asker downloads the bundle, keeps the messages
  * that fall in the range and are well-formed, marks the request fulfilled,
  * and deletes the bundle and the request. A helper may let a claim go, and
- * any member may free one stalled for 30 minutes.
+ * any member may free one stalled for 30 minutes. A request is offered only
+ * to a device holding none of the group's chat, and members watch the open
+ * requests as they change.
  *
  * Sections:
  *  - Types
@@ -64,6 +68,8 @@ import type { MesRecTyp } from '../platform/chat-store.ts'; // What: Message Rec
 type HisKinTyp = 'backlog' | 'recovery';                     // What: History Kind Type. Why: A request asks for older chat or for the asker's own. How: This lists the two kinds.
 type RanRecTyp = { begTimNum : number, endTimNum : number }; // What: Range Record Type. Why: A request's range bounds what's sent and kept. How: This types a start, inclusive, and an end, exclusive, in milliseconds.
 
+type HisRecTyp = { claTimNum : number | null, claUidStr : string | null, kinValStr : HisKinTyp, ranTimNum : number | null, staValStr : string, uidReqStr : string }; // What: History Record Type. Why: The app shows each open request and who's helping. How: This types one request as hisLisFun lists it.
+
 // #endregion Types
 
 
@@ -78,7 +84,52 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: A request e
 
 // #region Helpers
 
-type HisRecTyp = { claTimNum : number | null, claUidStr : string | null, kinValStr : HisKinTyp, ranTimNum : number | null, staValStr : string, uidReqStr : string }; // What: History Record Type. Why: The app shows each open request and who's helping. How: This types one request as hisLisFun lists it.
+// #region hisRecFun
+
+/**
+ * hisRecFun = History Records Function
+ *
+ * @summary
+ * Reads a snapshot of a group's history requests into the open ones'
+ * records, pending or claimed, each with its asker, kind, start, status, and
+ * claim, leaving out a fulfilled one, which is about to go.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param hisSnaObj - Histories Snapshot Object: The requests as read or
+ *                    watched.
+ *
+ * @returns The open requests' records.
+ *
+ * @example
+ * ```ts
+ * hisRecFun(hisSnaObj) // => [ { kinValStr : 'recovery', ... } ]
+ * ```
+ *
+*/
+
+const hisRecFun = ( hisSnaObj : QuerySnapshot ) : HisRecTyp[] => hisSnaObj.docs.filter( ( hisDocObj ) => hisDocObj.get( 'status' ) !== 'fulfilled' ).map( ( hisDocObj ) : HisRecTyp => { // What: History Records Function. Why: A read and a watch of the requests report them the same way. How: This keeps the open ones and reads each into a record.
+
+
+	return { // What: Record Return. Why: Each request becomes one record. How: This returns its fields.
+
+
+		claTimNum : ( hisDocObj.get( 'claimedAt' ) as Timestamp | null )?.toMillis() ?? null,  // What: Claim Time Number. Why: A claim stalls after 30 minutes. How: This reads when it was claimed, null when it isn't. // What: Type Assertion Note. Why: The rules store a timestamp or null. How: The as reads it as either.
+		claUidStr : hisDocObj.get( 'claimedByUid' ) as string | null,                          // What: Claim UID String. Why: The app shows who's helping. How: This reads the claimant, null when unclaimed. // What: Type Assertion Note. Why: The rules store a UID or null. How: The as reads it as either.
+		kinValStr : hisDocObj.get( 'kind' ) as HisKinTyp,                                      // What: Kind Value String. Why: The app words each kind its own way. How: This reads it. // What: Type Assertion Note. Why: The rules allow only the two kinds. How: The as reads it as one.
+		ranTimNum : ( hisDocObj.get( 'rangeStart' ) as Timestamp | null )?.toMillis() ?? null, // What: Range Time Number. Why: A backlog's start says how far back it asks. How: This reads it, null for a recovery. // What: Type Assertion Note. Why: The rules store a timestamp or null. How: The as reads it as either.
+		staValStr : hisDocObj.get( 'status' ) as string,                                       // What: Status Value String. Why: A pending request is open to help. How: This reads it. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
+		uidReqStr : hisDocObj.id                                                               // What: UID Requester String. Why: A request is claimed by its asker's UID. How: This reads the document's ID.
+
+
+	};
+
+
+} );
+
+// #endregion hisRecFun
+
+
 
 // #region hisLisFun
 
@@ -102,40 +153,109 @@ type HisRecTyp = { claTimNum : number | null, claUidStr : string | null, kinValS
  *
 */
 
-const hisLisFun = async ( groIdeStr : string ) : Promise< HisRecTyp[] > => { // What: History List Function. Why: Members see who needs history, so a willing one can help. How: This reads the open requests.
-
-
-	const hisSnaObj = await getDocs( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/historyRequests` ) ); // What: Histories Snapshot Object. Why: Every request is in the group's collection. How: This reads it.
-
-
-
-	return hisSnaObj.docs.filter( ( hisDocObj ) => hisDocObj.get( 'status' ) !== 'fulfilled' ).map( ( hisDocObj ) : HisRecTyp => { // What: Requests Return. Why: A fulfilled request is about to go. How: This returns each open one's record.
-
-
-		return { // What: Record Return. Why: Each request becomes one record. How: This returns its fields.
-
-
-			claTimNum : ( hisDocObj.get( 'claimedAt' ) as Timestamp | null )?.toMillis() ?? null,  // What: Claim Time Number. Why: A claim stalls after 30 minutes. How: This reads when it was claimed, null when it isn't. // What: Type Assertion Note. Why: The rules store a timestamp or null. How: The as reads it as either.
-			claUidStr : hisDocObj.get( 'claimedByUid' ) as string | null,                          // What: Claim UID String. Why: The app shows who's helping. How: This reads the claimant, null when unclaimed. // What: Type Assertion Note. Why: The rules store a UID or null. How: The as reads it as either.
-			kinValStr : hisDocObj.get( 'kind' ) as HisKinTyp,                                      // What: Kind Value String. Why: The app words each kind its own way. How: This reads it. // What: Type Assertion Note. Why: The rules allow only the two kinds. How: The as reads it as one.
-			ranTimNum : ( hisDocObj.get( 'rangeStart' ) as Timestamp | null )?.toMillis() ?? null, // What: Range Time Number. Why: A backlog's start says how far back it asks. How: This reads it, null for a recovery. // What: Type Assertion Note. Why: The rules store a timestamp or null. How: The as reads it as either.
-			staValStr : hisDocObj.get( 'status' ) as string,                                       // What: Status Value String. Why: A pending request is open to help. How: This reads it. // What: Type Assertion Note. Why: The rules store it as a string. How: The as reads it as one.
-			uidReqStr : hisDocObj.id                                                               // What: UID Requester String. Why: A request is claimed by its asker's UID. How: This reads the document's ID.
-
-
-		};
-
-
-	} );
-
-
-};
+const hisLisFun = async ( groIdeStr : string ) : Promise< HisRecTyp[] > => hisRecFun( await getDocs( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/historyRequests` ) ) ); // What: History List Function. Why: Members see who needs history, so a willing one can help. How: This reads the open requests.
 
 // #endregion hisLisFun
 
 
 
+// #region hisWatFun
+
+/**
+ * hisWatFun = History Watch Function
+ *
+ * @summary
+ * Watches a group's open history requests, calling onReqFun with them now
+ * and after every change, such as a claim, so a prompt to help goes the
+ * moment someone else takes it, and calling onErrFun when the watch is
+ * refused. Returns the function that stops it.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param onReqFun  - On Requests Function: Called with the open requests.
+ * @param onErrFun  - On Error Function: Called when the watch fails, by
+ *                    default nothing.
+ *
+ * @returns The function that stops the watch.
+ *
+ * @example
+ * ```ts
+ * hisWatFun('Xk3...', onReqFun, onErrFun) // => () => void
+ * ```
+ *
+*/
+
+const hisWatFun = ( groIdeStr : string, onReqFun : ( hisRecArr : HisRecTyp[] ) => void, onErrFun : ( errValObj : Error ) => void = () => {} ) : () => void => onSnapshot( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/historyRequests` ), ( hisSnaObj ) => onReqFun( hisRecFun( hisSnaObj ) ), onErrFun ); // What: History Watch Function. Why: The prompts follow every request as it's asked, claimed, and answered. How: This watches the collection and reports its open requests.
+
+// #endregion hisWatFun
+
+
+
 const hisRefFun = ( groIdeStr : string, uidReqStr : string ) => doc( firGetFun().fstDatObj, `groups/${ groIdeStr }/historyRequests/${ uidReqStr }` ); // What: History Reference Function. Why: Each request is keyed by its asker. How: This names one.
+
+
+
+type HisProTyp = { creTimNum : number, joiTimNum : number, kinValStr : HisKinTyp }; // What: History Prompt Type. Why: The chat offers one kind of request, and a backlog's choices run between the group's start and the join. How: This types the kind with both times in milliseconds.
+
+// #region hisProFun
+
+/**
+ * hisProFun = History Prompt Function
+ *
+ * @summary
+ * Resolves with the history request to offer this identity in a group, or
+ * null for none (Section 11.9). Only a device holding none of the group's
+ * chat is offered one: for a day after joining, a backlog of the chat from
+ * before the join, unless the group began within a minute of it, as it does
+ * for its creator; after that, a recovery of the chat since the join, since
+ * the device isn't the one that joined. Resolves null for an identity that
+ * isn't a member.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ *
+ * @returns A promise that resolves with the kind and both times, or null.
+ *
+ * @example
+ * ```ts
+ * hisProFun('Xk3...') // => { creTimNum, joiTimNum, kinValStr : 'backlog' }
+ * ```
+ *
+*/
+
+const hisProFun = async ( groIdeStr : string ) : Promise< HisProTyp | null > => { // What: History Prompt Function. Why: The chat offers history only when it's missing, and of the kind that fits. How: This checks the device's history, then the join's and the group's times.
+
+
+	if ( ( await mesLisFun( groIdeStr ) ).length > 0 ) return null; // What: Held History Guard. Why: A device with chat already has history. How: This offers nothing.
+
+
+
+	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The member's own join time decides the kind. How: This reads the identity.
+
+	const [ groSnaObj, memSnaObj ] = await Promise.all( [ getDoc( doc( firGetFun().fstDatObj, `groups/${ groIdeStr }` ) ), getDoc( doc( firGetFun().fstDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ) ) ] ); // What: Group Snapshot Object. Why: The group's start bounds a backlog. How: This reads the group. // What: Member Snapshot Object. Why: The join splits the kinds. How: This reads the membership.
+
+
+	if ( !groSnaObj.exists() || !memSnaObj.exists() ) return null; // What: Not Member Guard. Why: Only a member asks. How: This offers nothing otherwise.
+
+
+
+	const creTimNum = ( groSnaObj.get( 'createdAt' ) as Timestamp ).toMillis(); // What: Created Time Number. Why: A backlog reaches back no further than the group's start. How: This reads it. // What: Type Assertion Note. Why: The rules require the server's time on a group. How: The as reads it as a timestamp.
+	const joiTimNum = ( memSnaObj.get( 'joinedAt' ) as Timestamp ).toMillis();  // What: Join Time Number. Why: The join splits the kinds. How: This reads it. // What: Type Assertion Note. Why: The rules require the server's time on a membership. How: The as reads it as a timestamp.
+
+
+
+	if ( Date.now() - joiTimNum >= DAY_MIL_NUM ) return { creTimNum, joiTimNum, kinValStr : 'recovery' }; // What: Recovery Guard. Why: A device without chat a day after the join isn't the one that joined. How: This offers a recovery.
+
+
+
+	return joiTimNum - creTimNum > 60000 ? { creTimNum, joiTimNum, kinValStr : 'backlog' } : null; // What: Backlog Return. Why: A fresh joiner may want what came before, while a creator has nothing before them. How: This offers a backlog when the group began more than a minute before the join.
+
+
+};
+
+// #endregion hisProFun
 
 
 
@@ -615,7 +735,7 @@ const hisWitFun = async ( groIdeStr : string ) : Promise< void > => { // What: H
 
 // #region Exports
 
-export { hisAskFun, hisClaFun, hisCovFun, hisGetFun, type HisKinTyp, hisLisFun, type HisRecTyp, hisRelFun, hisSenFun, hisWitFun }; // What: Named Exports. Why: The history prompts and the helper's screen drive a request through these. How: This exports the functions and the request types.
+export { hisAskFun, hisClaFun, hisCovFun, hisGetFun, type HisKinTyp, hisLisFun, hisProFun, type HisProTyp, type HisRecTyp, hisRelFun, hisSenFun, hisWatFun, hisWitFun }; // What: Named Exports. Why: The history prompts and the helper's screen drive a request through these. How: This exports the functions and the request types.
 
 // #endregion Exports
 

@@ -1,0 +1,185 @@
+
+
+
+/**
+ * history-requests.module.css = History Requests Module
+ *
+ * @summary
+ * Styles for HisReqCom: the heading, the note in muted text, and the list,
+ * a tier 3 space apart, its rows between dividers. Each row stacks the
+ * asker's name, what they asked for, its status, and its button a tier 5
+ * space apart, the button an outlined pill whose label names the asker for
+ * screen readers alone.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region hisLisSec */
+
+.hisLisSec { /* What: History List Section. Why: The heading, the note, and the list read as one part. How: This stacks them in named areas a tier 3 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'hisTitHea' 'hisIntPar' 'hisLisUno';
+	row-gap             : var( --tie-ver-003 );                    /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.hisTitHea { /* What: History Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2 in its own area. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : hisTitHea;
+
+
+}
+.hisTitHea:focus { /* What: Focused History Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.hisIntPar { /* What: History Intro Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : hisIntPar;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region hisLisUno */
+
+.hisLisUno { /* What: History List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below, in its own area. */
+
+
+	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display    : grid;
+	grid-area  : hisLisUno;
+	list-style : none;
+
+
+}
+
+
+
+/* #region hisRowIte */
+
+.hisRowIte { /* What: History Row Item. Why: A request's name, what it asks, its status, and its button read down one row. How: This stacks them a tier 5 space apart in order, since a row shows some of them and not others, each at its own width, with a tier 4 space above and below and a border below. */
+
+
+	border-bottom : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display       : grid;
+	justify-items : start;
+	padding       : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+	row-gap       : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.hisNamSpa { /* What: History Name Span. Why: The member is known by their name, and a long one shouldn't run off the row. How: This sets it bold, breaking a long word where it has to. */
+
+
+	font-weight   : 700;
+	overflow-wrap : anywhere;
+
+
+}
+
+.hisKinSpa { /* What: History Kind Span. Why: What the request asks is quieter than the name. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+.hisStaSpa { /* What: History Status Span. Why: Who is sending, or why there's no button, reads as a quiet note. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region actPlaBut */
+
+.actPlaBut { /* What: Action Plain Button. Why: Sending and freeing a claim are lighter actions than the screen's own, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.actHidSpa { /* What: Action Hidden Span. Why: A screen reader hears whom a button acts on, while sight has the row. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+/* #endregion actPlaBut */
+
+/* #endregion hisRowIte */
+
+/* #endregion hisLisUno */
+
+/* #endregion hisLisSec */
+
+

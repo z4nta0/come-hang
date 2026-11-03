@@ -13,6 +13,7 @@ import { eveBloFun       } from '../utils/date.ts';          // What: Event Bloc
 import { EveDetCom       } from './event-details.tsx';       // What: Event Details Component. Why: The next event's sheet and panel show its details and bring-list. How: This draws them.
 import { eveLisFun       } from '../state/events.ts';        // What: Event List Function. Why: The group's next event is pinned above the chat. How: This lists the events, soonest first.
 import { eveRanFun       } from '../utils/date.ts';          // What: Event Range Function. Why: The pinned event says the hours it runs. How: This formats its range.
+import { HisBanCom       } from './history-banner.tsx';      // What: History Banner Component. Why: A phone missing the chat is offered the group's history. How: This shows the banner above the log.
 import { IcoSvgCom       } from '../ui/icon.tsx';            // What: Icon SVG Component. Why: The send button shows a paper plane. How: This draws it.
 import { ideEnsFun       } from '../state/identity.ts';      // What: Identity Ensure Function. Why: A member's own messages show on their side. How: This reads their UID.
 import { iniTexFun       } from '../utils/text.ts';          // What: Initials Text Function. Why: Each sender's avatar shows their initials. How: This takes them from the name.
@@ -53,7 +54,8 @@ import type { SheHanTyp } from '../ui/sheet.tsx';           // What: Sheet Handl
  * has arrived, shows as a centered line. A watch the rules refuse, as they
  * do until the group's membership mirror holds this member, starts again a
  * second later, and a group whose key is still waiting to be shared says so
- * instead.
+ * instead. Below the pinned event, a banner offers chat history this phone is
+ * missing, and the log takes in what arrives.
  *
  * Sections:
  *  - Types
@@ -501,6 +503,16 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 
 
 			) }
+
+
+
+			<HisBanCom
+				className={ cssModObj.hisBanDiv }
+				groIdeStr={ groIdeStr }
+				uidValStr={ uidValStr }
+
+				onHisFun={ () => void mesLisFun( groIdeStr ).then( ( stoRecArr ) => stoRecArr.forEach( mesAddFun ) ) } // What: History Handler. Why: History sent by another member should show at once. How: This reads the device's history again and merges each message into the log.
+			/>{ /* What: History Banner Component. Why: A phone missing the group's chat is offered it, and a request's progress shows (Section 11.9). How: This shows the banner between the pinned event and the log. */ }
 
 
 
