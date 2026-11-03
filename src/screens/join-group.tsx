@@ -8,6 +8,7 @@ import cssModObj from './join-group.module.css'; // What: CSS Module Object. Why
 
 import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Asking to join, asking again, and trying again are each a phase's leading action. How: This draws them.
 import { IcoSvgCom } from '../ui/icon.tsx';         // What: Icon SVG Component. Why: The back button shows an arrow. How: This draws it.
+import { InsNotCom } from '../ui/install-note.tsx'; // What: Install Note Component. Why: A browser that can install the app suggests it here. How: This shows the note while the browser offers its prompt.
 import { invGetFun } from '../state/joins.ts';      // What: Invite Get Function. Why: The screen names the group its link opens. How: This reads the invite.
 import { joiNotFun } from '../core/text-limits.ts'; // What: Join Note Function. Why: A note outside its limits is caught before anything is sent. How: This checks it.
 import { joiWatFun } from '../state/joins.ts';      // What: Join Watch Function. Why: The group opens as soon as a member lets the joiner in. How: This watches the request.
@@ -39,7 +40,8 @@ import { useState  } from 'react';                  // What: Use State. Why: The
  * withdraw it, and watches it: an approval opens the group, and a request
  * that ends without one says so, with a way to ask again. A link opened by
  * a member, or by a joiner already let in, opens the group. Each change of
- * part moves focus to the heading, since the button pressed is gone.
+ * part moves focus to the heading, since the button pressed is gone. A
+ * browser that can install the app with one tap suggests it in a note below.
  *
  * Sections:
  *  - Types
@@ -821,6 +823,10 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 				role='alert'
 			>{ errMesStr }</p>{ /* What: Join Error Paragraph Element. Why: A failed send or withdrawal has to be announced, and an alert added only when it speaks is often missed. How: This is in the page and empty from the start, and gains the message when one fails. */ }
+
+
+
+			<InsNotCom />{ /* What: Install Note Component. Why: A browser that can install the app with one tap suggests it, never in the way. How: This shows the note below the screen's own content while the browser offers its prompt. */ }
 
 
 		</MaiAreCom>

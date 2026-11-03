@@ -6,14 +6,15 @@
 import cssModObj from './welcome.module.css'; // What: CSS Module Object. Why: The welcome screen is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { BraMarCom    } from '../ui/brand-mark.tsx'; // What: Brand Mark Component. Why: The welcome leads with the app's mark. How: This draws it above the name.
-import { ButBasCom    } from '../ui/button.tsx';     // What: Button Base Component. Why: Starting a group is the welcome's one action. How: This draws it as the main action button.
-import { gooRecFun    } from '../state/identity.ts'; // What: Google Recover Function. Why: Someone on a new phone gets their groups back (Section 8). How: This signs in with Google and remakes the phone's key pair.
-import { MaiAreCom    } from '../ui/main-area.tsx';  // What: Main Area Component. Why: The welcome is the screen's main content. How: This holds it in the main landmark.
-import { useEffect    } from 'react';                // What: Use Effect. Why: The welcome takes focus when it replaces a group just left or deleted. How: This moves focus once it's drawn.
-import { useRef       } from 'react';                // What: Use Reference. Why: The heading takes focus. How: This holds it.
-import { useScrOpeFun } from '../ui/screen.ts';      // What: Use Screen Open Function. Why: The button opens the screen for starting a group, and a focus request is cleared from the entry. How: This returns the function that opens a screen.
-import { useState     } from 'react';                // What: Use State. Why: The sign-in's progress and failure change while the welcome shows. How: This holds each.
+import { BraMarCom    } from '../ui/brand-mark.tsx';   // What: Brand Mark Component. Why: The welcome leads with the app's mark. How: This draws it above the name.
+import { ButBasCom    } from '../ui/button.tsx';       // What: Button Base Component. Why: Starting a group is the welcome's one action. How: This draws it as the main action button.
+import { gooRecFun    } from '../state/identity.ts';   // What: Google Recover Function. Why: Someone on a new phone gets their groups back (Section 8). How: This signs in with Google and remakes the phone's key pair.
+import { InsNotCom    } from '../ui/install-note.tsx'; // What: Install Note Component. Why: A browser that can install the app suggests it here. How: This shows the note while the browser offers its prompt.
+import { MaiAreCom    } from '../ui/main-area.tsx';    // What: Main Area Component. Why: The welcome is the screen's main content. How: This holds it in the main landmark.
+import { useEffect    } from 'react';                  // What: Use Effect. Why: The welcome takes focus when it replaces a group just left or deleted. How: This moves focus once it's drawn.
+import { useRef       } from 'react';                  // What: Use Reference. Why: The heading takes focus. How: This holds it.
+import { useScrOpeFun } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: The button opens the screen for starting a group, and a focus request is cleared from the entry. How: This returns the function that opens a screen.
+import { useState     } from 'react';                  // What: Use State. Why: The sign-in's progress and failure change while the welcome shows. How: This holds each.
 
 // #endregion Imports
 
@@ -28,7 +29,8 @@ import { useState     } from 'react';                // What: Use State. Why: Th
  * one that joins with an invite link, centered in the screen. Nothing on it
  * starts Firebase, so a first visit makes no connection until the visitor
  * acts. Someone who has used the app on another phone gets their groups back
- * through Google instead.
+ * through Google instead. A browser that can install the app with one tap
+ * suggests it in a note below.
  *
  * Sections:
  *  - Components
@@ -223,6 +225,10 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 
 				role='alert'
 			>{ errMesStr }</p>{ /* What: Welcome Error Paragraph Element. Why: A sign-in that doesn't go through has to be told at once, and an alert added only when it speaks is often missed. How: This is in the page and empty from the start, and gains the message when one fails. */ }
+
+
+
+			<InsNotCom />{ /* What: Install Note Component. Why: A browser that can install the app with one tap suggests it, never in the way. How: This shows the note below the screen's own content while the browser offers its prompt. */ }
 
 
 		</MaiAreCom>

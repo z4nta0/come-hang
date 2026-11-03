@@ -28,18 +28,19 @@ import { updateDoc          } from 'firebase/firestore';       // What: Update D
  * @summary
  * Makes sure this device has a working identity before its first group action
  * (ARCHITECTURE.md Sections 6 and 8), and never on page load, so on iOS
- * nothing is created before the app is installed (Section 16). The bootstrap
- * signs in anonymously unless already signed in, keeps an ECDH P-256 key pair
- * in IndexedDB whose private key can't be read by script, publishes the raw
- * public key to users/{uid}, and starts the private accounts/{uid} with no
- * groups, then asks the browser to keep the app's storage. Every step checks
- * what's already there, so calling it again, or after a failure partway,
- * repeats nothing. A key pair stored for a different UID, left by an identity
- * since replaced, is replaced too. Only a pair made now is published, so after
- * a recovery onto a new phone (Section 8), an older phone still signed in to
- * the identity never takes the published key back. Google sign-in links the
- * identity, so it can be recovered on a new phone, where signing in with
- * Google takes it back before the bootstrap makes that phone's key pair.
+ * nothing is created in Safari unless someone chooses to carry on there rather
+ * than install (Section 16). The bootstrap signs in anonymously unless already
+ * signed in, keeps an ECDH P-256 key pair in IndexedDB whose private key can't
+ * be read by script, publishes the raw public key to users/{uid}, and starts
+ * the private accounts/{uid} with no groups, then asks the browser to keep the
+ * app's storage. Every step checks what's already there, so calling it again,
+ * or after a failure partway, repeats nothing. A key pair stored for a
+ * different UID, left by an identity since replaced, is replaced too. Only a
+ * pair made now is published, so after a recovery onto a new phone (Section
+ * 8), an older phone still signed in to the identity never takes the published
+ * key back. Google sign-in links the identity, so it can be recovered on a new
+ * phone, where signing in with Google takes it back before the bootstrap makes
+ * that phone's key pair.
  *
  * Sections:
  *  - Types

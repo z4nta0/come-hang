@@ -1,0 +1,113 @@
+
+
+
+/**
+ * install-note.module.css = Install Note Module
+ *
+ * @summary
+ * Styles for InsNotCom: a bordered card on the surface color, set apart from
+ * the screen it sits on, stacking its heading, line, and buttons a tier 4
+ * space apart. Install is the shared main button, and Not now reads as text,
+ * easing its hover color, press dim, and focus ring.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region insNotSec */
+
+.insNotSec { /* What: Install Note Section. Why: The suggestion is a side note to the screen, so it reads as a card of its own. How: This draws a rounded bordered card on the surface color and stacks its parts a tier 4 space apart, in order, with the tier 3 space inside. */
+
+
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	border-radius    : var( --rad-bor-lar );                            /* Radius Border Large ~= 14.572px */
+	display          : grid;
+	padding          : var( --tie-ver-003 ) var( --tie-hor-003 );       /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 3, about 14.572px - 19.304px */
+	row-gap          : var( --tie-ver-004 );                            /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.insNotHea { /* What: Install Note Heading. Why: The heading names the note without outranking the screen's own. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.insNotPar { /* What: Install Note Paragraph. Why: The line explains rather than leads, at a comfortable length. How: This sets it in muted text, capped at the small text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+
+
+
+/* #region insActDiv */
+
+.insActDiv { /* What: Install Actions Div. Why: Install and Not now sit together, wrapping when the card is narrow. How: This lays them out in a flex row a tier 4 space apart, centered on each other and on the card, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items     : center;
+	display         : flex;
+	flex-wrap       : wrap;
+	gap             : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	justify-content : center;
+
+
+}
+
+.insLatBut { /* What: Install Later Button. Why: Not now is quieter than Install, so it reads as text, still a full touch target. How: This sets bold accent text on no background, at least a touch target tall, and eases its hover color, press dim, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	color            : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : 0 var( --spa-ver-m02 );              /* Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition       : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.insLatBut:hover { /* What: Hovered Install Later Button. Why: A text button shows it's live by color alone. How: This darkens its text a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.insLatBut:active { /* What: Pressed Install Later Button. Why: A button styled as text presses like a text link. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Install Later Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.insLatBut { /* What: Motionless Install Later Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion insActDiv */
+
+/* #endregion insNotSec */
+
+

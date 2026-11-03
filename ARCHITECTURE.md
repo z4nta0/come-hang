@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-03 (joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-03 (the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1465,14 +1465,10 @@ real, and the app is built against both:
   install.** A "Join with an invite link" option is built in regardless
   (built 2026-11-03), see Section 16; the real-iPhone test of the invite
   address still decides whether it's the main path or only the backup.
-  Also still open, for
-  the invite screen's design: whether the invite page shown in Safari
-  before the install names the group. Reading an invite needs a sign-in,
-  and the app's invite read runs the identity bootstrap, which would leave
-  an identity in Safari's storage that the installed app can't use
-  (Section 16). The page could skip the name there, or sign in
-  anonymously without the rest of the bootstrap, at the cost of one
-  never-used Auth account per visitor.
+  **Resolved (2026-11-03)**: the invite page shown in Safari before the
+  install doesn't name the group, since reading the invite needs a
+  sign-in that would leave an identity in Safari's storage the installed
+  app can't use (Section 16).
 - **Resolved (2026-10-22): environments.** Decided: the Emulator Suite
   for daily development and every automated test, plus two real Firebase
   projects, live and staging, the staging one backing Netlify deploy
@@ -1529,7 +1525,8 @@ the Blaze change.
     the bootstrap finishes at the first group action, and not when the
     browser already keeps it (decided 2026-10-29). Never before a group
     action, so a visitor who hasn't acted isn't prompted (Firefox may ask),
-    and nothing runs on iOS before the app is installed (Section 16).
+    and nothing runs in iOS Safari unless someone chooses to carry on there
+    rather than install (Section 16).
 - UI: no component library; every component is built in-house.
 - Layout (decided 2026-10-29, from the wireframes of the design pass):
   - **Wide screens**: a rail of every group down the left, then the open
@@ -1729,8 +1726,8 @@ the Blaze change.
   again. A member opening a link lands in the group. Each change of part
   moves focus to its heading, and the back button leads to the app,
   restarting the group list, since opening the invite made the identity.
-  On iOS the welcome will lead through the install screen first (Section 16),
-  built with that screen. The paste screen (built 2026-11-03, Section 16)
+  On an iPhone or iPad in Safari the install screen comes first (built
+  2026-11-03, Section 16), keeping an invite link's token to copy. The paste screen (built 2026-11-03, Section 16)
   reaches the same join screen from a link pasted into the app.
 - `src/state/joins.ts` is joining (Sections 9 and 17): reading an invite
   for its group's name, filing a join request with a tidied and checked
@@ -2053,16 +2050,40 @@ iPhone and iPad this is close to required:
   group, cached chat) does not come with it. The prompt therefore comes
   *before* the app creates an identity or joins a group, not after.
 
+**Decided (2026-11-03): on iPhone and iPad the install steps come first,
+with a way past.** In Safari, before the welcome, a join screen, or
+anything else, the install screen (`src/screens/install-ios.tsx`) says why
+to install: nothing done in Safari moves to the app installed later,
+Safari deletes a site's data after 7 days without a visit, and only the
+installed app gets notifications. It then lists Safari's steps (Share, then
+"Add to Home Screen"). A quieter "Continue in Safari" below says what that
+risks, opens the app with focus on its main area, and is kept on the
+device, so later visits go straight in. An installed app, which Safari
+reports through `navigator.standalone`, never sees the steps.
+
 Android and desktop Chrome share storage between the browser and the
 installed app, so data carries over there, and Chrome offers an install
 button the app can trigger itself (`beforeinstallprompt`). The
-recommendation still shows, just without blocking.
+recommendation still shows, just without blocking. **Decided
+(2026-11-03)**: where the browser offers its prompt, a note on the welcome
+and the join screen (`src/ui/install-note.tsx`) suggests installing, with
+Install and "Not now", which is kept on the device; and Settings' part for
+this phone keeps an Install button, or says how to install where the
+browser has no prompt, until the app is installed.
+`src/platform/install.ts` keeps the prompt from the moment the app loads,
+since the browser offers it once.
 
 **Carrying an invite through the install.** Most people will arrive
 by tapping an invite link, which opens in Safari. After installing, the
 home-screen app opens at its own start address, so the invite token may
 be lost along the way. Still to test on a real iPhone: whether "Add to
-Home Screen" from the invite page keeps that page's address.
+Home Screen" from the invite page keeps that page's address. **Decided
+(2026-11-03): the invite page in Safari doesn't name the group.** Reading
+the invite needs a sign-in, which would leave an identity in Safari's
+storage that the installed app can't use, so the install screen says only
+that there's an invite, shows its link, and offers to copy it before the
+steps, adding a last step of pasting it once the app opens. Nothing on
+the install screen signs in or opens Firestore.
 
 **Decided (2026-10-22): "Join with an invite link" is a permanent part of
 the app**, not only an install workaround. The installed app's first

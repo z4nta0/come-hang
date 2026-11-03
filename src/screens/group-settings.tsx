@@ -6,32 +6,38 @@
 import cssModObj from './group-settings.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom    } from '../ui/button.tsx';          // What: Button Base Component. Why: Saving the group's settings and accepting an offer are the section's leading actions. How: This draws their buttons.
-import { colModGetFun } from '../platform/color-mode.ts'; // What: Color Mode Get Function. Why: The appearance choice starts from the one kept on this phone. How: This reads it.
-import { colModSetFun } from '../platform/color-mode.ts'; // What: Color Mode Set Function. Why: Picking light, dark, or the phone's setting applies at once and is kept. How: This applies and keeps it.
-import { dayDatFun    } from '../utils/date.ts';          // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
-import { gooLinFun    } from '../state/identity.ts';      // What: Google Link Function. Why: Linking Google lets the member get their groups back on a new phone (Section 8). How: This links through the popup.
-import { gooStaFun    } from '../state/identity.ts';      // What: Google State Function. Why: The account part says whether Google is linked. How: This reads it.
-import { groDelFun    } from '../state/groups.ts';        // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
-import { groLeaFun    } from '../state/members.ts';       // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
-import { groNamFun    } from '../core/text-limits.ts';    // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
-import { groSetFun    } from '../state/groups.ts';        // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
-import { ideEnsFun    } from '../state/identity.ts';      // What: Identity Ensure Function. Why: The member an offer names answers it. How: This reads their UID.
-import { memLisFun    } from '../state/members.ts';       // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
-import { OFF_LIF_NUM  } from '../state/ownership.ts';     // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
-import { offAccFun    } from '../state/ownership.ts';     // What: Offer Accept Function. Why: The member offered the group can take it. How: This makes them its owner.
-import { offDecFun    } from '../state/ownership.ts';     // What: Offer Decline Function. Why: The member offered the group can turn it down. How: This declines and tells the owner.
-import { offMakFun    } from '../state/ownership.ts';     // What: Offer Make Function. Why: The owner hands the group over by offering it (Section 18). How: This makes the offer.
-import { offWitFun    } from '../state/ownership.ts';     // What: Offer Withdraw Function. Why: The owner can call an offer off. How: This withdraws it.
-import { purBuyFun    } from '../state/purchase.ts';      // What: Purchase Buy Function. Why: The upgrade is bought once (Section 18). How: This asks for the checkout's address.
-import { purPaiFun    } from '../state/purchase.ts';      // What: Purchase Paid Function. Why: The account part says whether the upgrade is bought. How: This reads it.
-import { pusActFun    } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
-import { pusDisFun    } from '../state/push.ts';          // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
-import { pusEnaFun    } from '../state/push.ts';          // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
-import { texNorFun    } from '../core/text-limits.ts';    // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
-import { useEffect    } from 'react';                     // What: Use Effect. Why: The section reads the members, and a confirmation or an offer moves focus. How: This starts the read and moves focus once drawn.
-import { useRef       } from 'react';                     // What: Use Reference. Why: Focus moves between a button, what replaces it, and a field with a problem. How: This holds the elements.
-import { useState     } from 'react';                     // What: Use State. Why: The drafts, the members, the confirmations, and the messages change while the section is open. How: This holds each.
+import { ButBasCom            } from '../ui/button.tsx';          // What: Button Base Component. Why: Saving the group's settings and accepting an offer are the section's leading actions. How: This draws their buttons.
+import { canProFun            } from '../platform/install.ts';    // What: Can Prompt Function. Why: Settings offers the Install button only while the browser can install. How: This checks for its prompt.
+import { colModGetFun         } from '../platform/color-mode.ts'; // What: Color Mode Get Function. Why: The appearance choice starts from the one kept on this phone. How: This reads it.
+import { colModSetFun         } from '../platform/color-mode.ts'; // What: Color Mode Set Function. Why: Picking light, dark, or the phone's setting applies at once and is kept. How: This applies and keeps it.
+import { dayDatFun            } from '../utils/date.ts';          // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
+import { gooLinFun            } from '../state/identity.ts';      // What: Google Link Function. Why: Linking Google lets the member get their groups back on a new phone (Section 8). How: This links through the popup.
+import { gooStaFun            } from '../state/identity.ts';      // What: Google State Function. Why: The account part says whether Google is linked. How: This reads it.
+import { groDelFun            } from '../state/groups.ts';        // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
+import { groLeaFun            } from '../state/members.ts';       // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
+import { groNamFun            } from '../core/text-limits.ts';    // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
+import { groSetFun            } from '../state/groups.ts';        // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
+import { ideEnsFun            } from '../state/identity.ts';      // What: Identity Ensure Function. Why: The member an offer names answers it. How: This reads their UID.
+import { insProFun            } from '../platform/install.ts';    // What: Install Prompt Function. Why: The Install button asks the browser to install. How: This shows its prompt.
+import { insSubFun            } from '../platform/install.ts';    // What: Install Subscribe Function. Why: The Install button follows the prompt as it comes and goes. How: This subscribes to it.
+import { isaInsFun            } from '../platform/install.ts';    // What: Is-An Installed Function. Why: An installed app needs no install part. How: This checks whether it runs installed.
+import { isaIosFun            } from '../platform/install.ts';    // What: Is-An iOS Function. Why: An iPhone installs through Safari's own menu. How: This checks for an iPhone or iPad.
+import { memLisFun            } from '../state/members.ts';       // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
+import { OFF_LIF_NUM          } from '../state/ownership.ts';     // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
+import { offAccFun            } from '../state/ownership.ts';     // What: Offer Accept Function. Why: The member offered the group can take it. How: This makes them its owner.
+import { offDecFun            } from '../state/ownership.ts';     // What: Offer Decline Function. Why: The member offered the group can turn it down. How: This declines and tells the owner.
+import { offMakFun            } from '../state/ownership.ts';     // What: Offer Make Function. Why: The owner hands the group over by offering it (Section 18). How: This makes the offer.
+import { offWitFun            } from '../state/ownership.ts';     // What: Offer Withdraw Function. Why: The owner can call an offer off. How: This withdraws it.
+import { purBuyFun            } from '../state/purchase.ts';      // What: Purchase Buy Function. Why: The upgrade is bought once (Section 18). How: This asks for the checkout's address.
+import { purPaiFun            } from '../state/purchase.ts';      // What: Purchase Paid Function. Why: The account part says whether the upgrade is bought. How: This reads it.
+import { pusActFun            } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
+import { pusDisFun            } from '../state/push.ts';          // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
+import { pusEnaFun            } from '../state/push.ts';          // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
+import { texNorFun            } from '../core/text-limits.ts';    // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
+import { useEffect            } from 'react';                     // What: Use Effect. Why: The section reads the members, and a confirmation or an offer moves focus. How: This starts the read and moves focus once drawn.
+import { useRef               } from 'react';                     // What: Use Reference. Why: Focus moves between a button, what replaces it, and a field with a problem. How: This holds the elements.
+import { useState             } from 'react';                     // What: Use State. Why: The drafts, the members, the confirmations, and the messages change while the section is open. How: This holds each.
+import { useSyncExternalStore } from 'react';                     // What: Use Sync External Store. Why: The browser's prompt arrives outside React. How: This rerenders the part when it does.
 
 
 import type { ColModTyp } from '../platform/color-mode.ts'; // What: Color Mode Type. Why: Each appearance choice names a mode. How: This types it.
@@ -49,12 +55,13 @@ import type { MemRecTyp } from '../state/members.ts';       // What: Member Reco
  * The open group's Settings section: the group's name and how long the server
  * holds a message someone hasn't received, which the owner changes in a form
  * and everyone else reads; handing the group over, which the owner offers to a
- * member and the member accepts or declines; this phone's appearance and
- * notifications; the account's Google link and upgrade; then the way out of
- * the group, a leave for a member and a deletion, confirmed by typing the
- * group's name, for the owner. Each change is announced, a field with a
- * problem says so beside it, and a change that fails says why. A leave or
- * deletion hands the group to the screen host, which opens what's left.
+ * member and the member accepts or declines; this phone's appearance,
+ * notifications, and how to install the app until it's installed; the
+ * account's Google link and upgrade; then the way out of the group, a leave
+ * for a member and a deletion, confirmed by typing the group's name, for the
+ * owner. Each change is announced, a field with a problem says so beside it,
+ * and a change that fails says why. A leave or deletion hands the group to the
+ * screen host, which opens what's left.
  *
  * Sections:
  *  - Constants
@@ -172,6 +179,8 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	const namInpRef = useRef< HTMLInputElement >( null );   // What: Name Input Reference. Why: The name box takes focus when it has a problem. How: This holds the box.
 	const offButRef = useRef< HTMLButtonElement >( null );  // What: Offer Button Reference. Why: A withdrawn offer brings the offer back, which takes focus. How: This holds its button.
 	const witButRef = useRef< HTMLButtonElement >( null );  // What: Withdraw Button Reference. Why: An offer made replaces its form with the withdrawal, which takes focus. How: This holds its button.
+
+	const canProBoo = useSyncExternalStore( insSubFun, canProFun ); // What: Can Prompt Boolean. Why: The Install button shows only while the browser can install. How: This reads whether its prompt is kept, rerendering when it changes.
 
 	const focChaRef = useRef< React.RefObject< HTMLElement | null > | null >( null ); // What: Focus Change Reference. Why: An offer's or a link's buttons give way only once the screen shows the change, which can arrive before or after the write settles. How: This holds the reference of the element owed focus then, null when none is.
 
@@ -1024,6 +1033,44 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 				</div>
+
+
+
+				{ !isaInsFun() && ( // What: Install Block. Why: An app not yet installed says how to install it on this phone. How: This shows the note, and the button where the browser can install.
+
+
+					<>{ /* What: Install Fragment. Why: The note and its button belong to the part together. How: This groups them without adding an element. */ }
+
+
+						<p className={ cssModObj.devNotPar }>{ canProBoo ? 'Install Come Hang to open it from your home screen in its own window, like any other app.' : isaIosFun() ? 'To install, tap Safari\'s Share button, then "Add to Home Screen". Groups you have in Safari won\'t move to the installed app.' : "To install, use your browser's install option if it has one, or open Come Hang in Chrome or Edge." }</p>{ /* What: Device Note Paragraph Element. Why: How to install depends on the browser, and on iPhone what Safari holds stays there. How: This says what this browser can do. */ }
+
+
+
+						{ canProBoo && ( // What: Install Button Block. Why: Only a browser that offers its prompt can install with a tap. How: This shows the button while it does.
+
+
+							<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The install button sits below its note. How: This holds it in a row that wraps. */ }
+
+
+								<button
+									className={ cssModObj.actPlaBut }
+
+									type='button'
+
+									onClick={ () => { document.getElementById( 'main' )?.focus(); void insProFun(); } } // What: Install Handler. Why: The button goes with the prompt, so focus shouldn't fall to the page. How: This focuses the main area, then shows the browser's prompt.
+								>Install the app</button>{ /* What: Action Plain Button Element. Why: Installing should take one tap where the browser allows it. How: This shows the browser's prompt. */ }
+
+
+							</div>
+
+
+						) }
+
+
+					</>
+
+
+				) }
 
 
 			</section>

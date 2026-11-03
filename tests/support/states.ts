@@ -40,9 +40,10 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 
 	heiNum  : number,                        // What: Height Number. Why: The viewport's height decides what's on screen. How: This is the viewport height in CSS pixels.
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
+	iosBoo? : boolean,                       // What: iOS Boolean. Why: An iPhone in Safari shows the install steps first. How: This makes the page report an iPhone's Safari when true.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -53,6 +54,11 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 
 
 // #region Constants
+
+const INV_PAT_STR = `/join/${ 'A'.repeat( 22 ) }`;                                                                                                     // What: Invite Path String. Why: An iPhone's Safari keeps an invite link's token without reading the invite, so any well-formed one will do. How: This is a link with a token no invite has.
+const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'; // What: iOS User Agent String. Why: The install states run as an iPhone's Safari. How: This is the user agent that Safari on iOS 18 sends.
+
+
 
 // #region STA_REC_ARR
 
@@ -91,42 +97,46 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every check walks the same list of states, so a new state is added in one place. How: Each row names a state, its path, and its viewport.
 
 
-	{ heiNum : 900, ideStr : 'welcome-desktop',      patStr : '/', widNum : 1440                                        }, // What: Welcome Desktop State. Why: The welcome is checked at a desktop width. How: This loads the root at 1,440px.
-	{ heiNum : 844, ideStr : 'welcome-phone',        patStr : '/', widNum : 390                                         }, // What: Welcome Phone State. Why: The welcome is checked at a phone width. How: This loads the root at 390px.
-	{ heiNum : 900, ideStr : 'welcome-desktop-dark', patStr : '/', widNum : 1440, schStr : 'dark'                       }, // What: Welcome Desktop Dark State. Why: Dark mode is checked at a desktop width. How: This loads the root at 1,440px with the phone set to dark.
-	{ heiNum : 844, ideStr : 'welcome-phone-dark',   patStr : '/', widNum : 390,  schStr : 'dark'                       }, // What: Welcome Phone Dark State. Why: Dark mode is checked at a phone width. How: This loads the root at 390px with the phone set to dark.
-	{ heiNum : 900, ideStr : 'loading-desktop',      patStr : '/', widNum : 1440, steStr : 'loading'                    }, // What: Loading Desktop State. Why: The waiting screen is checked with its loader showing. How: This holds the app's check at 1,440px.
-	{ heiNum : 844, ideStr : 'loading-phone',        patStr : '/', widNum : 390,  steStr : 'loading'                    }, // What: Loading Phone State. Why: The loader is checked at a phone width. How: This holds the app's check at 390px.
-	{ heiNum : 900, ideStr : 'create-desktop',       patStr : '/', widNum : 1440, steStr : 'create'                     }, // What: Create Desktop State. Why: The form for starting a group is checked at a desktop width. How: This opens it at 1,440px.
-	{ heiNum : 844, ideStr : 'create-phone',         patStr : '/', widNum : 390,  steStr : 'create'                     }, // What: Create Phone State. Why: The form is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 900, ideStr : 'paste-desktop',        patStr : '/', widNum : 1440, steStr : 'paste'                      }, // What: Paste Desktop State. Why: The screen for joining with an invite link is checked at a desktop width. How: This opens it from the welcome at 1,440px.
-	{ heiNum : 844, ideStr : 'paste-phone',          patStr : '/', widNum : 390,  steStr : 'paste'                      }, // What: Paste Phone State. Why: The paste screen is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 900, ideStr : 'group-desktop',        patStr : '/', widNum : 1440, steStr : 'group'                      }, // What: Group Desktop State. Why: The group frame is checked with its rail. How: This opens a new group at 1,440px.
-	{ heiNum : 844, ideStr : 'group-phone',          patStr : '/', widNum : 390,  steStr : 'group'                      }, // What: Group Phone State. Why: The group frame is checked with its switcher. How: This opens a new group at 390px.
-	{ heiNum : 900, ideStr : 'chat-desktop',         patStr : '/', widNum : 1440, steStr : 'chat'                       }, // What: Chat Desktop State. Why: A chat with an event and a message is checked at a desktop width. How: This fills a new group's chat at 1,440px.
-	{ heiNum : 844, ideStr : 'chat-phone',           patStr : '/', widNum : 390,  steStr : 'chat'                       }, // What: Chat Phone State. Why: The chat is checked at a phone width. How: This fills a new group's chat at 390px.
-	{ heiNum : 844, ideStr : 'chat-phone-dark',      patStr : '/', widNum : 390,  schStr : 'dark', steStr : 'chat'      }, // What: Chat Phone Dark State. Why: The chat's dark colors are checked too. How: This fills a new group's chat at 390px with the phone set to dark.
-	{ heiNum : 844, ideStr : 'sheet-phone',          patStr : '/', widNum : 390,  steStr : 'sheet'                      }, // What: Sheet Phone State. Why: The group sheet is a modal layer of its own. How: This opens a new group's sheet at 390px.
-	{ heiNum : 900, ideStr : 'chat-tablet',          patStr : '/', widNum : 900,  steStr : 'chat'                       }, // What: Chat Tablet State. Why: Between 720px and 1,100px the rail shows and the event stays pinned. How: This fills a new group's chat at 900px.
-	{ heiNum : 844, ideStr : 'event-phone',          patStr : '/', widNum : 390,  steStr : 'event'                      }, // What: Event Phone State. Why: The pinned event's sheet is a modal layer of its own. How: This opens it at 390px.
-	{ heiNum : 900, ideStr : 'events-desktop',       patStr : '/', widNum : 1440, steStr : 'events'                     }, // What: Events Desktop State. Why: The Events section is checked at a desktop width. How: This opens it in a new group with a planned event at 1,440px.
-	{ heiNum : 844, ideStr : 'events-phone',         patStr : '/', widNum : 390,  steStr : 'events'                     }, // What: Events Phone State. Why: The Events section is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 844, ideStr : 'form-phone',           patStr : '/', widNum : 390,  steStr : 'form'                       }, // What: Form Phone State. Why: The event form is a modal layer of its own. How: This opens it at 390px.
-	{ heiNum : 844, ideStr : 'edit-phone',           patStr : '/', widNum : 390,  steStr : 'edit'                       }, // What: Edit Phone State. Why: An item's edit form is checked in its sheet. How: This opens the open item's form at 390px.
-	{ heiNum : 900, ideStr : 'people-desktop',       patStr : '/', widNum : 1440, steStr : 'people'                     }, // What: People Desktop State. Why: The People section is checked at a desktop width. How: This opens it in a new group at 1,440px.
-	{ heiNum : 844, ideStr : 'people-phone',         patStr : '/', widNum : 390,  steStr : 'people'                     }, // What: People Phone State. Why: The People section is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 900, ideStr : 'requests-desktop',     patStr : '/', widNum : 1440, steStr : 'requests'                   }, // What: Requests Desktop State. Why: The waiting list is checked at a desktop width. How: This opens the People section with two requests waiting at 1,440px.
-	{ heiNum : 844, ideStr : 'requests-phone',       patStr : '/', widNum : 390,  steStr : 'requests'                   }, // What: Requests Phone State. Why: The waiting list is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 900, ideStr : 'settings-desktop',     patStr : '/', widNum : 1440, steStr : 'settings'                   }, // What: Settings Desktop State. Why: The owner's Settings section is checked at a desktop width. How: This opens it in a new group at 1,440px.
-	{ heiNum : 844, ideStr : 'settings-phone',       patStr : '/', widNum : 390,  steStr : 'settings'                   }, // What: Settings Phone State. Why: The owner's Settings section is checked at a phone width. How: This opens it at 390px.
-	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/', widNum : 390,  steStr : 'delete'                     }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
-	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/', widNum : 390,  steStr : 'member'                     }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
-	{ heiNum : 844, ideStr : 'offered-phone',        patStr : '/', widNum : 390,  steStr : 'offered'                    }, // What: Offered Phone State. Why: The member an offer names sees its answers. How: This opens Settings as a member offered another's group at 390px.
-	{ heiNum : 900, ideStr : 'map-desktop',          patStr : '/', widNum : 1440, steStr : 'map'                        }, // What: Map Desktop State. Why: The Map section is checked sharing at a desktop width. How: This shares beside an arrived member at 1,440px.
-	{ heiNum : 844, ideStr : 'map-phone',            patStr : '/', widNum : 390,  steStr : 'map'                        }, // What: Map Phone State. Why: The Map section is checked sharing at a phone width. How: This shares beside an arrived member at 390px.
-	{ heiNum : 900, ideStr : 'join-desktop',         patStr : '/', widNum : 1440, steStr : 'join'                       }, // What: Join Desktop State. Why: The form an invite link opens is checked at a desktop width. How: This opens another's link at 1,440px.
-	{ heiNum : 844, ideStr : 'join-phone',           patStr : '/', widNum : 390,  steStr : 'join'                       }, // What: Join Phone State. Why: The join form is checked at a phone width. How: This opens another's link at 390px.
-	{ heiNum : 844, ideStr : 'waiting-phone',        patStr : '/', widNum : 390,  steStr : 'waiting'                    }  // What: Waiting Phone State. Why: A sent request's waiting part is checked with its withdrawal. How: This asks through another's link at 390px.
+	{ heiNum : 900, ideStr : 'welcome-desktop',      patStr : '/',         widNum : 1440                                      }, // What: Welcome Desktop State. Why: The welcome is checked at a desktop width. How: This loads the root at 1,440px.
+	{ heiNum : 844, ideStr : 'welcome-phone',        patStr : '/',         widNum : 390                                       }, // What: Welcome Phone State. Why: The welcome is checked at a phone width. How: This loads the root at 390px.
+	{ heiNum : 900, ideStr : 'welcome-desktop-dark', patStr : '/',         widNum : 1440, schStr : 'dark'                     }, // What: Welcome Desktop Dark State. Why: Dark mode is checked at a desktop width. How: This loads the root at 1,440px with the phone set to dark.
+	{ heiNum : 844, ideStr : 'welcome-phone-dark',   patStr : '/',         widNum : 390,  schStr : 'dark'                     }, // What: Welcome Phone Dark State. Why: Dark mode is checked at a phone width. How: This loads the root at 390px with the phone set to dark.
+	{ heiNum : 900, ideStr : 'loading-desktop',      patStr : '/',         widNum : 1440, steStr : 'loading'                  }, // What: Loading Desktop State. Why: The waiting screen is checked with its loader showing. How: This holds the app's check at 1,440px.
+	{ heiNum : 844, ideStr : 'loading-phone',        patStr : '/',         widNum : 390,  steStr : 'loading'                  }, // What: Loading Phone State. Why: The loader is checked at a phone width. How: This holds the app's check at 390px.
+	{ heiNum : 900, ideStr : 'create-desktop',       patStr : '/',         widNum : 1440, steStr : 'create'                   }, // What: Create Desktop State. Why: The form for starting a group is checked at a desktop width. How: This opens it at 1,440px.
+	{ heiNum : 844, ideStr : 'create-phone',         patStr : '/',         widNum : 390,  steStr : 'create'                   }, // What: Create Phone State. Why: The form is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'paste-desktop',        patStr : '/',         widNum : 1440, steStr : 'paste'                    }, // What: Paste Desktop State. Why: The screen for joining with an invite link is checked at a desktop width. How: This opens it from the welcome at 1,440px.
+	{ heiNum : 844, ideStr : 'paste-phone',          patStr : '/',         widNum : 390,  steStr : 'paste'                    }, // What: Paste Phone State. Why: The paste screen is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'note-phone',           patStr : '/',         widNum : 390,  steStr : 'note'                     }, // What: Note Phone State. Why: The install note shows where a browser offers its prompt, which the suite's browsers never do. How: This fires a stand-in prompt on the welcome at 390px.
+	{ heiNum : 900, ideStr : 'group-desktop',        patStr : '/',         widNum : 1440, steStr : 'group'                    }, // What: Group Desktop State. Why: The group frame is checked with its rail. How: This opens a new group at 1,440px.
+	{ heiNum : 844, ideStr : 'group-phone',          patStr : '/',         widNum : 390,  steStr : 'group'                    }, // What: Group Phone State. Why: The group frame is checked with its switcher. How: This opens a new group at 390px.
+	{ heiNum : 900, ideStr : 'chat-desktop',         patStr : '/',         widNum : 1440, steStr : 'chat'                     }, // What: Chat Desktop State. Why: A chat with an event and a message is checked at a desktop width. How: This fills a new group's chat at 1,440px.
+	{ heiNum : 844, ideStr : 'chat-phone',           patStr : '/',         widNum : 390,  steStr : 'chat'                     }, // What: Chat Phone State. Why: The chat is checked at a phone width. How: This fills a new group's chat at 390px.
+	{ heiNum : 844, ideStr : 'chat-phone-dark',      patStr : '/',         widNum : 390,  schStr : 'dark',    steStr : 'chat' }, // What: Chat Phone Dark State. Why: The chat's dark colors are checked too. How: This fills a new group's chat at 390px with the phone set to dark.
+	{ heiNum : 844, ideStr : 'sheet-phone',          patStr : '/',         widNum : 390,  steStr : 'sheet'                    }, // What: Sheet Phone State. Why: The group sheet is a modal layer of its own. How: This opens a new group's sheet at 390px.
+	{ heiNum : 900, ideStr : 'chat-tablet',          patStr : '/',         widNum : 900,  steStr : 'chat'                     }, // What: Chat Tablet State. Why: Between 720px and 1,100px the rail shows and the event stays pinned. How: This fills a new group's chat at 900px.
+	{ heiNum : 844, ideStr : 'event-phone',          patStr : '/',         widNum : 390,  steStr : 'event'                    }, // What: Event Phone State. Why: The pinned event's sheet is a modal layer of its own. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'events-desktop',       patStr : '/',         widNum : 1440, steStr : 'events'                   }, // What: Events Desktop State. Why: The Events section is checked at a desktop width. How: This opens it in a new group with a planned event at 1,440px.
+	{ heiNum : 844, ideStr : 'events-phone',         patStr : '/',         widNum : 390,  steStr : 'events'                   }, // What: Events Phone State. Why: The Events section is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'form-phone',           patStr : '/',         widNum : 390,  steStr : 'form'                     }, // What: Form Phone State. Why: The event form is a modal layer of its own. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'edit-phone',           patStr : '/',         widNum : 390,  steStr : 'edit'                     }, // What: Edit Phone State. Why: An item's edit form is checked in its sheet. How: This opens the open item's form at 390px.
+	{ heiNum : 900, ideStr : 'people-desktop',       patStr : '/',         widNum : 1440, steStr : 'people'                   }, // What: People Desktop State. Why: The People section is checked at a desktop width. How: This opens it in a new group at 1,440px.
+	{ heiNum : 844, ideStr : 'people-phone',         patStr : '/',         widNum : 390,  steStr : 'people'                   }, // What: People Phone State. Why: The People section is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'requests-desktop',     patStr : '/',         widNum : 1440, steStr : 'requests'                 }, // What: Requests Desktop State. Why: The waiting list is checked at a desktop width. How: This opens the People section with two requests waiting at 1,440px.
+	{ heiNum : 844, ideStr : 'requests-phone',       patStr : '/',         widNum : 390,  steStr : 'requests'                 }, // What: Requests Phone State. Why: The waiting list is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 900, ideStr : 'settings-desktop',     patStr : '/',         widNum : 1440, steStr : 'settings'                 }, // What: Settings Desktop State. Why: The owner's Settings section is checked at a desktop width. How: This opens it in a new group at 1,440px.
+	{ heiNum : 844, ideStr : 'settings-phone',       patStr : '/',         widNum : 390,  steStr : 'settings'                 }, // What: Settings Phone State. Why: The owner's Settings section is checked at a phone width. How: This opens it at 390px.
+	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/',         widNum : 390,  steStr : 'delete'                   }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
+	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/',         widNum : 390,  steStr : 'member'                   }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
+	{ heiNum : 844, ideStr : 'offered-phone',        patStr : '/',         widNum : 390,  steStr : 'offered'                  }, // What: Offered Phone State. Why: The member an offer names sees its answers. How: This opens Settings as a member offered another's group at 390px.
+	{ heiNum : 900, ideStr : 'map-desktop',          patStr : '/',         widNum : 1440, steStr : 'map'                      }, // What: Map Desktop State. Why: The Map section is checked sharing at a desktop width. How: This shares beside an arrived member at 1,440px.
+	{ heiNum : 844, ideStr : 'map-phone',            patStr : '/',         widNum : 390,  steStr : 'map'                      }, // What: Map Phone State. Why: The Map section is checked sharing at a phone width. How: This shares beside an arrived member at 390px.
+	{ heiNum : 900, ideStr : 'join-desktop',         patStr : '/',         widNum : 1440, steStr : 'join'                     }, // What: Join Desktop State. Why: The form an invite link opens is checked at a desktop width. How: This opens another's link at 1,440px.
+	{ heiNum : 844, ideStr : 'join-phone',           patStr : '/',         widNum : 390,  steStr : 'join'                     }, // What: Join Phone State. Why: The join form is checked at a phone width. How: This opens another's link at 390px.
+	{ heiNum : 844, ideStr : 'waiting-phone',        patStr : '/',         widNum : 390,  steStr : 'waiting'                  }, // What: Waiting Phone State. Why: A sent request's waiting part is checked with its withdrawal. How: This asks through another's link at 390px.
+	{ heiNum : 844, ideStr : 'install-phone',        patStr : '/',         widNum : 390,  iosBoo : true                       }, // What: Install Phone State. Why: An iPhone in Safari shows the install steps before anything else. How: This opens the app as an iPhone's Safari at 390px.
+	{ heiNum : 900, ideStr : 'install-tablet',       patStr : '/',         widNum : 1024, iosBoo : true                       }, // What: Install Tablet State. Why: An iPad shows the same steps at a wider width. How: This opens the app as an iPad's Safari at 1,024px.
+	{ heiNum : 844, ideStr : 'invited-phone',        patStr : INV_PAT_STR, widNum : 390,  iosBoo : true                       }  // What: Invited Phone State. Why: An invite link opened in an iPhone's Safari keeps its link to copy before the steps. How: This opens a link as an iPhone's Safari at 390px.
 
 
 ];
@@ -581,6 +591,46 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
 
 
 
+// #region bipFakFun
+
+/**
+ * bipFakFun = Before Install Prompt Fake Function
+ *
+ * @summary
+ * Fires a stand-in for the install prompt a browser such as Chrome offers,
+ * whose prompt counts its calls on the window and whose answer is accepted,
+ * since the suite's browsers never offer a real one.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param curPagObj - Current Page Object: The page to fire it in.
+ *
+ * @returns A promise that settles once it's fired, with no value.
+ *
+ * @example
+ * ```ts
+ * bipFakFun(page) // => Promise<void>
+ * ```
+ *
+*/
+
+const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( () => { // What: Before Install Prompt Fake Function. Why: The note and the button wait for the browser's prompt. How: This fires a stand-in in the page.
+
+
+	const bipEveObj = new Event( 'beforeinstallprompt', { cancelable : true } ); // What: Before Install Prompt Event Object. Why: The app keeps whatever the browser fires under that name. How: This makes one that can be cancelled, as the real one can.
+
+
+	Object.assign( bipEveObj, { prompt : async () => { Reflect.set( window, 'proCouNum', Number( Reflect.get( window, 'proCouNum' ) ?? 0 ) + 1 ); }, userChoice : Promise.resolve( { outcome : 'accepted' } ) } ); // What: Prompt Assign Call. Why: The app shows the prompt and reads the answer. How: This adds a prompt that counts its calls and an accepted answer.
+
+	window.dispatchEvent( bipEveObj ); // What: Dispatch Call. Why: The app hears it as the browser's prompt. How: This fires it.
+
+
+} );
+
+// #endregion bipFakFun
+
+
+
 // #region steRunFun
 
 /**
@@ -622,7 +672,7 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'join' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -640,6 +690,22 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 	if ( steStr === 'join' || steStr === 'waiting' ) { await joiSteFun( curPagObj, steStr ); return; } // What: Join Guard. Why: The join states open another's invite link rather than start a group. How: This runs the join steps and returns.
+
+
+
+	if ( steStr === 'note' ) { // What: Note Block. Why: The note state shows the install note on the welcome. How: This fires a stand-in prompt, waits for the note, and stops.
+
+
+		await bipFakFun( curPagObj ); // What: Prompt Fire Call. Why: The note waits for the browser's prompt. How: This fires a stand-in.
+
+		await curPagObj.getByRole( 'heading', { level : 2, name : 'Install Come Hang' } ).waitFor(); // What: Note Wait. Why: The note shows once the prompt is kept. How: This waits for its heading.
+
+
+
+		return; // What: Note Return. Why: The note state stops at the welcome. How: This returns.
+
+
+	}
 
 
 
@@ -893,6 +959,8 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 	await curPagObj.setViewportSize( { height : staRecObj.heiNum, width : staRecObj.widNum } ); // What: Viewport Size Call. Why: The state's layout depends on its width. How: This sizes the page before it loads, so breakpoints apply from the first paint.
 
+	if ( staRecObj.iosBoo === true ) await curPagObj.addInitScript( ( uasValStr ) => Object.defineProperty( Navigator.prototype, 'userAgent', { get : () => uasValStr } ), IOS_UAS_STR ); // What: iOS Agent Call. Why: The app tells an iPhone by its user agent, which the suite's browsers don't send. How: This makes the page report an iPhone's Safari before it loads.
+
 	if ( staRecObj.steStr === 'loading' ) await curPagObj.addInitScript( datHolFun, -1 ); // What: Database Hold Call. Why: The waiting screen shows only while the app's check is held. How: This holds the app's database for good, before the page loads.
 
 	await curPagObj.goto( staRecObj.patStr ); // What: Page Load Call. Why: Each state starts from a fresh load of its route. How: This opens the path on the suite's server.
@@ -914,7 +982,7 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 // #region Exports
 
-export { datHolFun, opeStaFun, reqSteFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states, their opener, the hold that slows the app's launch, and the joiners who ask to join. How: This exports the state list, its type, and the three helpers.
+export { bipFakFun, datHolFun, opeStaFun, reqSteFun, STA_REC_ARR, type StaRecTyp }; // What: Named Exports. Why: The suites share these states, their opener, the hold that slows the app's launch, the joiners who ask to join, and the stand-in install prompt. How: This exports the state list, its type, and the four helpers.
 
 // #endregion Exports
 
