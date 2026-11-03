@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-03 (the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-03 (the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1917,9 +1917,24 @@ the Blaze change.
   it's served. Server code runs as Firebase Cloud Functions, since it's
   triggered by database writes, which a Netlify Function can't listen
   for. Setup carries ease-my-life's lessons: the site's domains in
-  Firebase Auth's authorized domains, the API key's website restrictions
-  (including the project's `firebaseapp.com` address used for Google
-  sign-in), and Firebase's addresses in the CSP's `connect-src`.
+  Firebase Auth's authorized domains, the API key's website restrictions,
+  and Firebase's addresses in the Content-Security-Policy.
+- Built 2026-11-03 (`deploy-files.ts`): each build fills in the hosting
+  files for its own Firebase project, read from `VITE_FIREBASE_CONFIG`.
+  The policy's `connect-src` names that project's functions and database
+  along with Firestore, Auth, Storage, FCM, and App Check, the Realtime
+  Database's own servers under `firebaseio.com`, and nothing else; a build
+  without a project, such as the test suites', keeps the strict policy.
+  Google sign-in runs on the app's own domain (decided 2026-11-03), since
+  Safari, the installed iPhone app included, blocks the storage a sign-in
+  page on `firebaseapp.com` needs: `_redirects` passes `/__/auth/` through
+  to the project's `firebaseapp.com`, ahead of the app's fallback, the app
+  sets its sign-in domain to the site's own host, frame-src allows only
+  the app itself, and the service worker leaves `/__/` alone. App Check
+  starts with reCAPTCHA Enterprise in a production build that has
+  `VITE_APPCHECK_SITE_KEY`, which also opens reCAPTCHA's script and frame
+  addresses in the policy. A config missing its project or database fails
+  the build.
 - App Check moves from "later" to launch, given the concern about bots
   and abuse (Section 15).
 - Location (decided 2026-10-28): every service in us-central1, so Cloud
@@ -1984,16 +1999,29 @@ the Blaze change.
       `functions/src/setup.ts`.
 - [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
       after upload (Section 11.9).
-- [ ] App Check enforced on Firestore, RTDB, Storage, and Functions.
+- [ ] App Check: a reCAPTCHA Enterprise site key for each project's
+      domain, set as `VITE_APPCHECK_SITE_KEY` in Netlify for that
+      environment, the app registered with App Check, then enforcement
+      turned on for Firestore, RTDB, Storage, and Functions once tokens are
+      seen arriving in the console's metrics.
 - [ ] Firestore TTL policies on the `expireAt` field of every collection
       group that has one (`liveLocations`, `events`, `assignments`,
       `historyRequests`, `notices`, `pushToken`, `polarEvents`), since a
       TTL policy is set per collection group in the console, not by the
       rules.
-- [ ] Authorized domains, API key restrictions, and CSP, per the hosting
-      bullet above, the CSP's `connect-src` including FCM's token
-      addresses (`fcmregistrations.googleapis.com` and
-      `firebaseinstallations.googleapis.com`).
+- [ ] `VITE_FIREBASE_CONFIG` set in Netlify for each environment, the
+      project's web config as JSON, which the build reads its policy and
+      sign-in passthrough from.
+- [ ] Sign-in on the app's own domain: the site's domains in Firebase
+      Auth's authorized domains, and each domain's
+      `https://<domain>/__/auth/handler` added as an authorized redirect
+      URI on the project's Google OAuth client. Deploy previews change
+      their address each time, so Google sign-in is tried on a fixed
+      staging address.
+- [ ] The API key restricted to the site's domains.
+- [ ] Once staging is up, a real check that Google sign-in, App Check,
+      chat, and pushes all work under the built policy, which the test
+      suites can't cover without a project.
 - [ ] Polar: the upgrade's product made in the sandbox (staging) and live
       (live), each project's `POLAR_ACCESS_TOKEN` and
       `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,

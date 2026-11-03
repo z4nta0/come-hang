@@ -3,6 +3,8 @@
 
 // #region Imports
 
+import { depConFun     } from '../../deploy-files.ts'; // What: Deploy Config Function. Why: A build's project is read from its config. How: This reads it.
+import { depRedFun     } from '../../deploy-files.ts'; // What: Deploy Redirects Function. Why: The sign-in passthrough is checked as a build writes it. How: This fills in the redirects.
 import { execFileSync  } from 'node:child_process';    // What: Exec File Sync. Why: The dependency check asks npm itself. How: This runs npm audit and returns its output.
 import { expect        } from '@playwright/test';      // What: Expect. Why: Each check passes only when the policy and the build are what they should be. How: This asserts on what each check reads, such as the audit's counts.
 import { fileURLToPath } from 'node:url';              // What: File URL To Path. Why: The repo root npm works from sits two folders above this file, with the build folder, dist/, inside it. How: This turns each one's URL into a path.
@@ -23,13 +25,14 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
  * @summary
  * Checks the security policy and what ships rather than a page, so it runs in
  * the Chromium project only, since a file reads the same in every engine. The
- * headers public/_headers sends have to hold the app to its own strict policy,
- * such as refusing framing. The production build, which the security suite's
- * preview server builds before the run, has to hold no private key or provider
- * token, and none of the development member switcher or its seed. npm audit
- * has to find no high or critical advisory in the shipped dependencies of the
- * app or the Cloud Functions, and skips with a message when npm's registry
- * can't be reached.
+ * headers public/_headers sends, as a build fills them in for its project or
+ * for none, have to hold the app to its own strict policy, such as refusing
+ * framing. The production build, which the security suite's preview server
+ * builds before the run, has to hold no private key or provider token, and
+ * none of the development member switcher or its seed. npm audit has to find
+ * no high or critical advisory in the shipped dependencies of the app or the
+ * Cloud Functions, and skips with a message when npm's registry can't be
+ * reached.
  *
  * Sections:
  *  - Constants
@@ -43,10 +46,13 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
 
 // #region Constants
 
-const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                       // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
-const DIS_DIR_STR = fileURLToPath( new URL( '../../dist/', import.meta.url ) );      // What: Distribution Directory String. Why: The secret search reads what visitors download. How: This resolves the build folder, dist/.
-const FUN_DIR_STR = fileURLToPath( new URL( '../../functions/', import.meta.url ) ); // What: Functions Directory String. Why: The Cloud Functions ship dependencies from their own lockfile. How: This resolves the functions folder.
-const ROO_DIR_STR = fileURLToPath( new URL( '../..', import.meta.url ) );            // What: Root Directory String. Why: npm audit reads the app's lockfile at the repo root. How: This resolves the repo root.
+const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                              // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
+const DIS_DIR_STR = fileURLToPath( new URL( '../../dist/', import.meta.url ) );             // What: Distribution Directory String. Why: The secret search reads what visitors download. How: This resolves the build folder, dist/.
+const FUN_DIR_STR = fileURLToPath( new URL( '../../functions/', import.meta.url ) );        // What: Functions Directory String. Why: The Cloud Functions ship dependencies from their own lockfile. How: This resolves the functions folder.
+const RED_PAT_STR = fileURLToPath( new URL( '../../public/_redirects', import.meta.url ) ); // What: Redirects Path String. Why: The sign-in passthrough is checked in the file Netlify reads. How: This resolves public/_redirects.
+const ROO_DIR_STR = fileURLToPath( new URL( '../..', import.meta.url ) );                   // What: Root Directory String. Why: npm audit reads the app's lockfile at the repo root. How: This resolves the repo root.
+
+const PRO_CON_OBJ = { appChkBoo : true, datUrlStr : 'https://come-hang-live-default-rtdb.firebaseio.com', proIdeStr : 'come-hang-live' }; // What: Project Config Object. Why: A deploy build fills the files in for its project. How: This stands in for the live project, with App Check on.
 
 const AUD_DIR_ARR = [ // What: Audit Directory Array. Why: The app and the Cloud Functions each ship dependencies from their own lockfile. How: Each row names a package folder and what ships from it.
 
@@ -127,6 +133,60 @@ test( 'the other hardening headers are set', () => { // What: Hardening Headers 
 	expect( heaAllObj[ 'permissions-policy' ] ).toBeTruthy();                                              // What: Permissions Policy Assertion. Why: Browser features the app doesn't use shouldn't be available to injected code. How: This checks a policy is set.
 	expect( heaAllObj[ 'permissions-policy' ] ).toMatch( /(^|, )geolocation=\(self\)(,|$)/ );              // What: Geolocation Assertion. Why: Location sharing needs the position, but only for this app's own pages. How: This expects geolocation allowed to this origin alone.
 	expect( heaAllObj[ 'permissions-policy' ] ).toMatch( /(^|, )camera=\(\)(,|$)/ );                       // What: Camera Assertion. Why: A feature the app doesn't use stays off. How: This expects the camera turned off.
+
+
+} );
+
+test( 'a build without a project keeps the policy strict and drops the sign-in passthrough', () => { // What: No Project Test. Why: The suite's own build, and any build missing its config, should open nothing beyond the app itself. How: This fills in both files for no project and checks the policy and the redirects.
+
+
+	const cspValStr = heaAllFun()[ 'content-security-policy' ] ?? '';          // What: Content-Security-Policy Value String. Why: Its directives are checked. How: This reads it filled in for no project.
+	const redTexStr = depRedFun( readFileSync( RED_PAT_STR, 'utf8' ), null ); // What: Redirects Text String. Why: The passthrough's line is checked. How: This fills in the redirects for no project.
+
+
+	expect( cspValStr ).toContain( "connect-src 'self';" ); // What: Connect Assertion. Why: The app talks to no other origin. How: This expects only the app itself.
+	expect( cspValStr ).toContain( "frame-src 'none';" );   // What: Frame Assertion. Why: Nothing is framed without sign-in. How: This expects frames refused.
+	expect( cspValStr ).not.toContain( '%' );               // What: Filled Policy Assertion. Why: A placeholder left behind would break the policy. How: This expects none.
+	expect( redTexStr ).not.toMatch( /^\/__\/auth/m );      // What: No Passthrough Assertion. Why: There's no project to pass sign-in through to. How: This expects no /__/auth/ rule.
+	expect( redTexStr ).not.toContain( '%' );               // What: Filled Redirects Assertion. Why: A placeholder left behind would be served as a rule. How: This expects none.
+
+
+} );
+
+
+
+test( "a build's policy names exactly its own project, and sign-in passes through ahead of the fallback", () => { // What: Project Test. Why: Each environment should open only its own project's addresses, and the sign-in pages have to be passed through before the app's fallback catches them. How: This fills in both files for a stand-in project, with App Check on and off, and checks each.
+
+
+	const appCspStr = heaAllFun( PRO_CON_OBJ )[ 'content-security-policy' ] ?? '';                            // What: App Check Policy String. Why: App Check opens reCAPTCHA. How: This reads the policy with it on.
+	const offCspStr = heaAllFun( { ...PRO_CON_OBJ, appChkBoo : false } )[ 'content-security-policy' ] ?? ''; // What: Off Policy String. Why: Without App Check, reCAPTCHA stays shut. How: This reads the policy with it off.
+	const redLinArr = depRedFun( readFileSync( RED_PAT_STR, 'utf8' ), PRO_CON_OBJ ).split( '\n' );           // What: Redirects Line Array. Why: The rules' order matters. How: This fills in the redirects and splits them into lines.
+
+
+	expect( appCspStr ).toContain( 'https://us-central1-come-hang-live.cloudfunctions.net' );                     // What: Functions Assertion. Why: Callables go to the project's own functions. How: This expects its address.
+	expect( appCspStr ).toContain( 'wss://come-hang-live-default-rtdb.firebaseio.com' );                          // What: Database Assertion. Why: Chat connects to the project's own database. How: This expects its address.
+	expect( appCspStr ).toContain( "frame-src 'self' https://www.google.com/recaptcha/" );                        // What: App Check Frame Assertion. Why: Sign-in's page is the app's own, and reCAPTCHA frames Google's. How: This expects both.
+	expect( appCspStr ).toContain( "script-src 'self' https://www.google.com/recaptcha/" );                       // What: App Check Script Assertion. Why: reCAPTCHA's script is Google's. How: This expects it beside the app's.
+	expect( appCspStr ).not.toContain( 'firebaseapp.com' );                                                       // What: No Sign-In Domain Assertion. Why: Sign-in runs on the app's own domain. How: This expects Firebase's sign-in domain absent.
+	expect( appCspStr ).not.toContain( '%' );                                                                     // What: Filled Policy Assertion. Why: A placeholder left behind would break the policy. How: This expects none.
+	expect( offCspStr ).toContain( "frame-src 'self';" );                                                         // What: Off Frame Assertion. Why: Without App Check only sign-in's page is framed. How: This expects the app alone.
+	expect( offCspStr ).not.toContain( 'recaptcha' );                                                             // What: Off reCAPTCHA Assertion. Why: Nothing loads reCAPTCHA without App Check. How: This expects it absent.
+	expect( redLinArr ).toContain( '/__/auth/*    https://come-hang-live.firebaseapp.com/__/auth/:splat   200' ); // What: Passthrough Assertion. Why: Sign-in's pages come from the project. How: This expects the rule naming its domain.
+	expect( redLinArr.findIndex( ( linTexStr ) => linTexStr.startsWith( '/__/auth/' ) ) ).toBeLessThan( redLinArr.findIndex( ( linTexStr ) => linTexStr.startsWith( '/*' ) ) ); // What: Order Assertion. Why: Netlify takes the first rule that matches, and the fallback matches everything. How: This expects the passthrough first.
+
+
+} );
+
+
+
+test( 'a build reads its project from its config and refuses an incomplete one', () => { // What: Config Test. Why: A deploy with a broken config should fail the build rather than ship a broken policy. How: This reads no config, a full one, and one missing its database, checking each.
+
+
+	expect( depConFun( undefined, undefined ) ).toBeNull(); // What: No Config Assertion. Why: A build without a project keeps the strict files. How: This expects null.
+
+	expect( depConFun( JSON.stringify( { databaseURL : PRO_CON_OBJ.datUrlStr, projectId : PRO_CON_OBJ.proIdeStr } ), 'key' ) ).toEqual( PRO_CON_OBJ ); // What: Full Config Assertion. Why: The project, its database, and App Check's key are all read. How: This expects the stand-in project.
+
+	expect( () => depConFun( JSON.stringify( { projectId : 'come-hang-live' } ), undefined ) ).toThrow( 'needs a projectId and a databaseURL' ); // What: Incomplete Config Assertion. Why: A config missing its database would build a broken policy. How: This expects the build to fail.
 
 
 } );

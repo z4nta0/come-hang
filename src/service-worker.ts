@@ -24,14 +24,15 @@ import type { FirebaseOptions } from 'firebase/app'; // What: Firebase Options. 
  *
  * @summary
  * The app's one service worker (ARCHITECTURE.md Section 14), built by
- * vite-plugin-pwa, which writes the build's file list into it. It caches
- * every file the build produced, so the app opens without a connection, and
- * answers every navigation with the app's page, as Netlify does, apart from
- * the legal pages, which are pages of their own. In a production build it
- * also receives FCM's pushes and shows each one, and a tap on one brings the
- * app forward where the push leads, its group and section, opening it there
- * when it isn't open. The app hands this worker's
- * registration to FCM, so FCM never registers a second worker of its own.
+ * vite-plugin-pwa, which writes the build's file list into it. It caches every
+ * file the build produced, so the app opens without a connection, and answers
+ * every navigation with the app's page, as Netlify does, apart from the legal
+ * pages, which are pages of their own, and the sign-in pages Netlify passes
+ * through to Firebase under /__/. In a production build it also receives FCM's
+ * pushes and shows each one, and a tap on one brings the app forward where the
+ * push leads, its group and section, opening it there when it isn't open. The
+ * app hands this worker's registration to FCM, so FCM never registers a second
+ * worker of its own.
  *
  * Sections:
  *  - Types
@@ -139,7 +140,7 @@ cleanupOutdatedCaches(); // What: Cache Cleanup Call. Why: Old caches go once a 
 
 precacheAndRoute( self.__WB_MANIFEST ); // What: Precache Call. Why: The app's files are served without a connection. How: This caches the build's list and serves it.
 
-registerRoute( new NavigationRoute( createHandlerBoundToURL( 'index.html' ), { denylist : [ /^\/(privacy|terms)(\/|$)/ ] } ) ); // What: Navigation Route Call. Why: The app answers at every address it handles, offline too, while the legal pages are their own. How: This serves the cached page for every navigation but theirs.
+registerRoute( new NavigationRoute( createHandlerBoundToURL( 'index.html' ), { denylist : [ /^\/(privacy|terms)(\/|$)/, /^\/__\// ] } ) ); // What: Navigation Route Call. Why: The app answers at every address it handles, offline too, while the legal pages are their own and /__/ passes through to Firebase's sign-in pages. How: This serves the cached page for every navigation but those.
 
 
 

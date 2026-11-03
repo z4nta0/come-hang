@@ -6,11 +6,18 @@
 import reaPluFun from '@vitejs/plugin-react'; // What: React Plugin Function. Why: Vite needs the React plugin to compile JSX. How: This is called first in the plugins array.
 
 
-import { defineConfig } from 'vite';            // What: Define Config. Why: Vite's config helper passes the config through with its types. How: This wraps VIT_CON_OBJ.
-import { VitePWA      } from 'vite-plugin-pwa'; // What: Vite PWA. Why: The app's service worker is built with the file list it caches. How: This returns the plugin.
+import { defineConfig  } from 'vite';              // What: Define Config. Why: Vite's config helper passes the config through with its types. How: This wraps VIT_CON_OBJ.
+import { depConFun     } from './deploy-files.ts'; // What: Deploy Config Function. Why: The hosting files follow the build's project. How: This reads it from the environment.
+import { depHeaFun     } from './deploy-files.ts'; // What: Deploy Headers Function. Why: The policy names the build's project. How: This fills in the headers file.
+import { depRedFun     } from './deploy-files.ts'; // What: Deploy Redirects Function. Why: Sign-in passes through to the build's project. How: This fills in the redirects file.
+import { readFileSync  } from 'node:fs';           // What: Read File Sync. Why: The copied hosting files are read back. How: This reads one.
+import { resolve       } from 'node:path';         // What: Resolve. Why: The hosting files sit in the build's folder. How: This builds their paths.
+import { VitePWA       } from 'vite-plugin-pwa';   // What: Vite PWA. Why: The app's service worker is built with the file list it caches. How: This returns the plugin.
+import { writeFileSync } from 'node:fs';           // What: Write File Sync. Why: The filled-in hosting files replace the copies. How: This writes one.
 
 
-import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a Vite plugin. How: This types minHtmFun's return value.
+import type { DepConTyp } from './deploy-files.ts'; // What: Deploy Config Type. Why: The plugin holds the build's project between hooks. How: This types it.
+import type { Plugin    } from 'vite';              // What: Plugin. Why: The page minifier and the deploy files' writer are Vite plugins. How: This types their return values.
 
 // #endregion Imports
 
@@ -27,8 +34,9 @@ import type { Plugin } from 'vite'; // What: Plugin. Why: The page minifier is a
  * index.html, which Vite processes but never minifies, so the page's comments
  * and indentation stay out of what visitors download. The web app manifest
  * stays hand-written, so the plugin writes none. Every other setting stays at
- * Vite's default, including copying the files in public/ (such as Netlify's
- * _redirects) into the build untouched.
+ * Vite's default, including copying the files in public/ into the build,
+ * after which Netlify's _headers and _redirects are filled in for the
+ * build's own Firebase project (deploy-files.ts).
  *
  * Sections:
  *  - Helpers
@@ -105,12 +113,71 @@ const minHtmFun = () : Plugin => ({ // What: Minify HTML Function. Why: index.ht
 // #endregion minHtmFun
 
 
+
+// #region depWriFun
+
+/**
+ * depWriFun = Deploy Write Function
+ *
+ * @summary
+ * Returns a build-only Vite plugin that fills in the build's _headers and
+ * _redirects for its own Firebase project once the bundle is written,
+ * reading the project from VITE_FIREBASE_CONFIG and App Check's key from
+ * VITE_APPCHECK_SITE_KEY, as the app does. A build without a project keeps
+ * the strict files.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns The plugin.
+ *
+ * @example
+ * ```ts
+ * depWriFun() // => { apply : 'build', name : 'write-deploy-files', ... }
+ * ```
+ *
+*/
+
+const depWriFun = () : Plugin => { // What: Deploy Write Function. Why: Each environment's hosting files name its own project. How: This returns a plugin that fills them in after the build.
+
+
+	let depConObj : DepConTyp = null; // What: Deploy Config Object. Why: The project is read once the config resolves, and used once the bundle is written. How: This holds it, null without a project.
+	let outDirStr = '';               // What: Output Directory String. Why: The files are rewritten where the build wrote them. How: This holds the build's folder.
+
+
+
+	return { // What: Plugin Return. Why: Vite runs the plugin's hooks during the build. How: This returns them.
+
+
+		apply          : 'build',                                                                                                                                                                    // What: Apply. Why: The dev server serves no hosting files. How: This runs the plugin only during npm run build.
+		configResolved : ( conResObj ) => { depConObj = depConFun( conResObj.env.VITE_FIREBASE_CONFIG, conResObj.env.VITE_APPCHECK_SITE_KEY ); outDirStr = resolve( conResObj.root, conResObj.build.outDir ); }, // What: Config Resolved Hook. Why: The project comes from the build's environment. How: This reads it and the output folder.
+		name           : 'write-deploy-files',                                                                                                                                                       // What: Name. Why: Vite reports a plugin's warnings and errors under its name. How: This names the plugin.
+
+		closeBundle : () => { // What: Close Bundle Hook. Why: The hosting files are in the build only once public/ has been copied. How: This rewrites both there.
+
+
+			writeFileSync( resolve( outDirStr, '_headers' ), depHeaFun( readFileSync( resolve( outDirStr, '_headers' ), 'utf8' ), depConObj ) );     // What: Headers Write Call. Why: The policy names the build's project. How: This fills in the headers file.
+			writeFileSync( resolve( outDirStr, '_redirects' ), depRedFun( readFileSync( resolve( outDirStr, '_redirects' ), 'utf8' ), depConObj ) ); // What: Redirects Write Call. Why: Sign-in passes through to the build's project. How: This fills in the redirects file.
+
+
+		}
+
+
+	};
+
+
+};
+
+// #endregion depWriFun
+
+
 const VIT_CON_OBJ = defineConfig({ // What: Vite Config Object. Why: Vite reads its whole configuration from this file's default export. How: This builds the config, including the minHtmFun plugin above.
 
 
 	css     : { modules : { localsConvention : 'camelCaseOnly' } }, // What: CSS. Why: CSS modules expose each class name as a camelCase key only, so a modifier class such as .butBasAnc--primary is read as cssModObj.butBasAncPrimary, per the CSS modules rules. How: This sets the locals convention.
 
-	plugins : [ // What: Plugins. Why: Vite builds the app through these plugins, in this order. How: This lists React, the service worker, and the page minifier.
+	plugins : [ // What: Plugins. Why: Vite builds the app through these plugins, in this order. How: This lists React, the service worker, the page minifier, and the deploy files' writer.
 
 
 		reaPluFun(), // What: React Plugin Call. Why: JSX has to compile. How: This adds React's plugin.
@@ -128,7 +195,8 @@ const VIT_CON_OBJ = defineConfig({ // What: Vite Config Object. Why: Vite reads 
 
 		}),
 
-		minHtmFun() // What: Minify HTML Call. Why: The shipped page drops its comments. How: This adds the page minifier, last.
+		minHtmFun(), // What: Minify HTML Call. Why: The shipped page drops its comments. How: This adds the page minifier.
+		depWriFun()  // What: Deploy Write Call. Why: The hosting files name the build's own project. How: This adds the deploy files' writer, last.
 
 
 	]

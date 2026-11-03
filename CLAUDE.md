@@ -186,10 +186,12 @@ emulators need Java, 21 installed.
 - **Client storage**: raw IndexedDB, no wrapper library.
 - **Security suite** (per the security testing rule): the baseline lives in
   `tests/security/`, checking `public/_headers` and the production build. The
-  policy is strict while the app talks to no other origin: the Firebase work
-  adds its addresses to the Content-Security-Policy and turns the secret
-  search's Google key pattern into an allowance for the Firebase web config's
-  browser key (named here when it lands), each in the change that needs it.
+  build fills in `_headers` and `_redirects` for its own Firebase project
+  (`deploy-files.ts`, from `VITE_FIREBASE_CONFIG`), so the policy opens only
+  that project's addresses, and the suite checks the files filled in for a
+  stand-in project and for none, as its own build has none. Its secret search
+  runs on that project-less build, so the Firebase web config's browser key,
+  public by design, never meets its Google key pattern.
   Location sharing opened `geolocation` to the app's own origin
   (`geolocation=(self)`), which the headers spec checks.
 - **Firestore SDK override**: the Firestore SDK's Node build pins

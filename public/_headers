@@ -1,11 +1,15 @@
 # _headers = Security Headers Policy
 #
 # @summary
-# Hardening headers applied to every response. For now the app loads nothing
-# but its own self-hosted files and talks to no other origin, so the
-# Content-Security-Policy can be strict rather than needing broad allowances.
-# The Firebase work opens connect-src and the sign-in pages' addresses, and
-# location sharing opens geolocation, each in the change that needs it.
+# Hardening headers applied to every response. The app loads nothing but its
+# own self-hosted files, so the Content-Security-Policy stays strict, opening
+# only what a build's own Firebase project needs. The build fills in three
+# placeholders from its project (deploy-files.ts): %FIREBASE_CONNECT% adds
+# the project's addresses to connect-src, %FIREBASE_FRAME% sets frame-src to
+# the app itself, for the sign-in page Netlify passes through, plus
+# reCAPTCHA's frames when App Check is on, and %FIREBASE_SCRIPT% adds
+# reCAPTCHA's script then. A build without a project, such as a test build,
+# adds nothing and keeps frame-src at 'none'.
 #
 # default-src 'self' is the fallback every unlisted fetch directive inherits,
 # such as the one for fonts, so those need no lines of their own. The
@@ -24,9 +28,9 @@
 #
 # @author z4nta0 <https://github.com/z4nta0>
 
-# What: Security Headers Rule. Why: Every response should refuse framing, sniffing, plain HTTP, referrer leaks to other sites, unused browser features, and anything loaded from another origin. How: This applies the Content-Security-Policy, the permissions and referrer policies, HSTS, a nosniff content type, and a deny on framing to every path.
+# What: Security Headers Rule. Why: Every response should refuse framing, sniffing, plain HTTP, referrer leaks to other sites, unused browser features, and anything loaded from another origin but its own Firebase project. How: This applies the Content-Security-Policy, its project's placeholders filled in by the build, the permissions and referrer policies, HSTS, a nosniff content type, and a deny on framing to every path.
 /*
-	Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; object-src 'none'; script-src 'self'; style-src 'self'
+	Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'%FIREBASE_CONNECT%; form-action 'self'; frame-ancestors 'none'; frame-src %FIREBASE_FRAME%; object-src 'none'; script-src 'self'%FIREBASE_SCRIPT%; style-src 'self'
 	Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()
 	Referrer-Policy: same-origin
 	Strict-Transport-Security: max-age=63072000; includeSubDomains
