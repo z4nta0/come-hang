@@ -3,15 +3,18 @@
 
 // #region Imports
 
-import { collection } from 'firebase/firestore';      // What: Collection. Why: An account's notices are listed together. How: This names the notices collection.
-import { deleteDoc  } from 'firebase/firestore';      // What: Delete Doc. Why: A seen notice is dismissed. How: This deletes it.
-import { doc        } from 'firebase/firestore';      // What: Doc. Why: A notice is dismissed by path. How: This builds a reference.
-import { firGetFun  } from '../platform/firebase.ts'; // What: Firebase Get Function. Why: Notices live in Firestore. How: This returns the services.
-import { getDocs    } from 'firebase/firestore';      // What: Get Docs. Why: Every waiting notice is shown. How: This reads the collection.
-import { ideEnsFun  } from './identity.ts';           // What: Identity Ensure Function. Why: Notices are under this identity's account. How: This reads its UID.
+import { collection } from 'firebase/firestore';       // What: Collection. Why: An account's notices are listed together. How: This names the notices collection.
+import { deleteDoc  } from 'firebase/firestore';       // What: Delete Doc. Why: A seen notice is dismissed. How: This deletes it.
+import { doc        } from 'firebase/firestore';       // What: Doc. Why: A notice is dismissed by path. How: This builds a reference.
+import { firGetFun  } from '../platform/firebase.ts';  // What: Firebase Get Function. Why: Notices live in Firestore. How: This returns the services.
+import { getDocs    } from 'firebase/firestore';       // What: Get Docs. Why: Every waiting notice is listed. How: This reads the collection.
+import { ideEnsFun  } from './identity.ts';            // What: Identity Ensure Function. Why: Notices are under this identity's account. How: This reads its UID.
+import { keyGetFun  } from '../platform/key-store.ts'; // What: Key Get Function. Why: Only a phone that has acted holds an identity with notices. How: This reads its record without connecting.
+import { onSnapshot } from 'firebase/firestore';       // What: On Snapshot. Why: A notice arriving while the app is open shows at once. How: This listens to the collection.
 
 
-import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A notice's times come back as timestamps. How: This types them.
+import type { QueryDocumentSnapshot } from 'firebase/firestore'; // What: Query Document Snapshot. Why: The list and the watch read notices the same way. How: This types one notice's document.
+import type { Timestamp             } from 'firebase/firestore'; // What: Timestamp. Why: A notice's times come back as timestamps. How: This types them.
 
 // #endregion Imports
 
@@ -26,7 +29,8 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
  * answered offer. Cloud Functions write them to the account's notices, and
  * the app lists the unexpired ones, newest first, each with its kind, the
  * group's ID and its name at the time, and the other person involved where
- * there is one, then deletes each once it's been seen.
+ * there is one, then deletes each once it's been seen. The app can list them
+ * once or watch them, so one arriving while it's open shows at once.
  *
  * Sections:
  *  - Helpers
@@ -67,39 +71,38 @@ const notDisFun = async ( notIdeStr : string ) : Promise< void > => deleteDoc( d
 
 
 
-type NotRecTyp = { creTimNum : number, groIdeStr : string, groNamStr : string, kinValStr : string, notIdeStr : string, othUidStr : string }; // What: Notice Record Type. Why: The app picks a notice's message by kind and names the group. How: This types one notice as notLisFun lists it.
+type NotRecTyp = { creTimNum : number, groIdeStr : string, groNamStr : string, kinValStr : string, notIdeStr : string, othUidStr : string }; // What: Notice Record Type. Why: The app picks a notice's message by kind and names the group. How: This types one notice as the list and the watch report it.
 
-// #region notLisFun
+// #region notArrFun
 
 /**
- * notLisFun = Notice List Function
+ * notArrFun = Notice Array Function
  *
  * @summary
- * Resolves with this identity's waiting notices, newest first. A notice past
+ * Reads a set of notice documents into records, newest first. A notice past
  * its expiry is left out, since its TTL deletion can run a day late. A
  * notice with no other person involved has an empty othUidStr.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param void - This function takes no parameters.
+ * @param notDocArr - Notice Document Array: The notices' documents.
  *
- * @returns A promise that resolves with the notices.
+ * @returns The unexpired notices' records, newest first.
  *
  * @example
  * ```ts
- * notLisFun() // => [ { kinValStr : 'removed', ... } ]
+ * notArrFun(notSnaObj.docs) // => [ { kinValStr : 'removed', ... } ]
  * ```
  *
 */
 
-const notLisFun = async () : Promise< NotRecTyp[] > => { // What: Notice List Function. Why: A group mustn't just vanish from someone's list without a word (Section 9). How: This reads the account's notices and keeps the unexpired ones.
+const notArrFun = ( notDocArr : QueryDocumentSnapshot[] ) : NotRecTyp[] => { // What: Notice Array Function. Why: The list and the watch report notices the same way. How: This keeps the unexpired documents and reads each into a record.
 
 
-	const notSnaObj = await getDocs( collection( firGetFun().fstDatObj, `accounts/${ ( await ideEnsFun() ).uidValStr }/notices` ) );  // What: Notices Snapshot Object. Why: Every waiting notice is in the account's collection. How: This reads it.
-	const notDocArr = notSnaObj.docs.filter( ( notDocObj ) => ( notDocObj.get( 'expireAt' ) as Timestamp ).toMillis() > Date.now() ); // What: Notice Document Array. Why: An expired notice is over. How: This keeps the unexpired ones. // What: Type Assertion Note. Why: The functions store the expiry as a timestamp. How: The as reads it as one.
+	const curDocArr = notDocArr.filter( ( notDocObj ) => ( notDocObj.get( 'expireAt' ) as Timestamp ).toMillis() > Date.now() ); // What: Current Document Array. Why: An expired notice is over. How: This keeps the unexpired ones. // What: Type Assertion Note. Why: The functions store the expiry as a timestamp. How: The as reads it as one.
 
 
-	const notRecArr = notDocArr.map( ( notDocObj ) : NotRecTyp => { // What: Notice Record Array. Why: The app shows each notice. How: This reads each one's fields into a record.
+	const notRecArr = curDocArr.map( ( notDocObj ) : NotRecTyp => { // What: Notice Record Array. Why: The app shows each notice. How: This reads each one's fields into a record.
 
 
 		return { // What: Record Return. Why: Each notice becomes one record. How: This returns its fields.
@@ -125,6 +128,90 @@ const notLisFun = async () : Promise< NotRecTyp[] > => { // What: Notice List Fu
 
 };
 
+// #endregion notArrFun
+
+
+
+// #region notLisFun
+
+/**
+ * notLisFun = Notice List Function
+ *
+ * @summary
+ * Resolves with this identity's waiting notices, newest first, read once,
+ * as notArrFun reads them.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that resolves with the notices.
+ *
+ * @example
+ * ```ts
+ * notLisFun() // => [ { kinValStr : 'removed', ... } ]
+ * ```
+ *
+*/
+
+const notLisFun = async () : Promise< NotRecTyp[] > => notArrFun( ( await getDocs( collection( firGetFun().fstDatObj, `accounts/${ ( await ideEnsFun() ).uidValStr }/notices` ) ) ).docs ); // What: Notice List Function. Why: A group mustn't just vanish from someone's list without a word (Section 9). How: This reads the account's notices once and keeps the unexpired ones.
+
+// #endregion notLisFun
+
+
+
+// #region notWatFun
+
+/**
+ * notWatFun = Notice Watch Function
+ *
+ * @summary
+ * Watches this identity's waiting notices, reporting them newest first, as
+ * notArrFun reads them, each time one arrives or goes. A phone with no
+ * identity, or one whose sign-in was lost, reports nothing and connects to
+ * nothing. A watch that fails is logged and stops reporting. Resolves with
+ * the function that stops watching.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param onNotFun - On Notices Function: Called with the notices each time
+ *                   they change.
+ *
+ * @returns A promise that resolves with the function that stops watching.
+ *
+ * @example
+ * ```ts
+ * notWatFun(setNotRecArr) // => () => void
+ * ```
+ *
+*/
+
+const notWatFun = async ( onNotFun : ( notRecArr : NotRecTyp[] ) => void ) : Promise< () => void > => { // What: Notice Watch Function. Why: A notice left while the app is open should show without waiting for the next launch. How: This listens to the account's notices.
+
+
+	if ( await keyGetFun( 'identity' ) === undefined ) return () => {}; // What: No Identity Guard. Why: A first visit has no notices, and connecting would create the Firebase services on page load. How: This returns a stop that does nothing.
+
+
+
+	const { autValObj, fstDatObj } = firGetFun(); // What: Firebase Services. Why: The notices are read through Auth and Firestore. How: This reads both.
+
+
+	await autValObj.authStateReady(); // What: Auth Ready Call. Why: The signed-in identity is restored from storage asynchronously. How: This waits until Auth knows it.
+
+
+
+	const uidValStr = autValObj.currentUser?.uid; // What: UID Value String. Why: The notices are under the signed-in UID. How: This reads it, undefined when nobody is signed in.
+
+
+	if ( uidValStr === undefined ) return () => {}; // What: Signed Out Guard. Why: An identity whose sign-in was lost has no notices to read. How: This returns a stop that does nothing.
+
+
+
+	return onSnapshot( collection( fstDatObj, `accounts/${ uidValStr }/notices` ), ( notSnaObj ) => onNotFun( notArrFun( notSnaObj.docs ) ), ( errCatObj ) => console.warn( errCatObj ) ); // What: Watch Return. Why: Each change reports the notices, and a failure stays visible to someone debugging. How: This listens to the collection and returns its stop.
+
+
+};
+
 // #endregion notLisFun
 
 // #endregion Helpers
@@ -133,7 +220,7 @@ const notLisFun = async () : Promise< NotRecTyp[] > => { // What: Notice List Fu
 
 // #region Exports
 
-export { notDisFun, notLisFun, type NotRecTyp }; // What: Named Exports. Why: The notice screen lists and dismisses notices through these. How: This exports the functions and the notice record's type.
+export { notDisFun, notLisFun, notWatFun, type NotRecTyp }; // What: Named Exports. Why: The notice sheet watches and dismisses notices through these, and a list reads them once. How: This exports the functions and the notice record's type.
 
 // #endregion Exports
 

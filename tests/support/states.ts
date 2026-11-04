@@ -3,7 +3,8 @@
 
 // #region Imports
 
-import { expect } from '@playwright/test'; // What: Expect. Why: The loading state waits until its loader has appeared. How: This retries its check until the status reads as loading.
+import { expect    } from '@playwright/test'; // What: Expect. Why: The loading state waits until its loader has appeared. How: This retries its check until the status reads as loading.
+import { notSeeFun } from './notices.ts';     // What: Notice Seed Function. Why: The notice state needs notices only Cloud Functions write. How: This writes one through the emulator.
 
 
 import type { Page } from '@playwright/test'; // What: Page. Why: Opening and settling a state drives a Playwright page. How: This types the helpers' page parameters.
@@ -43,7 +44,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	iosBoo? : boolean,                       // What: iOS Boolean. Why: An iPhone in Safari shows the install steps first. How: This makes the page report an iPhone's Safari when true.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -73,8 +74,8 @@ const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Appl
  * confirmation, the data deletion's confirmation, a member's Settings with and
  * without an offer of the group, the Map section while sharing, the join form
  * an invite link opens, a sent request waiting, the privacy policy's sheet in
- * Settings, the static privacy and terms pages, and the waiting screen with
- * its loader showing. Every row shares the {@link
+ * Settings, the sheet of notices, the static privacy and terms pages, and the
+ * waiting screen with its loader showing. Every row shares the {@link
  * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
@@ -130,6 +131,7 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/',         widNum : 390,  steStr : 'delete'                   }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'erase-phone',          patStr : '/',         widNum : 390,  steStr : 'erase'                    }, // What: Erase Phone State. Why: The data deletion's confirmation is checked with its list and box. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'legal-phone',          patStr : '/',         widNum : 390,  steStr : 'legal'                    }, // What: Legal Phone State. Why: The privacy policy opens in a sheet from Settings. How: This opens it in the owner's Settings at 390px.
+	{ heiNum : 844, ideStr : 'notice-phone',         patStr : '/',         widNum : 390,  steStr : 'notice'                   }, // What: Notice Phone State. Why: What happened while someone was away opens in a sheet of its own. How: This leaves a new group's owner two notices at 390px.
 	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/',         widNum : 390,  steStr : 'member'                   }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
 	{ heiNum : 844, ideStr : 'history-phone',        patStr : '/',         widNum : 390,  steStr : 'history'                  }, // What: History Phone State. Why: A fresh joiner of an older group is offered its earlier chat in a banner atop the chat. How: This joins another's group, made older, at 390px.
 	{ heiNum : 844, ideStr : 'helping-phone',        patStr : '/',         widNum : 390,  steStr : 'helping'                  }, // What: Helping Phone State. Why: A member who can help sees another's request in People. How: This joins another's group whose owner asks for history, at 390px.
@@ -606,6 +608,48 @@ const reqSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Req
 
 
 
+// #region notSteFun
+
+/**
+ * notSteFun = Notice Steps Function
+ *
+ * @summary
+ * Leaves the page's identity two notices the way the Cloud Functions do
+ * ({@link notSeeFun}): Lake Trip deleted by its owner a day ago, and a
+ * removal from Book Club an hour ago. Then it waits for the sheet of
+ * notices, which opens by itself as they arrive.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param curPagObj - Current Page Object: The page showing a group.
+ *
+ * @returns A promise that settles once the sheet shows both, with no value.
+ *
+ * @example
+ * ```ts
+ * notSteFun(page) // => Promise<void>
+ * ```
+ *
+*/
+
+const notSteFun = async ( curPagObj : Page ) : Promise< void > => { // What: Notice Steps Function. Why: Only Cloud Functions write notices, so the state writes them as one would. How: This seeds two and waits for the sheet.
+
+
+	const uidValStr = await curPagObj.evaluate( async ( modPatStr ) => ( ( await ( await import( /* @vite-ignore */ modPatStr ) ).ideEnsFun() ) as { uidValStr : string } ).uidValStr, '/src/state/identity.ts' ); // What: UID Value String. Why: The notices are under the page's account. How: This reads the identity's UID. // What: Type Assertion Note. Why: The import is untyped in the page. How: The as reads its result as the identity.
+
+
+	await notSeeFun( { ageMilNum : 86400000, groIdeStr : 'gone1', groNamStr : 'Lake Trip', kinValStr : 'groupDeleted', uidValStr } ); // What: Deletion Seed Call. Why: The sheet lists a group its owner deleted. How: This leaves the notice a day old.
+	await notSeeFun( { ageMilNum : 3600000,  groIdeStr : 'gone2', groNamStr : 'Book Club', kinValStr : 'removed',      uidValStr } ); // What: Removal Seed Call. Why: The sheet lists a removal too, newest first. How: This leaves the notice an hour old.
+
+	await curPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByText( 'You were removed from Book Club.' ).waitFor(); // What: Sheet Wait. Why: The sheet opens once the watch reports the notices. How: This waits for the removal's message in it.
+
+
+};
+
+// #endregion notSteFun
+
+
+
 // #region bipFakFun
 
 /**
@@ -669,7 +713,8 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  * events state the Events section, the form state the section's form, the
  * people state the People section, the requests state that section once two
  * people have asked to join ({@link reqSteFun}), the settings state the
- * Settings section, the delete state its deletion's confirmation, and the
+ * Settings section, the delete state its deletion's confirmation, the notice
+ * state the sheet of notices once two are left ({@link notSteFun}), and the
  * sheet state the group sheet from its switcher. A group needs the Firebase
  * Emulators, which the suites that reach one run inside.
  *
@@ -687,7 +732,7 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -857,6 +902,11 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 	await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: A later visit shows the group without the focus its creation gave it. How: This opens the app again.
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Reopened Group Wait. Why: The group shows once its list has loaded. How: This waits for its heading.
+
+
+
+	if ( steStr === 'notice' ) { await notSteFun( curPagObj ); return; } // What: Notice Guard. Why: The notice state stops at the sheet of notices over the group. How: This leaves the notices, waits for the sheet, and returns.
+
 
 
 	if ( steStr === 'edit' || steStr === 'event' ) { // What: Event Block. Why: The event state opens the pinned event's sheet, and the edit state an item's form in it. How: This presses the card, waits for the sheet's list, opens the open item's form for the edit state, and stops.

@@ -14,6 +14,7 @@ import { isaInsFun       } from '../platform/install.ts'; // What: Is-An Install
 import { isaIosFun       } from '../platform/install.ts'; // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
 import { JoiGroCom       } from './join-group.tsx';       // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
 import { LoaScrCom       } from './loading.tsx';          // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
+import { NotSheCom       } from './notices.tsx';          // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
 import { PasInvCom       } from './paste-invite.tsx';     // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
 import { safConFun       } from '../platform/install.ts'; // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
 import { scrReaFun       } from '../ui/scroll-top.ts';    // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
@@ -57,7 +58,9 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * change through a status that stays across screens. On an iPhone or iPad in
  * Safari, the install screen shows before any of these, holding an invite
  * link's token to copy, until the app runs installed or someone carries on in
- * Safari, whose main area then takes focus.
+ * Safari, whose main area then takes focus. Once the groups have loaded, the
+ * sheet of notices about what happened while someone was away sits over
+ * whichever screen shows.
  *
  * Sections:
  *  - Hooks
@@ -168,7 +171,8 @@ const useGroLisFun = ( watVerNum : number ) : GroRecTyp[] | null => { // What: U
  * @summary
  * Renders the screen the history entry and the groups call for: the waiting
  * screen while loading, the screen for starting a group, the welcome, or the
- * group frame, followed by a status region that stays as the screens change. A
+ * group frame, then the notices sheet once the groups have loaded, outside
+ * the install screen, and a status region that stays as the screens change. A
  * created group restarts the watch and replaces the form's entry with the new
  * group's, marked to take focus. A group left or deleted is hidden at once,
  * before the watch drops it, its entry replaced with the next group's, or with
@@ -443,6 +447,10 @@ function ScrHosCom () : React.JSX.Element {
 
 
 			{ scrPicFun() }{ /* What: Screen Pick Call. Why: The entry and the groups decide the screen. How: This renders the one they call for. */ }
+
+
+
+			{ !iosGatBoo && groRecArr !== null && <NotSheCom watVerNum={ watVerNum } /> }{ /* What: Notice Sheet Condition. Why: Notices open over a real screen, not the install steps or the wait, and the sheet's watch restarts with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the install screen. */ }
 
 
 

@@ -1,0 +1,80 @@
+
+
+
+/**
+ * notices.module.css = Notices Sheet Module
+ *
+ * @summary
+ * Styles for NotSheCom's content inside its sheet: the list of notices a tier
+ * 3 space apart, each a message at the base text width over its time in
+ * small muted text, and "Got it" keeping its own width at the start of the
+ * row rather than stretching across the sheet.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region notLisUno */
+
+.notLisUno { /* What: Notice List Unordered. Why: The notices read as one list without the browser's bullets or indent. How: This stacks its items a tier 3 space apart by auto placement, since the number of notices changes. */
+
+
+	display    : grid;
+	list-style : none;
+	margin     : 0;
+	padding    : 0;
+	row-gap    : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+
+/* #region notRowIte */
+
+.notRowIte { /* What: Notice Row Item. Why: A notice's message and its time read as one entry. How: This stacks them in named areas a tier 5 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'notMesPar' 'notDatTim';
+	row-gap             : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.notMesPar { /* What: Notice Message Paragraph. Why: The sentence reads comfortably on a wide screen. How: This caps it at the base text width in its own area. */
+
+
+	grid-area : notMesPar;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+.notDatTim { /* What: Notice Date Time. Why: When it happened is secondary to what happened. How: This sets it small in the muted text color in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area : notDatTim;
+
+
+}
+
+/* #endregion notRowIte */
+
+/* #endregion notLisUno */
+
+
+
+.notAckBut { /* What: Notice Acknowledge Button. Why: "Got it" is one short action, not a bar across the sheet. How: This keeps its own width at the start of the panel's row. */
+
+
+	justify-self : start;
+
+
+}
+
+

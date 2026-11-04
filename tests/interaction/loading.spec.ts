@@ -54,7 +54,7 @@ test( 'a slow launch shows the loader, which gives way to the screen', async ( {
 
 	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Welcome Assertion. Why: The screen replaces the loader once the check ends. How: This waits for the welcome's heading.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveCount( 0 ); // What: Loader Gone Assertion. Why: The loader shouldn't stay beside the screen. How: This expects its status to be gone.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Loading' } ) ).toHaveCount( 0 ); // What: Loader Gone Assertion. Why: The loader shouldn't stay beside the screen, whose own status, such as the welcome's note after a deletion, may be there empty. How: This expects no status reading as loading.
 
 
 } );
