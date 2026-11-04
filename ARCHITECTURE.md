@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-04 (the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -829,8 +829,9 @@ in one map can't be traced to its group.
 `/accounts/{uid}/notices/{noticeId}` (decided 2026-10-26) holds what
 happened to someone while they were away, so a group never just vanishes
 or changes hands silently: the app shows each waiting notice as a message
-when it next opens, alongside the push that went out when it happened,
-and the owner dismisses it by deleting it. Only Cloud Functions write
+in a sheet when it next opens, or at once while it's open, alongside the
+push that went out when it happened, and seeing it dismisses it by deleting
+it (Section 14). Only Cloud Functions write
 notices, which the rules enforce by allowing clients no writes, so a
 member can't forge one telling someone a group was deleted. Kinds: a group
 deleted (`groupDeleted`), a removal (`removed`), an ownership offer
@@ -1796,8 +1797,8 @@ the Blaze change.
   someone else, and swaps the group between both accounts' maps, or
   declines through `decOffFun`. An offer refused for a full owned slot
   rejects with Firestore's permission-denied, which the offer screen
-  explains. `src/state/notices.ts` lists the unexpired notices newest
-  first and dismisses them. The client suite runs with the Functions
+  explains. `src/state/notices.ts` lists or watches the unexpired notices
+  newest first and dismisses them. The client suite runs with the Functions
   emulator, so a decline and the notices it leaves are checked end to end.
 - `src/state/events.ts` is the group's events (Sections 5 and 11.5): any
   member plans one, and its creator or the owner changes or cancels it. The
@@ -1929,12 +1930,21 @@ the Blaze change.
   gone. Messages already delivered stay on other members' phones, and the
   ones still waiting on the server are deleted on the usual schedule.
 
+- **The notices sheet** (decided 2026-11-04, built in
+  `src/screens/notices.tsx`): the screen host watches the identity's
+  notices once the groups have loaded, outside the install screen, and a
+  sheet titled "While you were away" opens by itself over whatever screen
+  shows when any are waiting, a notice arriving while the app is open
+  opening it, or joining the list while it's open. Each notice reads as a
+  sentence naming its group, and the other member where the group's members
+  can still be read, such as "Dana Lee declined your offer of Beach Day.",
+  falling back to wording that names no one, with when it happened, newest
+  first. One "Got it" puts them all away, and closing the sheet any other
+  way does too: every notice shown is deleted, and focus moves to the
+  screen's main area. A notice of a kind the app doesn't know is left
+  alone, so a kind added later waits for an app that can word it.
+
 **App structure, still open**:
-- Notices aren't shown yet (found 2026-11-03): Cloud Functions write them
-  and `src/state/notices.ts` lists and dismisses them, but no screen shows
-  them, so someone removed from a group, or whose group was deleted or
-  handed to them, learns of it only from the push. Section 11.1's notices
-  need their screen before launch.
 - Identities left unused: nothing removes an identity whose phone was
   wiped or lost without deleting its data, so its public key and account
   stay. They hold no content, but a cleanup of identities in no group and

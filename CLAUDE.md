@@ -75,7 +75,10 @@ own install prompt, a note on the first screens and Settings offer it. The
 privacy policy and terms are written, as static pages at `/privacy` and
 `/terms` and in a sheet from Settings, and the welcome and the join form link
 both. Settings and, for a phone in no group, the welcome delete someone's
-data, handing each group they own to its earliest member. The app's one
+data, handing each group they own to its earliest member. A sheet titled
+"While you were away" opens over any screen when notices are waiting, or
+arrive, such as a removal or an answered offer, and "Got it" or any other
+way of closing it dismisses them all. The app's one
 service worker opens it offline and shows pushes, a tap on one opening its
 group at the section its news is in. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per

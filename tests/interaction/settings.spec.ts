@@ -304,18 +304,28 @@ pagTesObj( 'the owner offers the group and withdraws it, then the member decline
 
 	await secPagObj.getByRole( 'button', { name : 'Decline' } ).click(); // What: Decline Click Call. Why: The member turns the group down. How: This presses Decline.
 
-	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Declined the offer.' );               // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Declined the offer.' );              // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
 	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Leave the group' } ) ).toBeFocused();              // What: Next Heading Focus Assertion. Why: The offer's part went with it. How: This expects the next part's heading focused.
 	await expect( secPagObj.getByRole( 'heading', { level : 3, name : "You're offered this group" } ) ).toHaveCount( 0 ); // What: Offer Gone Assertion. Why: A declined offer stops showing. How: This expects no heading.
-	await expect( offButObj ).toBeVisible();                                                                             // What: Owner Form Assertion. Why: The owner's form returns once the offer ends. How: This waits for its button.
+
+
+	const ownDiaObj = curPagObj.getByRole( 'dialog', { name : 'While you were away' } ); // What: Owner Dialog Object. Why: The owner hears of each answer in the sheet of notices, live. How: This finds it by its title.
+
+
+	await expect( ownDiaObj ).toContainText( 'Dana Lee declined your offer of Beach Day.' ); // What: Declined Notice Assertion. Why: The owner learns of the decline while the app is open. How: This reads the sheet that opens over Settings.
+
+	await ownDiaObj.getByRole( 'button', { name : 'Got it' } ).click(); // What: Got It Click Call. Why: The owner puts the notice away before offering again. How: This closes the sheet.
+
+	await expect( offButObj ).toBeVisible(); // What: Owner Form Assertion. Why: The owner's form returns once the offer ends. How: This waits for the offer button.
 
 	await offButObj.click(); // What: Third Offer Click Call. Why: The member is offered the group to accept. How: This offers it again.
 
 	await secPagObj.getByRole( 'button', { name : 'Accept' } ).click(); // What: Accept Click Call. Why: The member takes the group. How: This presses Accept.
 
-	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'You now own Beach Day.' );     // What: Accepted Status Assertion. Why: The acceptance is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'You now own Beach Day.' );  // What: Accepted Status Assertion. Why: The acceptance is announced. How: This reads the status.
 	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Hand over the group' } ) ).toBeFocused(); // What: Heading Focus Assertion. Why: The answers went with the offer. How: This expects the part's heading focused.
 	await expect( curPagObj.getByRole( 'button', { name : 'Leave group' } ) ).toBeVisible();                     // What: Old Owner Assertion. Why: The old owner stays in the group as a member who can leave. How: This waits for their leave.
+	await expect( ownDiaObj ).toContainText( 'Dana Lee accepted your offer and now owns Beach Day.' );           // What: Accepted Notice Assertion. Why: The old owner learns of the handover while the app is open. How: This reads the sheet that opens over Settings.
 
 	expect( ( await docReaFun( setEnvObj, `groups/${ groIdeStr }` ) )?.ownerUid ).toBe( uidMemStr ); // What: New Owner Assertion. Why: The handover reached the server. How: This reads the group's owner.
 
