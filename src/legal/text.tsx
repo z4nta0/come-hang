@@ -193,7 +193,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>A group</strong> is kept until its owner deletes it, which deletes its members, events, and chat for everyone. When you leave a group or are removed, your membership is deleted.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you ask us to.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you delete your data or ask us to.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>What's on your phone</strong> stays until you delete the app's data or uninstall it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -211,13 +211,15 @@ function PriPolCom () : React.JSX.Element {
 			<ul>{ /* What: Body List Element. Why: Related points read more easily as a list. How: This holds them. */ }
 
 
+				<li>You can delete your data at any time, from the account part of Settings, or from the welcome screen if you're in no group. You leave every group you're in, each group you own passes to the member who joined it earliest, or is deleted if no one else is in it, and everything we keep for you is deleted, with your sign-in and any linked Google account, along with what Come Hang keeps on the phone you use.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
 				<li>You can leave a group at any time, and a group's owner can delete it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>You can turn notifications and location sharing on and off whenever you like.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>Linking a Google account and buying the upgrade are both optional.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li>You can ask us for a copy of the information we hold about you, or ask us to correct or delete it, by writing to <a href='mailto:support@comehang.app'>support@comehang.app</a>, and we'll answer within 30 days. Since there's no account, we find your information through a linked Google account. Without one we may not be able to tell which anonymous identity is yours, but leaving your groups and deleting the app's data from your phone removes your memberships, and what's left holds only a random ID, a public key, and an empty list of groups.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>You can also ask us for a copy of the information we hold about you, or ask us to correct or delete it, by writing to <a href='mailto:support@comehang.app'>support@comehang.app</a>, and we'll answer within 30 days. Since there's no account, we find your information through a linked Google account, so without one, deleting your data in the app is the way to remove it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>Depending on where you live, such as California or the European Union, the law may give you more rights over your information. We honor the requests above for everyone, wherever they live, and you can also complain to your local data protection authority.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -313,7 +315,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>Groups</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>A group's owner controls its settings, can remove members, and can delete the group, which deletes its chat, events, and members for everyone. Any member can let in someone who asks to join, or decline or block them. We don't moderate groups, and we can't read what's said in them, so we aren't responsible for what members post or for disagreements between them. You can leave a group at any time.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>A group's owner controls its settings, can remove members, and can delete the group, which deletes its chat, events, and members for everyone. Any member can let in someone who asks to join, or decline or block them. If an owner deletes their data, each group they own passes to the member who joined it earliest. We don't moderate groups, and we can't read what's said in them, so we aren't responsible for what members post or for disagreements between them. You can leave a group at any time.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Location sharing</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -367,7 +369,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>Ending your use</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>You can stop using Come Hang at any time by leaving your groups and deleting the app's data from your phone. We may suspend or end your access if you break these terms, or if we have to for legal or security reasons. The parts of these terms that by their nature should last, such as the disclaimers, the limits on liability, and the governing law, keep applying after your use ends.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>You can stop using Come Hang at any time by deleting your data, from Settings or the welcome screen, which deletes what we keep for you and what Come Hang keeps on your phone. We may suspend or end your access if you break these terms, or if we have to for legal or security reasons. The parts of these terms that by their nature should last, such as the disclaimers, the limits on liability, and the governing law, keep applying after your use ends.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Disclaimers</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 

@@ -8,14 +8,17 @@ import cssModObj from './welcome.module.css'; // What: CSS Module Object. Why: T
 
 import { BraMarCom    } from '../ui/brand-mark.tsx';   // What: Brand Mark Component. Why: The welcome leads with the app's mark. How: This draws it above the name.
 import { ButBasCom    } from '../ui/button.tsx';       // What: Button Base Component. Why: Starting a group is the welcome's one action. How: This draws it as the main action button.
+import { DEL_STO_STR  } from '../state/deletion.ts';   // What: Deleted Storage String. Why: The welcome says the data is gone after a deletion starts the app over. How: This names the note the deletion leaves.
+import { DelDatCom    } from './delete-data.tsx';      // What: Delete Data Component. Why: Someone in no group can still have data to delete. How: This draws its button and confirmation.
 import { gooRecFun    } from '../state/identity.ts';   // What: Google Recover Function. Why: Someone on a new phone gets their groups back (Section 8). How: This signs in with Google and remakes the phone's key pair.
+import { ideHasFun    } from '../state/deletion.ts';   // What: Identity Has Function. Why: The welcome offers to delete data only when the phone holds an identity. How: This checks without connecting.
 import { InsNotCom    } from '../ui/install-note.tsx'; // What: Install Note Component. Why: A browser that can install the app suggests it here. How: This shows the note while the browser offers its prompt.
 import { LegLinCom    } from '../legal/links.tsx';     // What: Legal Links Component. Why: Starting or joining a group means agreeing to the terms and the policy. How: This draws the line linking both.
 import { MaiAreCom    } from '../ui/main-area.tsx';    // What: Main Area Component. Why: The welcome is the screen's main content. How: This holds it in the main landmark.
-import { useEffect    } from 'react';                  // What: Use Effect. Why: The welcome takes focus when it replaces a group just left or deleted. How: This moves focus once it's drawn.
+import { useEffect    } from 'react';                  // What: Use Effect. Why: The welcome takes focus when it replaces a group just left or deleted, and reads what the phone holds. How: This runs each once it's drawn.
 import { useRef       } from 'react';                  // What: Use Reference. Why: The heading takes focus. How: This holds it.
 import { useScrOpeFun } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: The button opens the screen for starting a group, and a focus request is cleared from the entry. How: This returns the function that opens a screen.
-import { useState     } from 'react';                  // What: Use State. Why: The sign-in's progress and failure change while the welcome shows. How: This holds each.
+import { useState     } from 'react';                  // What: Use State. Why: The sign-in's progress and failure, the identity check, and the deletion note change while the welcome shows. How: This holds each.
 
 // #endregion Imports
 
@@ -25,14 +28,16 @@ import { useState     } from 'react';                  // What: Use State. Why: 
  * welcome.tsx = Welcome
  *
  * @summary
- * The screen someone sees before they belong to any group: the app's mark,
- * its name, a line on what it's for, and a button that starts a group, then
- * one that joins with an invite link, centered in the screen. Nothing on it
- * starts Firebase, so a first visit makes no connection until the visitor
- * acts. Someone who has used the app on another phone gets their groups back
- * through Google instead. A line below the buttons says starting or joining
- * means agreeing to the terms and the privacy policy, linking both, and a
- * browser that can install the app with one tap suggests it in a note below.
+ * The screen someone sees before they belong to any group: the app's mark, its
+ * name, a line on what it's for, and a button that starts a group, then one
+ * that joins with an invite link, centered in the screen. Nothing on it starts
+ * Firebase, so a first visit makes no connection until the visitor acts.
+ * Someone who has used the app on another phone gets their groups back through
+ * Google instead. A line below the buttons says starting or joining means
+ * agreeing to the terms and the privacy policy, linking both, and a browser
+ * that can install the app with one tap suggests it in a note below. A phone
+ * holding an identity in no group is offered a way to delete its data, and
+ * after a deletion the welcome says the data is gone.
  *
  * Sections:
  *  - Components
@@ -65,7 +70,9 @@ type WscProTyp = { focBoo : boolean, onRecFun : () => void }; // What: Welcome S
  * calls onRecFun; a sign-in that doesn't go through is announced through the
  * alert, saying why where it can. Below the buttons, a line says starting or
  * joining a group means agreeing to the terms and the privacy policy, linking
- * both.
+ * both. Once drawn it checks the phone for an identity, showing the part for
+ * deleting data last when there is one, and a note left by a deletion is
+ * announced through the status and cleared.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -89,7 +96,9 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: The start button opens another screen, and a focus request is cleared. How: This reads the function that opens one.
 
 	const [ errMesStr, setErrMesStr ] = useState( '' );    // What: Error Message String And Setter. Why: A sign-in that doesn't go through is announced. How: This holds the alert's text, empty when there's none.
+	const [ ideHasBoo, setIdeHasBoo ] = useState( false ); // What: Identity Has Boolean And Setter. Why: Deleting data is offered only when there's some. How: This is true once the phone is found to hold an identity.
 	const [ recReqBoo, setRecReqBoo ] = useState( false ); // What: Recover Request Boolean And Setter. Why: One sign-in at a time, and the button says it's working. How: This is true while one is out.
+	const [ staMesStr, setStaMesStr ] = useState( '' );    // What: Status Message String And Setter. Why: A deletion that started the app over is announced. How: This holds the status's text, empty when there's none.
 
 
 
@@ -106,6 +115,35 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 
 
 	}, [ focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: Focus moves when it's asked for. How: focBoo changes when the request does, and scrOpeFun only if the router's navigate does.
+
+
+
+	useEffect( () => { // What: Phone Check Effect. Why: The welcome offers to delete data only when there's some, and says so after a deletion. How: This checks for an identity, and reads and clears the deletion's note.
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: A check that finishes after the welcome is gone shouldn't set its state. How: This is true until the cleanup runs.
+
+
+		void ideHasFun().then( ( hasValBoo ) => { if ( actValBoo ) setIdeHasBoo( hasValBoo ); } ); // What: Identity Check Call. Why: The phone may hold an identity in no group. How: This checks and keeps the answer while the welcome shows.
+
+
+
+		if ( sessionStorage.getItem( DEL_STO_STR ) !== null ) { // What: Deleted Note Block. Why: The app just started over after a deletion. How: This announces it and clears the note, so a reload doesn't say it again.
+
+
+			sessionStorage.removeItem( DEL_STO_STR ); // What: Note Clear Call. Why: The note is said once. How: This removes it.
+
+			setStaMesStr( 'Your data has been deleted from Come Hang and this phone.' ); // What: Status Set Call. Why: The person should know the deletion finished. How: This announces it.
+
+
+		}
+
+
+
+		return () => { actValBoo = false; }; // What: Check Cleanup. Why: A late answer belongs to a welcome that's gone. How: This marks the effect inactive.
+
+
+	}, [] ); // What: Effect Dependency Array. Why: The phone is checked once, when the welcome opens. How: The empty array runs the effect once.
 
 
 
@@ -200,6 +238,12 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 
 			<p className={ cssModObj.welTagPar }>Plan get-togethers with your group: chat, set the date, see who's bringing what, and find each other on the day.</p>{ /* What: Welcome Tagline Paragraph Element. Why: A first visitor should know what the app is for. How: This says it in one line. */ }
 
+			<p
+				className={ cssModObj.welStaPar }
+
+				role='status'
+			>{ staMesStr }</p>{ /* What: Welcome Status Paragraph Element. Why: A deletion that started the app over should be told, and a status added only when it speaks is often missed. How: This is in the page and empty from the start, and gains the message after a deletion. */ }
+
 
 
 			<ButBasCom
@@ -241,6 +285,10 @@ function WelScrCom ( { focBoo, onRecFun } : WscProTyp ) : React.JSX.Element {
 
 
 			<InsNotCom />{ /* What: Install Note Component. Why: A browser that can install the app with one tap suggests it, never in the way. How: This shows the note below the screen's own content while the browser offers its prompt. */ }
+
+
+
+			{ ideHasBoo && <DelDatCom className={ cssModObj.welDelDiv } /> }{ /* What: Delete Data Check. Why: A phone holding an identity in no group can still have data to delete, such as a Google link or the upgrade, with no Settings to reach. How: This shows the button and its confirmation last, only then. */ }
 
 
 		</MaiAreCom>

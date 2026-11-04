@@ -29,10 +29,11 @@ import type { DocumentReference } from 'firebase-admin/firestore'; // What: Docu
  *  - The member offered the group leaving or being removed makes the offer
  *    one nobody can accept, so the trigger clears it, and a leave, which the
  *    owner didn't cause, leaves the owner a notice.
- *  - An acceptance, the only change of owner, leaves the old owner a notice,
- *    of the claim kind when the claim record had offered the new owner the
- *    group, and ends any claim. A claim candidate leaving tells the absent
- *    owner nothing.
+ *  - An acceptance leaves the old owner a notice, of the claim kind when the
+ *    claim record had offered the new owner the group, and ends any claim. A
+ *    claim candidate leaving tells the absent owner nothing.
+ *  - An owner who deleted their data hands the group on and leaves it in one
+ *    change, which leaves the new owner a notice instead, and ends any claim.
  *  - A new offer pushes the member offered the group, with no notice, since
  *    they accept in the app.
  * Each notice goes out as a push too once the notices have landed. A decline
@@ -141,19 +142,32 @@ const groChaFun = onDocumentUpdated( { ...FUN_OPT_OBJ, document : 'groups/{groId
 
 	const couDowBoo = aftDatObj.memberCount < befDatObj.memberCount; // What: Count Down Boolean. Why: Only a leave or a removal lowers the count. How: This compares the counts.
 
-	const offAccBoo = aftDatObj.ownerUid !== befDatObj.ownerUid;                                                     // What: Offer Accepted Boolean. Why: Accepting an offer is the only way a group changes owner (Section 18). How: This compares the owners.
+	const offAccBoo = aftDatObj.ownerUid !== befDatObj.ownerUid;                                                     // What: Offer Accepted Boolean. Why: Accepting an offer or a claim is how a group changes owner, apart from an owner deleting their data (Section 18). How: This compares the owners.
 	const offLefBoo = couDowBoo && aftDatObj.pendingOwnerUid === couUidStr;                                          // What: Offer Left Boolean. Why: The member offered the group can leave or be removed while the offer stands. How: This checks the count fell for that member.
 	const offMadBoo = aftDatObj.pendingOwnerUid !== null && aftDatObj.pendingOwnerUid !== befDatObj.pendingOwnerUid; // What: Offer Made Boolean. Why: The member offered the group gets a push when it's offered (Section 18). How: This checks the offer now names someone it didn't before.
+	const ownLefBoo = offAccBoo && couDowBoo && couUidStr === befDatObj.ownerUid;                                    // What: Owner Left Boolean. Why: Only a data deletion hands a group on and takes its owner out in one change. How: This is true when the owner changed and the count fell for the old owner.
 	const remNewBoo = couDowBoo && aftDatObj.removedUids?.[ couUidStr ] === true;                                    // What: Removed New Boolean. Why: Only a removal lowers the count for a UID it blocks, since a blocked joiner was never counted. How: This checks the count fell for a UID now on the blocklist.
 
-	const claSnaObj = offAccBoo || offLefBoo || offMadBoo ? await claRefFun( groIdeStr ).get() : null; // What: Claim Snapshot Object. Why: An acceptance, a leave by the member offered the group, and a new offer each depend on whether the offer is a claim. How: This reads the claim record for those alone.
+	const claSnaObj = ( offAccBoo && !ownLefBoo ) || offLefBoo || offMadBoo ? await claRefFun( groIdeStr ).get() : null; // What: Claim Snapshot Object. Why: An acceptance, a leave by the member offered the group, and a new offer each depend on whether the offer is a claim. How: This reads the claim record for those alone.
 	const claOffStr = claSnaObj?.get( 'offeredUid' ) as string | null | undefined;                     // What: Claim Offered String. Why: The claim record names who a claim offer went to. How: This reads it, missing when there's no record. // What: Type Assertion Note. Why: Only the daily run writes the record's offeredUid, as a UID or null. How: The as reads it as either, or missing.
 
 	const pusQueArr : [ string, string ][] = []; // What: Push Queue Array. Why: Pushes go out only once the notices have landed. How: This collects each push's UID and kind.
 
 
 
-	if ( offAccBoo ) { // What: Acceptance Block. Why: A new owner ends any claim, and a claimed group is reported as a claim. How: This leaves the old owner the right notice and push, and deletes the claim record.
+	if ( ownLefBoo ) { // What: Owner Left Block. Why: An owner who deleted their data handed the group to a member, who should know it's theirs now, and the old owner has nothing left to tell (Section 18). How: This leaves the new owner a notice and a push, and deletes any claim record.
+
+
+		notBatFun( batWriObj, aftDatObj.ownerUid, 'ownershipPassed', groIdeStr, groNamStr ); // What: Passed Notice Call. Why: The new owner is told when they're next in the app. How: This leaves them a notice.
+
+		pusQueArr.push( [ aftDatObj.ownerUid, 'ownershipPassed' ] ); // What: Passed Push Queue. Why: The new owner is told at once too. How: This queues their push.
+
+		batWriObj.delete( claRefFun( groIdeStr ) ); // What: Claim Delete Call. Why: The group has an owner again, so any claim is over. How: This deletes the record, which does nothing when there's none.
+
+
+	}
+
+	else if ( offAccBoo ) { // What: Acceptance Block. Why: A new owner ends any claim, and a claimed group is reported as a claim. How: This leaves the old owner the right notice and push, and deletes the claim record.
 
 
 		const accKinStr = claOffStr === aftDatObj.ownerUid ? 'ownershipClaimed' : 'offerAccepted'; // What: Accepted Kind String. Why: The old owner learns the handover finished, or that their group was claimed while they were away (Section 18). How: This picks the claim kind when the claim record offered the new owner the group.

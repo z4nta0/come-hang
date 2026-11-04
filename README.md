@@ -17,7 +17,8 @@ a switcher on a phone. It's built and maintained by
 - **No sign-up.** The app makes an anonymous identity on the phone the first
   time someone starts or joins a group, along with that phone's own key pair.
   Linking a Google account is optional, and brings the same groups back on a
-  new phone.
+  new phone. "Delete my data" removes everything kept for you, handing each
+  group you own to the member who joined it earliest.
 - **Content is encrypted before it leaves the phone.** Chat messages, events
   and their bring-lists, member names, and locations are encrypted with a key
   each group holds, and each member's copy of that key is wrapped with their
@@ -64,8 +65,8 @@ Each group has five:
   new phone for the group's key, requests for history, and the members.
 - **Settings:** the group's name, its chat retention, handing it to another
   member, leaving, and deleting it, plus this phone's light or dark mode and
-  notifications, linking Google, the upgrade, and the privacy policy and
-  terms.
+  notifications, linking Google, the upgrade, deleting your data, and the
+  privacy policy and terms.
 
 ## Running it locally
 

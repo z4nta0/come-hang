@@ -7,6 +7,7 @@ import { chaPusFun } from './activity-pushes.ts'; // What: Chat Push Function. W
 import { cheCreFun } from './purchase.ts';        // What: Checkout Create Function. Why: Buying the upgrade starts from the app. How: This is the callable that opens a Polar checkout.
 import { dayRunFun } from './daily-run.ts';       // What: Day Run Function. Why: Offers lapse and inactive owners' groups are offered on through it. How: This is the schedule.
 import { decOffFun } from './offer-decline.ts';   // What: Decline Offer Function. Why: The member offered a group declines through it. How: This is the callable.
+import { delDatFun } from './data-deletion.ts';   // What: Delete Data Function. Why: Someone deletes their data through it. How: This is the callable.
 import { delGroFun } from './group-deletion.ts';  // What: Delete Group Function. Why: The owner deletes a group through it. How: This is the callable.
 import { groChaFun } from './group-changes.ts';   // What: Group Change Function. Why: Removals and ended offers are reported to the people they affect. How: This is its trigger.
 import { hisPusFun } from './activity-pushes.ts'; // What: History Push Function. Why: Members learn someone needs chat history. How: This is the history request trigger.
@@ -35,6 +36,6 @@ import { polWebFun } from './purchase.ts';        // What: Polar Webhook Functio
 
 
 
-export { chaPusFun, cheCreFun, dayRunFun, decOffFun, delGroFun, groChaFun, hisPusFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, hisPusFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 

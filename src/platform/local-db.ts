@@ -89,13 +89,52 @@ const datOpeFun = () : Promise< IDBDatabase > => new Promise( ( resValFun, rejVa
 
 // #endregion datOpeFun
 
+
+
+// #region datDelFun
+
+/**
+ * datDelFun = Database Delete Function
+ *
+ * @summary
+ * Deletes the app's IndexedDB database, with its keys and chat history, and
+ * resolves once it's gone. Every reader and writer closes its connection
+ * when it's done, so the delete waits only for work already under way.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that settles once the database is gone, with no value.
+ *
+ * @example
+ * ```ts
+ * datDelFun() // => Promise<void>
+ * ```
+ *
+*/
+
+const datDelFun = () : Promise< void > => new Promise( ( resValFun, rejValFun ) => { // What: Database Delete Function. Why: Deleting someone's data clears what this phone keeps. How: This wraps IndexedDB's delete request in a promise.
+
+
+	const delReqObj = indexedDB.deleteDatabase( DAT_BAS_STR ); // What: Delete Request Object. Why: The database deletes asynchronously. How: This asks for it to go.
+
+
+	delReqObj.onsuccess = () => resValFun();                 // What: Success Handler. Why: The caller goes on once it's gone. How: This resolves then.
+	delReqObj.onerror   = () => rejValFun( delReqObj.error ); // What: Error Handler. Why: A failed delete has to reach the caller. How: This rejects with the error.
+
+
+} );
+
+// #endregion datDelFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { datOpeFun, KEY_STO_STR, MES_STO_STR }; // What: Named Exports. Why: The key store and the chat history open the database and name their stores. How: This exports the opener and the store names.
+export { datDelFun, datOpeFun, KEY_STO_STR, MES_STO_STR }; // What: Named Exports. Why: The key store and the chat history open the database and name their stores, and deleting someone's data deletes it. How: This exports the opener, the delete, and the store names.
 
 // #endregion Exports
 
