@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-03 (the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -836,7 +836,8 @@ member can't forge one telling someone a group was deleted. Kinds: a group
 deleted (`groupDeleted`), a removal (`removed`), an ownership offer
 accepted (`offerAccepted`), declined (`offerDeclined`), lapsed
 (`offerLapsed`), or ended by the person offered leaving (`offerLeft`), and
-ownership claimed from an inactive owner (`ownershipClaimed`). A notice's
+ownership claimed from an inactive owner (`ownershipClaimed`), and a group
+passed on by an owner who deleted their data (`ownershipPassed`). A notice's
 ID is its kind and group, `<kind>-<groupId>` (decided 2026-10-28), so a
 retried function writes it once, and a later notice of the same kind about
 the same group replaces the earlier one.
@@ -1909,14 +1910,35 @@ the Blaze change.
   - **Kept out**: the switcher isn't mounted in a browser a test drives, and
     a production build holds none of it, which the security suite checks.
 
+- **Deleting one's data** (decided 2026-11-03, built in
+  `functions/src/data-deletion.ts`, `src/state/deletion.ts`, and
+  `src/screens/delete-data.tsx`): Settings' account part offers "Delete my
+  data", and so does the welcome on a phone holding an identity in no
+  group, since such an identity can still hold a Google link or the
+  upgrade with no Settings to reach. Its confirmation lists what happens
+  and asks for the word delete. The callable `delDatFun` then, for each
+  group the identity owns, deletes its own documents there and hands the
+  group on or deletes it (Section 18); for each group it belongs to,
+  deletes its documents and leaves; then deletes its requests to join any
+  group, found by reading every join request's ID since nothing lists
+  them, its account with the notices and push token under it, its public
+  key, and its Auth record last, so a retry can still sign in until the
+  end. The phone then turns notifications off, signs out, deletes
+  Firestore's offline copy and the app's database, removes the app's local
+  storage keys, and starts over at the welcome, which says the data is
+  gone. Messages already delivered stay on other members' phones, and the
+  ones still waiting on the server are deleted on the usual schedule.
+
 **App structure, still open**:
-- Deleting one's own identity (found 2026-11-03, writing the privacy
-  policy): nothing in the app deletes an identity's `/users` and
-  `/accounts` documents or its Auth record, and nothing removes an identity
-  left unused. The policy offers deletion by email, which can find an
-  identity only through a linked Google account. An in-app "Delete my
-  data" in Settings, a callable that leaves or hands over each group and
-  deletes the rest, would close the gap, and app stores ask for one.
+- Notices aren't shown yet (found 2026-11-03): Cloud Functions write them
+  and `src/state/notices.ts` lists and dismisses them, but no screen shows
+  them, so someone removed from a group, or whose group was deleted or
+  handed to them, learns of it only from the push. Section 11.1's notices
+  need their screen before launch.
+- Identities left unused: nothing removes an identity whose phone was
+  wiped or lost without deleting its data, so its public key and account
+  stay. They hold no content, but a cleanup of identities in no group and
+  unused for a long time would keep them from piling up.
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's
@@ -2336,7 +2358,7 @@ webhook removes the flag, and the "over a limit" rule above applies.
 - **Offer, then accept.** The owner offers ownership to a current member
   (`pendingOwnerUid`, with `pendingOfferedAt`), and it moves only when that
   member accepts, so nobody is handed a group, and a slot of theirs,
-  without agreeing. The owner can withdraw the offer and the member can
+  without agreeing, apart from an owner deleting their data (below). The owner can withdraw the offer and the member can
   decline it, and a new offer replaces a standing one.
 - **The new owner needs a free slot**: a free user who already owns a
   group, or a paid user who owns 10, can't accept until they delete or
@@ -2379,6 +2401,16 @@ webhook removes the flag, and the "over a limit" rule above applies.
 - **An owner can't simply leave.** Leaving requires transferring
   ownership first or deleting the group, so no group is ever left without
   an owner by choice.
+- **An owner who deletes their data hands each group on** (decided
+  2026-11-03, built in `functions/src/data-deletion.ts`): each group they
+  own passes, in one transaction with their leave, to the member who
+  joined it earliest, any standing offer cleared, or is deleted whole when
+  no one else is in it, so the other members never lose their group. The
+  heir isn't asked, since the owner is gone, and may end up over a cap,
+  which the "over a limit" rule above covers. The group change trigger
+  reads an owner change that also counts the old owner out as this
+  handover, and leaves the heir an `ownershipPassed` notice and a push
+  instead of telling the departed owner anything.
 - **Enforcement in the rules** (decided 2026-10-25): rules can't count
   documents, so each user's private `/accounts/{uid}` keeps two maps of
   their groups, the ones they own and the ones they only belong to, and

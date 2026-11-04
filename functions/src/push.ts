@@ -74,6 +74,7 @@ const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why:
 	offerLeft        : 'The member you offered this group to left it.',
 	offerMade        : "You've been offered ownership of this group.",
 	ownershipClaimed : 'A member took over this group while you were away.',
+	ownershipPassed  : 'The owner deleted their data, so this group is yours now.',
 	removed          : 'You were removed from this group.'
 
 
@@ -106,7 +107,8 @@ const PUS_SEC_OBJ : Record< string, string > = { // What: Push Section Object. W
 	offerLapsed      : 'settings',
 	offerLeft        : 'settings',
 	offerMade        : 'settings',
-	ownershipClaimed : 'settings'
+	ownershipClaimed : 'settings',
+	ownershipPassed  : 'settings'
 
 
 };

@@ -38,7 +38,8 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  * its history transfers in Storage, and the group document goes last. A
  * failure partway leaves the group document, so the owner's retry passes the
  * owner check and finishes the job, and once the group document is gone a call
- * does nothing.
+ * does nothing. A data deletion runs the same stages for a group its owner
+ * was alone in (data-deletion.ts).
  *
  * Sections:
  *  - Helpers
@@ -125,6 +126,66 @@ const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< string[] > =
 
 // #endregion firBatFun
 
+
+
+// #region groDelRunFun
+
+/**
+ * groDelRunFun = Group Deletion Run Function
+ *
+ * @summary
+ * Deletes a group in its stages: the first batch, with its notices, then a
+ * push to each member told, the group's other Firestore collections, its
+ * chat, presence, and mirror in the Realtime Database, its history
+ * transfers in Storage, and the group document last, so a failure partway
+ * leaves something a retry can finish. It checks nothing about who asked,
+ * which its callers do.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groSnaObj - Group Snapshot Object: The group being deleted.
+ *
+ * @returns A promise that settles once the group is deleted, with no value.
+ *
+ * @example
+ * ```ts
+ * groDelRunFun(groSnaObj) // => Promise<void>
+ * ```
+ *
+*/
+
+const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > => { // What: Group Deletion Run Function. Why: The owner's deletion and a data deletion remove a group the same way. How: This runs every stage in order.
+
+
+	const notUidArr = await firBatFun( groSnaObj ); // What: Notified UID Array. Why: Members lose access and are told before anything else goes. How: This commits the first batch and keeps who it told.
+
+
+	await Promise.all( notUidArr.map( ( uidValStr ) => pusSenFun( uidValStr, 'groupDeleted', groSnaObj.get( 'name' ) ) ) ); // What: Deletion Push Call. Why: Each member is told at once too, by the group's name. How: This sends each their push, best effort.
+
+
+	for ( const colRefObj of await groSnaObj.ref.listCollections() ) await FIR_DAT_OBJ.recursiveDelete( colRefObj ); // What: Collection Delete Loop. Why: Events, their items, requests, and locations all go, including any collection added later. How: This deletes each of the group's collections with everything under it.
+
+
+
+	await REA_DAT_OBJ.ref().update({ // What: Realtime Delete Call. Why: The group's chat, presence, and mirror go with it. How: This removes all three in one update.
+
+
+		[ `chats/${ groSnaObj.id }` ]    : null, // What: Chat Path. Why: The group's chat uses its ID as the conversation ID. How: This removes the chat.
+		[ `mirrors/${ groSnaObj.id }` ]  : null, // What: Mirror Path. Why: The rules' copy of the membership goes too. How: This removes the mirror.
+		[ `presence/${ groSnaObj.id }` ] : null  // What: Presence Path. Why: Nobody is online in a deleted group. How: This removes its presence.
+
+
+	});
+
+	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groSnaObj.id }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
+
+	await groSnaObj.ref.delete(); // What: Group Delete Call. Why: The group document goes last, so a retry can still check the owner. How: This deletes it.
+
+
+};
+
+// #endregion groDelRunFun
+
 // #endregion Helpers
 
 
@@ -174,29 +235,7 @@ const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 
 
-	const notUidArr = await firBatFun( groSnaObj ); // What: Notified UID Array. Why: Members lose access and are told before anything else goes. How: This commits the first batch and keeps who it told.
-
-
-	await Promise.all( notUidArr.map( ( uidValStr ) => pusSenFun( uidValStr, 'groupDeleted', groSnaObj.get( 'name' ) ) ) ); // What: Deletion Push Call. Why: Each member is told at once too, by the group's name. How: This sends each their push, best effort.
-
-
-	for ( const colRefObj of await groRefObj.listCollections() ) await FIR_DAT_OBJ.recursiveDelete( colRefObj ); // What: Collection Delete Loop. Why: Events, their items, requests, and locations all go, including any collection added later. How: This deletes each of the group's collections with everything under it.
-
-
-
-	await REA_DAT_OBJ.ref().update({ // What: Realtime Delete Call. Why: The group's chat, presence, and mirror go with it. How: This removes all three in one update.
-
-
-		[ `chats/${ groIdeStr }` ]    : null, // What: Chat Path. Why: The group's chat uses its ID as the conversation ID. How: This removes the chat.
-		[ `mirrors/${ groIdeStr }` ]  : null, // What: Mirror Path. Why: The rules' copy of the membership goes too. How: This removes the mirror.
-		[ `presence/${ groIdeStr }` ] : null  // What: Presence Path. Why: Nobody is online in a deleted group. How: This removes its presence.
-
-
-	});
-
-	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groIdeStr }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
-
-	await groRefObj.delete(); // What: Group Delete Call. Why: The group document goes last, so a retry can still check the owner. How: This deletes it.
+	await groDelRunFun( groSnaObj ); // What: Deletion Run Call. Why: The group goes in its stages, members first and the group document last. How: This runs them.
 
 
 } );
@@ -209,7 +248,7 @@ const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 // #region Exports
 
-export { delGroFun }; // What: Named Export. Why: The entry file exports every function Firebase deploys. How: This exports the callable.
+export { delGroFun, groDelRunFun }; // What: Named Exports. Why: The entry file exports every function Firebase deploys, and a data deletion deletes a group its owner was alone in. How: This exports the callable and its stages.
 
 // #endregion Exports
 

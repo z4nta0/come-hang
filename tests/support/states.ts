@@ -43,7 +43,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	iosBoo? : boolean,                       // What: iOS Boolean. Why: An iPhone in Safari shows the install steps first. How: This makes the page report an iPhone's Safari when true.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -68,13 +68,13 @@ const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Appl
  * @summary
  * Every state the checks visit: each screen at a phone width and a desktop
  * width, some in dark mode too, the chat at a tablet width, the group and
- * event sheets, an item's form, and the event form open on a phone, the
- * People section with two requests waiting, the owner's Settings, its
- * deletion's confirmation, a member's Settings with and without an offer of
- * the group, the Map section while sharing, the join form an invite link
- * opens, a sent request waiting, the privacy policy's sheet in Settings, the
- * static privacy and terms pages, and the waiting screen with its loader
- * showing. Every row shares the {@link
+ * event sheets, an item's form, and the event form open on a phone, the People
+ * section with two requests waiting, the owner's Settings, its deletion's
+ * confirmation, the data deletion's confirmation, a member's Settings with and
+ * without an offer of the group, the Map section while sharing, the join form
+ * an invite link opens, a sent request waiting, the privacy policy's sheet in
+ * Settings, the static privacy and terms pages, and the waiting screen with
+ * its loader showing. Every row shares the {@link
  * StaRecTyp} shape, so its fields carry no comments of their own:
  *
  * - `heiNum` (Number): Height Number, the viewport height in CSS pixels.
@@ -128,6 +128,7 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 900, ideStr : 'settings-desktop',     patStr : '/',         widNum : 1440, steStr : 'settings'                 }, // What: Settings Desktop State. Why: The owner's Settings section is checked at a desktop width. How: This opens it in a new group at 1,440px.
 	{ heiNum : 844, ideStr : 'settings-phone',       patStr : '/',         widNum : 390,  steStr : 'settings'                 }, // What: Settings Phone State. Why: The owner's Settings section is checked at a phone width. How: This opens it at 390px.
 	{ heiNum : 844, ideStr : 'delete-phone',         patStr : '/',         widNum : 390,  steStr : 'delete'                   }, // What: Delete Phone State. Why: The deletion's confirmation is checked with its box. How: This opens it in the owner's Settings at 390px.
+	{ heiNum : 844, ideStr : 'erase-phone',          patStr : '/',         widNum : 390,  steStr : 'erase'                    }, // What: Erase Phone State. Why: The data deletion's confirmation is checked with its list and box. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'legal-phone',          patStr : '/',         widNum : 390,  steStr : 'legal'                    }, // What: Legal Phone State. Why: The privacy policy opens in a sheet from Settings. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/',         widNum : 390,  steStr : 'member'                   }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
 	{ heiNum : 844, ideStr : 'history-phone',        patStr : '/',         widNum : 390,  steStr : 'history'                  }, // What: History Phone State. Why: A fresh joiner of an older group is offered its earlier chat in a banner atop the chat. How: This joins another's group, made older, at 390px.
@@ -686,7 +687,7 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -928,7 +929,7 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 
-	if ( steStr === 'delete' || steStr === 'legal' || steStr === 'settings' ) { // What: Settings Block. Why: The settings states open the owner's Settings section, the delete state the deletion's confirmation too, and the legal state the privacy policy's sheet. How: This presses the tab, reloads the section so nothing is focused, waits for its form, opens the confirmation or the sheet for those states, and stops.
+	if ( steStr === 'delete' || steStr === 'erase' || steStr === 'legal' || steStr === 'settings' ) { // What: Settings Block. Why: The settings states open the owner's Settings section, the delete and erase states a confirmation too, and the legal state the privacy policy's sheet. How: This presses the tab, reloads the section so nothing is focused, waits for its form, opens the confirmation or the sheet for those states, and stops.
 
 
 		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The section opens from its tab. How: This presses it.
@@ -939,6 +940,8 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 		if ( steStr === 'delete' ) await curPagObj.getByRole( 'button', { name : 'Delete group' } ).click(); // What: Delete Click Call. Why: The delete state shows the confirmation. How: This opens it.
+
+		if ( steStr === 'erase' ) await curPagObj.getByRole( 'button', { name : 'Delete my data' } ).click(); // What: Erase Click Call. Why: The erase state shows the data deletion's confirmation. How: This opens it.
 
 
 

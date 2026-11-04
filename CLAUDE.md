@@ -74,10 +74,12 @@ link to copy, with a way to carry on in Safari, and where a browser offers its
 own install prompt, a note on the first screens and Settings offer it. The
 privacy policy and terms are written, as static pages at `/privacy` and
 `/terms` and in a sheet from Settings, and the welcome and the join form link
-both. The app's one service worker opens it offline and shows pushes, a tap on
-one opening its group at the section its news is in. In development, a member
-switcher on the screen's edge acts as the members of a demo group it seeds,
-one tab per member. Next steps are in ARCHITECTURE.md's Section 14.
+both. Settings and, for a phone in no group, the welcome delete someone's
+data, handing each group they own to its earliest member. The app's one
+service worker opens it offline and shows pushes, a tap on one opening its
+group at the section its news is in. In development, a member switcher on the
+screen's edge acts as the members of a demo group it seeds, one tab per
+member. Next steps are in ARCHITECTURE.md's Section 14.
 
 **Design tokens**: the chosen design's colors, fonts, and text widths are
 in `src/styles/styles.css`, with no placeholders left.

@@ -11,6 +11,7 @@ import { canProFun            } from '../platform/install.ts';    // What: Can P
 import { colModGetFun         } from '../platform/color-mode.ts'; // What: Color Mode Get Function. Why: The appearance choice starts from the one kept on this phone. How: This reads it.
 import { colModSetFun         } from '../platform/color-mode.ts'; // What: Color Mode Set Function. Why: Picking light, dark, or the phone's setting applies at once and is kept. How: This applies and keeps it.
 import { dayDatFun            } from '../utils/date.ts';          // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
+import { DelDatCom            } from './delete-data.tsx';         // What: Delete Data Component. Why: The account part offers to delete the member's data. How: This draws its button and confirmation.
 import { gooLinFun            } from '../state/identity.ts';      // What: Google Link Function. Why: Linking Google lets the member get their groups back on a new phone (Section 8). How: This links through the popup.
 import { gooStaFun            } from '../state/identity.ts';      // What: Google State Function. Why: The account part says whether Google is linked. How: This reads it.
 import { groDelFun            } from '../state/groups.ts';        // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
@@ -58,12 +59,12 @@ import type { MemRecTyp } from '../state/members.ts';       // What: Member Reco
  * and everyone else reads; handing the group over, which the owner offers to a
  * member and the member accepts or declines; this phone's appearance,
  * notifications, and how to install the app until it's installed; the
- * account's Google link and upgrade; the privacy policy and the terms, each
- * opening in a sheet; then the way out of the group, a leave for a member and
- * a deletion, confirmed by typing the group's name, for the owner. Each change
- * is announced, a field with a problem says so beside it, and a change that
- * fails says why. A leave or deletion hands the group to the screen host,
- * which opens what's left.
+ * account's Google link, upgrade, and the deletion of the member's data; the
+ * privacy policy and the terms, each opening in a sheet; then the way out of
+ * the group, a leave for a member and a deletion, confirmed by typing the
+ * group's name, for the owner. Each change is announced, a field with a
+ * problem says so beside it, and a change that fails says why. A leave or
+ * deletion hands the group to the screen host, which opens what's left.
  *
  * Sections:
  *  - Constants
@@ -146,11 +147,12 @@ type GscProTyp = { curGroObj : GroRecTyp, onGonFun : ( gonIdeStr : string, mesSt
  * dark, or the phone's setting, applied at once, and turns notifications on or
  * off with one button, saying what the browser answered. The account part
  * links Google, focus then landing on its heading, and once linked offers the
- * upgrade, which opens Polar's checkout. One change runs at a time, its button
- * reading what it's doing; a change is announced through the status and a
- * failure through the alert, a refused offer or acceptance saying why, while a
- * leave or deletion that lands calls onGonFun with the group's ID and what to
- * announce. Key it by the group, so another group starts afresh.
+ * upgrade, which opens Polar's checkout, and ends with a way to delete the
+ * member's data, through its own confirmation. One change runs at a time, its
+ * button reading what it's doing; a change is announced through the status and
+ * a failure through the alert, a refused offer or acceptance saying why, while
+ * a leave or deletion that lands calls onGonFun with the group's ID and what
+ * to announce. Key it by the group, so another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -1083,7 +1085,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 				className={ cssModObj.accSetSec }
 
 				aria-labelledby='accSetHea'
-			>{ /* What: Account Settings Section Element. Why: Google recovery and the upgrade belong to the member's account rather than the group or the phone. How: This holds its heading, notes, and buttons. */ }
+			>{ /* What: Account Settings Section Element. Why: Google recovery, the upgrade, and deleting the member's data belong to their account rather than the group or the phone. How: This holds its heading, notes, and buttons. */ }
 
 
 				<h3
@@ -1158,6 +1160,10 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 						) }
+
+
+
+						<DelDatCom />{ /* What: Delete Data Component. Why: Someone can delete everything Come Hang keeps for them, which belongs to their account. How: This draws the button and its confirmation at the end of the part. */ }
 
 
 					</>
