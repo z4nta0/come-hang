@@ -25,10 +25,10 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * @summary
  * Checks deleting someone's data as people do it, in whichever engine the
  * project runs, against the Emulator Suite: from Settings, the confirmation
- * refuses another word and gives focus back on Escape, then the deletion
- * hands the owner's group to its member, clears the phone, and starts the
- * app over at the welcome, which says so once; and the welcome offers the
- * same deletion to a phone holding an identity in no group.
+ * refuses another word and gives focus back on Escape, then the deletion hands
+ * the owner's group to its member, clears the phone, and starts the app over
+ * at the landing page, which says so once; and the welcome offers the same
+ * deletion to a phone holding an identity in no group.
  *
  * Sections:
  *  - Module State
@@ -200,7 +200,7 @@ pagTesObj( 'an owner deletes their data from Settings only once delete is typed,
 
 	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says the data is gone. How: This reads the welcome's status, allowing for the server call, the clear-out, and the reload, which WebKit takes longest over.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: The app starts over at the welcome. How: This expects its heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The app starts over at the landing page, with no identity left. How: This expects its heading.
 	await expect( delButObj ).toHaveCount( 0 );                                                        // What: No Button Assertion. Why: A phone with nothing left has nothing to delete. How: This expects the button gone.
 
 	expect( ( await docReaFun( delEnvObj, `groups/${ groIdeStr }` ) )?.ownerUid ).toBe( uidMemStr ); // What: Handover Assertion. Why: The member keeps the group. How: This reads its owner.
@@ -208,9 +208,9 @@ pagTesObj( 'an owner deletes their data from Settings only once delete is typed,
 	expect( await docReaFun( delEnvObj, `users/${ uidOwnStr }` ) ).toBeUndefined();                  // What: Public Key Gone Assertion. Why: The owner's public key goes. How: This expects it gone.
 	expect( await phoReaFun( curPagObj ) ).toEqual( { keyNamArr : [], recCouNum : 0 } );             // What: Phone Clear Assertion. Why: Nothing of the identity stays on the phone. How: This expects no record in the app's database and no key of the app's.
 
-	await curPagObj.reload(); // What: Reload Call. Why: The note is said once. How: This reloads the welcome.
+	await curPagObj.reload(); // What: Reload Call. Why: The note is said once. How: This reloads the landing page.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible();  // What: Reloaded Welcome Assertion. Why: The welcome opens again. How: This expects its heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible();  // What: Reloaded Landing Assertion. Why: The landing page opens again. How: This expects its heading.
 	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveCount( 0 ); // What: Note Gone Assertion. Why: A reload shouldn't say it again. How: This expects no such status.
 
 

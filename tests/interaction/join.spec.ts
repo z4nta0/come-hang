@@ -164,7 +164,7 @@ pagTesObj( 'an invite link opens the join screen at the root, and an approval op
 
 	await secPagObj.goto( `/join/${ tokValStr }` ); // What: Link Open Call. Why: The joiner arrives through the link. How: This opens it.
 
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ) ).toBeVisible(); // What: Form Assertion. Why: The joiner sees which group they're asking to join. How: This expects the heading naming it.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ) ).toBeVisible(); // What: Form Assertion. Why: The joiner sees which group they're asking to join. How: This expects the heading naming it.
 	expect( new URL( secPagObj.url() ).pathname ).toBe( '/' );                                            // What: Root Assertion. Why: The app answers at its root, and the link's path shouldn't stay in the bar. How: This expects the root.
 
 	await secPagObj.getByRole( 'button', { name : 'Ask to join' } ).click(); // What: Empty Ask Call. Why: A request needs a name. How: This sends the form empty.
@@ -227,9 +227,9 @@ pagTesObj( "a pasted invite link opens its join screen, and a paste that holds n
 	const linInpLoc = secPagObj.getByLabel( 'Invite link', { exact : true } ); // What: Link Input Locator. Why: The checks read and fill the field. How: This finds it by its label.
 
 
-	await secPagObj.goto( '/' ); // What: Welcome Open Call. Why: The paste starts from the welcome. How: This opens the app.
+	await secPagObj.goto( '/' ); // What: Landing Open Call. Why: The paste starts from the landing page. How: This opens the app.
 
-	await secPagObj.getByRole( 'button', { name : 'Join with an invite link' } ).click(); // What: Join Click Call. Why: The welcome offers joining with a link. How: This presses its button.
+	await secPagObj.getByRole( 'button', { name : 'Join with an invite link' } ).click(); // What: Join Click Call. Why: The landing page offers joining with a link. How: This presses its button.
 
 	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join with an invite link' } ) ).toBeFocused(); // What: Heading Focus Assertion. Why: The button that opened the screen is gone, so focus lands on the heading. How: This expects it focused.
 
@@ -248,11 +248,11 @@ pagTesObj( "a pasted invite link opens its join screen, and a paste that holds n
 
 	await secPagObj.getByRole( 'button', { name : 'Continue' } ).click(); // What: Link Continue Call. Why: The link opens its invite. How: This sends the form.
 
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ) ).toBeVisible(); // What: Join Screen Assertion. Why: The pasted link opens the group's join screen. How: This expects the heading naming the group.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ) ).toBeVisible(); // What: Join Screen Assertion. Why: The pasted link opens the group's join screen. How: This expects the heading naming the group.
 
 	await secPagObj.goBack(); // What: Back Call. Why: The join screen took the paste's place, so back returns to where it was opened. How: This steps back.
 
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: Back skips the paste screen. How: This expects the welcome's heading.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: Back skips the paste screen. How: This expects the landing page's heading.
 
 
 } );
@@ -271,7 +271,7 @@ pagTesObj( 'a withdrawal returns to the form, and a decline ends the request wit
 
 	await secPagObj.getByRole( 'button', { name : 'Withdraw request' } ).click(); // What: Withdraw Click Call. Why: The joiner takes the request back. How: This presses the button.
 
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ) ).toBeFocused();                                    // What: Form Focus Assertion. Why: The form comes back, focus on its heading, since the button went. How: This expects the heading focused.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ) ).toBeFocused();           // What: Form Focus Assertion. Why: The form comes back, focus on its heading, since the button went. How: This expects the heading focused.
 	await expect( secPagObj.getByRole( 'status' ).filter( { hasText : 'withdrew' } ) ).toHaveText( 'You withdrew your request.' ); // What: Withdraw Status Assertion. Why: The withdrawal is announced. How: This expects the host's status.
 
 	const uidJoiStr = ( await runPagFun( secPagObj, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: UID Joiner String. Why: The request is read by the joiner's UID. How: This reads it. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity's record. How: The as reads its UID.
@@ -286,7 +286,7 @@ pagTesObj( 'a withdrawal returns to the form, and a decline ends the request wit
 
 	await secPagObj.getByRole( 'button', { name : 'Ask again' } ).click(); // What: Ask Again Click Call. Why: A declined joiner may ask again. How: This presses the button.
 
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ) ).toBeFocused(); // What: Form Again Assertion. Why: The form comes back for a working link, focus on its heading. How: This expects the heading focused.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ) ).toBeFocused(); // What: Form Again Assertion. Why: The form comes back for a working link, focus on its heading. How: This expects the heading focused.
 
 
 } );
@@ -316,7 +316,45 @@ pagTesObj( "a blocked joiner's request ends, and asking again is refused with a 
 	await secPagObj.getByRole( 'button', { name : 'Ask to join' } ).click(); // What: Ask Click Call. Why: The rules refuse a blocked joiner. How: This sends the request.
 
 	await expect( secPagObj.getByRole( 'alert' ) ).toHaveText( /^The group didn't take the request\./ ); // What: Refused Assertion. Why: A refusal says why. How: This expects the alert's message.
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ) ).toBeVisible(); // What: Form Kept Assertion. Why: A refused request leaves the form. How: This expects its heading still showing.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ) ).toBeVisible(); // What: Form Kept Assertion. Why: A refused request leaves the form. How: This expects its heading still showing.
+
+
+} );
+
+
+
+pagTesObj( 'the invite form shows whose app it is, and "What is Come Hang?" opens the landing page, which leads back to joining with what was typed kept', async ( { page : ownPagObj, secPagObj } ) => { // What: About Test. Why: Someone invited to an app they've never heard of can read about it without losing their place. How: This types a name and note, opens the landing page, reloads it, goes back, and checks the form kept both.
+
+
+	const { tokValStr } = await invSetFun( ownPagObj ); // What: Token Value String. Why: The joiner opens the group's link. How: This starts the group and reads its token.
+
+
+	const bacButLoc = secPagObj.getByRole( 'button', { name : 'Back to joining Beach Day' } ); // What: Back Button Locator. Why: The landing page leads back to the invite. How: This finds its main button by name.
+	const namInpLoc = secPagObj.getByLabel( 'Your full name' );                                // What: Name Input Locator. Why: The name has to survive the trip. How: This finds the field by its label.
+	const notInpLoc = secPagObj.getByLabel( 'Note to the group (optional)' );                  // What: Note Input Locator. Why: The note has to survive the trip. How: This finds the field by its label.
+
+
+	await secPagObj.goto( `/join/${ tokValStr }` ); // What: Link Open Call. Why: The joiner arrives through the link. How: This opens it.
+
+	await expect( secPagObj.getByText( 'Plans made. Fun had. Memories created.' ) ).toBeVisible(); // What: Brand Assertion. Why: The form says what the app is for. How: This expects the headline.
+
+	await namInpLoc.fill( 'Jordan Lee' );    // What: Name Fill Call. Why: Something typed should come back. How: This types a name.
+	await notInpLoc.fill( "Dana's cousin" ); // What: Note Fill Call. Why: The note should come back too. How: This types a note.
+
+	await secPagObj.getByRole( 'button', { name : 'What is Come Hang?' } ).click(); // What: About Click Call. Why: The joiner wants to know more first. How: This opens the landing page.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The landing page opened. How: This expects its headline.
+	await expect( secPagObj.getByRole( 'button', { name : 'Start a group' } ) ).toHaveCount( 0 );                                   // What: No Start Assertion. Why: An invite's visitor isn't pulled away from the group. How: This expects no start button.
+
+	await secPagObj.reload(); // What: Reload Call. Why: The way back should survive a reload. How: This reloads the landing page.
+
+	await expect( bacButLoc.first() ).toBeVisible(); // What: Back Kept Assertion. Why: The entry still names the group. How: This expects the way back.
+
+	await bacButLoc.first().click(); // What: Back Click Call. Why: The joiner carries on. How: This presses the hero's way back.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ) ).toBeVisible(); // What: Form Assertion. Why: The way back returns to the invite form. How: This expects its heading.
+	await expect( namInpLoc ).toHaveValue( 'Jordan Lee' );                                                                // What: Name Kept Assertion. Why: What was typed is kept. How: This expects the name.
+	await expect( notInpLoc ).toHaveValue( "Dana's cousin" );                                                             // What: Note Kept Assertion. Why: What was typed is kept. How: This expects the note.
 
 
 } );

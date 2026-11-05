@@ -6,7 +6,8 @@
  *
  * @summary
  * Styles for JoiGroCom: one column at the base text width, centered in the
- * screen, holding a bar with the back button beside the heading, then the
+ * screen, holding the app's mark, name, and headline with a link-styled way
+ * to the landing page, a bar with the back button beside the heading, then the
  * part the join has reached, its text, fields, and buttons a tier 2 space
  * apart, then the alert. A field stacks its label, box, hint, and problem a
  * tier 5 space apart, and its box shifts its border on hover, turns red with
@@ -20,12 +21,12 @@
 
 /* #region joiScrMai */
 
-.joiScrMai { /* What: Join Screen Main. Why: The join should read as one column, at a comfortable width, whatever the screen. How: This holds the bar, the part, and the alert in named areas, the frame tier apart, at the base text width centered in the screen, with the frame tier above and below and the gutter at the sides. */
+.joiScrMai { /* What: Join Screen Main. Why: The join should read as one column, at a comfortable width, whatever the screen. How: This holds the brand, the bar, the part, and the alert in named areas, the frame tier apart, at the base text width centered in the screen, with the frame tier above and below and the gutter at the sides. */
 
 
 	align-content         : start;
 	display               : grid;
-	grid-template-areas   : 'joiBarDiv' 'joiBodDiv' 'joiErrPar';
+	grid-template-areas   : 'joiBraDiv' 'joiBarDiv' 'joiBodDiv' 'joiErrPar';
 	grid-template-columns : minmax( 0, var( --tex-wid-bas ) );         /* Text Width Base ~= 29.207em */
 	justify-content       : center;
 	min-height            : 100vh;
@@ -34,6 +35,120 @@
 
 
 }
+
+
+/* #region joiBraDiv */
+
+.joiBraDiv { /* What: Join Brand Div. Why: Whose app this is reads first, quietly. How: This stacks the wordmark, the headline, and the way to the landing page in named areas a tier 4 space apart, at the start of the line. */
+
+
+	display             : grid;
+	grid-area           : joiBraDiv;
+	grid-template-areas : 'joiBraPar' 'joiTagPar' 'joiWhaBut';
+	justify-items       : start;
+	row-gap             : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+
+
+/* #region joiBraPar */
+
+.joiBraPar { /* What: Join Brand Paragraph. Why: The mark and the name read as the wordmark. How: This sets them side by side in the brand font's extra bold, a step up, a tier 4 space apart, in their own area. */
+
+
+	align-items         : center;
+	column-gap          : var( --tie-hor-004 ); /* Tier Horizontal 4, about 8.304px - 11px */
+	display             : grid;
+	font-family         : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size           : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	font-weight         : 800;
+	grid-area           : joiBraPar;
+	grid-template-areas : 'joiMarSvg joiNamSpa';
+	margin              : 0;
+
+
+}
+
+.joiMarSvg { /* What: Join Mark SVG. Why: The mark leads the name at its height. How: This sets it square at a rhythm step, in its own area. */
+
+
+	grid-area : joiMarSvg;
+	height    : calc( var( --ver-rhy-p02 ) * 1rem ); /* Vertical Rhythm Base Plus 2 ~= 25.572px */
+	width     : calc( var( --ver-rhy-p02 ) * 1rem ); /* Vertical Rhythm Base Plus 2 ~= 25.572px */
+
+
+}
+
+.joiNamSpa { /* What: Join Name Span. Why: The name follows the mark. How: This places it in its own area. */
+
+
+	grid-area : joiNamSpa;
+
+
+}
+
+/* #endregion joiBraPar */
+
+.joiTagPar { /* What: Join Tagline Paragraph. Why: The headline says what the app is for, below the name. How: This sets it bold in the muted text color, in its own area. */
+
+
+	color       : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-weight : 700;
+	grid-area   : joiTagPar;
+	margin      : 0;
+
+
+}
+
+.joiWhaBut { /* What: Join What Button. Why: The way to the landing page reads as a link, and presses like one. How: This sets it bold in the main accent, underlined, with no box, at least a touch target tall, in its own area, and eases its hover color, press dim, and focus ring. */
+
+
+	background      : none;
+	border          : 0;
+	color           : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	cursor          : pointer;
+	font            : inherit;
+	font-weight     : 700;
+	grid-area       : joiWhaBut;
+	min-height      : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding         : 0;
+	text-decoration : underline;
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.joiWhaBut:hover { /* What: Hovered Join What Button. Why: A text link shows it's live by color alone. How: This darkens it a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.joiWhaBut:active { /* What: Pressed Join What Button. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Join What Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.joiWhaBut { /* What: Motionless Join What Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion joiBraDiv */
+
 
 
 /* #region joiBarDiv */

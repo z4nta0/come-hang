@@ -23,12 +23,12 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The helper dri
  * Checks the install steps an iPhone or iPad shows in Safari, in whichever
  * engine the project runs, each page reporting an iPhone's Safari since the
  * app reads the device from its user agent. The steps come before the app,
- * carrying on in Safari opens it with focus on its main area and stays
- * chosen through a reload, and an installed app skips them. An invite link
- * opened there keeps its link to copy and reads nothing, so nothing signs in
- * from Safari's storage. Where a browser offers its own install prompt, a
- * stand-in for it shows the note on the welcome, whose Not now holds through
- * a reload and whose Install shows the prompt, and the Install button in
+ * carrying on in Safari opens it with focus on its main area and stays chosen
+ * through a reload, and an installed app skips them. An invite link opened
+ * there keeps its link to copy and reads nothing, so nothing signs in from
+ * Safari's storage. Where a browser offers its own install prompt, a stand-in
+ * for it shows the note on the landing page, whose Not now holds through a
+ * reload and whose Install shows the prompt, and the Install button in
  * Settings, which shows it too.
  *
  * Sections:
@@ -111,16 +111,16 @@ test( 'on an iPhone in Safari the install steps come first, and carrying on open
 	await iosOpeFun( page, '/' ); // What: Open Call. Why: The steps show at the app's root. How: This opens it as an iPhone's Safari.
 
 	await expect( page.getByRole( 'heading', { level : 1, name : 'Add Come Hang to your Home Screen' } ) ).toBeVisible(); // What: Steps Assertion. Why: Installing comes before anything else. How: This expects the install heading.
-	await expect( page.getByRole( 'button', { name : 'Start a group' } ) ).toHaveCount( 0 );                               // What: No Welcome Assertion. Why: The welcome waits until someone installs or carries on. How: This expects no start button.
+	await expect( page.getByRole( 'button', { name : 'Start a group' } ) ).toHaveCount( 0 );                               // What: No Landing Assertion. Why: The welcome waits until someone installs or carries on. How: This expects no start button.
 
 	await page.getByRole( 'button', { name : 'Continue in Safari' } ).click(); // What: Continue Click Call. Why: Someone not ready to install can still look around. How: This presses the button.
 
-	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: Carrying on opens the app. How: This expects the welcome's heading.
+	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: Carrying on opens the app. How: This expects the landing page's heading.
 	await expect( page.getByRole( 'main' ) ).toBeFocused();                                      // What: Main Focus Assertion. Why: The pressed button is gone, so focus lands on the screen that replaced it. How: This expects the main area focused.
 
 	await page.reload(); // What: Reload Call. Why: The choice should hold on later visits. How: This reloads the app.
 
-	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Kept Choice Assertion. Why: Someone who chose Safari isn't stopped again. How: This expects the welcome straight away.
+	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Kept Choice Assertion. Why: Someone who chose Safari isn't stopped again. How: This expects the welcome straight away.
 
 
 } );
@@ -132,7 +132,7 @@ test( 'an installed app on iPhone skips the install steps', async ( { page } ) =
 
 	await iosOpeFun( page, '/', true ); // What: Installed Open Call. Why: The installed app is what the steps lead to. How: This opens it as an installed iPhone app.
 
-	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: The installed app opens straight to the welcome. How: This expects its heading.
+	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The installed app opens straight to the landing page. How: This expects its heading.
 
 
 } );
@@ -167,7 +167,7 @@ test( 'an invite link in iPhone Safari keeps its link to copy and makes no ident
 test( 'a browser that offers its install prompt shows the note, whose Not now holds and whose Install shows the prompt', async ( { page } ) => { // What: Note Test. Why: Where installing takes one tap it's suggested, never in the way (Section 16). How: This fires a stand-in prompt, checks the note, dismisses it and checks it stays gone after a reload, then installs from a fresh device and checks the prompt showed.
 
 
-	await page.goto( '/' ); // What: Welcome Open Call. Why: The note shows on the welcome. How: This opens the app.
+	await page.goto( '/' ); // What: Landing Open Call. Why: The note shows on the landing page. How: This opens the app.
 
 	await bipFakFun( page ); // What: Prompt Fire Call. Why: The note waits for the browser's prompt. How: This fires a stand-in.
 
@@ -182,7 +182,7 @@ test( 'a browser that offers its install prompt shows the note, whose Not now ho
 
 	await bipFakFun( page ); // What: Second Prompt Fire Call. Why: The browser offers its prompt again on each load. How: This fires another stand-in.
 
-	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Come Hang' } ) ).toBeVisible();          // What: Welcome Assertion. Why: The welcome itself still shows. How: This expects its heading.
+	await expect( page.getByRole( 'heading', { exact : true, level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The landing page itself still shows. How: This expects its heading.
 	await expect( page.getByRole( 'heading', { level : 2, name : 'Install Come Hang' } ) ).toHaveCount( 0 ); // What: Kept Dismissal Assertion. Why: Not now holds. How: This expects no note.
 
 	await page.evaluate( () => localStorage.clear() ); // What: Storage Clear Call. Why: A device that never dismissed the note is checked next. How: This forgets the dismissal.

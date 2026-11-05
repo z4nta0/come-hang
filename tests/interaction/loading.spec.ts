@@ -34,7 +34,7 @@ test( 'a quick launch never shows the loader', async ( { page : curPagObj } ) =>
 
 	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The launch is the thing checked. How: This opens the app.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Welcome Wait. Why: The launch is over once the welcome shows. How: This waits for its heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Landing Wait. Why: The launch is over once the landing page shows. How: This waits for its heading.
 
 	expect( await curPagObj.evaluate( () => Reflect.get( globalThis, 'loaSeeBoo' ) ) ).toBeUndefined(); // What: No Loader Assertion. Why: The check took less than the loader's delay. How: This expects the watch to have recorded nothing.
 
@@ -52,7 +52,7 @@ test( 'a slow launch shows the loader, which gives way to the screen', async ( {
 
 	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Loading' ); // What: Loader Status Assertion. Why: A screen reader should hear the app is loading. How: This waits for the status to say so.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Welcome Assertion. Why: The screen replaces the loader once the check ends. How: This waits for the welcome's heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Landing Assertion. Why: The screen replaces the loader once the check ends. How: This waits for the landing page's heading.
 
 	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Loading' } ) ).toHaveCount( 0 ); // What: Loader Gone Assertion. Why: The loader shouldn't stay beside the screen, whose own status, such as the welcome's note after a deletion, may be there empty. How: This expects no status reading as loading.
 
@@ -66,9 +66,9 @@ test( 'a slow reload returns to where it was left once the screen has loaded', a
 
 	await curPagObj.setViewportSize( { height : 120, width : 390 } ); // What: Short Viewport Call. Why: The page has to be scrollable for a restored position to mean anything. How: This makes the screen too short to show the welcome whole.
 
-	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The check starts on the welcome. How: This opens the app.
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The check starts on the landing page. How: This opens the app.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Welcome Wait. Why: The page can only scroll once the welcome shows. How: This waits for its heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Landing Wait. Why: The page can only scroll once the landing page shows. How: This waits for its heading.
 
 	await curPagObj.evaluate( () => window.scrollTo( { behavior : 'instant', left : 0, top : document.body.scrollHeight } ) );           // What: Bottom Scroll Call. Why: The position to return to has to be below the top. How: This jumps to the bottom of the page.
 	await curPagObj.evaluate( () => new Promise( ( resProFun ) => requestAnimationFrame( () => requestAnimationFrame( resProFun ) ) ) ); // What: Two Frame Wait. Why: The scroll hook records a position from the scroll event, which the browser fires on the next frame. How: This waits two frames before reading it.
@@ -81,9 +81,9 @@ test( 'a slow reload returns to where it was left once the screen has loaded', a
 
 	await curPagObj.addInitScript( datHolFun, 1000 ); // What: Database Hold Call. Why: The reload's screen should load well after the fonts. How: This holds the app's database for a second on the reload.
 
-	await curPagObj.reload(); // What: Page Reload Call. Why: This is the navigation being checked. How: This reloads the welcome.
+	await curPagObj.reload(); // What: Page Reload Call. Why: This is the navigation being checked. How: This reloads the landing page.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Reloaded Welcome Wait. Why: The position is restored once the screen has loaded. How: This waits for the welcome's heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Reloaded Landing Wait. Why: The position is restored once the screen has loaded. How: This waits for the welcome's heading.
 
 	await expect.poll( () => curPagObj.evaluate( () => window.scrollY ) ).toBe( leaScrNum ); // What: Reloaded Position Assertion. Why: A slow reload should still open the page where it was left. How: This polls the scroll position until it matches.
 

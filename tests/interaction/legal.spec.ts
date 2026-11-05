@@ -17,7 +17,7 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
  *
  * @summary
  * Checks the privacy policy and the terms where people meet them, in whichever
- * engine the project runs: the welcome and the join form link both static
+ * engine the project runs: the landing page and the join form link both static
  * pages in a new tab, Settings opens each document in a sheet that hands focus
  * back to its button when it closes, a link between the documents there
  * switches the sheet, and a static page follows a light or dark choice kept by
@@ -29,14 +29,16 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each beh
 
 
 
-test( 'the welcome links the terms and the policy, each opening in a new tab', async ( { page } ) => { // What: Welcome Links Test. Why: Google's verification looks for the policy on the home page, and starting a group means agreeing to both. How: This opens the welcome and checks each link's address and target.
+test( 'the landing page links the terms and the policy beside its actions, each opening in a new tab', async ( { page } ) => { // What: Landing Links Test. Why: Google's verification looks for the policy on the home page, and starting a group means agreeing to both. How: This opens the welcome and checks each link's address and target.
 
 
-	await page.goto( '/' ); // What: Welcome Visit. Why: The welcome is what a first visit opens. How: This loads the root.
+	await page.goto( '/' ); // What: Landing Visit. Why: The landing page is what a first visit opens. How: This loads the root.
 
 
-	const priLinObj = page.getByRole( 'link', { name : 'Privacy Policy' } );   // What: Privacy Link Object. Why: The policy's link is checked. How: This finds it by its name.
-	const terLinObj = page.getByRole( 'link', { name : 'Terms of Service' } ); // What: Terms Link Object. Why: The terms' link is checked. How: This finds it by its name.
+	const legLinLoc = page.getByText( /^By starting or joining a group/ ); // What: Legal Line Locator. Why: The agreement line's links are checked, apart from the footer's. How: This finds the line by its opening words.
+
+	const priLinObj = legLinLoc.getByRole( 'link', { name : 'Privacy Policy' } );   // What: Privacy Link Object. Why: The policy's link is checked. How: This finds it in the line by its name.
+	const terLinObj = legLinLoc.getByRole( 'link', { name : 'Terms of Service' } ); // What: Terms Link Object. Why: The terms' link is checked. How: This finds it in the line by its name.
 
 
 	await expect( priLinObj ).toHaveAttribute( 'href', '/privacy' ); // What: Privacy Address Assertion. Why: The link opens the policy's page. How: This checks its address.
@@ -143,7 +145,7 @@ test( 'a legal page follows the light or dark choice kept by the app, and links 
 
 	await page.getByRole( 'contentinfo' ).getByRole( 'link', { name : 'Open Come Hang' } ).click(); // What: App Click Call. Why: The footer ends with the way back to the app. How: This follows the link.
 
-	await expect( page.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: The link should open the app. How: This checks the welcome's heading.
+	await expect( page.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The link should open the app. How: This checks the landing page's heading.
 
 
 } );

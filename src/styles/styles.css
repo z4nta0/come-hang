@@ -462,6 +462,7 @@
 	--ver-rhy-p12 : var( --cdn-pow-013 );     /* What: Vertical Rhythm Base Plus 12 ~= 38.691. Why: This is the vertical rhythm's step 12 above its base. How: This is the core design number to the power of 13, multiplied by 1rem where it sets a length. */
 	--ver-rhy-p13 : var( --cdn-pow-014 );     /* What: Vertical Rhythm Base Plus 13 ~= 51.254. Why: This is the vertical rhythm's step 13 above its base. How: This is the core design number to the power of 14, multiplied by 1rem where it sets a length. */
 	--ver-rhy-p14 : var( --cdn-pow-015 );     /* What: Vertical Rhythm Base Plus 14 ~= 67.897. Why: This is the vertical rhythm's step 14 above its base. How: This is the core design number to the power of 15, multiplied by 1rem where it sets a length. */
+	--ver-rhy-p15 : var( --cdn-pow-016 );     /* What: Vertical Rhythm Base Plus 15 ~= 89.945. Why: This is the vertical rhythm's step 15 above its base. How: This is the core design number to the power of 16, multiplied by 1rem where it sets a length. */
 
 	/* #endregion Vertical Rhythm Tokens */
 

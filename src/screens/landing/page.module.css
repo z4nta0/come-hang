@@ -1,0 +1,1286 @@
+
+
+
+/**
+ * page.module.css = Landing Page Module
+ *
+ * @summary
+ * Styles for LanPagCom: a main area of full-width sections, each holding its
+ * content to the page's width with the gutter at the sides at least, then a
+ * footer. The hero sets its text beside three leaning phones from 720px
+ * wide and above them below; the trust and free sections sit on raised
+ * bands; the steps and plans line up in columns from 720px wide; each
+ * question's answer grows into place; and the closing band sits on the main
+ * accent. Its buttons and links ease their hover, press, and focus looks.
+ * The route is styled in its own module.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region lanPagMai */
+
+.lanPagMai { /* What: Landing Page Main. Why: The page reads as a stack of full-width sections. How: This stacks them by auto placement, since each section is its own block. */
+
+
+	display : grid;
+
+
+}
+
+
+
+/* #region herSecSec */
+
+.herSecSec { /* What: Hero Section Section. Why: The page opens with what Come Hang is and how to start. How: This stacks the text above the phones in named areas, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	align-items         : center;
+	display             : grid;
+	grid-template-areas : 'herTexDiv' 'herColDiv';
+	padding             : var( --tie-ver-001 ) max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px */ /* What: Side Padding Note. Why: Each section runs full width while its content keeps the page's width. How: The sides take the gutter, or half of what's left beside the page's width when that's more. */
+	row-gap             : var( --tie-ver-001 );                                                                                 /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Hero Section Section. Why: A wide screen has room for the text beside the phones. How: This applies from 720px wide and up. */
+
+
+	.herSecSec { /* What: Side By Side Hero Section Section. Why: The text and the phones read together. How: This sets them in two columns, the text's wider, the frame tier apart. */
+
+
+		column-gap            : var( --tie-hor-001 ); /* Tier Horizontal 1, about 44.876px - 59.447px */
+		grid-template-areas   : 'herTexDiv herColDiv';
+		grid-template-columns : 1.3fr 1fr;
+
+
+	}
+
+
+}
+
+
+
+/* #region herTexDiv */
+
+.herTexDiv { /* What: Hero Text Div. Why: The name, headline, pitch, and actions read as one column. How: This stacks them in named areas a tier 3 space apart, at the start of the line. */
+
+
+	display             : grid;
+	grid-area           : herTexDiv;
+	grid-template-areas : 'herBraPar' 'herTitHea' 'herPitPar' 'herStaPar' 'herActDiv' 'herRecPar' 'herErrPar' 'herLegPar';
+	justify-items       : start;
+	row-gap             : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+
+/* #region herBraPar */
+
+.herBraPar { /* What: Hero Brand Paragraph. Why: The mark and the name read as the wordmark. How: This sets them side by side in the brand font's extra bold, a tier 4 space apart, in their own area. */
+
+
+	align-items           : center;
+	column-gap            : var( --tie-hor-004 ); /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	font-family           : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size             : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	font-weight           : 800;
+	grid-area             : herBraPar;
+	grid-template-areas   : 'herMarSvg herNamSpa';
+	margin                : 0;
+
+
+}
+
+.herMarSvg { /* What: Hero Mark SVG. Why: The mark leads the name at its height. How: This sets it square at a rhythm step, in its own area. */
+
+
+	grid-area : herMarSvg;
+	height    : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	width     : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+
+.herNamSpa { /* What: Hero Name Span. Why: The name follows the mark. How: This places it in its own area. */
+
+
+	grid-area : herNamSpa;
+
+
+}
+
+/* #endregion herBraPar */
+
+
+
+/* #region herTitHea */
+
+.herTitHea { /* What: Hero Title Heading. Why: The headline is the page's biggest text, growing with the screen. How: This sets it in the brand font's extra bold, slightly tightened, set tight, between two font steps so each beat keeps to one line, with the tier 2 space above it less the tier 3 gap. */
+
+
+	font-family    : var( --fon-fam-bra );                                                   /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size      : clamp( var( --fon-siz-p04 ), 9vw, var( --fon-siz-p06 ) );               /* Font Size Base Plus 4 ~= 33.876px, Font Size Base Plus 6 ~= 59.447px */
+	font-weight    : 800;
+	grid-area      : herTitHea;
+	letter-spacing : calc( var( --cdn-pow-014-rec ) * -1em );                                /* Core-Design-Number to the Power of 14 Reciprocal ~= -0.020em */
+	line-height    : var( --ver-rhy-m01 );                                                   /* Vertical Rhythm Base Minus 1 = 1 */
+	margin         : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ) 0 0;                /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.herOneSpa { /* What: Hero One Span. Why: Each beat sits on its own line, the first in ink. How: This sets it as a block in the main text color. */
+
+
+	color   : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+	display : block;
+
+
+}
+
+.herTwoSpa { /* What: Hero Two Span. Why: The second beat, the fun, takes the main accent. How: This sets it as a block in periwinkle. */
+
+
+	color   : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	display : block;
+
+
+}
+
+.herThrSpa { /* What: Hero Three Span. Why: The last beat takes the coral spark. How: This sets it as a block in coral. */
+
+
+	color   : var( --acc-sec-col ); /* Accent Secondary Color = #DD6248 */
+	display : block;
+
+
+}
+
+/* #endregion herTitHea */
+
+
+
+.herPitPar { /* What: Hero Pitch Paragraph. Why: The pitch reads below the headline at a comfortable length. How: This sets it a step up in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : herPitPar;
+	margin    : 0;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+.herStaPar { /* What: Hero Status Paragraph. Why: A deletion's confirmation reads below the pitch. How: This sets it bold, capped at the small text width, in its own area. */
+
+
+	font-weight : 700;
+	grid-area   : herStaPar;
+	margin      : 0;
+	max-width   : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+.herStaPar:empty { /* What: Empty Hero Status Paragraph. Why: The status stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the column's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+
+
+/* #region herActDiv */
+
+.herActDiv { /* What: Hero Actions Div. Why: Starting and joining sit together, each its own width, and wrap where the row runs out of room, which grid can't do without fixed tracks. How: This sets them in a wrapping flex row a tier 4 space apart, with the tier 2 space above it less the tier 3 gap, wrapping onto two lines at about 400px wide and below. */
+
+
+	display    : flex;
+	flex-wrap  : wrap;
+	gap        : var( --tie-ver-004 ) var( --tie-hor-004 );                 /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	grid-area  : herActDiv;
+	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.herJoiBut { /* What: Hero Join Button. Why: Joining with a link is a lighter action than starting a group, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.herJoiBut:hover { /* What: Hovered Hero Join Button. Why: The button shows it's live under the pointer. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.herJoiBut:active { /* What: Pressed Hero Join Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Hero Join Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.herJoiBut { /* What: Motionless Hero Join Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion herActDiv */
+
+
+
+/* #region herRecPar */
+
+.herRecPar { /* What: Hero Recover Paragraph. Why: Getting groups back on a new phone is a smaller action below the buttons. How: This sets it in the muted text color, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : herRecPar;
+	margin    : 0;
+
+
+}
+
+.herRecBut { /* What: Hero Recover Button. Why: The button reads as a link inside the question's sentence, and presses like one. How: This sets it bold in the main accent, underlined, with no box, and eases its hover color, press dim, and focus ring. */
+
+
+	background      : none;
+	border          : 0;
+	color           : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	cursor          : pointer;
+	font            : inherit;
+	font-weight     : 700;
+	padding         : 0;
+	text-decoration : underline;
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.herRecBut:hover { /* What: Hovered Hero Recover Button. Why: A text link shows it's live by color alone. How: This darkens it a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.herRecBut:active { /* What: Pressed Hero Recover Button. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Hero Recover Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.herRecBut { /* What: Motionless Hero Recover Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion herRecPar */
+
+
+
+.herErrPar { /* What: Hero Error Paragraph. Why: A sign-in that doesn't go through should be clear below the actions. How: This sets it bold in the dark error color, capped at the small text width, in its own area. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+	grid-area   : herErrPar;
+	margin      : 0;
+	max-width   : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+.herErrPar:empty { /* What: Empty Hero Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the column's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+.herLegPar { /* What: Hero Legal Paragraph. Why: The agreement line sits below the actions. How: This places it in its own area. */
+
+
+	grid-area : herLegPar;
+
+
+}
+
+/* #endregion herTexDiv */
+
+
+
+/* #region herColDiv */
+
+.herColDiv { /* What: Hero Collage Div. Why: Three phones lean on each other in one spot. How: This sets them in one grid cell, centered, with room above and below for their tilt. */
+
+
+	display       : grid;
+	grid-area     : herColDiv;
+	justify-items : center;
+	padding-block : var( --tie-ver-002 ); /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.herPhoPic { /* What: Hero Phone Picture. Why: Each phone shows one screen, framed like a phone, the three stacked in one cell. How: This sets an ink frame with rounded corners around the screenshot, at a width that grows with the screen between two rhythm steps, in the collage's one cell. */
+
+
+	border        : var( --bor-wid-xla ) solid var( --tex-mai-col );                                                           /* Border Width Extra Large ~= 3.572px, Text Main Color = #1D1E33 */
+	border-radius : var( --rad-bor-xla );                                                                                      /* Radius Border Extra Large ~= 19.304px */
+	display       : block;
+	grid-column   : 1;
+	grid-row      : 1;
+	overflow      : hidden;
+	width         : clamp( calc( var( --ver-rhy-p08 ) * 1rem ), var( --hor-rhy-020 ), calc( var( --ver-rhy-p10 ) * 1rem ) ); /* Vertical Rhythm Base Plus 8 ~= 138.204px, Horizontal Rhythm 20 ~= 268.187px @ 1,920px width, Vertical Rhythm Base Plus 10 ~= 242.520px */ /* What: Cell Placement Note. Why: The three phones overlap in one cell, which has no name since a one-cell grid needs none. How: Each takes its first row and column. */
+
+
+}
+.herPhoPic:nth-child( 1 ) { /* What: Hero Phone Picture First. Why: The first phone leans left, behind the middle one. How: This moves it left by under half its width and tilts it back. */
+
+
+	transform : translateX( -45% ) rotate( -6deg ); /* What: Lean Note. Why: The phones overlap like a hand of cards. How: The shift is a share of the phone's own width, and the tilt a literal angle, since neither is a length on the scale. */
+
+
+}
+.herPhoPic:nth-child( 2 ) { /* What: Hero Phone Picture Second. Why: The middle phone sits in front, a little higher. How: This raises it and tilts it slightly, above the others. */
+
+
+	transform : translateY( -4% ) rotate( 3deg );
+	z-index   : 1; /* What: Front Layer Note. Why: The middle phone covers the edges of the other two, which sit at the default layer. How: It takes the layer just above them. */
+
+
+}
+.herPhoPic:nth-child( 3 ) { /* What: Hero Phone Picture Third. Why: The last phone leans right, behind the middle one. How: This moves it right by under half its width and tilts it forward. */
+
+
+	transform : translateX( 45% ) rotate( 8deg ); /* What: Lean Note. Why: The phones overlap like a hand of cards. How: The shift is a share of the phone's own width, and the tilt a literal angle, since neither is a length on the scale. */
+
+
+}
+
+.herPhoIma { /* What: Hero Phone Image. Why: The screenshot fills its frame. How: This sets it as a block at the frame's width, keeping its shape. */
+
+
+	display : block;
+	height  : auto;
+	width   : 100%;
+
+
+}
+
+/* #endregion herColDiv */
+
+/* #endregion herSecSec */
+
+
+
+/* #region truSecSec */
+
+.truSecSec { /* What: Trust Section Section. Why: What stays private stands apart as its own band, right after the hero. How: This sets a raised band with a border above and below, the frame tier inside, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	background-color : var( --bac-sur-col );                                                                               /* Background Surface Color = #FFFFFF */
+	border-block     : var( --bor-wid-bas ) solid var( --bor-mai-col );                                                    /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	padding          : var( --tie-ver-001 ) max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px */
+
+
+}
+
+
+
+/* #region truInnDiv */
+
+.truInnDiv { /* What: Trust Inner Div. Why: The heading, the promises, and the link read in order. How: This stacks them in named areas a tier 2 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'truTitHea' 'truLisUno' 'truSeePar';
+	row-gap             : var( --tie-ver-002 ); /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.truTitHea { /* What: Trust Title Heading. Why: The section's point is said big. How: This sets it between two font steps, growing with the screen, capped at the base text width, in its own area. */
+
+
+	font-size : clamp( var( --fon-siz-p04 ), 4.4vw, var( --fon-siz-p05 ) ); /* Font Size Base Plus 4 ~= 33.876px, Font Size Base Plus 5 ~= 44.876px */
+	grid-area : truTitHea;
+	margin    : 0;
+	max-width : var( --tex-wid-bas );                                       /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region truLisUno */
+
+.truLisUno { /* What: Trust List Unordered. Why: The four promises read as a list without the browser's bullets or indent. How: This stacks them a tier 2 space apart by auto placement, since the list's items share one layout, in its own area. */
+
+
+	display    : grid;
+	gap        : var( --tie-ver-002 ) var( --tie-hor-001 ); /* Tier Vertical 2 ~= 25.572px, Tier Horizontal 1, about 44.876px - 59.447px */
+	grid-area  : truLisUno;
+	list-style : none;
+	margin     : 0;
+	padding    : 0;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Trust List Unordered. Why: A wide screen has room for two promises side by side. How: This applies from 720px wide and up. */
+
+
+	.truLisUno { /* What: Two Column Trust List Unordered. Why: Four promises fill two rows evenly. How: This sets two equal columns. */
+
+
+		grid-template-columns : 1fr 1fr;
+
+
+	}
+
+
+}
+
+
+
+/* #region truIteIte */
+
+.truIteIte { /* What: Trust Item Item. Why: A promise's icon sits beside its title and sentence. How: This sets the icon in its own column beside the two, in named areas, a tier 3 space across and a tier 5 space down. */
+
+
+	align-items           : start;
+	display               : grid;
+	gap                   : var( --tie-ver-005 ) var( --tie-hor-003 ); /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 3, about 14.572px - 19.304px */
+	grid-template-areas   : 'truIcoSpa truIteHea' 'truIcoSpa truItePar';
+	grid-template-columns : auto 1fr;
+
+
+}
+
+.truIcoSpa { /* What: Trust Icon Span. Why: An icon marks each promise at a glance. How: This centers it in a tinted square in the accent, a rhythm step on each side, in its own area. */
+
+
+	background-color : var( --acc-tin-col );                /* Accent Tint Color = #E7E8FA */
+	border-radius    : var( --rad-bor-lar );                /* Radius Border Large ~= 14.572px */
+	color            : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	display          : grid;
+	grid-area        : truIcoSpa;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	width            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+
+.truIteHea { /* What: Trust Item Heading. Why: Each promise's name reads a step up. How: This sets it a step up, in its own area. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : truIteHea;
+	margin    : 0;
+
+
+}
+
+.truItePar { /* What: Trust Item Paragraph. Why: The promise reads below its name. How: This sets it in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : truItePar;
+	margin    : 0;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+/* #endregion truIteIte */
+
+/* #endregion truLisUno */
+
+
+
+/* #region truSeePar */
+
+.truSeePar { /* What: Trust See Paragraph. Why: The link to what the server reads closes the band. How: This places it in its own area. */
+
+
+	grid-area : truSeePar;
+	margin    : 0;
+
+
+}
+
+.truSeeAnc { /* What: Trust See Anchor. Why: A link has to stand out from text by more than color. How: This sets it bold in the main accent, underlined, and eases its hover color, press dim, and focus ring. */
+
+
+	color           : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	font-weight     : 700;
+	text-decoration : underline;
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.truSeeAnc:hover { /* What: Hovered Trust See Anchor. Why: A text link shows it's live by color alone. How: This darkens it a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.truSeeAnc:active { /* What: Pressed Trust See Anchor. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Trust See Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.truSeeAnc { /* What: Motionless Trust See Anchor. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion truSeePar */
+
+/* #endregion truInnDiv */
+
+/* #endregion truSecSec */
+
+
+
+/* #region staSecSec */
+
+.staSecSec { /* What: Starts Section Section. Why: How a group starts reads as its own block. How: This stacks the heading above the steps in named areas, a tier 2 space apart, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	display             : grid;
+	grid-template-areas : 'secTitHea' 'staLisOrd';
+	padding             : var( --tie-ver-001 ) max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px */
+	row-gap             : var( --tie-ver-002 );                                                                                 /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.secTitHea { /* What: Section Title Heading. Why: Each later section's heading reads big. How: This sets it between two font steps, growing with the screen, in its own area. */
+
+
+	font-size : clamp( var( --fon-siz-p04 ), 3.6vw, var( --fon-siz-p05 ) ); /* Font Size Base Plus 4 ~= 33.876px, Font Size Base Plus 5 ~= 44.876px */
+	grid-area : secTitHea;
+	margin    : 0;
+
+
+}
+
+
+
+/* #region staLisOrd */
+
+.staLisOrd { /* What: Starts List Ordered. Why: The steps read in order without the browser's numbers, which each step draws itself. How: This stacks them a tier 3 space apart by auto placement, counting them for their numbers, in its own area. */
+
+
+	counter-reset : staIteCou;
+	display       : grid;
+	gap           : var( --tie-ver-003 ) var( --tie-hor-002 ); /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 2, about 25.572px - 33.876px */
+	grid-area     : staLisOrd;
+	list-style    : none;
+	margin        : 0;
+	padding       : 0;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Starts List Ordered. Why: A wide screen has room for the three steps side by side. How: This applies from 720px wide and up. */
+
+
+	.staLisOrd { /* What: Three Column Starts List Ordered. Why: The three steps fill one row. How: This sets three equal columns. */
+
+
+		grid-template-columns : 1fr 1fr 1fr;
+
+
+	}
+
+
+}
+
+
+
+/* #region staIteIte */
+
+.staIteIte { /* What: Starts Item Item. Why: A step's number sits beside its title and sentence. How: This sets the number in its own column beside the two, a tier 3 space across and a tier 5 space down, counting the step. */
+
+
+	align-items           : start;
+	counter-increment     : staIteCou;
+	display               : grid;
+	gap                   : var( --tie-ver-005 ) var( --tie-hor-003 ); /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 3, about 14.572px - 19.304px */
+	grid-template-areas   : 'staIteNum staIteHea' 'staIteNum staItePar';
+	grid-template-columns : auto 1fr;
+
+
+}
+.staIteIte::before { /* What: Starts Item Item Number. Why: Each step shows its number in a periwinkle circle. How: This draws the count bold in a circle a rhythm step across, in the number's area. */
+
+
+	background-color : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	border-radius    : 50%;
+	color            : var( --tex-acc-col );                /* Text Accent Color = #FFFFFF */
+	content          : counter( staIteCou );
+	display          : grid;
+	font-weight      : 800;
+	grid-area        : staIteNum;
+	height           : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	place-items      : center;
+	width            : calc( var( --ver-rhy-p03 ) * 1rem ); /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+
+.staIteHea { /* What: Starts Item Heading. Why: Each step's name reads a step up. How: This sets it a step up, in its own area. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : staIteHea;
+	margin    : 0;
+
+
+}
+
+.staItePar { /* What: Starts Item Paragraph. Why: The step's sentence reads below its name. How: This sets it in the muted text color, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : staItePar;
+	margin    : 0;
+
+
+}
+
+/* #endregion staIteIte */
+
+/* #endregion staLisOrd */
+
+/* #endregion staSecSec */
+
+
+
+/* #region freSecSec */
+
+.freSecSec { /* What: Free Section Section. Why: The free tier and the upgrade stand apart as their own band. How: This sets a raised band with a border above and below, the frame tier inside, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	background-color : var( --bac-sur-col );                                                                               /* Background Surface Color = #FFFFFF */
+	border-block     : var( --bor-wid-bas ) solid var( --bor-mai-col );                                                    /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	padding          : var( --tie-ver-001 ) max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px */
+
+
+}
+
+
+
+/* #region freInnDiv */
+
+.freInnDiv { /* What: Free Inner Div. Why: The heading, the lead, the plans, and the notes read in order. How: This stacks them in named areas a tier 3 space apart. */
+
+
+	display             : grid;
+	grid-template-areas : 'secTitHea' 'freLeaPar' 'freCarDiv' 'freNotUno';
+	row-gap             : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+/* What: Section Title Heading Pointer. Why: The band's heading shares the later sections' look. How: Its rule sits in the staSecSec region. */
+
+.freLeaPar { /* What: Free Lead Paragraph. Why: Everything that matters is free, said before the numbers. How: This sets it a step up in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : freLeaPar;
+	margin    : 0;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region freCarDiv */
+
+.freCarDiv { /* What: Free Cards Div. Why: The two plans compare as a pair. How: This stacks them a tier 3 space apart, with the tier 2 space above them less the tier 3 gap, in its own area. */
+
+
+	display    : grid;
+	gap        : var( --tie-ver-003 ) var( --tie-hor-003 );                 /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 3, about 14.572px - 19.304px */
+	grid-area  : freCarDiv;
+	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Free Cards Div. Why: A wide screen has room for the plans side by side. How: This applies from 720px wide and up. */
+
+
+	.freCarDiv { /* What: Two Column Free Cards Div. Why: The plans compare across one row. How: This sets two equal columns. */
+
+
+		grid-template-columns : 1fr 1fr;
+
+
+	}
+
+
+}
+
+
+
+/* #region plaCarDiv */
+
+.plaCarDiv { /* What: Plan Card Div. Why: Each plan reads as a card on the page's color. How: This stacks its name, price, and limits in named areas a tier 4 space apart, inside a rounded border, the tier 2 space inside. */
+
+
+	background-color    : var( --bac-pag-col );                                 /* Background Page Color = #F4F4FA */
+	border              : var( --bor-wid-lar ) solid var( --bor-mai-col );      /* Border Width Large ~= 2.035px, Border Main Color = #E0E1EF */
+	border-radius       : var( --rad-bor-xla );                                 /* Radius Border Extra Large ~= 19.304px */
+	display             : grid;
+	grid-template-areas : 'plaNamHea' 'plaPriPar' 'plaLimDes';
+	padding             : var( --tie-ver-002 ) var( --tie-hor-002 );            /* Tier Vertical 2 ~= 25.572px, Tier Horizontal 2, about 25.572px - 33.876px */
+	row-gap             : var( --tie-ver-004 );                                 /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+.plaCarDiv--upgrade { /* What: Plan Card Div Upgrade. Why: The upgrade's card is outlined in the accent. How: This colors its border, at the same width as the other card's. */
+
+
+	border-color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+
+
+}
+
+.plaNamHea { /* What: Plan Name Heading. Why: Each card names its plan a few steps up. How: This sets it, in its own area. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	grid-area : plaNamHea;
+	margin    : 0;
+
+
+}
+
+
+
+/* #region plaPriPar */
+
+.plaPriPar { /* What: Plan Price Paragraph. Why: The price is the card's biggest number. How: This sets it in the brand font's extra bold, in its own area. */
+
+
+	font-family : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size   : var( --fon-siz-p05 ); /* Font Size Base Plus 5 ~= 44.876px */
+	font-weight : 800;
+	grid-area   : plaPriPar;
+	line-height : var( --ver-rhy-m01 ); /* Vertical Rhythm Base Minus 1 = 1 */
+	margin      : 0;
+
+
+}
+
+.plaOncSpa { /* What: Plan Once Span. Why: "once" follows the price quietly. How: This sets it in the main font at the body's weight and size, in the muted text color. */
+
+
+	color       : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-family : var( --fon-fam-mai ); /* Font Family Main = 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif */
+	font-size   : var( --fon-siz-p01 ); /* Font Size Base Plus 1 ~= 14.572px */
+	font-weight : 500;
+
+
+}
+
+/* #endregion plaPriPar */
+
+
+
+/* #region plaLimDes */
+
+.plaLimDes { /* What: Plan Limits Description. Why: Each limit reads as a label beside its number. How: This sets the labels and numbers in two columns, a tier 4 space down and a tier 3 space across, by auto placement, since the list's pairs repeat, with the tier 3 space above it less the tier 4 gap. */
+
+
+	display               : grid;
+	gap                   : var( --tie-ver-004 ) var( --tie-hor-003 );                 /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 3, about 14.572px - 19.304px */
+	grid-area             : plaLimDes;
+	grid-template-columns : 1fr auto;
+	margin                : calc( var( --tie-ver-003 ) - var( --tie-ver-004 ) ) 0 0; /* Tier Vertical 3 ~= 14.572px, Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.plaLimTer { /* What: Plan Limit Term. Why: The label is secondary to its number. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+.plaLimDet { /* What: Plan Limit Details. Why: The number is what compares. How: This sets it a step up in the brand font's extra bold, at the end of its row. */
+
+
+	font-family : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-size   : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	font-weight : 800;
+	margin      : 0;
+	text-align  : end;
+
+
+}
+
+/* #endregion plaLimDes */
+
+/* #endregion plaCarDiv */
+
+/* #endregion freCarDiv */
+
+
+
+/* #region freNotUno */
+
+.freNotUno { /* What: Free Notes Unordered. Why: The upgrade's terms read as a short list without the browser's bullets, which each note draws itself. How: This stacks them a tier 4 space apart by auto placement, with the tier 2 space above them less the tier 3 gap, in its own area. */
+
+
+	display    : grid;
+	grid-area  : freNotUno;
+	list-style : none;
+	margin     : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ) 0 0; /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+	padding    : 0;
+	row-gap    : var( --tie-ver-004 );                                    /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.freNotIte { /* What: Free Note Item. Why: Each note reads in the muted color with a coral dot before it. How: This sets the dot and the note in two columns a tier 4 space apart. */
+
+
+	align-items           : baseline;
+	color                 : var( --tex-mut-col );  /* Text Muted Color = #5A5D7E */
+	column-gap            : var( --tie-hor-004 );  /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-columns : auto 1fr;
+
+
+}
+.freNotIte::before { /* What: Free Note Item Dot. Why: A coral dot marks each note. How: This draws a small circle in the coral spark, a rhythm step across, in the first column. */
+
+
+	background-color : var( --acc-sec-col );                /* Accent Secondary Color = #DD6248 */
+	border-radius    : 50%;
+	content          : '';
+	height           : calc( var( --ver-rhy-m02 ) * 1rem ); /* Vertical Rhythm Base Minus 2 ~= 8.304px */
+	width            : calc( var( --ver-rhy-m02 ) * 1rem ); /* Vertical Rhythm Base Minus 2 ~= 8.304px */
+
+
+}
+
+/* #endregion freNotUno */
+
+/* #endregion freInnDiv */
+
+/* #endregion freSecSec */
+
+
+
+/* #region insSecSec */
+
+.insSecSec { /* What: Install Section Section. Why: Installing reads as its own short block. How: This stacks the heading, the sentence, and the browser's install note a tier 3 space apart, the heading and sentence in named areas and the note by auto placement since it shows only sometimes, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	display             : grid;
+	grid-template-areas : 'secTitHea' 'insTexPar';
+	padding             : var( --tie-ver-001 ) max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px */
+	row-gap             : var( --tie-ver-003 );                                                                                 /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+/* What: Section Title Heading Pointer. Why: The section's heading shares the later sections' look. How: Its rule sits in the staSecSec region. */
+
+.insTexPar { /* What: Install Text Paragraph. Why: The sentence reads below the heading at a comfortable length. How: This sets it a step up in the muted text color, capped at the base text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : insTexPar;
+	margin    : 0;
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+/* #endregion insSecSec */
+
+
+
+/* #region faqSecSec */
+
+.faqSecSec { /* What: FAQ Section Section. Why: The questions read as their own block. How: This stacks the heading above the list in named areas, a tier 2 space apart, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	display             : grid;
+	grid-template-areas : 'secTitHea' 'faqLisUno';
+	padding             : 0 max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ) var( --tie-ver-001 ); /* Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px, Tier Vertical 1 ~= 44.876px */ /* What: Top Padding Note. Why: The install section above already ends with the frame tier. How: The top takes none. */
+	row-gap             : var( --tie-ver-002 );                                                                                   /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+/* What: Section Title Heading Pointer. Why: The section's heading shares the later sections' look. How: Its rule sits in the staSecSec region. */
+
+
+
+/* #region faqLisUno */
+
+.faqLisUno { /* What: FAQ List Unordered. Why: The questions read as one list without the browser's bullets or indent. How: This stacks them by auto placement, since their number can change, capped at the base text width, in its own area. */
+
+
+	display    : grid;
+	grid-area  : faqLisUno;
+	list-style : none;
+	margin     : 0;
+	max-width  : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+	padding    : 0;
+
+
+}
+
+
+
+/* #region faqIteIte */
+
+.faqIteIte { /* What: FAQ Item Item. Why: Each question and its answer read as one entry, ruled off from the next. How: This stacks them in named areas with a border below. */
+
+
+	border-bottom       : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display             : grid;
+	grid-template-areas : 'faqQueHea' 'faqAnsDiv';
+
+
+}
+
+
+
+/* #region faqQueHea */
+
+.faqQueHea { /* What: FAQ Question Heading. Why: The question's button fills its heading, which sets the size. How: This sets it a step up, in its own area. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	grid-area : faqQueHea;
+	margin    : 0;
+
+
+}
+
+.faqQueBut { /* What: FAQ Question Button. Why: The whole question is the button, with a plus that turns into a cross when open, and it presses like text since it reads as one. How: This sets it full width with no box, its words and plus in two columns, at least a touch target tall, the tier 3 space above and below, and eases its hover color, press dim, and focus ring. */
+
+
+	align-items           : center;
+	background            : none;
+	border                : 0;
+	color                 : var( --tex-mai-col );                /* Text Main Color = #1D1E33 */
+	column-gap            : var( --tie-hor-003 );                /* Tier Horizontal 3, about 14.572px - 19.304px */
+	cursor                : pointer;
+	display               : grid;
+	font                  : inherit;
+	font-weight           : 700;
+	grid-template-columns : 1fr auto;
+	min-height            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding               : var( --tie-ver-003 ) 0;              /* Tier Vertical 3 ~= 14.572px */
+	text-align            : start;
+	transition            : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	width                 : 100%;
+
+
+}
+.faqQueBut:hover { /* What: Hovered FAQ Question Button. Why: The question shows it's live under the pointer. How: This turns it the main accent. */
+
+
+	color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+
+
+}
+.faqQueBut:active { /* What: Pressed FAQ Question Button. Why: A button styled as text presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+.faqQueBut::after { /* What: FAQ Question Button Plus. Why: A plus says the answer opens, turning into a cross once it has. How: This draws it in the accent, a step up, and eases its turn with the gentle overshoot. */
+
+
+	color      : var( --acc-mai-col );                                    /* Accent Main Color = #4A4FC9 */
+	content    : '+';
+	font-size  : var( --fon-siz-p03 );                                    /* Font Size Base Plus 3 ~= 25.572px */
+	transition : transform var( --dur-tra-p02 ) var( --mot-ove-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Overshoot Easing = cubic-bezier( .34, 1.2, .5, 1 ) */
+
+
+}
+.faqQueBut[aria-expanded='true']::after { /* What: Open FAQ Question Button Plus. Why: An open answer shows a cross to close it. How: This turns the plus an eighth of a turn. */
+
+
+	transform : rotate( 45deg );
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion FAQ Question Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.faqQueBut,
+	.faqQueBut::after { /* What: Motionless FAQ Question Button. Why: The hover, press, focus, and open looks should switch at once. How: This turns the transitions off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion faqQueHea */
+
+
+
+/* #region faqAnsDiv */
+
+.faqAnsDiv { /* What: FAQ Answer Div. Why: An answer grows into place below its question and closes the same way, pushing the questions below, which a transform can't do. How: This holds it in a row that eases from no height to its own, leaving on the accelerating curve. */
+
+
+	display            : grid;
+	grid-area          : faqAnsDiv;
+	grid-template-rows : 0fr;
+	transition         : grid-template-rows var( --dur-tra-p03 ) var( --mot-acc-eas ), padding-bottom var( --dur-tra-p03 ) var( --mot-acc-eas ); /* Duration Transition Base Plus 3 ~= 366.4ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+
+
+}
+.faqAnsDiv[data-answer-open-active] { /* What: Open FAQ Answer Div. Why: An open answer takes its own height, with room below it, arriving on the decelerating curve. How: This opens the row and adds the tier 3 space below. */
+
+
+	grid-template-rows : 1fr;
+	padding-bottom     : var( --tie-ver-003 );                                                                                         /* Tier Vertical 3 ~= 14.572px */
+	transition         : grid-template-rows var( --dur-tra-p03 ) var( --mot-dec-eas ), padding-bottom var( --dur-tra-p03 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 3 ~= 366.4ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion FAQ Answer Div. Why: Someone who asked for less motion should see the answer open and close at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.faqAnsDiv,
+	.faqAnsDiv[data-answer-open-active] { /* What: Motionless FAQ Answer Div. Why: The answer should open and close at once. How: This turns the transitions off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.faqAnsPar { /* What: FAQ Answer Paragraph. Why: The answer is clipped while its row grows, and reads in the muted color. How: This lets it shrink to nothing, clips what overflows, and sets it in the muted text color. */
+
+
+	color      : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	margin     : 0;
+	min-height : 0;
+	overflow   : hidden;
+
+
+}
+
+/* #endregion faqAnsDiv */
+
+/* #endregion faqIteIte */
+
+/* #endregion faqLisUno */
+
+/* #endregion faqSecSec */
+
+
+
+/* #region cloSecSec */
+
+.cloSecSec { /* What: Close Section Section. Why: The page ends on one clear invitation on the main accent. How: This sets a periwinkle band with the heading above the button, centered, a tier 2 space apart, the frame tier around them, with the gutter at the sides. */
+
+
+	background-color : var( --acc-mai-col );                    /* Accent Main Color = #4A4FC9 */
+	color            : var( --tex-acc-col );                    /* Text Accent Color = #FFFFFF */
+	display          : grid;
+	justify-items    : center;
+	padding          : var( --tie-ver-001 ) var( --gut-sid-pad ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap          : var( --tie-ver-002 );                    /* Tier Vertical 2 ~= 25.572px */
+	text-align       : center;
+
+
+}
+
+.cloTitHea { /* What: Close Title Heading. Why: The invitation reads big, in the band's text color. How: This sets it between two font steps, growing with the screen. */
+
+
+	color     : inherit;
+	font-size : clamp( var( --fon-siz-p04 ), 5vw, var( --fon-siz-p06 ) ); /* Font Size Base Plus 4 ~= 33.876px, Font Size Base Plus 6 ~= 59.447px */
+	margin    : 0;
+
+
+}
+
+.cloStaBut { /* What: Close Start Button. Why: The band's one action has to stand out on the accent. How: This draws a pill in the page's color with bold accent text, at least a touch target tall, and eases its hover background, hover lift, press scale, and focus ring. */
+
+
+	background-color : var( --bac-pag-col );                                                                                       /* Background Page Color = #F4F4FA */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                                                                                       /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );                                                                        /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) clamp( calc( var( --ver-rhy-p01 ) * 1rem ), var( --hor-rhy-013 ), calc( var( --ver-rhy-p03 ) * 1rem ) ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Vertical Rhythm Base Plus 1 ~= 19.304px, Horizontal Rhythm 13 ~= 37.460px @ 1,920px width, Vertical Rhythm Base Plus 3 ~= 33.876px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing and rhythm steps directly, outside the tiers, matching the main button's. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.cloStaBut:hover { /* What: Hovered Close Start Button. Why: The button should respond to the pointer. How: This tints it with the accent and lifts it 2px. */
+
+
+	background-color : var( --acc-tin-col );                                /* Accent Tint Color = #E7E8FA */
+	transform        : translateY( calc( var( --spa-ver-m07 ) * -1 ) ); /* Spacing Vertical Base Minus 7 ~= -2.035px */
+
+
+}
+.cloStaBut:active { /* What: Pressed Close Start Button. Why: A press should register before anything else happens. How: This presses the pill in slightly, which also undoes its hover lift. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Close Start Button. Why: Someone who asked for less motion shouldn't see the button slide. How: This applies only when the reduced-motion preference is set. */
+
+
+	.cloStaBut { /* What: Motionless Close Start Button. Why: The hover, press, and focus looks should switch at once, the lift and press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion cloSecSec */
+
+/* #endregion lanPagMai */
+
+
+
+/* #region pagFooFoo */
+
+.pagFooFoo { /* What: Page Footer Footer. Why: The links sit in a row, each its own width, wrapping where the row runs out of room, which grid can't do without fixed tracks. How: This centers them in a wrapping flex row, a tier 3 space apart, with the tier 2 space around them and the gutter at the sides, at the base size, wrapping onto more lines at about 450px wide and below. */
+
+
+	display         : flex;
+	flex-wrap       : wrap;
+	font-size       : var( --fon-siz-bas );                      /* Font Size Base = 11px */
+	gap             : var( --tie-ver-003 ) var( --tie-hor-003 ); /* Tier Vertical 3 ~= 14.572px, Tier Horizontal 3, about 14.572px - 19.304px */
+	justify-content : center;
+	padding         : var( --tie-ver-002 ) var( --gut-sid-pad ); /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+
+
+}
+
+.fooLinAnc { /* What: Footer Link Anchor. Why: The footer's links are quiet until pointed at. How: This sets them in the muted text color, underlined, and eases their hover color, press dim, and focus ring. */
+
+
+	color           : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	text-decoration : underline;
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.fooLinAnc:hover { /* What: Hovered Footer Link Anchor. Why: A text link shows it's live by color alone. How: This turns it the main text color. */
+
+
+	color : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.fooLinAnc:active { /* What: Pressed Footer Link Anchor. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Footer Link Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.fooLinAnc { /* What: Motionless Footer Link Anchor. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion pagFooFoo */
+
+
