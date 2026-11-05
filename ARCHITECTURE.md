@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-05 (the landing page for a visitor with no identity, its trust and upgrade sections, the invite form's branding, and its pre-render, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1624,6 +1624,73 @@ the Blaze change.
     18, Missouri law, and a full refund of the upgrade on request within 14
     days (Section 18).
 
+- **The landing page** (decided 2026-11-05, not yet built): the root shows
+  it to a visitor whose phone holds no identity, someone arriving from a
+  search result, a shared post, a bookmark, a typed or mistyped address,
+  a legal page, or the home-screen icon before their first group action,
+  and to every crawler. It replaces the welcome for them. A phone holding
+  an identity never sees it uninvited: a member goes straight to their
+  groups, a tapped push to its section, and an invite to its join form.
+  What the root shows an identity in no group is still open (below).
+  - **Tone**: balanced between fun and serious, the whimsy coming from a
+    dashed map route and the pins, the rest plain type, real screenshots,
+    and honest copy.
+  - **Order**: the hero, the trust section, the route, how a group starts,
+    free and the upgrade, installing, a short FAQ (such as whether it's
+    free, losing a phone, who sees a location, and being in more than one
+    group), then a closing call to action and a footer with the privacy
+    policy, the terms, and the support email.
+  - **Hero**: the mark, the wordmark, a headline with some personality, the
+    one-line pitch, "Start a group" as the main action with "Join with an
+    invite link" beside it and "Get my groups back" as a small link, and a
+    collage of phone screenshots.
+  - **Trust, right after the hero**: the app handles chat, plans, and
+    locations, which can make people nervous, so this section drives home
+    that what people write is encrypted on their phone before it's sent
+    (messages, event details, bring-list items, names, and locations) and
+    can't be read by the server, that messages wait on the server only
+    until everyone in the group has them, that events go 2 days after they
+    end and a location within the hour, and that there's no account, email,
+    ads, or tracking. Every line stays exactly true (Section 11's
+    plaintext fields, Section 5's retention): no claim that all data is
+    encrypted, and a "What we can see" link to the privacy policy's list of
+    what the server reads, so the section never contradicts the policy.
+  - **The route**: four stops along a dashed route line that draws itself
+    as the page scrolls, ending at an arrival pin: talking it over (the
+    chat with its pinned event), picking the day (the Events section),
+    who's bringing what (the bring-list in members' colors), and finding
+    each other on the day (the Map section and the chat's status lines).
+    Each stop has a catchy headline and one plain sentence of what the
+    feature does. On a phone the route runs down the page; on a wide
+    screen the stops alternate sides and the route snakes between them.
+    Under reduced motion the route is simply drawn.
+  - **How a group starts**: start a group, share the link, let people in.
+  - **Free and the upgrade**: the upgrade is sold from day one (Section
+    18), and the section makes the free tier's generosity plain with
+    Section 18's limits, free beside $9.99 once: groups started, groups
+    belonged to, and people in a group started. It says joining is never
+    paid for, that it's one payment rather than a subscription, refunded in
+    full within 14 days, and that it needs a linked Google account.
+  - **Installing**: a short note that it runs in the browser and goes on
+    the home screen, with no app store.
+  - **Screenshots**: rendered by a script from seeded demo data, like the
+    social card, so they follow the design, in light and dark, optimized
+    as WebP and shown in a simple phone frame. The demo group's names are
+    believable but plainly sample ones, and nothing poses as a real user or
+    a review.
+  - **Pre-rendered**: the build renders the page into `index.html`, as it
+    does the legal pages, so crawlers and link checkers that run no script
+    read it, and it shows before the app loads.
+  - **Invites**: an invite link still opens the join form first, since its
+    visitor already has a reason and a friend vouching for the app. The
+    form gains the mark, the wordmark, the pitch, and a warmer heading,
+    drawn from the landing page's design, and a "What is Come Hang?" link
+    that opens the landing page as a new history entry. Opened that way,
+    the page's main action becomes going back to joining the group by
+    name, the back gesture returning too; the token stays in the join
+    entry and for the session, so a reload keeps the way back, and the
+    form keeps what was typed.
+
 **App's Firebase wiring, built 2026-10-28**:
 - `src/platform/firebase.ts` creates the services the first time something
   asks, never on page load, so a visitor who hasn't acted makes no
@@ -1964,6 +2031,9 @@ the Blaze change.
   alone, so a kind added later waits for an app that can word it.
 
 **App structure, still open**:
+- What the root shows a phone holding an identity in no group, such as
+  after leaving its last group: today it's the welcome, with "Delete my
+  data", and it's decided once the landing page is built (above).
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's
@@ -2315,7 +2385,8 @@ self-reported, so approval still rests on the approver's own judgment.
 Decided 2026-10-22: owning more than one group is a paid feature, a
 one-time $9.99 purchase, to discourage abuse and as a source of income.
 It's built from the start but stays unlocked for everyone until the
-paywall is switched on before launch.
+paywall is switched on, which happens for launch (decided 2026-11-05), the
+landing page selling the upgrade from day one (Section 14).
 
 **Limits (decided 2026-10-22)**:
 
