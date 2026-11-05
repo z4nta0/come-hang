@@ -56,7 +56,7 @@ function PriPolCom () : React.JSX.Element {
 		<>{ /* What: Privacy Policy Fragment. Why: The policy's headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 3, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 4, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>Come Hang is an app for planning get-togethers with a group. It's made and run by Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below). This policy explains what information Come Hang handles, why, who else handles it, how long it's kept, and the choices you have. If you have a question, write to <a href='mailto:support@comehang.app'>support@comehang.app</a>.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -193,7 +193,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>A group</strong> is kept until its owner deletes it, which deletes its members, events, and chat for everyone. When you leave a group or are removed, your membership is deleted.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you delete your data or ask us to.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you delete your data or ask us to. If you're in no group, haven't bought the upgrade or linked a Google account, and haven't opened the app for 180 days, it's deleted automatically.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>What's on your phone</strong> stays until you delete the app's data or uninstall it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 

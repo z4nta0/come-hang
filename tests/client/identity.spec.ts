@@ -3,10 +3,12 @@
 
 // #region Imports
 
+import { deleteDoc                 } from 'firebase/firestore';           // What: Delete Doc. Why: A cleaned-up identity's documents are gone from the server. How: This deletes one past the rules.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: The published documents are read back. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the identity is as it should be. How: This asserts on what the page and the emulator return.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: The published documents are read back. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read what the page published, past the rules. How: This connects to the emulator.
+import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Groups and identities are made the way the app does it. How: This calls the app's functions in a page.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the identity is its own test. How: This declares them.
 
 
@@ -254,6 +256,36 @@ test( 'the storage is kept once the identity exists, never asked for on page loa
 
 
 	expect( await stoRunFun() ).toBe( false ); // What: No API Check. Why: Nothing can be asked without the API. How: This expects false.
+
+
+} );
+
+
+
+test( 'a phone whose identity was cleaned up while it was away starts over as a new identity and starts a group', async ( { page } ) => { // What: Returning Phone Test. Why: The daily cleanup deletes an identity unused for 180 days in no group, and its phone may come back. How: This makes an identity, deletes it on the server, relaunches, starts a group, and checks it belongs to a new identity.
+
+
+	await page.goto( '/' ); // What: Home Visit. Why: The bootstrap runs in the app's own page. How: This opens it.
+
+
+	const oldUidStr = ( await runPagFun( page, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: Old UID String. Why: The identity the cleanup deletes. How: This makes it and reads its UID. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity, untyped through the page. How: The as reads its UID.
+
+
+	await fetch( 'http://127.0.0.1:8240/identitytoolkit.googleapis.com/v1/projects/demo-come-hang/accounts:delete', { body : JSON.stringify( { localId : oldUidStr } ), headers : { 'Authorization' : 'Bearer owner', 'Content-Type' : 'application/json' }, method : 'POST' } ); // What: Sign-In Delete Call. Why: The cleanup deletes the sign-in record. How: This deletes it as a server.
+
+	await ideEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { await deleteDoc( doc( cotAdmObj.firestore(), `accounts/${ oldUidStr }` ) ); await deleteDoc( doc( cotAdmObj.firestore(), `users/${ oldUidStr }` ) ); } ); // What: Documents Delete Call. Why: The cleanup deletes the account and the public key. How: This deletes both past the rules.
+
+	await page.goto( '/' ); // What: Relaunch Call. Why: The phone comes back, and Auth checks a restored sign-in with the server as it starts. How: This opens the app again.
+
+	await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ); // What: Group Create Call. Why: Starting a group is the first thing a returning phone might do. How: This creates one as the app does.
+
+
+	const newUidStr = ( await runPagFun( page, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr; // What: New UID String. Why: The phone signed in afresh. How: This reads its UID. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity, untyped through the page. How: The as reads its UID.
+
+
+	expect( newUidStr ).not.toBe( oldUidStr );                                                                          // What: New Identity Assertion. Why: The deleted identity can't come back. How: This expects a different UID.
+	expect( Object.keys( ( await reaDocFun( `accounts/${ newUidStr }` ) )?.ownedGroups as object ) ).toHaveLength( 1 ); // What: Group Owned Assertion. Why: The new identity started the group. How: This expects one owned group. // What: Type Assertion Note. Why: The account's owned groups are a map. How: The as reads it as an object.
+	expect( await reaDocFun( `accounts/${ oldUidStr }` ) ).toBeUndefined();                                            // What: Old Account Gone Assertion. Why: Nothing may recreate the deleted identity's account. How: This expects it still gone.
 
 
 } );
