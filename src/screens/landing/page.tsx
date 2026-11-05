@@ -23,6 +23,7 @@ import { MaiAreCom    } from '../../ui/main-area.tsx';    // What: Main Area Com
 import { useEffect    } from 'react';                     // What: Use Effect. Why: A deletion's note is read once the page is drawn. How: This runs once.
 import { useId        } from 'react';                     // What: Use Identifier. Why: Each question's button names the answer it opens. How: This makes a unique ID for it.
 import { useRecGroFun } from '../group-recovery.ts';      // What: Use Recover Groups Function. Why: Someone on a new phone gets their groups back from here. How: This returns the recovery, its progress, and its alert's text.
+import { useScrBacFun } from '../../ui/screen.ts';        // What: Use Screen Back Function. Why: Opened from an invite, the page leads back to joining. How: This returns the function that steps back.
 import { useScrOpeFun } from '../../ui/screen.ts';        // What: Use Screen Open Function. Why: Starting a group and joining with a link open their own screens. How: This returns the function that opens a screen.
 import { useState     } from 'react';                     // What: Use State. Why: A deletion's note and each question's open state change while the page shows. How: This holds each.
 
@@ -42,7 +43,8 @@ import { useState     } from 'react';                     // What: Use State. Wh
  * free tier beside the upgrade; installing; a few questions; a closing call
  * to start a group; and a footer with the legal pages and the support email.
  * Nothing on it starts Firebase until the visitor acts, and after a deletion
- * it says the data is gone.
+ * it says the data is gone. Opened from an invite's "What is Come Hang?", its
+ * actions lead back to joining the group instead.
  *
  * Sections:
  *  - Constants
@@ -204,7 +206,7 @@ function FaqIteCom ( { ansStr, queStr } : FicProTyp ) : React.JSX.Element {
 
 
 
-type LpcProTyp = { onRecFun : () => void }; // What: Landing Page Component Props Type. Why: An identity brought back from Google is handed to the screen host. How: This types LanPagCom's props.
+type LpcProTyp = { invNamStr? : string, onRecFun : () => void }; // What: Landing Page Component Props Type. Why: Opened from an invite the page leads back to joining its group, and an identity brought back from Google is handed to the screen host. How: This types LanPagCom's props.
 
 // #region LanPagCom
 
@@ -220,25 +222,35 @@ type LpcProTyp = { onRecFun : () => void }; // What: Landing Page Component Prop
  * onRecFun; a sign-in that doesn't go through is announced through the
  * alert. A note left by a deletion is announced through the status once the
  * page is drawn, then cleared. The closing band's button starts a group too.
+ * When invNamStr is given, as when the invite form opened the page, the
+ * hero's only action and the closing band's button read "Back to joining"
+ * the group and step back to the form, and getting groups back isn't
+ * offered.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param props.onRecFun - On Recover Function: Called once an identity is
- *                         brought back onto this phone.
+ * @param props.invNamStr - Invite Name String: The group the invite form is
+ *                          for, empty when it isn't known, or none when the
+ *                          page wasn't opened from an invite.
+ * @param props.onRecFun  - On Recover Function: Called once an identity is
+ *                          brought back onto this phone.
  *
  * @returns The page's main area and footer.
  *
  * @example
  * ```tsx
- * LanPagCom({ onRecFun }) // => <LanPagCom />
+ * LanPagCom({ invNamStr, onRecFun }) // => <LanPagCom />
  * ```
  *
 */
 
-function LanPagCom ( { onRecFun } : LpcProTyp ) : React.JSX.Element {
+function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
+	const scrBacFun = useScrBacFun(); // What: Screen Back Function. Why: Opened from an invite, the page steps back to the form. How: This reads the function that steps back.
 	const scrOpeFun = useScrOpeFun(); // What: Screen Open Function. Why: The buttons open other screens. How: This reads the function that opens one.
+
+	const invBacStr = `Back to joining ${ invNamStr || 'the group' }`; // What: Invite Back String. Why: The way back names the group the invite is for. How: This builds the label, naming the group generally when its name isn't known.
 
 	const { errMesStr, recGroFun, recReqBoo } = useRecGroFun( onRecFun ); // What: Error Message String. Why: A sign-in that doesn't go through is announced. How: This reads the alert's text. // What: Recover Groups Function. Why: The recover button runs it. How: This reads it. // What: Recover Request Boolean. Why: The button says it's working. How: This reads whether a sign-in is out.
 	const [ staMesStr, setStaMesStr ]           = useState( '' );            // What: Status Message String And Setter. Why: A deletion that started the app over is announced. How: This holds the status's text, empty when there's none.
@@ -311,22 +323,33 @@ function LanPagCom ( { onRecFun } : LpcProTyp ) : React.JSX.Element {
 						<div className={ cssModObj.herActDiv }>{ /* What: Hero Actions Div Element. Why: Starting and joining sit together. How: This sets them in a row that wraps onto two lines where it runs out of room. */ }
 
 
-							<ButBasCom onClick={ () => scrOpeFun( { scrStr : 'create' } ) }>Start a group</ButBasCom>{ /* What: Hero Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
+							{ invNamStr === undefined ? ( // What: Invite Mode Check. Why: Opened from an invite, the page's one action leads back to joining. How: This shows starting and joining normally, and the way back otherwise.
 
-							<button
-								className={ cssModObj.herJoiBut }
 
-								type='button'
+								<>{ /* What: Normal Actions Fragment. Why: Starting and joining sit side by side. How: This groups them without a wrapper. */ }
 
-								onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
-							>Join with an invite link</button>{ /* What: Hero Join Button Element. Why: Someone sent a link can join with it here, which on an installed iPhone app is the only way an invite reaches the app. How: This opens the screen for pasting the link. */ }
+
+									<ButBasCom onClick={ () => scrOpeFun( { scrStr : 'create' } ) }>Start a group</ButBasCom>{ /* What: Hero Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
+
+									<button
+										className={ cssModObj.herJoiBut }
+
+										type='button'
+
+										onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
+									>Join with an invite link</button>{ /* What: Hero Join Button Element. Why: Someone sent a link can join with it here, which on an installed iPhone app is the only way an invite reaches the app. How: This opens the screen for pasting the link. */ }
+
+
+								</>
+
+							) : <ButBasCom onClick={ scrBacFun }>{ invBacStr }</ButBasCom> }{ /* What: Hero Back Button Component. Why: Someone who came from an invite carries on joining. How: This steps back to the invite form. */ }
 
 
 						</div>
 
 
 
-						<p className={ cssModObj.herRecPar }>New phone? <button className={ cssModObj.herRecBut } type='button' onClick={ () => void recGroFun() }>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button></p>{ /* What: Hero Recover Paragraph Element. Why: Someone who used the app on another phone brings their groups here, a smaller action than starting or joining. How: This asks the question and offers the button, which signs in with Google, reading "Signing in…" meanwhile. */ }
+						{ invNamStr === undefined && <p className={ cssModObj.herRecPar }>New phone? <button className={ cssModObj.herRecBut } type='button' onClick={ () => void recGroFun() }>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button></p> }{ /* What: Hero Recover Paragraph Element. Why: Someone who used the app on another phone brings their groups here, a smaller action than starting or joining, and not while an invite waits. How: This asks the question and offers the button, which signs in with Google, reading "Signing in…" meanwhile. */ }
 
 						<p
 							className={ cssModObj.herErrPar }
@@ -714,8 +737,8 @@ function LanPagCom ( { onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 						type='button'
 
-						onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
-					>Start your group</button>{ /* What: Close Start Button Element. Why: Someone who read to the end starts here. How: This opens the screen for starting a group. */ }
+						onClick={ () => invNamStr === undefined ? scrOpeFun( { scrStr : 'create' } ) : scrBacFun() } // What: Close Click Handler. Why: Opened from an invite, the button leads back to joining. How: This starts a group normally, and steps back to the form otherwise.
+					>{ invNamStr === undefined ? 'Start your group' : invBacStr }</button>{ /* What: Close Start Button Element. Why: Someone who read to the end starts here, or carries on joining. How: This opens the screen for starting a group, or steps back to the invite form, its label saying which. */ }
 
 
 				</section>

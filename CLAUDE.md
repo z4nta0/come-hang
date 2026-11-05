@@ -70,7 +70,9 @@ event from 3 hours before it starts, lists everyone sharing with their
 distance, direction, and freshness around a plot, and posts "I'm on my way"
 and "I've arrived" to the chat as status lines, the sharing running across
 sections and resuming after a reload. An invite link opens the join screen,
-which asks for a joiner's name and an optional note, waits for a member's
+branded with the app's mark, name, and headline and a "What is Come Hang?"
+that opens the landing page and leads back, which asks for a joiner's name
+and an optional note, waits for a member's
 approval, offers to withdraw the request, and opens the group once they're let
 in. A member whose phone is missing a group's chat asks for it from a banner
 atop the chat, and another member whose phone holds it sends it from People.

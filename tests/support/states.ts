@@ -515,7 +515,7 @@ const joiSteFun = async ( curPagObj : Page, steStr : 'join' | 'waiting' ) : Prom
 
 	await curPagObj.goto( `/join/${ tokValStr }` ); // What: Link Open Call. Why: The joiner arrives through the link. How: This opens it.
 
-	await curPagObj.getByRole( 'heading', { level : 1, name : 'Join Beach Day' } ).waitFor(); // What: Form Wait. Why: The form shows once the invite is read. How: This waits for its heading.
+	await curPagObj.getByRole( 'heading', { level : 1, name : "You're invited to Beach Day" } ).waitFor(); // What: Form Wait. Why: The form shows once the invite is read. How: This waits for its heading.
 
 
 
@@ -536,7 +536,7 @@ const joiSteFun = async ( curPagObj : Page, steStr : 'join' | 'waiting' ) : Prom
 
 	await curPagObj.reload(); // What: Part Reload Call. Why: The part is checked as it opens on a later visit, with nothing focused. How: This reloads it, which its entry keeps.
 
-	await curPagObj.getByRole( 'heading', { level : 1, name : steStr === 'join' ? 'Join Beach Day' : 'Waiting to join Beach Day' } ).waitFor(); // What: Reloaded Wait. Why: The part shows once the join's status is read. How: This waits for its heading.
+	await curPagObj.getByRole( 'heading', { level : 1, name : steStr === 'join' ? "You're invited to Beach Day" : 'Waiting to join Beach Day' } ).waitFor(); // What: Reloaded Wait. Why: The part shows once the join's status is read. How: This waits for its heading.
 
 
 };

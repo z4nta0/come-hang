@@ -54,16 +54,17 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * Creating a group restarts the watch, since a first group is also when the
  * identity is made, and opens the new group in place of the form, and getting
  * groups back from the landing page or the welcome restarts it too. The join
- * screen an invite link opens shows whatever the groups, and once its joiner
- * is in, or leaves it, the watch restarts, since opening the invite made the
- * identity, and the group or the default screen opens in its place. Leaving or
- * deleting a group opens the next group, or the welcome when none is left, and
- * the host announces the change through a status that stays across screens. On
- * an iPhone or iPad in Safari, the install screen shows before any of these,
- * holding an invite link's token to copy, until the app runs installed or
- * someone carries on in Safari, whose main area then takes focus. Once the
- * groups have loaded, the sheet of notices about what happened while someone
- * was away sits over whichever screen shows.
+ * screen an invite link opens shows whatever the groups, and so does the
+ * landing page it opens through "What is Come Hang?", in its invite mode, and
+ * once its joiner is in, or leaves it, the watch restarts, since opening the
+ * invite made the identity, and the group or the default screen opens in its
+ * place. Leaving or deleting a group opens the next group, or the welcome when
+ * none is left, and the host announces the change through a status that stays
+ * across screens. On an iPhone or iPad in Safari, the install screen shows
+ * before any of these, holding an invite link's token to copy, until the app
+ * runs installed or someone carries on in Safari, whose main area then takes
+ * focus. Once the groups have loaded, the sheet of notices about what happened
+ * while someone was away sits over whichever screen shows.
  *
  * Sections:
  *  - Hooks
@@ -463,6 +464,10 @@ function ScrHosCom () : React.JSX.Element {
 
 
 		}
+
+
+
+		if ( scrStaObj?.scrStr === 'about' ) return <LanPagCom invNamStr={ scrStaObj.namStr ?? '' } onRecFun={ recGroFun } />; // What: About Return. Why: The invite form's "What is Come Hang?" opens the landing page, which leads back to joining. How: This shows it in its invite mode, naming the group the entry carries.
 
 
 

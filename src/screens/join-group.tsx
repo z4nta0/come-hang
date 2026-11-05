@@ -6,22 +6,25 @@
 import cssModObj from './join-group.module.css'; // What: CSS Module Object. Why: The screen is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Asking to join, asking again, and trying again are each a phase's leading action. How: This draws them.
-import { IcoSvgCom } from '../ui/icon.tsx';         // What: Icon SVG Component. Why: The back button shows an arrow. How: This draws it.
-import { InsNotCom } from '../ui/install-note.tsx'; // What: Install Note Component. Why: A browser that can install the app suggests it here. How: This shows the note while the browser offers its prompt.
-import { invGetFun } from '../state/joins.ts';      // What: Invite Get Function. Why: The screen names the group its link opens. How: This reads the invite.
-import { joiNotFun } from '../core/text-limits.ts'; // What: Join Note Function. Why: A note outside its limits is caught before anything is sent. How: This checks it.
-import { joiWatFun } from '../state/joins.ts';      // What: Join Watch Function. Why: The group opens as soon as a member lets the joiner in. How: This watches the request.
-import { LegLinCom } from '../legal/links.tsx';     // What: Legal Links Component. Why: Asking to join means agreeing to the terms and the policy. How: This draws the line linking both.
-import { MaiAreCom } from '../ui/main-area.tsx';    // What: Main Area Component. Why: The invite is the screen's main content. How: This holds it in the main landmark.
-import { perNamFun } from '../core/text-limits.ts'; // What: Person Name Function. Why: A name outside its limits is caught before anything is sent. How: This checks it.
-import { reqCreFun } from '../state/joins.ts';      // What: Request Create Function. Why: Sending the form asks to join. How: This files the request.
-import { reqStaFun } from '../state/joins.ts';      // What: Request Status Function. Why: Opening the link again finds a request already waiting, or a membership. How: This reads where the join stands.
-import { reqWitFun } from '../state/joins.ts';      // What: Request Withdraw Function. Why: A joiner may take their request back. How: This deletes it.
-import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: The name and note are checked as they'll be saved. How: This tidies them first.
-import { useEffect } from 'react';                  // What: Use Effect. Why: The invite loads as the screen opens, the request is watched while it waits, and the heading takes focus after a change. How: This runs each.
-import { useRef    } from 'react';                  // What: Use Reference. Why: A field with an error takes focus, the heading takes focus after a change, and a withdrawal is told from a decline. How: This holds each.
-import { useState  } from 'react';                  // What: Use State. Why: The phase, the group, the fields, their errors, and the sending states change as the join goes on. How: This holds each.
+import { BraMarCom    } from '../ui/brand-mark.tsx';       // What: Brand Mark Component. Why: The invite form shows whose app it is. How: This draws the mark beside the name.
+import { ButBasCom    } from '../ui/button.tsx';           // What: Button Base Component. Why: Asking to join, asking again, and trying again are each a phase's leading action. How: This draws them.
+import { IcoSvgCom    } from '../ui/icon.tsx';             // What: Icon SVG Component. Why: The back button shows an arrow. How: This draws it.
+import { InsNotCom    } from '../ui/install-note.tsx';     // What: Install Note Component. Why: A browser that can install the app suggests it here. How: This shows the note while the browser offers its prompt.
+import { invGetFun    } from '../state/joins.ts';          // What: Invite Get Function. Why: The screen names the group its link opens. How: This reads the invite.
+import { joiNotFun    } from '../core/text-limits.ts';     // What: Join Note Function. Why: A note outside its limits is caught before anything is sent. How: This checks it.
+import { joiWatFun    } from '../state/joins.ts';          // What: Join Watch Function. Why: The group opens as soon as a member lets the joiner in. How: This watches the request.
+import { LegLinCom    } from '../legal/links.tsx';         // What: Legal Links Component. Why: Asking to join means agreeing to the terms and the policy. How: This draws the line linking both.
+import { MaiAreCom    } from '../ui/main-area.tsx';        // What: Main Area Component. Why: The invite is the screen's main content. How: This holds it in the main landmark.
+import { perNamFun    } from '../core/text-limits.ts';     // What: Person Name Function. Why: A name outside its limits is caught before anything is sent. How: This checks it.
+import { proKeyFun    } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps its own storage. How: This names the draft's key for the current one.
+import { reqCreFun    } from '../state/joins.ts';          // What: Request Create Function. Why: Sending the form asks to join. How: This files the request.
+import { reqStaFun    } from '../state/joins.ts';          // What: Request Status Function. Why: Opening the link again finds a request already waiting, or a membership. How: This reads where the join stands.
+import { reqWitFun    } from '../state/joins.ts';          // What: Request Withdraw Function. Why: A joiner may take their request back. How: This deletes it.
+import { texNorFun    } from '../core/text-limits.ts';     // What: Text Normalize Function. Why: The name and note are checked as they'll be saved. How: This tidies them first.
+import { useEffect    } from 'react';                      // What: Use Effect. Why: The invite loads as the screen opens, the request is watched while it waits, and the heading takes focus after a change. How: This runs each.
+import { useRef       } from 'react';                      // What: Use Reference. Why: A field with an error takes focus, the heading takes focus after a change, and a withdrawal is told from a decline. How: This holds each.
+import { useScrOpeFun } from '../ui/screen.ts';            // What: Use Screen Open Function. Why: "What is Come Hang?" opens the landing page. How: This returns the function that opens a screen.
+import { useState     } from 'react';                      // What: Use State. Why: The phase, the group, the fields, their errors, and the sending states change as the join goes on. How: This holds each.
 
 // #endregion Imports
 
@@ -31,8 +34,10 @@ import { useState  } from 'react';                  // What: Use State. Why: The
  * join-group.tsx = Join Group
  *
  * @summary
- * The screen an invite link opens (ARCHITECTURE.md Sections 9 and 17): a back
- * button and a heading over the part the join has reached. It opens the invite
+ * The screen an invite link opens (ARCHITECTURE.md Sections 9 and 17): the
+ * app's mark, name, and headline with a "What is Come Hang?" that opens the
+ * landing page, then a back button and a heading over the part the join has
+ * reached. It opens the invite
  * to name its group, or says the link no longer works, or that it couldn't be
  * opened with a way to try again. Someone not yet asking gives their full name
  * and an optional note, each checked against its limits before anything is
@@ -41,13 +46,16 @@ import { useState  } from 'react';                  // What: Use State. Why: The
  * waits the screen says a member will let them in, offers to withdraw it, and
  * watches it: an approval opens the group, and a request that ends without one
  * says so, with a way to ask again. A link opened by a member, or by a joiner
- * already let in, opens the group. Each change of part moves focus to the
+ * already let in, opens the group. What's typed in the form is kept for the
+ * session, so a trip to the landing page and back, or a reload, keeps it,
+ * until the request is sent. Each change of part moves focus to the
  * heading, since the button pressed is gone. A browser that can install the
  * app with one tap suggests it in a note below.
  *
  * Sections:
  *  - Types
  *  - Constants
+ *  - Helpers
  *  - Components
  *  - Exports
  *
@@ -75,6 +83,60 @@ const PER_ERR_STR = 'Use letters, spaces, apostrophes, hyphens, and periods.';  
 const REF_REQ_STR = "The group didn't take the request. You may not be able to join it, or you're in as many groups as you can be."; // What: Refused Request String. Why: The rules refuse a joiner who is blocked, already in, or out of slots, and can't say which. How: This names the likely reasons.
 
 // #endregion Constants
+
+
+
+// #region Helpers
+
+// #region draGetFun
+
+/**
+ * draGetFun = Draft Get Function
+ *
+ * @summary
+ * Reads the form's kept draft from session storage, where the form leaves
+ * it as it's typed. Anything that isn't a draft this screen wrote, or
+ * storage that can't be read, reads as an empty draft.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param draKeyStr - Draft Key String: The draft's storage key.
+ *
+ * @returns The kept note and name, empty where there's none.
+ *
+ * @example
+ * ```ts
+ * draGetFun('come-hang-join-draft-Xk3...') // => { notStr, perStr }
+ * ```
+ *
+*/
+
+const draGetFun = ( draKeyStr : string ) : { notStr : string, perStr : string } => { // What: Draft Get Function. Why: A trip to the landing page and back, or a reload, keeps what was typed. How: This reads the kept draft, checking each field.
+
+
+	let draValAny : unknown = null; // What: Draft Value Any. Why: The kept draft is read as untrusted. How: This holds it, null when there's none.
+
+
+
+	try { draValAny = JSON.parse( sessionStorage.getItem( draKeyStr ) ?? 'null' ); } // What: Draft Read Try. Why: The draft is kept as JSON. How: This reads and parses it.
+
+	catch { draValAny = null; } // What: Draft Read Catch. Why: Storage that can't be read, or a draft that isn't JSON, means none. How: This reads it as empty.
+
+
+
+	const notValAny : unknown = typeof draValAny === 'object' && draValAny !== null ? Reflect.get( draValAny, 'notStr' ) : undefined; // What: Note Value Any. Why: The note is checked before it's used. How: This reads it from an object, untyped.
+	const perValAny : unknown = typeof draValAny === 'object' && draValAny !== null ? Reflect.get( draValAny, 'perStr' ) : undefined; // What: Person Value Any. Why: The name is checked before it's used. How: This reads it from an object, untyped.
+
+
+
+	return { notStr : typeof notValAny === 'string' ? notValAny : '', perStr : typeof perValAny === 'string' ? perValAny : '' }; // What: Draft Return. Why: The form starts from what was typed. How: This returns each field when it's a string, and empty otherwise.
+
+
+};
+
+// #endregion draGetFun
+
+// #endregion Helpers
 
 
 
@@ -139,23 +201,37 @@ type JgcProTyp = { // What: Join Group Component Props Type. Why: The screen ope
 function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLeaFun, tokValStr } : JgcProTyp ) : React.JSX.Element {
 
 
-	const focHeaRef = useRef( false );                      // What: Focus Heading Reference. Why: The heading takes focus after a change of part, but not as the screen first opens. How: This is true while a change owes it focus.
-	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: The heading takes focus after a change of part. How: This holds it.
-	const notInpRef = useRef< HTMLInputElement >( null );   // What: Note Input Reference. Why: The note field takes focus when it has a problem. How: This holds its element.
-	const perInpRef = useRef< HTMLInputElement >( null );   // What: Person Input Reference. Why: The name field takes focus when it has a problem. How: This holds its element.
-	const witRunRef = useRef( false );                      // What: Withdraw Running Reference. Why: The watch sees a withdrawn request end, which isn't a decline. How: This is true while a withdrawal runs.
+	const draKeyStr = proKeyFun( `come-hang-join-draft-${ tokValStr }` ); // What: Draft Key String. Why: What's typed is kept per invite, for the session. How: This names its session storage key, per development member too.
+	const focHeaRef = useRef( false );                                    // What: Focus Heading Reference. Why: The heading takes focus after a change of part, but not as the screen first opens. How: This is true while a change owes it focus.
+	const heaEleRef = useRef< HTMLHeadingElement >( null );               // What: Heading Element Reference. Why: The heading takes focus after a change of part. How: This holds it.
+	const notInpRef = useRef< HTMLInputElement >( null );                 // What: Note Input Reference. Why: The note field takes focus when it has a problem. How: This holds its element.
+	const perInpRef = useRef< HTMLInputElement >( null );                 // What: Person Input Reference. Why: The name field takes focus when it has a problem. How: This holds its element.
+	const scrOpeFun = useScrOpeFun();                                     // What: Screen Open Function. Why: "What is Come Hang?" opens the landing page. How: This reads the function that opens a screen.
+	const witRunRef = useRef( false );                                    // What: Withdraw Running Reference. Why: The watch sees a withdrawn request end, which isn't a decline. How: This is true while a withdrawal runs.
 
-	const [ curGroStr, setCurGroStr ] = useState( groIdeStr ?? '' );        // What: Current Group String And Setter. Why: The request and its watch belong to the invite's group. How: This holds its ID, empty until known.
-	const [ curNamStr, setCurNamStr ] = useState( groNamStr ?? '' );        // What: Current Name String And Setter. Why: Every part names the group. How: This holds its name, empty until known.
-	const [ errMesStr, setErrMesStr ] = useState( '' );                     // What: Error Message String And Setter. Why: A failed send or withdrawal is announced. How: This holds the alert's text, empty until one fails.
-	const [ loaVerNum, setLoaVerNum ] = useState( 0 );                      // What: Load Version Number And Setter. Why: Trying again and asking again read the invite afresh. How: This counts the loads.
-	const [ notErrStr, setNotErrStr ] = useState( '' );                     // What: Note Error String And Setter. Why: The note field says what's wrong with it. How: This holds its problem, empty when there's none.
-	const [ notValStr, setNotValStr ] = useState( '' );                     // What: Note Value String And Setter. Why: The field shows what's typed. How: This holds the note as typed.
-	const [ perErrStr, setPerErrStr ] = useState( '' );                     // What: Person Error String And Setter. Why: The name field says what's wrong with it. How: This holds its problem, empty when there's none.
-	const [ perNamStr, setPerNamStr ] = useState( '' );                     // What: Person Name String And Setter. Why: The field shows what's typed. How: This holds the name as typed.
-	const [ phaValStr, setPhaValStr ] = useState< JoiPhaTyp >( 'loading' ); // What: Phase Value String And Setter. Why: The screen shows one part of the join. How: This holds it, loading until the invite is read.
-	const [ senReqBoo, setSenReqBoo ] = useState( false );                  // What: Send Request Boolean And Setter. Why: A second submit while the first is out would send twice. How: This is true while the request is being sent.
-	const [ witBusBoo, setWitBusBoo ] = useState( false );                  // What: Withdraw Busy Boolean And Setter. Why: The button shows the withdrawal is out. How: This is true while it runs.
+	const [ curGroStr, setCurGroStr ] = useState( groIdeStr ?? '' );                     // What: Current Group String And Setter. Why: The request and its watch belong to the invite's group. How: This holds its ID, empty until known.
+	const [ curNamStr, setCurNamStr ] = useState( groNamStr ?? '' );                     // What: Current Name String And Setter. Why: Every part names the group. How: This holds its name, empty until known.
+	const [ errMesStr, setErrMesStr ] = useState( '' );                                  // What: Error Message String And Setter. Why: A failed send or withdrawal is announced. How: This holds the alert's text, empty until one fails.
+	const [ loaVerNum, setLoaVerNum ] = useState( 0 );                                   // What: Load Version Number And Setter. Why: Trying again and asking again read the invite afresh. How: This counts the loads.
+	const [ notErrStr, setNotErrStr ] = useState( '' );                                  // What: Note Error String And Setter. Why: The note field says what's wrong with it. How: This holds its problem, empty when there's none.
+	const [ notValStr, setNotValStr ] = useState( () => draGetFun( draKeyStr ).notStr ); // What: Note Value String And Setter. Why: The field shows what's typed, kept through a trip away. How: This holds the note as typed, starting from the kept draft.
+	const [ perErrStr, setPerErrStr ] = useState( '' );                                  // What: Person Error String And Setter. Why: The name field says what's wrong with it. How: This holds its problem, empty when there's none.
+	const [ perNamStr, setPerNamStr ] = useState( () => draGetFun( draKeyStr ).perStr ); // What: Person Name String And Setter. Why: The field shows what's typed, kept through a trip away. How: This holds the name as typed, starting from the kept draft.
+	const [ phaValStr, setPhaValStr ] = useState< JoiPhaTyp >( 'loading' );              // What: Phase Value String And Setter. Why: The screen shows one part of the join. How: This holds it, loading until the invite is read.
+	const [ senReqBoo, setSenReqBoo ] = useState( false );                               // What: Send Request Boolean And Setter. Why: A second submit while the first is out would send twice. How: This is true while the request is being sent.
+	const [ witBusBoo, setWitBusBoo ] = useState( false );                               // What: Withdraw Busy Boolean And Setter. Why: The button shows the withdrawal is out. How: This is true while it runs.
+
+
+
+	useEffect( () => { // What: Draft Keep Effect. Why: A trip to the landing page and back, or a reload, should keep what was typed. How: This writes the name and note to session storage as they change.
+
+
+		try { sessionStorage.setItem( draKeyStr, JSON.stringify( { notStr : notValStr, perStr : perNamStr } ) ); } // What: Draft Write Try. Why: The draft is kept as JSON. How: This writes it.
+
+		catch { return; } // What: Draft Write Catch. Why: Storage that can't be written only costs the kept draft. How: This leaves it.
+
+
+	}, [ draKeyStr, notValStr, perNamStr ] ); // What: Effect Dependency Array. Why: The draft follows what's typed. How: notValStr and perNamStr change as each field does, and draKeyStr with the invite.
 
 
 
@@ -421,6 +497,8 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 			setPhaValStr( 'waiting' ); // What: Waiting Set Call. Why: The request waits for a member. How: This shows the waiting part.
 
+			sessionStorage.removeItem( draKeyStr ); // What: Draft Clear Call. Why: A sent request needs no draft. How: This forgets it.
+
 
 		}
 
@@ -551,12 +629,12 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 	const heaTexObj : Record< JoiPhaTyp, string > = { // What: Heading Text Object. Why: The heading names the part the join has reached. How: This holds each part's heading by its phase.
 
 
-		ended   : 'Your request has ended',        // What: Ended Heading. Why: The request is over without an approval. How: This says so.
-		failed  : 'Join a group',                  // What: Failed Heading. Why: The group isn't known when the invite couldn't be read. How: This names the screen.
-		form    : `Join ${ groTexStr }`,           // What: Form Heading. Why: The joiner sees which group they're asking to join. How: This names it.
-		invalid : "This invite link doesn't work", // What: Invalid Heading. Why: The link opens nothing. How: This says so.
-		loading : 'Join a group',                  // What: Loading Heading. Why: The group isn't known yet. How: This names the screen.
-		waiting : `Waiting to join ${ groTexStr }` // What: Waiting Heading. Why: The joiner sees what they're waiting on. How: This names the group.
+		ended   : 'Your request has ended',           // What: Ended Heading. Why: The request is over without an approval. How: This says so.
+		failed  : 'Join a group',                     // What: Failed Heading. Why: The group isn't known when the invite couldn't be read. How: This names the screen.
+		form    : `You're invited to ${ groTexStr }`, // What: Form Heading. Why: The joiner sees which group invited them, warmly. How: This names it.
+		invalid : "This invite link doesn't work",    // What: Invalid Heading. Why: The link opens nothing. How: This says so.
+		loading : 'Join a group',                     // What: Loading Heading. Why: The group isn't known yet. How: This names the screen.
+		waiting : `Waiting to join ${ groTexStr }`    // What: Waiting Heading. Why: The joiner sees what they're waiting on. How: This names the group.
 
 
 	};
@@ -567,6 +645,36 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 
 		<MaiAreCom className={ cssModObj.joiScrMai }>{ /* What: Join Screen Main Area Component. Why: The join is the screen's whole content. How: This holds the bar, the part, and the alert in one centered column. */ }
+
+
+			<div className={ cssModObj.joiBraDiv }>{ /* What: Join Brand Div Element. Why: Someone who's never heard of Come Hang should see whose app this is before giving their name. How: This holds the mark and name, the headline, and the way to the landing page. */ }
+
+
+				<p className={ cssModObj.joiBraPar }>{ /* What: Join Brand Paragraph Element. Why: The mark and the name read as the wordmark. How: This sets them side by side. */ }
+
+
+					<BraMarCom className={ cssModObj.joiMarSvg } />{ /* What: Join Mark SVG Element. Why: The mark makes the app recognizable. How: This draws it before the name. */ }
+
+					<span className={ cssModObj.joiNamSpa }>Come Hang</span>{ /* What: Join Name Span Element. Why: The name sits beside the mark. How: This sets it. */ }
+
+
+				</p>
+
+
+
+				<p className={ cssModObj.joiTagPar }>Plans made. Fun had. Memories created.</p>{ /* What: Join Tagline Paragraph Element. Why: The landing page's headline says what the app is for in a line. How: This repeats it. */ }
+
+				<button
+					className={ cssModObj.joiWhaBut }
+
+					type='button'
+
+					onClick={ () => scrOpeFun( { namStr : curNamStr, scrStr : 'about' } ) }
+				>What is Come Hang?</button>{ /* What: Join What Button Element. Why: Someone who wants more before joining can read about the app and come back. How: This opens the landing page as a new entry, naming the group to go back to joining. */ }
+
+
+			</div>
+
 
 
 			<div className={ cssModObj.joiBarDiv }>{ /* What: Join Bar Div Element. Why: The way back sits beside the screen's heading. How: This lays them out in one row. */ }
