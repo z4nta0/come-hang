@@ -1640,7 +1640,8 @@ the Blaze change.
     free, losing a phone, who sees a location, and being in more than one
     group), then a closing call to action and a footer with the privacy
     policy, the terms, and the support email.
-  - **Hero**: the mark, the wordmark, a headline with some personality, the
+  - **Hero**: the mark, the wordmark, the headline "Plans made. Fun had.
+    Memories created." in three lines of ink, periwinkle, and coral, the
     one-line pitch, "Start a group" as the main action with "Join with an
     invite link" beside it and "Get my groups back" as a small link, and a
     collage of phone screenshots.
@@ -1660,10 +1661,16 @@ the Blaze change.
     chat with its pinned event), picking the day (the Events section),
     who's bringing what (the bring-list in members' colors), and finding
     each other on the day (the Map section and the chat's status lines).
-    Each stop has a catchy headline and one plain sentence of what the
-    feature does. On a phone the route runs down the page; on a wide
-    screen the stops alternate sides and the route snakes between them.
-    Under reduced motion the route is simply drawn.
+    Each stop has a catchy headline beside an icon from the app's own set
+    (a chat bubble, a calendar, a checklist, and a map pin, the first,
+    second, and last matching the app's tabs) and one plain sentence of
+    what the feature does, and the arrival reads "You're all here." beside
+    a party popper. The route is a dotted periwinkle line wiggling down a
+    spine of coral numbered pins to a periwinkle check pin. On a phone the
+    spine runs down the left with each stop's text beside it and its
+    screenshot centered below; on a wide screen the stops' text and
+    screenshots alternate sides of a central spine. Under reduced motion
+    the route is simply drawn.
   - **How a group starts**: start a group, share the link, let people in.
   - **Free and the upgrade**: the upgrade is sold from day one (Section
     18), and the section makes the free tier's generosity plain with
