@@ -36,7 +36,8 @@ complete, each walked through with the user: `firestore.rules` covers every
 Firestore collection in ARCHITECTURE.md's data model, `database.rules.json`
 covers chat and presence, and `storage.rules` covers history transfers. The
 Cloud Functions so far are the membership mirror, group deletion, the removal
-and offer notices, the offer decline, the daily run, and the pushes, with the
+and offer notices, the offer decline, the daily run, the daily cleanup of
+unused identities, and the pushes, with the
 push token rules, including the activity pushes for chat, join requests,
 history requests, and key requests, and the purchase's Polar checkout and
 webhook. The app has its Firebase services, created on first use, the identity
@@ -136,7 +137,9 @@ other suites clear, and `npm test` runs it last. Its specs run one
 at a time, since each clears the data the next one's triggers write.
 Playwright's loader can't link the HTTP functions' module, so the purchase
 spec runs the checkout and webhook in a Node process of their own,
-`tests/support/purchase-child.ts`, which loads the functions' build. The
+`tests/support/purchase-child.ts`, which loads the functions' build. It
+can't link the Admin SDK's Auth module either, so the identity cleanup spec
+runs the cleanup in `tests/support/cleanup-child.ts` the same way. The
 Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The
 emulator can't fire a v2 scheduled function, by itself or on request, so
 the daily run's spec imports it and calls its handler through its `run`

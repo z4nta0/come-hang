@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-04 (the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -572,6 +572,24 @@ in place of their name. Any member can reassign or release it (Section 11.5).
       security isn't), not infrastructure. Worth adding once it's clear
       Google alone isn't covering everyone who wants to link a recovery
       credential.
+- **Unused identities are cleaned up** (decided 2026-11-04, built as
+  `ideCleFun` in `functions/src/identity-cleanup.ts`): a phone wiped or
+  lost without deleting its data leaves its identity behind, its account,
+  public key, and Auth record. A scheduled function runs once a day at
+  09:00 UTC, an hour after the daily run (Section 18), and deletes each
+  identity whose Auth record hasn't been refreshed for 180 days, which the
+  app does at least hourly while it's open, falling back to its last
+  sign-in when it never refreshed. Only an identity in no group is
+  deleted, and never one that bought the upgrade or has a Google account
+  linked, since a linked identity can still be recovered and a purchase is
+  never thrown away. 180 days is well past every other limit (join
+  requests 7 days, notices 30, push tokens 60), so nothing is left under
+  the account by then. The account is checked and deleted in a
+  transaction, so a group joined since the run began keeps the identity,
+  then the rest goes the way the end of deleting one's data does (Section
+  14). A phone that comes back finds its sign-in gone, since Auth checks a
+  restored sign-in with the server as it starts, and quietly becomes a new
+  identity, with nothing lost, having been in no group.
 
 **Pros**
 - Zero-friction onboarding, no signup screen at all, which matches the
@@ -1924,7 +1942,8 @@ the Blaze change.
   group, found by reading every join request's ID since nothing lists
   them, its account with the notices and push token under it, its public
   key, and its Auth record last, so a retry can still sign in until the
-  end. The phone then turns notifications off, signs out, deletes
+  end, those last three through `ideDelFun`, which the cleanup of unused
+  identities shares (Section 8). The phone then turns notifications off, signs out, deletes
   Firestore's offline copy and the app's database, removes the app's local
   storage keys, and starts over at the welcome, which says the data is
   gone. Messages already delivered stay on other members' phones, and the
@@ -1945,10 +1964,6 @@ the Blaze change.
   alone, so a kind added later waits for an app that can word it.
 
 **App structure, still open**:
-- Identities left unused: nothing removes an identity whose phone was
-  wiped or lost without deleting its data, so its public key and account
-  stay. They hold no content, but a cleanup of identities in no group and
-  unused for a long time would keep them from piling up.
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's
@@ -2022,6 +2037,11 @@ the Blaze change.
   app's side, asking permission, getting and storing the token, and
   keeping it fresh (Section 11.1), checked in the client suite, which also
   follows a stored token to the push a removal sends.
+- Built 2026-11-04 in `functions/src/identity-cleanup.ts`: the daily
+  cleanup of unused identities (Section 8), checked in the functions suite
+  through a Node process of its own, since the suite's loader can't link
+  the Admin SDK's Auth module, and a returning phone's fresh start checked
+  in the client suite.
 - Environments, see Section 13.
 - One service worker (decided 2026-10-28, built 2026-10-29,
   `src/service-worker.ts`): a PWA gets one service worker per scope, while

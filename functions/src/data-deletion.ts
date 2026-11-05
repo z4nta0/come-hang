@@ -7,9 +7,9 @@ import { FieldPath    } from 'firebase-admin/firestore';    // What: Field Path.
 import { FieldValue   } from 'firebase-admin/firestore';    // What: Field Value. Why: Counts fall and map entries go. How: This supplies the increment and the field delete.
 import { FIR_DAT_OBJ  } from './setup.ts';                  // What: Firestore Database Object. Why: Most of an identity's data lives in Firestore. How: This reads and deletes it.
 import { FUN_OPT_OBJ  } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
-import { getAuth      } from 'firebase-admin/auth';         // What: Get Auth. Why: The identity's sign-in record goes last. How: This returns Auth, which deletes it.
 import { groDelRunFun } from './group-deletion.ts';         // What: Group Deletion Run Function. Why: A group its owner was alone in is deleted. How: This runs the deletion's stages.
 import { HttpsError   } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
+import { ideDelFun    } from './identity-cleanup.ts';       // What: Identity Delete Function. Why: Once the identity is in no group, what's left of it goes. How: This deletes its account, public key, and sign-in record.
 import { onCall       } from 'firebase-functions/v2/https'; // What: On Call. Why: Someone deletes their data from the app. How: This registers a callable function, which checks the caller's sign-in.
 import { REA_DAT_OBJ  } from './setup.ts';                  // What: Realtime Database Object. Why: Presence lives there. How: This removes the identity's.
 import { STO_ADM_OBJ  } from './setup.ts';                  // What: Storage Admin Object. Why: A history transfer the identity asked for lives in Storage. How: This deletes it.
@@ -38,7 +38,8 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  * with the notices and push token under it, its public key, and last its
  * sign-in record. Each group leaves the account's maps as it's done, so a
  * retry after a failure picks up where the last call stopped, and once the
- * sign-in record is gone no call can run.
+ * sign-in record is gone no call can run. The last of it goes through
+ * identity-cleanup.ts, which the daily cleanup of unused identities shares.
  *
  * Sections:
  *  - Helpers
@@ -344,15 +345,7 @@ const delDatFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => 
 
 	await joiDelFun( uidValStr ); // What: Join Delete Call. Why: A request to join holds a typed name and note. How: This deletes the identity's.
 
-	await FIR_DAT_OBJ.recursiveDelete( accRefObj ); // What: Account Delete Call. Why: The account, its notices, and its push token go. How: This deletes the account with everything under it.
-
-	await FIR_DAT_OBJ.doc( `users/${ uidValStr }` ).delete(); // What: User Delete Call. Why: The public key has no one left to wrap a key for. How: This deletes it.
-
-
-
-	try { await getAuth().deleteUser( uidValStr ); } // What: Sign-In Delete Attempt. Why: The sign-in record, with any linked Google account, goes last, so a retry can still sign in until it's done. How: This deletes it.
-
-	catch ( errCatObj ) { if ( Reflect.get( Object( errCatObj ), 'code' ) !== 'auth/user-not-found' ) throw errCatObj; } // What: Missing Record Catch. Why: A record already gone means an earlier call finished. How: This ignores that error and passes on any other.
+	await ideDelFun( uidValStr ); // What: Identity Delete Call. Why: Once the identity is in no group, what's left of it goes. How: This deletes its account, public key, and sign-in record.
 
 
 } );
