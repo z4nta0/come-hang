@@ -11,6 +11,7 @@
 		"lint": "eslint .",
 		"og-image": "node design/og-image/render.mts",
 		"preview": "vite preview",
+		"screenshots": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"node design/screenshots/render.mts\"",
 		"test": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'accessibility-*' --project 'interaction-*' --project 'security-*' --project 'seo-*' --project 'worker-*'\" && npm run test:rules && npm run test:client && npm run test:functions",
 		"test:accessibility": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'accessibility-*'\"",
 		"test:client": "npm --prefix functions run build && firebase emulators:exec --only auth,functions,firestore,database,storage --project demo-come-hang \"playwright test --config tests/playwright.config.ts --project 'client-*'\"",
