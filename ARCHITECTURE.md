@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-05 (the landing page for a visitor with no identity, its trust and upgrade sections, the invite form's branding, and its pre-render, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-05 (the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1656,21 +1656,26 @@ the Blaze change.
     plaintext fields, Section 5's retention): no claim that all data is
     encrypted, and a "What we can see" link to the privacy policy's list of
     what the server reads, so the section never contradicts the policy.
-  - **The route**: four stops along a dashed route line that draws itself
-    as the page scrolls, ending at an arrival pin: talking it over (the
-    chat with its pinned event), picking the day (the Events section),
-    who's bringing what (the bring-list in members' colors), and finding
-    each other on the day (the Map section and the chat's status lines).
-    Each stop has a catchy headline beside an icon from the app's own set
-    (a chat bubble, a calendar, a checklist, and a map pin, the first,
-    second, and last matching the app's tabs) and one plain sentence of
-    what the feature does, and the arrival reads "You're all here." beside
-    a party popper. The route is a dotted periwinkle line wiggling down a
-    spine of coral numbered pins to a periwinkle check pin. On a phone the
-    spine runs down the left with each stop's text beside it and its
-    screenshot centered below; on a wide screen the stops' text and
-    screenshots alternate sides of a central spine. Under reduced motion
-    the route is simply drawn.
+  - **The route**: four stops along a dashed route line that draws itself as
+    the page scrolls, ending at an arrival pin: talking it over (the chat
+    with its pinned event), picking the day (the Events section), who's
+    bringing what (the bring-list in members' colors), and finding each
+    other on the day (the Map section and the chat's status lines). Each
+    stop has a catchy headline and one plain sentence of what the feature
+    does, with no icon beside it, since a second marker beside each pin read
+    as busy, and the arrival reads "You're all here." at the size of a
+    stop's headline. The route is a dotted periwinkle line wiggling down a
+    spine of coral numbered pins to a periwinkle check pin. Each pin drops
+    in with a small bounce as the line reaches it, and the group gathers
+    along the way: avatar circles in members' colors, each with an initial,
+    join at the stops (one at the first, more at each later one) and follow
+    just behind the line's tip, then line up as an overlapping row under
+    "You're all here." once it reaches the check pin. On a phone the spine
+    runs down the left with each stop's text beside it and its screenshot
+    centered below; on a wide screen the stops' text and screenshots
+    alternate sides of a central spine. Under reduced motion the route is
+    simply drawn, every pin in place and each person sitting just past the
+    stop where they join.
   - **How a group starts**: start a group, share the link, let people in.
   - **Free and the upgrade**: the upgrade is sold from day one (Section
     18), and the section makes the free tier's generosity plain with
