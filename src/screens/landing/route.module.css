@@ -1,0 +1,424 @@
+
+
+
+/**
+ * route.module.css = Landing Route Module
+ *
+ * @summary
+ * Styles for LanRouCom: the route's section held to the page's width, its
+ * heading centered above the route, and the route itself, where the stops'
+ * pins line up on a spine, down the left on a phone with each screenshot
+ * centered below its stop, and down the middle from 720px wide with each
+ * stop's text and screenshot on alternate sides. The dotted line and the
+ * gathering group sit over the stops. Once the script draws the route, each
+ * pin waits above its place until the line reaches it, then drops in with a
+ * small bounce, and each member pops in at their stop.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region rouSecSec */
+
+.rouSecSec { /* What: Route Section Section. Why: The route reads as its own block. How: This stacks the heading above the route in named areas, the frame tier apart and around them, holding the content to the page's width with the gutter at the sides at least. */
+
+
+	display             : grid;
+	grid-template-areas : 'rouTitHea' 'rouBodDiv';
+	padding             : var( --tie-ver-001 ) max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ); /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px */ /* What: Side Padding Note. Why: The section runs full width while its content keeps the page's width. How: The sides take the gutter, or half of what's left beside the page's width when that's more. */
+	row-gap             : var( --tie-ver-001 );                                                                                 /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+
+.rouTitHea { /* What: Route Title Heading. Why: The route's heading reads big, centered above it. How: This sets it between two font steps, growing with the screen, centered and capped at the base text width, in its own area. */
+
+
+	font-size    : clamp( var( --fon-siz-p04 ), 4.4vw, var( --fon-siz-p05 ) ); /* Font Size Base Plus 4 ~= 33.876px, Font Size Base Plus 5 ~= 44.876px */
+	grid-area    : rouTitHea;
+	justify-self : center;
+	margin       : 0;
+	max-width    : var( --tex-wid-bas );                                       /* Text Width Base ~= 29.207em */
+	text-align   : center;
+
+
+}
+
+
+
+/* #region rouBodDiv */
+
+.rouBodDiv { /* What: Route Body Div. Why: The line and the group are placed over the stops, measured from the route's corner. How: This stacks the stops above the arrival in named areas, the frame tier apart, as the place the line and the group are positioned from. */
+
+
+	display             : grid;
+	grid-area           : rouBodDiv;
+	grid-template-areas : 'rouStoOrd' 'rouArrDiv';
+	position            : relative;
+	row-gap             : var( --tie-ver-001 ); /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+
+.rouLinSvg { /* What: Route Line SVG. Why: The line covers the whole route, under the stops' content and the group, without catching taps. How: This lays it over the route's box from its corner, letting the curve run past its edges, and passes pointer events through. */
+
+
+	height         : 100%;
+	inset          : 0;
+	overflow       : visible;
+	pointer-events : none;
+	position       : absolute;
+	width          : 100%;
+
+
+}
+
+.rouMasPat { /* What: Route Mask Path. Why: The mask reveals the line up to its tip. How: This strokes the curve solid white, wide enough to cover the dots, with no fill. */
+
+
+	fill         : none;
+	stroke       : white; /* What: Mask Color Note. Why: A mask reads only how light it is, so it's the one fixed color here. How: White shows the line where the stroke runs. */
+	stroke-width : 12;
+
+
+}
+
+.rouLinPat { /* What: Route Line Path. Why: The route reads as a dotted path on a map. How: This strokes the curve in round dots of the main accent, partly see-through, with no fill. */
+
+
+	fill           : none;
+	opacity        : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+	stroke         : var( --acc-mai-col );     /* Accent Main Color = #4A4FC9 */
+	stroke-dasharray : 2 10;
+	stroke-linecap : round;
+	stroke-width   : 3;
+
+
+}
+
+
+
+/* #region rouStoOrd */
+
+.rouStoOrd { /* What: Route Stops Ordered. Why: The stops read in order without the browser's numbers, which each pin draws. How: This stacks them the frame tier apart by auto placement, since each stop shares one layout, in its own area. */
+
+
+	display    : grid;
+	grid-area  : rouStoOrd;
+	list-style : none;
+	margin     : 0;
+	padding    : 0;
+	row-gap    : var( --tie-ver-001 ); /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+
+
+
+/* #region rouStoIte */
+
+.rouStoIte { /* What: Route Stop Item. Why: On a phone the pin leads the stop's words, with its screenshot centered below. How: This sets the pin beside the words and the screenshot across both columns below, in named areas, a tier 2 space down and a tier 3 space across. */
+
+
+	align-items           : start;
+	display               : grid;
+	gap                   : var( --tie-ver-002 ) var( --tie-hor-003 ); /* Tier Vertical 2 ~= 25.572px, Tier Horizontal 3, about 14.572px - 19.304px */
+	grid-template-areas   : 'rouPinSpa rouTexDiv' 'rouPhoPic rouPhoPic';
+	grid-template-columns : calc( var( --ver-rhy-p03 ) * 1rem ) 1fr;   /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Route Stop Item. Why: A wide screen sets the pins down the middle, with each stop's words and screenshot on either side. How: This applies from 720px wide and up. */
+
+
+	.rouStoIte { /* What: Centered Route Stop Item. Why: The spine runs down the middle, words on the left. How: This sets the words, the pin, and the screenshot in three columns, the outer two equal, the frame tier apart. */
+
+
+		align-items           : center;
+		column-gap            : var( --tie-hor-001 );                          /* Tier Horizontal 1, about 44.876px - 59.447px */
+		grid-template-areas   : 'rouTexDiv rouPinSpa rouPhoPic';
+		grid-template-columns : 1fr calc( var( --ver-rhy-p03 ) * 1rem ) 1fr; /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+		text-align            : end;
+
+
+	}
+	.rouStoIte:nth-child( even ) { /* What: Flipped Route Stop Item. Why: Every other stop swaps sides, so the route snakes between them. How: This puts the screenshot on the left and the words on the right. */
+
+
+		grid-template-areas : 'rouPhoPic rouPinSpa rouTexDiv';
+		text-align          : start;
+
+
+	}
+
+
+}
+
+
+
+/* #region rouPinSpa */
+
+.rouPinSpa { /* What: Route Pin Span. Why: Each stop is a coral map pin with its number upright inside it, above the line. How: This turns a square with three round corners onto its point, in the coral spark, a rhythm step across, above the line, and eases its drop with the gentle overshoot. */
+
+
+	align-self       : start;
+	background-color : var( --acc-sec-col );                                                                              /* Accent Secondary Color = #DD6248 */
+	border-radius    : 50% 50% 50% 0;
+	display          : grid;
+	grid-area        : rouPinSpa;
+	height           : calc( var( --ver-rhy-p03 ) * 1rem );                                                               /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	place-items      : center;
+	position         : relative;
+	transform        : rotate( -45deg );
+	transition       : opacity var( --dur-ani-p02 ) var( --mot-dec-eas ), transform var( --dur-ani-p03 ) var( --mot-ove-eas ); /* Duration Animation Base Plus 2 ~= 277.0ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Animation Base Plus 3 ~= 366.4ms, Motion Overshoot Easing = cubic-bezier( .34, 1.2, .5, 1 ) */
+	width            : calc( var( --ver-rhy-p03 ) * 1rem );                                                               /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	z-index          : 1; /* What: Pin Layer Note. Why: A pin sits on the line, which is at the default layer. How: It takes the layer just above. */
+
+
+}
+.rouBodDiv[data-route-drawing-active] .rouPinSpa:not( [data-route-pin-shown] ) { /* What: Waiting Route Pin Span. Why: Once the script draws the route, a pin waits above its place until the line reaches it, leaving on the accelerating curve. How: This lifts it a spacing step and hides it. */
+
+
+	opacity    : 0;
+	transform  : translateY( calc( var( --spa-ver-p01 ) * -1 ) ) rotate( -45deg );                         /* Spacing Vertical Base Plus 1 ~= -19.304px */
+	transition : opacity var( --dur-ani-p02 ) var( --mot-acc-eas ), transform var( --dur-ani-p02 ) var( --mot-acc-eas ); /* Duration Animation Base Plus 2 ~= 277.0ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Route Pin Span. Why: Beside the stop's middle, the pin centers on its row. How: This applies from 720px wide and up. */
+
+
+	.rouPinSpa { /* What: Centered Route Pin Span. Why: The pin sits level with the stop's words and screenshot. How: This centers it in its row. */
+
+
+		align-self : center;
+
+
+	}
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Route Pin Span. Why: Someone who asked for less motion should see the pins in place without dropping. How: This applies only when the reduced-motion preference is set. */
+
+
+	.rouPinSpa,
+	.rouBodDiv[data-route-drawing-active] .rouPinSpa:not( [data-route-pin-shown] ) { /* What: Motionless Route Pin Span. Why: A pin shouldn't move. How: This turns the transitions off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+.rouPinSpa--arrive { /* What: Route Pin Span Arrive. Why: The route ends at a pin in the main accent. How: This colors it periwinkle. */
+
+
+	background-color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+
+
+}
+
+.rouNumSpa { /* What: Route Number Span. Why: The pin's number stands upright inside it. How: This turns it back the pin's angle, bold in the brand font, in the text color on the accent. */
+
+
+	color       : var( --tex-acc-col );  /* Text Accent Color = #FFFFFF */
+	font-family : var( --fon-fam-bra );  /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-weight : 800;
+	transform   : rotate( 45deg );
+
+
+}
+
+/* #endregion rouPinSpa */
+
+
+
+/* #region rouTexDiv */
+
+.rouTexDiv { /* What: Route Text Div. Why: The stop's headline and sentence read together. How: This stacks them in named areas a tier 4 space apart, in its own area. */
+
+
+	display             : grid;
+	grid-area           : rouTexDiv;
+	grid-template-areas : 'rouStoHea' 'rouStoPar';
+	row-gap             : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.rouStoHea { /* What: Route Stop Heading. Why: Each stop's headline reads big. How: This sets it a few steps up, in its own area. */
+
+
+	font-size : var( --fon-siz-p04 ); /* Font Size Base Plus 4 ~= 33.876px */
+	grid-area : rouStoHea;
+	margin    : 0;
+
+
+}
+
+.rouStoPar { /* What: Route Stop Paragraph. Why: The sentence reads below the headline at a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-area : rouStoPar;
+	margin    : 0;
+	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Route Stop Paragraph. Why: Words on the left side sit against the spine. How: This applies from 720px wide and up. */
+
+
+	.rouStoIte:nth-child( odd ) .rouStoPar { /* What: Ended Route Stop Paragraph. Why: The capped sentence sits against the spine, at the end of its column. How: This pushes it to the column's end. */
+
+
+		justify-self : end;
+
+
+	}
+
+
+}
+
+/* #endregion rouTexDiv */
+
+
+
+/* #region rouPhoPic */
+
+.rouPhoPic { /* What: Route Phone Picture. Why: Each stop's screen is framed like a phone, centered in its space. How: This sets an ink frame with rounded corners around the screenshot, at a width that grows with the screen between two rhythm steps, centered in its own area. */
+
+
+	border        : var( --bor-wid-xla ) solid var( --tex-mai-col );                                                           /* Border Width Extra Large ~= 3.572px, Text Main Color = #1D1E33 */
+	border-radius : var( --rad-bor-xla );                                                                                      /* Radius Border Extra Large ~= 19.304px */
+	display       : block;
+	grid-area     : rouPhoPic;
+	justify-self  : center;
+	overflow      : hidden;
+	position      : relative;
+	width         : clamp( calc( var( --ver-rhy-p09 ) * 1rem ), var( --hor-rhy-020 ), calc( var( --ver-rhy-p10 ) * 1rem ) ); /* Vertical Rhythm Base Plus 9 ~= 183.083px, Horizontal Rhythm 20 ~= 268.187px @ 1,920px width, Vertical Rhythm Base Plus 10 ~= 242.520px */
+	z-index       : 1; /* What: Phone Layer Note. Why: A phone sits over the line, which is at the default layer. How: It takes the layer just above. */
+
+
+}
+
+.rouPhoIma { /* What: Route Phone Image. Why: The screenshot fills its frame. How: This sets it as a block at the frame's width, keeping its shape. */
+
+
+	display : block;
+	height  : auto;
+	width   : 100%;
+
+
+}
+
+/* #endregion rouPhoPic */
+
+/* #endregion rouStoIte */
+
+/* #endregion rouStoOrd */
+
+
+
+/* #region rouArrDiv */
+
+.rouArrDiv { /* What: Route Arrival Div. Why: The route ends with the check pin beside the arrival's heading, with room below for the group to line up. How: This sets them in named areas like a stop's, a tier 3 space across, with the tier 1 space below. */
+
+
+	align-items           : center;
+	column-gap            : var( --tie-hor-003 );                         /* Tier Horizontal 3, about 14.572px - 19.304px */
+	display               : grid;
+	grid-area             : rouArrDiv;
+	grid-template-areas   : 'rouPinSpa rouArrHea';
+	grid-template-columns : calc( var( --ver-rhy-p03 ) * 1rem ) 1fr;     /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	padding-bottom        : var( --tie-ver-001 );                         /* Tier Vertical 1 ~= 44.876px */
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide Route Arrival Div. Why: The check pin sits on the central spine, the heading beside it. How: This applies from 720px wide and up. */
+
+
+	.rouArrDiv { /* What: Centered Route Arrival Div. Why: The arrival lines up with the stops. How: This sets three columns like a stop's, the heading in the right one. */
+
+
+		column-gap            : var( --tie-hor-001 );                          /* Tier Horizontal 1, about 44.876px - 59.447px */
+		grid-template-areas   : '. rouPinSpa rouArrHea';
+		grid-template-columns : 1fr calc( var( --ver-rhy-p03 ) * 1rem ) 1fr; /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+
+
+	}
+
+
+}
+
+/* What: Route Pin Span Pointer. Why: The check pin shares the stops' pin look. How: Its rule sits in the rouPinSpa region. */
+
+.rouArrHea { /* What: Route Arrival Heading. Why: The arrival reads at a stop's size. How: This sets it a few steps up, in its own area. */
+
+
+	font-size : var( --fon-siz-p04 ); /* Font Size Base Plus 4 ~= 33.876px */
+	grid-area : rouArrHea;
+	margin    : 0;
+
+
+}
+
+/* #endregion rouArrDiv */
+
+
+
+.rouAvaSpa { /* What: Route Avatar Span. Why: A member of the gathering group, placed on the line by the script and popping in once they've joined. How: This draws their initial bold in a circle of their color, ringed in the page's color, a rhythm step across, placed from the route's corner above the line and the phones, and eases its pop with the gentle overshoot. */
+
+
+	border        : var( --bor-wid-lar ) solid var( --bac-pag-col );                                                           /* Border Width Large ~= 2.035px, Background Page Color = #F4F4FA */
+	border-radius : 50%;
+	color         : var( --mem-tex-col );                                                                                      /* Member Text Color = #221F1B */
+	display       : grid;
+	font-size     : var( --fon-siz-bas );                                                                                      /* Font Size Base = 11px */
+	font-weight   : 800;
+	height        : calc( var( --ver-rhy-p03 ) * 1rem );                                                                       /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	left          : 0;
+	opacity       : 0;
+	place-items   : center;
+	position      : absolute;
+	scale         : 0.4;
+	top           : 0;
+	transition    : opacity var( --dur-ani-p01 ) var( --mot-acc-eas ), scale var( --dur-ani-p02 ) var( --mot-acc-eas );           /* Duration Animation Base Plus 1 ~= 209.1ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ), Duration Animation Base Plus 2 ~= 277.0ms */
+	width         : calc( var( --ver-rhy-p03 ) * 1rem );                                                                       /* Vertical Rhythm Base Plus 3 ~= 33.876px */
+	z-index       : 2; /* What: Avatar Layer Note. Why: The group passes over the pins and phones, at layer 1. How: It takes the layer just above them. */
+
+
+}
+.rouAvaSpa[data-route-avatar-shown] { /* What: Shown Route Avatar Span. Why: A member pops in once they've joined, arriving with a small overshoot. How: This shows them at full size. */
+
+
+	opacity    : 1;
+	scale      : 1;
+	transition : opacity var( --dur-ani-p01 ) var( --mot-dec-eas ), scale var( --dur-ani-p02 ) var( --mot-ove-eas ); /* Duration Animation Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Animation Base Plus 2 ~= 277.0ms, Motion Overshoot Easing = cubic-bezier( .34, 1.2, .5, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Route Avatar Span. Why: Someone who asked for less motion should see the group in place without popping. How: This applies only when the reduced-motion preference is set. */
+
+
+	.rouAvaSpa,
+	.rouAvaSpa[data-route-avatar-shown] { /* What: Motionless Route Avatar Span. Why: A member shouldn't pop. How: This turns the transitions off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion rouBodDiv */
+
+/* #endregion rouSecSec */
+
+

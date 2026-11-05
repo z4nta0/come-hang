@@ -44,7 +44,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	iosBoo? : boolean,                       // What: iOS Boolean. Why: An iPhone in Safari shows the install steps first. How: This makes the page report an iPhone's Safari when true.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' | 'welcome', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -99,10 +99,12 @@ const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Appl
 const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every check walks the same list of states, so a new state is added in one place. How: Each row names a state, its path, and its viewport.
 
 
-	{ heiNum : 900, ideStr : 'welcome-desktop',      patStr : '/',         widNum : 1440                                      }, // What: Welcome Desktop State. Why: The welcome is checked at a desktop width. How: This loads the root at 1,440px.
-	{ heiNum : 844, ideStr : 'welcome-phone',        patStr : '/',         widNum : 390                                       }, // What: Welcome Phone State. Why: The welcome is checked at a phone width. How: This loads the root at 390px.
-	{ heiNum : 900, ideStr : 'welcome-desktop-dark', patStr : '/',         widNum : 1440, schStr : 'dark'                     }, // What: Welcome Desktop Dark State. Why: Dark mode is checked at a desktop width. How: This loads the root at 1,440px with the phone set to dark.
-	{ heiNum : 844, ideStr : 'welcome-phone-dark',   patStr : '/',         widNum : 390,  schStr : 'dark'                     }, // What: Welcome Phone Dark State. Why: Dark mode is checked at a phone width. How: This loads the root at 390px with the phone set to dark.
+	{ heiNum : 900, ideStr : 'landing-desktop',      patStr : '/',         widNum : 1440                                      }, // What: Landing Desktop State. Why: The landing page is checked at a desktop width. How: This loads the root at 1,440px with no identity.
+	{ heiNum : 844, ideStr : 'landing-phone',        patStr : '/',         widNum : 390                                       }, // What: Landing Phone State. Why: The landing page is checked at a phone width. How: This loads the root at 390px with no identity.
+	{ heiNum : 900, ideStr : 'landing-desktop-dark', patStr : '/',         widNum : 1440, schStr : 'dark'                     }, // What: Landing Desktop Dark State. Why: Dark mode is checked at a desktop width. How: This loads the root at 1,440px with the phone set to dark.
+	{ heiNum : 844, ideStr : 'landing-phone-dark',   patStr : '/',         widNum : 390,  schStr : 'dark'                     }, // What: Landing Phone Dark State. Why: Dark mode is checked at a phone width. How: This loads the root at 390px with the phone set to dark.
+	{ heiNum : 900, ideStr : 'welcome-desktop',      patStr : '/',         widNum : 1440, steStr : 'welcome'                  }, // What: Welcome Desktop State. Why: The welcome is checked at a desktop width. How: This makes an identity in no group at 1,440px.
+	{ heiNum : 844, ideStr : 'welcome-phone',        patStr : '/',         widNum : 390,  steStr : 'welcome'                  }, // What: Welcome Phone State. Why: The welcome is checked at a phone width. How: This makes an identity in no group at 390px.
 	{ heiNum : 900, ideStr : 'loading-desktop',      patStr : '/',         widNum : 1440, steStr : 'loading'                  }, // What: Loading Desktop State. Why: The waiting screen is checked with its loader showing. How: This holds the app's check at 1,440px.
 	{ heiNum : 844, ideStr : 'loading-phone',        patStr : '/',         widNum : 390,  steStr : 'loading'                  }, // What: Loading Phone State. Why: The loader is checked at a phone width. How: This holds the app's check at 390px.
 	{ heiNum : 900, ideStr : 'create-desktop',       patStr : '/',         widNum : 1440, steStr : 'create'                   }, // What: Create Desktop State. Why: The form for starting a group is checked at a desktop width. How: This opens it at 1,440px.
@@ -732,7 +734,7 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'waiting' | 'welcome' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -750,6 +752,24 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 	if ( steStr === 'join' || steStr === 'waiting' ) { await joiSteFun( curPagObj, steStr ); return; } // What: Join Guard. Why: The join states open another's invite link rather than start a group. How: This runs the join steps and returns.
+
+
+
+	if ( steStr === 'welcome' ) { // What: Welcome Block. Why: The welcome shows to a phone holding an identity in no group. How: This makes the identity as the app does, opens the app again, and waits for the welcome's heading.
+
+
+		await curPagObj.evaluate( async () => { const modPatStr = '/src/state/identity.ts'; await ( await import( /* @vite-ignore */ modPatStr ) ).ideEnsFun(); } ); // What: Identity Call. Why: The phone needs an identity in no group. How: This makes one through the app's own module.
+
+		await curPagObj.reload(); // What: Reopen Call. Why: The app picks the welcome as it opens. How: This reloads it.
+
+		await curPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ).waitFor(); // What: Welcome Wait. Why: The welcome has to show before it's checked. How: This waits for its heading.
+
+
+
+		return; // What: Welcome Return. Why: The welcome state stops there. How: This returns.
+
+
+	}
 
 
 

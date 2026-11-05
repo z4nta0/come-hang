@@ -47,7 +47,11 @@ joining through an invite with a member's approval, the membership changes
 ownership offers and notices, events with their bring-lists, chat with its
 on-device history, presence, history requests, location sharing, push
 notifications, Google linking and recovery with the group keys shared again,
-and buying the upgrade. The first screens are built: the welcome, the form for
+and buying the upgrade. The first screens are built: the landing page, which a
+phone holding no identity sees, with its trust section, its route through a
+get-together whose pins drop in and whose group gathers as the page scrolls,
+and its free tier beside the upgrade, the welcome, which a phone holding an
+identity in no group sees, the form for
 starting a group, the group frame with its rail, its switcher and sheet, and
 the group chat with its next event, pinned as a card that opens a sheet below
 1,100px and shown in a panel beside the chat from 1,100px, each with the live
@@ -59,7 +63,8 @@ shares, and the members, and the Settings section. There the owner renames the
 group, sets its chat retention, offers the group to a member, who accepts or
 declines, and deletes it by name, a member leaves, and anyone picks light or
 dark and turns notifications on or off for their phone, links Google, and buys
-the upgrade. The welcome gets a linked member's groups back on a new phone.
+the upgrade. The landing page and the welcome get a linked member's groups
+back on a new phone.
 The Map section, drawn without a street map, shares a member's location for an
 event from 3 hours before it starts, lists everyone sharing with their
 distance, direction, and freshness around a plot, and posts "I'm on my way"
@@ -69,13 +74,14 @@ which asks for a joiner's name and an optional note, waits for a member's
 approval, offers to withdraw the request, and opens the group once they're let
 in. A member whose phone is missing a group's chat asks for it from a banner
 atop the chat, and another member whose phone holds it sends it from People.
-The welcome and the group list also join with a pasted invite link. On an
+The landing page, the welcome, and the group list also join with a pasted
+invite link. On an
 iPhone or iPad in Safari an install screen comes first, keeping an invite's
 link to copy, with a way to carry on in Safari, and where a browser offers its
 own install prompt, a note on the first screens and Settings offer it. The
 privacy policy and terms are written, as static pages at `/privacy` and
-`/terms` and in a sheet from Settings, and the welcome and the join form link
-both. Settings and, for a phone in no group, the welcome delete someone's
+`/terms` and in a sheet from Settings, and the landing page, the welcome, and
+the join form link both. Settings and, for a phone in no group, the welcome delete someone's
 data, handing each group they own to its earliest member. A sheet titled
 "While you were away" opens over any screen when notices are waiting, or
 arrive, such as a removal or an answered offer, and "Got it" or any other
@@ -97,6 +103,7 @@ npm run icons                # rebuild public/'s icons from design/brand
 npm run build                # type check what ships, then production build to dist/
 npm run lint                 # ESLint across the repo
 npm run og-image             # rebuild public/og-image.png from design/og-image
+npm run screenshots          # rebuild the landing page's app screenshots, in the emulators
 npm run typecheck            # tsc -b, plus the Cloud Functions
 npm test                     # every suite, browser suites in all three engines
 npm run test:accessibility   # the pre-commit accessibility scan
@@ -279,7 +286,8 @@ emulators need Java, 21 installed.
   its page so it reads without JavaScript, and `_redirects` serves each at
   its extensionless address ahead of the every-path rewrite. Settings opens
   each in a sheet, offline too, where a link from one document to the other
-  switches the sheet, and the welcome and the join form link both
+  switches the sheet, and the landing page, the welcome, and the join form
+  link both
   under their first step. Their facts: Gary S. Walton, an individual in
   Missouri, runs Come Hang; Missouri law governs the terms; users must be
   18 or older; the upgrade is refunded in full on request within 14 days;

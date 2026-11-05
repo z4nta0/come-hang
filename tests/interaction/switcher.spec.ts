@@ -154,7 +154,7 @@ test( 'the seed builds the demo group as Alex, and switching reloads the tab as 
 
 	await memPicFun( curPagObj, 'You' ); // What: Own Switch Call. Why: The device's own identity belongs to no group. How: This switches back to it.
 
-	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: An identity in no group sees the welcome. How: This expects its heading.
+	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The device's own profile holds no identity, so it sees the landing page. How: This expects its heading.
 
 	await memPicFun( curPagObj, 'Alex Kim' ); // What: Alex Return Call. Why: A member keeps their identity while the tab is someone else. How: This switches back to Alex.
 

@@ -40,17 +40,20 @@ const ICO_PAT_OBJ = { // What: Icon Path Object. Why: Every icon is drawn the sa
 
 
 	back     : 'M15 5l-7 7 7 7',
+	block    : 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM5.6 5.6l12.8 12.8',
 	chat     : 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',
 	close    : 'M6 6l12 12M18 6L6 18',
 	down     : 'M6 9l6 6 6-6',
 	events   : 'M5 6h14v14H5zM5 10h14M9 3v4M15 3v4',
 	link     : 'M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1',
+	lock     : 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
 	map      : 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
 	people   : 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.7',
 	plus     : 'M12 5v14M5 12h14',
 	send     : 'M4 12l16-8-6 16-2-7z',
 	settings : 'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4',
-	share    : 'M12 15V3M8 7l4-4 4 4M8 11H6v10h12V11h-2'
+	share    : 'M12 15V3M8 7l4-4 4 4M8 11H6v10h12V11h-2',
+	trash    : 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13'
 
 
 };

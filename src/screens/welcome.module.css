@@ -9,8 +9,8 @@
  * column, the mark above the wordmark and tagline a tier 3 space apart, the
  * start button a tier 2 space below them, then the outlined button that gets
  * groups back, the alert for a sign-in that doesn't go through, the
- * agreement line a tier 2 space below them, a status that says a deletion
- * finished, and the part for deleting data, placed last when it shows.
+ * agreement line a tier 2 space below them, and the part for deleting data,
+ * placed last.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -25,7 +25,7 @@
 
 	align-content       : center;
 	display             : grid;
-	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaPar' 'welStaBut' 'welJoiBut' 'welRecBut' 'welErrPar' 'welLegPar';
+	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut' 'welJoiBut' 'welRecBut' 'welErrPar' 'welLegPar';
 	justify-items       : center;
 	min-height          : 100vh;
 	padding             : var( --tie-ver-001 ) var( --gut-sid-pad );       /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
@@ -69,23 +69,6 @@
 	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
 	grid-area : welTagPar;
 	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
-
-
-}
-
-.welStaPar { /* What: Welcome Status Paragraph. Why: A deletion's confirmation reads below the tagline. How: This sets it bold, capped at the small text width, in its own area. */
-
-
-	font-weight : 700;
-	grid-area   : welStaPar;
-	max-width   : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
-
-
-}
-.welStaPar:empty { /* What: Empty Welcome Status Paragraph. Why: The status stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the screen's row gap, cancelling the gap above it. */
-
-
-	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
 
 
 }
@@ -189,7 +172,7 @@
 
 }
 
-.welDelDiv { /* What: Welcome Delete Div. Why: Deleting data comes last and apart, and shows only when the phone holds an identity, so a named row would leave a gap without it. How: This takes its row by auto placement after the named areas, with the tier 2 space less the tier 3 gap above it. */
+.welDelDiv { /* What: Welcome Delete Div. Why: Deleting data comes last and apart. How: This takes its row by auto placement after the named areas, with the tier 2 space less the tier 3 gap above it. */
 
 
 	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */

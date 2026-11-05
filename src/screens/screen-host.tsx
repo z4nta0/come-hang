@@ -9,10 +9,12 @@ import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Wh
 import { CreGroCom       } from './create-group.tsx';     // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
 import { GroFraCom       } from './group-frame.tsx';      // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
 import { groWatFun       } from '../state/groups.ts';     // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
+import { ideHasFun       } from '../state/deletion.ts';   // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
 import { InsIosCom       } from './install-ios.tsx';      // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
 import { isaInsFun       } from '../platform/install.ts'; // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
 import { isaIosFun       } from '../platform/install.ts'; // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
 import { JoiGroCom       } from './join-group.tsx';       // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
+import { LanPagCom       } from './landing/page.tsx';     // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
 import { LoaScrCom       } from './loading.tsx';          // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
 import { NotSheCom       } from './notices.tsx';          // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
 import { PasInvCom       } from './paste-invite.tsx';     // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
@@ -28,7 +30,7 @@ import { useRef          } from 'react';                  // What: Use Reference
 import { useScrOpeFun    } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
 import { useScrStaFun    } from '../ui/screen.ts';        // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
 import { useState        } from 'react';                  // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
-import { WelScrCom       } from './welcome.tsx';          // What: Welcome Screen Component. Why: Someone in no group sees the welcome. How: The host shows it when there are no groups.
+import { WelScrCom       } from './welcome.tsx';          // What: Welcome Screen Component. Why: A phone holding an identity in no group sees the welcome. How: The host shows it when there are no groups but an identity.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
@@ -45,22 +47,23 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * and the groups this identity is in. While the groups load it shows the
  * waiting screen, and once they have, it tells the scroll hook the screen is
  * ready, so a reload can return to where it was. The screen for starting a
- * group shows when the entry asks for it; otherwise someone in no group sees
- * the welcome, and someone in groups sees the group the entry names, or the
- * first group by name when it names none or one they've left. Creating a group
- * restarts the watch, since a first group is also when the identity is made,
- * and opens the new group in place of the form, and getting groups back from
- * the welcome restarts it too. The join screen an invite link opens shows
- * whatever the groups, and once its joiner is in, or leaves it, the watch
- * restarts, since opening the invite made the identity, and the group or the
- * default screen opens in its place. Leaving or deleting a group opens the
- * next group, or the welcome when none is left, and the host announces the
- * change through a status that stays across screens. On an iPhone or iPad in
- * Safari, the install screen shows before any of these, holding an invite
- * link's token to copy, until the app runs installed or someone carries on in
- * Safari, whose main area then takes focus. Once the groups have loaded, the
- * sheet of notices about what happened while someone was away sits over
- * whichever screen shows.
+ * group shows when the entry asks for it; otherwise a phone in no group sees
+ * the landing page when it holds no identity and the welcome when it does,
+ * waiting on that check too, and someone in groups sees the group the entry
+ * names, or the first group by name when it names none or one they've left.
+ * Creating a group restarts the watch, since a first group is also when the
+ * identity is made, and opens the new group in place of the form, and getting
+ * groups back from the landing page or the welcome restarts it too. The join
+ * screen an invite link opens shows whatever the groups, and once its joiner
+ * is in, or leaves it, the watch restarts, since opening the invite made the
+ * identity, and the group or the default screen opens in its place. Leaving or
+ * deleting a group opens the next group, or the welcome when none is left, and
+ * the host announces the change through a status that stays across screens. On
+ * an iPhone or iPad in Safari, the install screen shows before any of these,
+ * holding an invite link's token to copy, until the app runs installed or
+ * someone carries on in Safari, whose main area then takes focus. Once the
+ * groups have loaded, the sheet of notices about what happened while someone
+ * was away sits over whichever screen shows.
  *
  * Sections:
  *  - Hooks
@@ -157,6 +160,64 @@ const useGroLisFun = ( watVerNum : number ) : GroRecTyp[] | null => { // What: U
 
 // #endregion useGroLisFun
 
+
+
+// #region useIdeHasFun
+
+/**
+ * useIdeHasFun = Use Identity Has Function
+ *
+ * @summary
+ * Checks whether the phone holds an identity, without connecting, again each
+ * time watVerNum changes, since a run restarts whenever an identity may have
+ * been made or brought back. Returns null until the current run's check is
+ * in.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param watVerNum - Watch Version Number: The watch's run, which repeats
+ *                    the check when it changes.
+ *
+ * @returns Whether the phone holds an identity, or null while checking.
+ *
+ * @example
+ * ```ts
+ * useIdeHasFun(0) // => false
+ * ```
+ *
+*/
+
+const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use Identity Has Function. Why: The landing page and the welcome are told apart by whether the phone holds an identity. How: This checks it each run and keeps the answer with its run.
+
+
+	const [ ideHasObj, setIdeHasObj ] = useState< { hasBoo : boolean, watVerNum : number } | null >( null ); // What: Identity Has Object And Setter. Why: An answer has to be told apart from an earlier run's. How: This holds the latest answer with its run.
+
+
+
+	useEffect( () => { // What: Identity Check Effect. Why: The phone is checked for each run. How: This reads the key store and keeps the answer while the run is current.
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: A late answer belongs to a run that's over. How: This is true until the cleanup runs.
+
+
+		void ideHasFun().then( ( hasValBoo ) => { if ( actValBoo ) setIdeHasObj( { hasBoo : hasValBoo, watVerNum } ); } ); // What: Identity Check Call. Why: The answer picks the screen. How: This checks and keeps the answer with its run.
+
+
+
+		return () => { actValBoo = false; }; // What: Check Cleanup. Why: A later run replaces this one. How: This marks it inactive.
+
+
+	}, [ watVerNum ] ); // What: Effect Dependency Array. Why: A new run checks again. How: watVerNum changes whenever an identity may have changed.
+
+
+
+	return ideHasObj?.watVerNum === watVerNum ? ideHasObj.hasBoo : null; // What: Identity Return. Why: An earlier run's answer isn't the current one. How: This returns the answer when it's this run's, or null while checking.
+
+
+};
+
+// #endregion useIdeHasFun
+
 // #endregion Hooks
 
 
@@ -208,7 +269,8 @@ function ScrHosCom () : React.JSX.Element {
 	const [ watVerNum, setWatVerNum ] = useState( 0 );         // What: Watch Version Number And Setter. Why: A first group is created with the identity, which the running watch didn't have. How: This counts the watch's runs.
 
 
-	const groRecArr = useGroLisFun( watVerNum );                                                    // What: Group Record Array. Why: The groups decide between the welcome and a group. How: This watches them, null while loading.
+	const groRecArr = useGroLisFun( watVerNum );                                                    // What: Group Record Array. Why: The groups decide between the first screens and a group. How: This watches them, null while loading.
+	const ideHasBoo = useIdeHasFun( watVerNum );                                                    // What: Identity Has Boolean. Why: A phone in no group sees the landing page or the welcome by whether it holds an identity. How: This checks it, null while checking.
 	const visGroArr = groRecArr?.filter( ( groRecObj ) => groRecObj.ideStr !== gonIdeStr ) ?? null; // What: Visible Group Array. Why: A group just left or deleted is gone to the member at once. How: This leaves it out of the groups, null while loading.
 
 	const iosGatBoo = isaIosFun() && !isaInsFun() && !safConBoo; // What: iOS Gate Boolean. Why: On an iPhone or iPad in Safari, installing comes before anything else, since nothing done in Safari moves to the app (Section 16). How: This is true there until the app is installed or someone chooses to carry on in Safari.
@@ -217,10 +279,10 @@ function ScrHosCom () : React.JSX.Element {
 	useLayoutEffect( () => { // What: Screen Ready Effect. Why: A reload returns to its scroll position only once the real screen is tall enough to reach it. How: This tells the scroll hook the screen is ready once the groups have loaded.
 
 
-		if ( groRecArr !== null ) scrReaFun(); // What: Ready Call. Why: The real screen has just rendered. How: This settles the hook's wait, which later calls leave as it is.
+		if ( groRecArr !== null && ( groRecArr.length > 0 || ideHasBoo !== null ) ) scrReaFun(); // What: Ready Call. Why: The real screen has just rendered, which in no group also waits on the identity check. How: This settles the hook's wait, which later calls leave as it is.
 
 
-	}, [ groRecArr ] ); // What: Effect Dependency Array. Why: The screen is ready once the groups arrive. How: groRecArr changes from null to the list when they do.
+	}, [ groRecArr, ideHasBoo ] ); // What: Effect Dependency Array. Why: The screen is ready once the groups arrive, and in no group once the check does too. How: groRecArr changes from null to the list when they arrive, and ideHasBoo from null to the answer.
 
 
 
@@ -412,7 +474,15 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-		if ( visGroArr.length === 0 ) return <WelScrCom focBoo={ scrStaObj?.focBoo === true } onRecFun={ recGroFun } />; // What: Welcome Return. Why: Someone in no group starts at the welcome, which takes focus when it replaces the last group and can bring groups back. How: This shows it, passing the entry's focus request and what to do once an identity comes back.
+		if ( visGroArr.length === 0 && ideHasBoo === null ) return <LoaScrCom />; // What: Checking Return. Why: The landing page and the welcome are told apart by the identity check. How: This keeps the waiting screen until it's in.
+
+
+
+		if ( visGroArr.length === 0 && !ideHasBoo ) return <LanPagCom onRecFun={ recGroFun } />; // What: Landing Return. Why: A phone with no identity meets Come Hang through its landing page, which can bring groups back. How: This shows it, passing what to do once an identity comes back.
+
+
+
+		if ( visGroArr.length === 0 ) return <WelScrCom focBoo={ scrStaObj?.focBoo === true } onRecFun={ recGroFun } />; // What: Welcome Return. Why: A phone holding an identity in no group starts at the welcome, which takes focus when it replaces the last group and can bring groups back. How: This shows it, passing the entry's focus request and what to do once an identity comes back.
 
 
 

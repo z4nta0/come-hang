@@ -227,9 +227,9 @@ pagTesObj( "a pasted invite link opens its join screen, and a paste that holds n
 	const linInpLoc = secPagObj.getByLabel( 'Invite link', { exact : true } ); // What: Link Input Locator. Why: The checks read and fill the field. How: This finds it by its label.
 
 
-	await secPagObj.goto( '/' ); // What: Welcome Open Call. Why: The paste starts from the welcome. How: This opens the app.
+	await secPagObj.goto( '/' ); // What: Landing Open Call. Why: The paste starts from the landing page. How: This opens the app.
 
-	await secPagObj.getByRole( 'button', { name : 'Join with an invite link' } ).click(); // What: Join Click Call. Why: The welcome offers joining with a link. How: This presses its button.
+	await secPagObj.getByRole( 'button', { name : 'Join with an invite link' } ).click(); // What: Join Click Call. Why: The landing page offers joining with a link. How: This presses its button.
 
 	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Join with an invite link' } ) ).toBeFocused(); // What: Heading Focus Assertion. Why: The button that opened the screen is gone, so focus lands on the heading. How: This expects it focused.
 
@@ -252,7 +252,7 @@ pagTesObj( "a pasted invite link opens its join screen, and a paste that holds n
 
 	await secPagObj.goBack(); // What: Back Call. Why: The join screen took the paste's place, so back returns to where it was opened. How: This steps back.
 
-	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeVisible(); // What: Welcome Assertion. Why: Back skips the paste screen. How: This expects the welcome's heading.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: Back skips the paste screen. How: This expects the landing page's heading.
 
 
 } );
