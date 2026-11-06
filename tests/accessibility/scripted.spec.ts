@@ -545,6 +545,9 @@ async function keyProFun ( curPagObj : Page, engNamStr : string ) : Promise< str
 
 // #region Module Init
 
+test.describe.configure( { mode : 'parallel' } ); // What: Parallel Mode Call. Why: Each test opens its own state in its own page, so the file's tests needn't wait on one another, and run one at a time they kept a single worker busy long after the rest had finished. How: This lets the file's tests spread across every worker.
+
+
 for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every check runs on every page state. How: This declares each check once per state.
 
 

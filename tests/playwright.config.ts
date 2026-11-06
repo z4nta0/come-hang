@@ -73,7 +73,7 @@ const SUI_NAM_ARR = [ // What: Suite Name Array. Why: Each suite lives in its ow
 const PLA_CON_OBJ = defineConfig({ // What: Playwright Config Object. Why: Playwright reads its whole setup from this file's default export. How: This holds the run settings and the shared page settings, one project per suite and engine, the reporters, and the two servers.
 
 
-	fullyParallel : false,            // What: Fully Parallel. Why: Each spec file walks its states in order. How: This keeps a file's tests running in sequence, while separate files may still run in parallel.
+	fullyParallel : false,            // What: Fully Parallel. Why: Most spec files walk their steps in order. How: This keeps a file's tests running in sequence, while separate files may still run in parallel, and a file whose tests stand alone opts into parallel mode itself.
 	outputDir     : 'output/results', // What: Output Directory. Why: Failure screenshots and traces need a home git ignores. How: This writes them under tests/output/results.
 	testDir       : '.',              // What: Test Directory. Why: Each project picks its own folder below. How: This roots test discovery at tests/.
 	workers       : 3,                // What: Workers. Why: The engines are independent, but each worker drives a full browser. How: This runs up to three spec files at once.
