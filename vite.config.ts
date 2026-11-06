@@ -287,7 +287,9 @@ const VIT_CON_OBJ = defineConfig({ // What: Vite Config Object. Why: Vite reads 
 		depWriFun()  // What: Deploy Write Call. Why: The hosting files name the build's own project. How: This adds the deploy files' writer, last.
 
 
-	]
+	],
+
+	server : { watch : { ignored : [ '**/*.log', '**/dist/**', '**/functions/lib/**', '**/tests/output/**' ] } } // What: Server. Why: A test run writes hundreds of files a second into these folders and logs, none of them app code, and watching them kept every dev server busy throughout a run (measured 2026-11-06). How: This keeps the file watcher off the emulators' logs, the build, the compiled functions, and the test output.
 
 
 });
