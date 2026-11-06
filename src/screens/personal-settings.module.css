@@ -1,0 +1,241 @@
+
+
+
+/**
+ * personal-settings.module.css = Personal Settings Module
+ *
+ * @summary
+ * Styles for PerSetCom: this phone's part with its appearance choices, note,
+ * and buttons, the account's part with its notes and buttons, and each
+ * part's row of buttons. The parts sit in whichever Settings column holds
+ * them, which spaces them and holds their status and alert.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region devSetSec */
+
+.devSetSec { /* What: Device Settings Section. Why: The heading, the appearance choice, the note, and the button read as one part. How: This stacks them a tier 3 space apart, in order, since the button's row shares its class with the other parts. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.devTitHea { /* What: Device Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+
+
+/* #region devAppFie */
+
+.devAppFie { /* What: Device Appearance Fieldset. Why: The legend and the three choices read down one column, without the browser's frame around them. How: This stacks them a tier 5 space apart by auto placement, since the choices repeat one class, with no border, padding, or margin. */
+
+
+	border    : 0;
+	display   : grid;
+	margin    : 0;
+	min-width : 0;
+	padding   : 0;
+	row-gap   : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.devAppLeg { /* What: Device Appearance Legend. Why: The legend names the choices above them, set like a field's label. How: This sets it bold with no padding, a tier 5 space above the first choice. */
+
+
+	font-weight   : 700;
+	margin-bottom : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+	padding       : 0;
+
+
+}
+
+
+
+/* #region devChoLab */
+
+.devChoLab { /* What: Device Choice Label. Why: A whole row picks its mode, at least a touch target tall, and shows it's live under the pointer. How: This lays the circle beside its name a tier 5 space apart, rounds the row, and eases its hover background and focus ring. */
+
+
+	align-items           : center;
+	border-radius         : var( --rad-bor-med );                       /* Radius Border Medium = 11px */
+	column-gap            : var( --tie-hor-005 );                       /* Tier Horizontal 5, about 4.732px - 6.268px */
+	cursor                : pointer;
+	display               : grid;
+	grid-template-columns : auto minmax( 0, 1fr );
+	min-height            : calc( var( --ver-rhy-p04 ) * 1rem );        /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding               : 0 var( --spa-ver-m02 );                     /* Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A row's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition            : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease */
+
+
+}
+.devChoLab:hover { /* What: Hovered Device Choice Label. Why: A row in a list of choices shows it's live by color, since a lift would jostle the list. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Device Choice Label. Why: Someone who asked for less motion should see the tint switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.devChoLab { /* What: Motionless Device Choice Label. Why: The hover tint should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.devChoInp { /* What: Device Choice Input. Why: The circle should be easy to see and drawn in the brand's accent. How: This sizes it at the base rhythm step with no margin, filled in the main accent when chosen. */
+
+
+	accent-color : var( --acc-mai-col );                 /* Accent Main Color = #4A4FC9 */
+	height       : calc( var( --ver-rhy-bas ) * 1rem );  /* Vertical Rhythm Base ~= 14.572px */
+	margin       : 0;
+	width        : calc( var( --ver-rhy-bas ) * 1rem );  /* Vertical Rhythm Base ~= 14.572px */
+
+
+}
+
+/* #endregion devChoLab */
+
+/* #endregion devAppFie */
+
+
+.devNotPar { /* What: Device Note Paragraph. Why: The note is quieter than the heading. How: This sets it in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+.endActDiv { /* What: End Actions Div. Why: A part's buttons sit together, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Turning notifications on or off, installing, and linking Google are lighter actions, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion endActDiv */
+
+/* #endregion devSetSec */
+
+
+
+/* #region accSetSec */
+
+.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.accTitHea { /* What: Account Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+.accTitHea:focus { /* What: Focused Account Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
+
+
+	outline : none;
+
+
+}
+
+.accNotPar { /* What: Account Note Paragraph. Why: The notes are quieter than the heading. How: This sets them in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The link's and the upgrade's buttons sit in the same wrapping row as the other parts' buttons. How: Its rule sits in the devSetSec region. */
+
+/* What: Action Plain Button Pointer. Why: Linking Google uses the outlined pill. How: Its rule sits in the devSetSec region. */
+
+/* #endregion endActDiv */
+
+/* #endregion accSetSec */
+
+

@@ -27,7 +27,7 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * project runs, against the Emulator Suite: from Settings, the confirmation
  * refuses another word and gives focus back on Escape, then the deletion hands
  * the owner's group to its member, clears the phone, and starts the app over
- * at the landing page, which says so once; and the welcome offers the same
+ * at the landing page, which says so once; and Settings offers the same
  * deletion to a phone holding an identity in no group.
  *
  * Sections:
@@ -198,7 +198,7 @@ pagTesObj( 'an owner deletes their data from Settings only once delete is typed,
 
 	await delButObj.click(); // What: Confirm Click Call. Why: The owner deletes their data. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says the data is gone. How: This reads the welcome's status, allowing for the server call, the clear-out, and the reload, which WebKit takes longest over.
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says the data is gone. How: This reads the status, allowing for the server call, the clear-out, and the reload, which WebKit takes longest over.
 
 	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The app starts over at the landing page, with no identity left. How: This expects its heading.
 	await expect( delButObj ).toHaveCount( 0 );                                                        // What: No Button Assertion. Why: A phone with nothing left has nothing to delete. How: This expects the button gone.
@@ -218,7 +218,7 @@ pagTesObj( 'an owner deletes their data from Settings only once delete is typed,
 
 
 
-test( 'the welcome offers a phone with an identity in no group a way to delete its data', async ( { page : curPagObj } ) => { // What: Welcome Deletion Test. Why: An identity in no group can still hold data, with no Settings to reach. How: This makes an identity, deletes its only group, deletes its data from the welcome, and checks the welcome's status and that the public key is gone.
+test( 'Settings offers a phone with an identity in no group a way to delete its data', async ( { page : curPagObj } ) => { // What: Solo Deletion Test. Why: An identity in no group can still hold data, and its Settings works without a group. How: This makes an identity, deletes its only group, deletes its data from Settings, and checks the status and that the public key is gone.
 
 
 	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
@@ -233,15 +233,17 @@ test( 'the welcome offers a phone with an identity in no group a way to delete i
 
 	await runPagFun( curPagObj, '/src/state/groups.ts', 'groDelFun', groIdeStr ); // What: Group Delete Call. Why: The identity stays with no group. How: This deletes its only group.
 
-	await curPagObj.goto( '/' ); // What: Welcome Open Call. Why: Someone in no group sees the welcome. How: This opens the app.
+	await curPagObj.goto( '/' ); // What: Welcome Open Call. Why: Someone in no group sees the frame's welcome. How: This opens the app.
 
-	await curPagObj.getByRole( 'button', { name : 'Delete my data' } ).click(); // What: Open Click Call. Why: The welcome offers the deletion. How: This opens the confirmation.
+	await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The deletion lives in Settings, which works without a group. How: This opens its tab.
+
+	await curPagObj.getByRole( 'button', { name : 'Delete my data' } ).click(); // What: Open Click Call. Why: Settings offers the deletion. How: This opens the confirmation.
 
 	await curPagObj.getByLabel( 'Type "delete" to confirm' ).fill( 'delete' ); // What: Word Fill Call. Why: The word confirms. How: This types it.
 
 	await curPagObj.getByRole( 'button', { name : 'Delete my data' } ).click(); // What: Confirm Click Call. Why: The person deletes their data. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says so. How: This reads the welcome's status, allowing for the server call, the clear-out, and the reload.
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says so. How: This reads the status, allowing for the server call, the clear-out, and the reload.
 
 	await expect( curPagObj.getByRole( 'button', { name : 'Delete my data' } ) ).toHaveCount( 0 ); // What: No Button Assertion. Why: Nothing is left to delete. How: This expects the button gone.
 

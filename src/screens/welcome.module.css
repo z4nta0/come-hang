@@ -5,12 +5,11 @@
  * welcome.module.css = Welcome Module
  *
  * @summary
- * Styles for WelScrCom: a main area filling the screen as one centered
- * column, the mark above the wordmark and tagline a tier 3 space apart, the
- * start button a tier 2 space below them, then the outlined button that gets
- * groups back, the alert for a sign-in that doesn't go through, the
- * agreement line a tier 2 space below them, and the part for deleting data,
- * placed last.
+ * Styles for WelSecCom: a column filling the frame's content, centered,
+ * the mark above the heading and line a tier 3 space apart, the start button
+ * a tier 2 space below them, then the outlined buttons that join with a link
+ * and get groups back, the alert for a sign-in that doesn't go through, and
+ * the agreement line a tier 2 space below them.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -18,16 +17,17 @@
 
 
 
-/* #region welScrMai */
+/* #region welSecDiv */
 
-.welScrMai { /* What: Welcome Screen Main. Why: The welcome should sit in the middle of the screen. How: This fills the screen as a one-column grid of named areas, centered both ways, with the frame tier above and below and the gutter at the sides. */
+.welSecDiv { /* What: Welcome Section Div. Why: The welcome should sit in the middle of the content, and scroll when it outgrows a short screen. How: This fills the content as a one-column grid of named areas, centered both ways, with the frame tier above and below and the gutter at the sides. */
 
 
 	align-content       : center;
 	display             : grid;
 	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut' 'welJoiBut' 'welRecBut' 'welErrPar' 'welLegPar';
 	justify-items       : center;
-	min-height          : 100vh;
+	min-height          : 0;
+	overflow-y          : auto;
 	padding             : var( --tie-ver-001 ) var( --gut-sid-pad );       /* Tier Vertical 1 ~= 44.876px, Gutter Side Padding, about 19.304px - 44.876px */
 	row-gap             : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 	text-align          : center;
@@ -45,25 +45,16 @@
 
 }
 
-.welTitHea { /* What: Welcome Title Heading. Why: The app's name is the screen's biggest text, set as the wordmark. How: This sets it in the brand font's extra bold, slightly tightened, in its own area. */
+.welTitHea { /* What: Welcome Title Heading. Why: The heading is the content's biggest text, below the bar's. How: This sets it at Base Plus 3, in its own area. */
 
 
-	font-size      : var( --fon-siz-p05 );                    /* Font Size Base Plus 5 ~= 44.876px */
-	font-weight    : 800;
-	grid-area      : welTitHea;
-	letter-spacing : calc( var( --cdn-pow-014-rec ) * -1em ); /* Core-Design-Number to the Power of 14 Reciprocal ~= -0.020em */
-
-
-}
-.welTitHea:focus { /* What: Focused Welcome Title Heading. Why: Focus moves to the heading only so the next Tab starts there, and a ring around a heading would read as a control. How: This removes its outline. */
-
-
-	outline : none;
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+	grid-area : welTitHea;
 
 
 }
 
-.welTagPar { /* What: Welcome Tagline Paragraph. Why: The tagline is secondary to the name and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area. */
+.welTagPar { /* What: Welcome Tagline Paragraph. Why: The line is secondary to the heading and should stay a comfortable length. How: This sets it in the muted text color, capped at the small text width, in its own area. */
 
 
 	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
@@ -172,14 +163,6 @@
 
 }
 
-.welDelDiv { /* What: Welcome Delete Div. Why: Deleting data comes last and apart. How: This takes its row by auto placement after the named areas, with the tier 2 space less the tier 3 gap above it. */
-
-
-	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
-
-
-}
-
-/* #endregion welScrMai */
+/* #endregion welSecDiv */
 
 

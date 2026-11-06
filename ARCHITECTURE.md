@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-05 (the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -1722,6 +1722,27 @@ the Blaze change.
     the form keeps what was typed in session storage, per invite, until the
     request is sent.
 
+- **A phone with an identity in no group** (decided and built 2026-11-05),
+  such as after leaving its last group or deleting it, sees the app's own
+  frame with no groups rather than a separate page, so it still feels like
+  the app. The rail, or on a phone the bar and its sheet, lists no groups
+  and keeps starting one and joining with a link, and the bar shows the
+  Come Hang wordmark where a group's name goes. All five section tabs stay
+  in place, Chat, Events, Map, and People turned off with `aria-disabled`,
+  dimmed, and each saying why ("Start or join a group first") through a
+  tooltip and a screen reader description, a press on one leading back to
+  the welcome, and Settings working. Otherwise the content area holds the
+  welcome (`src/screens/welcome.tsx`): the mark, "You're not in a group
+  yet", a line on what to do, "Start a group", "Join with an invite link",
+  "Get my groups back", the line agreeing to the terms and the policy, and
+  the install note. Settings (`src/screens/solo-settings.tsx`) shows the
+  parts that belong to the phone and the account
+  (`src/screens/personal-settings.tsx`, shared with a group's Settings):
+  its appearance, notifications, installing, the Google link, the upgrade,
+  deleting one's data, and the legal documents, without the group's own
+  parts, so Delete my data lives in Settings for everyone. A phone with no
+  identity sees the landing page instead.
+
 **App's Firebase wiring, built 2026-10-28**:
 - `src/platform/firebase.ts` creates the services the first time something
   asks, never on page load, so a visitor who hasn't acted makes no
@@ -1754,8 +1775,8 @@ the Blaze change.
   (`src/screens/screen-host.tsx`) picks the screen from the history entry and
   the group list, showing a waiting screen while the groups load, whose loader
   of bouncing typing dots appears only after 300ms, then, to someone in no
-  group, the landing page when the phone holds no identity and the welcome
-  when it does (built 2026-11-05), the form for starting a group when the entry asks for
+  group, the landing page when the phone holds no identity and the group
+  frame with no group, holding the welcome, when it does (built 2026-11-05), the form for starting a group when the entry asks for
   it, and otherwise the group the entry names, or the first by name. The form
   tidies and checks both names, says what's wrong beside a field and focuses
   it, and announces a failed creation; a created group replaces the form's
@@ -2032,9 +2053,8 @@ the Blaze change.
 - **Deleting one's data** (decided 2026-11-03, built in
   `functions/src/data-deletion.ts`, `src/state/deletion.ts`, and
   `src/screens/delete-data.tsx`): Settings' account part offers "Delete my
-  data", and so does the welcome on a phone holding an identity in no
-  group, since such an identity can still hold a Google link or the
-  upgrade with no Settings to reach. Its confirmation lists what happens
+  data", Settings working without a group too, since an identity in no
+  group can still hold a Google link or the upgrade. Its confirmation lists what happens
   and asks for the word delete. The callable `delDatFun` then, for each
   group the identity owns, deletes its own documents there and hands the
   group on or deletes it (Section 18); for each group it belongs to,
@@ -2065,9 +2085,6 @@ the Blaze change.
   alone, so a kind added later waits for an app that can word it.
 
 **App structure, still open**:
-- What the root shows a phone holding an identity in no group, such as
-  after leaving its last group: today it's the welcome, with "Delete my
-  data", and it's decided once the landing page is built (above).
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's

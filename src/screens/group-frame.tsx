@@ -16,9 +16,11 @@ import { IcoSvgCom    } from '../ui/icon.tsx';       // What: Icon SVG Component
 import { iniTexFun    } from '../utils/text.ts';     // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
 import { MaiAreCom    } from '../ui/main-area.tsx';  // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
 import { SheDiaCom    } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
+import { SolSetCom    } from './solo-settings.tsx';  // What: Solo Settings Component. Why: Settings works with no group. How: The frame shows it as Settings then.
 import { useEffect    } from 'react';                // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This moves focus once it's drawn.
 import { useRef       } from 'react';                // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
 import { useScrOpeFun } from '../ui/screen.ts';      // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
+import { WelSecCom    } from './welcome.tsx';        // What: Welcome Section Component. Why: With no group, the content says how to start or join one. How: The frame shows it then.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
@@ -33,16 +35,19 @@ import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type.
  * group-frame.tsx = Group Frame
  *
  * @summary
- * The frame around an open group. Below 720px wide it has a bar with the
- * group's name, which opens a sheet listing every group and offering to start
- * one or join one with an invite link; from 720px up, a rail of every group,
- * by initials, sits down the left beside the bar, the name there plain text,
- * and the rail holds the buttons that start a group and join one with a link.
- * The group's sections, from its chat to its settings, run along the bottom
- * below 720px and down a column beside the rail from 720px, and the open
- * section fills the main area below the bar. Choosing a group, a section,
- * starting a group, or joining one opens it as a new history entry, and a
- * group just created takes focus on its heading.
+ * The frame around an open group, or around the welcome when the phone is
+ * in no group. Below 720px wide it has a bar with the group's name, or the
+ * app's wordmark with no group, which opens a sheet listing every group and
+ * offering to start one or join one with an invite link; from 720px up, a
+ * rail of every group, by initials, sits down the left beside the bar, the
+ * name there plain text, and the rail holds the buttons that start a group
+ * and join one with a link. The sections, from the chat to Settings, run
+ * along the bottom below 720px and down a column beside the rail from 720px,
+ * and the open section fills the main area below the bar. With no group,
+ * every section but Settings is turned off, saying a group comes first, and
+ * the main area shows the welcome. Choosing a group, a section, starting a
+ * group, or joining one opens it as a new history entry, and a group just
+ * created takes focus on its heading.
  *
  * Sections:
  *  - Constants
@@ -77,7 +82,7 @@ const SEC_TAB_ARR : SecTabTyp[] = [ // What: Section Tab Array. Why: Every group
 
 // #region Components
 
-type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, focuses it when asked, and hands on a group left or deleted. How: This types GroFraCom's props.
+type GfcProTyp = { curGroObj : GroRecTyp | null, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, onRecFun : () => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, or the welcome with none, focuses it when asked, and hands on a group left or deleted and an identity brought back. How: This types GroFraCom's props.
 
 // #region GroFraCom
 
@@ -87,8 +92,11 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  * @summary
  * Renders the frame around the open group: the rail, the bar with the
  * group's name as the screen's one h1, the section tabs, the main area
- * showing the open section, and the group sheet,
- * a modal sheet that slides up from the bottom. The sheet closes on its
+ * showing the open section, and the group sheet, a modal sheet that slides
+ * up from the bottom. With no group, the h1 is the app's wordmark, the
+ * group's sections are turned off, each described by why, a press on one
+ * returning to the welcome, and the main area shows the welcome, or the
+ * phone's and account's Settings. The sheet closes on its
  * close button, on Escape, on a tap of the dimmed page, or once a group is
  * chosen, sliding back down first. When focBoo is true, the heading takes
  * focus once drawn, and the history entry is replaced with one that no longer
@@ -96,7 +104,8 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param props.curGroObj - Current Group Object: The open group.
+ * @param props.curGroObj - Current Group Object: The open group, or null
+ *                          when the phone is in no group.
  * @param props.focBoo    - Focus Boolean: Whether the heading takes focus,
  *                          as it does for a group just created, or one
  *                          opened after another was left or deleted.
@@ -104,6 +113,8 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  * @param props.onGonFun  - On Gone Function: Called with a group's ID and
  *                          what to announce once Settings leaves or deletes
  *                          it.
+ * @param props.onRecFun  - On Recover Function: Called once the welcome
+ *                          brings an identity back onto this phone.
  * @param props.secNamStr - Section Name String: The section to show.
  *
  * @returns The frame.
@@ -115,9 +126,10 @@ type GfcProTyp = { curGroObj : GroRecTyp, focBoo : boolean, groRecArr : GroRecTy
  *
 */
 
-function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
+function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, onRecFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
 
 
+	const curIdeStr = curGroObj?.ideStr;                    // What: Current Identifier String. Why: The rail, sheet, tabs, and focus all compare against the open group. How: This holds its ID, undefined with no group.
 	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This holds the heading.
 	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group, starting one, or joining one with a link opens a screen. How: This reads the function that opens one.
 	const sheHanRef = useRef< SheHanTyp >( null );          // What: Sheet Handle Reference. Why: The switcher opens the group sheet and a choice closes it. How: This holds the sheet's handle.
@@ -133,10 +145,10 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 		heaEleRef.current?.focus(); // What: Focus Call. Why: The new group is announced and the next Tab starts from it. How: This focuses the heading.
 
-		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of the change, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
+		scrOpeFun( { groStr : curIdeStr, scrStr : 'group' }, true ); // What: Request Clear Call. Why: The request is for the moment of the change, and a reload or a later visit keeping the same entry shouldn't take focus again. How: This replaces the entry with one that no longer asks.
 
 
-	}, [ curGroObj.ideStr, focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curGroObj.ideStr changes when another group opens, focBoo when the request to focus does, and scrOpeFun only if the router's navigate does.
+	}, [ curIdeStr, focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curIdeStr changes when another group opens, focBoo when the request to focus does, and scrOpeFun only if the router's navigate does.
 
 
 
@@ -175,7 +187,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 						type='button'
 
-						aria-current={ groRecObj.ideStr === curGroObj.ideStr ? 'true' : undefined } // What: Rail Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's button.
+						aria-current={ groRecObj.ideStr === curIdeStr ? 'true' : undefined } // What: Rail Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's button.
 						title={ groRecObj.namStr }
 
 						onClick={ () => groOpeFun( groRecObj.ideStr ) }
@@ -247,10 +259,10 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 				<h1
 					ref={ heaEleRef }
 
-					className={ cssModObj.fraNamHea }
+					className={` ${ cssModObj.fraNamHea }   ${ curGroObj === null ? cssModObj.fraNamHeaWord : '' } `}
 
 					tabIndex={ -1 } // What: Heading Tab Index. Why: A group just created moves focus here, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
-				>{ /* What: Frame Name Heading Element. Why: The screen's one heading names the open group. How: This shows the name as the switcher below 720px wide, and as plain text from 720px up, where the rail switches groups. */ }
+				>{ /* What: Frame Name Heading Element. Why: The screen's one heading names the open group, or the app with none. How: This shows the name, or the wordmark, as the switcher below 720px wide, and as plain text from 720px up, where the rail switches groups. */ }
 
 
 					<button
@@ -264,7 +276,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 					>{ /* What: Frame Switcher Button Element. Why: On a phone the group's name is how someone reaches their other groups. How: This opens the group sheet, below 720px wide. */ }
 
 
-						{ curGroObj.namStr }
+						{ curGroObj?.namStr ?? 'Come Hang' }{ /* What: Heading Text. Why: The bar names the open group, or the app while there's none. How: This shows the group's name, or the wordmark. */ }
 
 						<IcoSvgCom
 							icoNamStr='down'
@@ -274,7 +286,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 					</button>
 
-					<span className={ cssModObj.fraNamSpa }>{ curGroObj.namStr }</span>{ /* What: Frame Name Span Element. Why: On a wide screen the name is plain text, since the rail switches groups. How: This shows it from 720px wide and up. */ }
+					<span className={ cssModObj.fraNamSpa }>{ curGroObj?.namStr ?? 'Come Hang' }</span>{ /* What: Frame Name Span Element. Why: On a wide screen the name, or the wordmark with no group, is plain text, since the rail switches groups. How: This shows it from 720px wide and up. */ }
 
 
 				</h1>
@@ -291,20 +303,38 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 			>{ /* What: Frame Section Nav Element. Why: Every part of the group sits one tap away. How: This lists a button for each section, along the bottom below 720px wide and down a column beside the rail from 720px. */ }
 
 
-				{ SEC_TAB_ARR.map( ( secTabObj ) => ( // What: Section Tab Map. Why: Each section gets its own button. How: This renders one per section.
+				<span
+					id='secLocSpa'
+
+					className={ cssModObj.secLocSpa }
+				>Start or join a group first</span>{ /* What: Section Locked Span Element. Why: A section turned off for want of a group should say why to a screen reader, which can't see it dimmed. How: The turned-off tabs name it as their description, hidden from sight, where their tooltip says it. */ }
 
 
-					<button
-						key={ secTabObj.icoNamStr }
 
-						className={ cssModObj.secTabBut }
+				{ SEC_TAB_ARR.map( ( secTabObj ) => { // What: Section Tab Map. Why: Each section gets its own button. How: This renders one per section, turning off a group's sections while there's none.
 
-						type='button'
 
-						aria-current={ secTabObj.icoNamStr === secNamStr ? 'page' : undefined } // What: Section Current State. Why: The open section should be marked, to sight and to a screen reader. How: This sets aria-current on its button.
+					const locTabBoo = curIdeStr === undefined && secTabObj.icoNamStr !== 'settings'; // What: Locked Tab Boolean. Why: A section showing a group's own things has nothing to show without one, while Settings has the phone's and account's. How: This is true for those sections with no group.
 
-						onClick={ () => scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group', secStr : secTabObj.icoNamStr } ) }
-					>{ /* What: Section Tab Button Element. Why: A section opens with a tap, and back returns to the last one. How: This opens the section as a new history entry. */ }
+
+
+					return (
+
+
+						<button
+							key={ secTabObj.icoNamStr }
+
+							className={ cssModObj.secTabBut }
+
+							type='button'
+
+							aria-current={ !locTabBoo && secTabObj.icoNamStr === secNamStr ? 'page' : undefined } // What: Section Current State. Why: The open section should be marked, to sight and to a screen reader, and a turned-off one is never open. How: This sets aria-current on its button.
+							aria-describedby={ locTabBoo ? 'secLocSpa' : undefined } // What: Section Description Reference. Why: A screen reader should say why the section is off. How: This points a turned-off tab at the reason.
+							aria-disabled={ locTabBoo ? 'true' : undefined } // What: Section Disabled State. Why: A turned-off tab stays in the Tab order so its reason can be found, while saying it's off. How: This marks it off without the disabled attribute, which would take it out of reach.
+							title={ locTabBoo ? 'Start or join a group first' : undefined } // What: Section Title Tooltip. Why: Someone pointing at a dimmed tab should see why it's off. How: This shows the reason on hover.
+
+							onClick={ () => { if ( !locTabBoo ) scrOpeFun( { groStr : curIdeStr, scrStr : 'group', secStr : secTabObj.icoNamStr } ); else if ( secNamStr === 'settings' ) scrOpeFun( { scrStr : 'group' } ); } } // What: Section Click Handler. Why: A section opens with a tap, while a turned-off one leads to the welcome, which says how to start or join a group. How: This opens the section, or the welcome from Settings, as a new history entry.
+						>{ /* What: Section Tab Button Element. Why: A section opens with a tap, and back returns to the last one. How: This opens the section as a new history entry, or leads to the welcome while it's off. */ }
 
 
 						<IcoSvgCom
@@ -312,13 +342,16 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 							sizSteStr='p01'
 						/>{ /* What: Section Icon SVG Component. Why: An icon makes each tab quick to find. How: This draws the section's icon at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
 
-						{ secTabObj.labStr }
+							{ secTabObj.labStr }
 
 
-					</button>
+						</button>
 
 
-				) ) }
+					);
+
+
+				} ) }
 
 
 			</nav>
@@ -328,7 +361,19 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 			<MaiAreCom className={ cssModObj.fraConMai }>{ /* What: Frame Content Main Area Component. Why: The open section is the screen's main content. How: This holds it below the bar, filling the rest of the screen. */ }
 
 
-				{ secNamStr === 'chat' ? ( // What: Chat Section Check. Why: Each section has its own component. How: This shows the open section, the chat first and the map last.
+				{ curGroObj === null && secNamStr === 'settings' ? ( // What: Solo Settings Check. Why: With no group, Settings still holds the phone's and account's parts. How: This shows them when Settings is open.
+
+
+					<SolSetCom /> // What: Solo Settings Component. Why: Someone in no group still sets up their phone and account, or deletes their data. How: This shows Settings without a group's parts.
+
+
+				) : curGroObj === null ? ( // What: Welcome Check. Why: With no group, there's no section of one to show. How: This shows the welcome instead.
+
+
+					<WelSecCom onRecFun={ onRecFun } /> // What: Welcome Section Component. Why: Someone in no group needs a way to start or join one, or to get theirs back. How: This shows the welcome.
+
+
+				) : secNamStr === 'chat' ? ( // What: Chat Section Check. Why: Each section has its own component. How: This shows the open section, the chat first and the map last.
 
 
 					<GroChaCom
@@ -411,7 +456,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, secNamStr } : Gfc
 
 								type='button'
 
-								aria-current={ groRecObj.ideStr === curGroObj.ideStr ? 'true' : undefined } // What: Sheet Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's row.
+								aria-current={ groRecObj.ideStr === curIdeStr ? 'true' : undefined } // What: Sheet Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's row.
 
 								onClick={ () => groOpeFun( groRecObj.ideStr ) }
 							>{ groRecObj.namStr }</button>{ /* What: Sheet Group Button Element. Why: A group is chosen by its name. How: This opens the group and closes the sheet. */ }

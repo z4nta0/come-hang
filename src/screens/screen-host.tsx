@@ -30,7 +30,6 @@ import { useRef          } from 'react';                  // What: Use Reference
 import { useScrOpeFun    } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
 import { useScrStaFun    } from '../ui/screen.ts';        // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
 import { useState        } from 'react';                  // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
-import { WelScrCom       } from './welcome.tsx';          // What: Welcome Screen Component. Why: A phone holding an identity in no group sees the welcome. How: The host shows it when there are no groups but an identity.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
@@ -48,9 +47,10 @@ import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type.
  * waiting screen, and once they have, it tells the scroll hook the screen is
  * ready, so a reload can return to where it was. The screen for starting a
  * group shows when the entry asks for it; otherwise a phone in no group sees
- * the landing page when it holds no identity and the welcome when it does,
- * waiting on that check too, and someone in groups sees the group the entry
- * names, or the first group by name when it names none or one they've left.
+ * the landing page when it holds no identity, waiting on that check, and
+ * otherwise the group frame shows the group the entry names, or the first
+ * group by name when it names none or one they've left, or with no group,
+ * its welcome or the Settings the entry names.
  * Creating a group restarts the watch, since a first group is also when the
  * identity is made, and opens the new group in place of the form, and getting
  * groups back from the landing page or the welcome restarts it too. The join
@@ -232,17 +232,18 @@ const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use I
  *
  * @summary
  * Renders the screen the history entry and the groups call for: the waiting
- * screen while loading, the screen for starting a group, the welcome, or the
- * group frame, then the notices sheet once the groups have loaded, outside
- * the install screen, and a status region that stays as the screens change. A
- * created group restarts the watch and replaces the form's entry with the new
- * group's, marked to take focus. A group left or deleted is hidden at once,
- * before the watch drops it, its entry replaced with the next group's, or with
- * none when it was the last, marked to take focus, and the status announces
- * the change. Groups brought back from Google restart the watch, the first of
- * them taking focus. On an iPhone or iPad in Safari, the install screen comes
- * first until the app runs installed or someone carries on in Safari, a
- * choice kept on the device, after which the main area takes focus.
+ * screen while loading, the screen for starting a group, the landing page, or
+ * the group frame, with no group when the phone is in none, then the notices
+ * sheet once the groups have loaded, outside the install screen, and a status
+ * region that stays as the screens change. A created group restarts the watch
+ * and replaces the form's entry with the new group's, marked to take focus. A
+ * group left or deleted is hidden at once, before the watch drops it, its
+ * entry replaced with the next group's, or with none when it was the last,
+ * marked to take focus, and the status announces the change. Groups brought
+ * back from Google restart the watch, the first of them taking focus. On an
+ * iPhone or iPad in Safari, the install screen comes first until the app runs
+ * installed or someone carries on in Safari, a choice kept on the device,
+ * after which the main area takes focus.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -487,11 +488,7 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-		if ( visGroArr.length === 0 ) return <WelScrCom focBoo={ scrStaObj?.focBoo === true } onRecFun={ recGroFun } />; // What: Welcome Return. Why: A phone holding an identity in no group starts at the welcome, which takes focus when it replaces the last group and can bring groups back. How: This shows it, passing the entry's focus request and what to do once an identity comes back.
-
-
-
-		const curGroObj = visGroArr.find( ( groRecObj ) => groRecObj.ideStr === scrStaObj?.groStr ) ?? visGroArr[ 0 ]; // What: Current Group Object. Why: The entry names a group, which may be one since left. How: This finds it, or takes the first group by name.
+		const curGroObj = visGroArr.find( ( groRecObj ) => groRecObj.ideStr === scrStaObj?.groStr ) ?? visGroArr[ 0 ] ?? null; // What: Current Group Object. Why: The entry names a group, which may be one since left, and a phone holding an identity may be in none. How: This finds it, or takes the first group by name, or null with no group.
 
 
 
@@ -500,12 +497,13 @@ function ScrHosCom () : React.JSX.Element {
 
 			<GroFraCom
 				curGroObj={ curGroObj }
-				focBoo={ scrStaObj?.focBoo === true && ( scrStaObj.groStr === undefined || curGroObj.ideStr === scrStaObj.groStr ) } // What: Focus Request. Why: Only a group opened by a creation, a leave, a deletion, or getting groups back takes focus, and only the one the entry names, or the first when it names none. How: This is true for the entry that change opened.
+				focBoo={ scrStaObj?.focBoo === true && ( scrStaObj.groStr === undefined || curGroObj?.ideStr === scrStaObj.groStr ) } // What: Focus Request. Why: Only a group opened by a creation, a leave, a deletion, or getting groups back takes focus, and only the one the entry names, or the first, or the frame with no group, when it names none. How: This is true for the entry that change opened.
 				groRecArr={ visGroArr }
-				secNamStr={ scrStaObj?.groStr === curGroObj.ideStr ? scrStaObj.secStr ?? 'chat' : 'chat' } // What: Section Name Choice. Why: The entry names the open section, and a group opened without one, or one that's gone, starts at its chat. How: This reads the entry's section when it's for the group shown, else the chat.
+				secNamStr={ scrStaObj?.groStr === undefined || scrStaObj.groStr === curGroObj?.ideStr ? scrStaObj?.secStr ?? 'chat' : 'chat' } // What: Section Name Choice. Why: The entry names the open section, and a group opened without one, or one that's gone, starts at its chat, which with no group is the welcome, while an entry naming no group, such as Settings opened before a first group arrived, keeps its section. How: This reads the entry's section when it's for the group shown or for none, else the chat.
 
 				onGonFun={ gonGroFun }
-			/> // What: Group Frame Component. Why: Someone in groups sees the open one framed with the rest. How: This shows the current group.
+				onRecFun={ recGroFun }
+			/> // What: Group Frame Component. Why: Someone holding an identity sees the open group framed with the rest, or the frame's welcome with none. How: This shows the current group, or the welcome.
 
 
 		);
