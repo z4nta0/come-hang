@@ -6,10 +6,10 @@
  *
  * @summary
  * Styles for WelSecCom: a column filling the frame's content, centered,
- * the mark above the heading and line a tier 3 space apart, the start button
- * a tier 2 space below them, then the outlined buttons that join with a link
- * and get groups back, the alert for a sign-in that doesn't go through, and
- * the agreement line a tier 2 space below them.
+ * the mark above the heading and line a tier 3 space apart, the three
+ * buttons a tier 2 space below them, all as wide as the widest, the outlined
+ * ones joining with a link and getting groups back, the alert for a sign-in
+ * that doesn't go through, and the agreement line a tier 2 space below them.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -24,7 +24,7 @@
 
 	align-content       : center;
 	display             : grid;
-	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welStaBut' 'welJoiBut' 'welRecBut' 'welErrPar' 'welLegPar';
+	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welActDiv' 'welErrPar' 'welLegPar';
 	justify-items       : center;
 	min-height          : 0;
 	overflow-y          : auto;
@@ -64,27 +64,16 @@
 
 }
 
-.welStaBut { /* What: Welcome Start Button. Why: The one action stands a little apart from the text above it. How: This adds the tier 2 space less the tier 3 gap above it, in its own area. */
+
+/* #region welActDiv */
+
+.welActDiv { /* What: Welcome Actions Div. Why: The three buttons should be the same width, and stand a little apart from the text above them. How: This stacks them a tier 3 space apart, each stretched to the widest one's width, since the column centers the group at its own width, in its own area, the tier 2 space less the tier 3 gap below the text. */
 
 
-	grid-area  : welStaBut;
+	display    : grid;
+	grid-area  : welActDiv;
 	margin-top : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
-
-
-}
-
-.welJoiBut { /* What: Welcome Join Button. Why: Joining with a link sits below starting a group. How: This places it in its own area, its look shared with the recover button below. */
-
-
-	grid-area : welJoiBut;
-
-
-}
-
-.welRecBut { /* What: Welcome Recover Button. Why: Getting groups back sits below joining with a link. How: This places it in its own area. */
-
-
-	grid-area : welRecBut;
+	row-gap    : var( --tie-ver-003 );                                 /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -135,6 +124,9 @@
 
 
 }
+
+/* #endregion welActDiv */
+
 
 .welErrPar { /* What: Welcome Error Paragraph. Why: A sign-in that doesn't go through should be clear below the buttons. How: This sets it bold in the dark error color, capped at the small text width, in its own area. */
 

@@ -100,27 +100,33 @@ function WelSecCom ( { onRecFun } : WscProTyp ) : React.JSX.Element {
 
 
 
-			<ButBasCom
-				className={ cssModObj.welStaBut }
+			<div className={ cssModObj.welActDiv }>{ /* What: Welcome Actions Div Element. Why: The three ways in should read as one set, the same width. How: This stacks the buttons, each as wide as the widest. */ }
 
-				onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
-			>Start a group</ButBasCom>{ /* What: Welcome Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
 
-			<button
-				className={ cssModObj.welJoiBut }
+				<ButBasCom onClick={ () => scrOpeFun( { scrStr : 'create' } ) }>Start a group</ButBasCom>{ /* What: Welcome Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
 
-				type='button'
 
-				onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
-			>Join with an invite link</button>{ /* What: Welcome Join Button Element. Why: Someone sent a link can join with it here, which on an installed iPhone app is the only way an invite reaches the app. How: This opens the screen for pasting the link. */ }
 
-			<button
-				className={ cssModObj.welRecBut }
+				<button
+					className={ cssModObj.welJoiBut }
 
-				type='button'
+					type='button'
 
-				onClick={ () => void recGroFun() }
-			>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button>{ /* What: Welcome Recover Button Element. Why: Someone who used the app on another phone brings their groups here, and the label shows while it's working. How: This signs in with Google, reading "Signing in…" meanwhile. */ }
+					onClick={ () => scrOpeFun( { scrStr : 'paste' } ) }
+				>Join with an invite link</button>{ /* What: Welcome Join Button Element. Why: Someone sent a link can join with it here, which on an installed iPhone app is the only way an invite reaches the app. How: This opens the screen for pasting the link. */ }
+
+				<button
+					className={ cssModObj.welRecBut }
+
+					type='button'
+
+					onClick={ () => void recGroFun() }
+				>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button>{ /* What: Welcome Recover Button Element. Why: Someone who used the app on another phone brings their groups here, and the label shows while it's working. How: This signs in with Google, reading "Signing in…" meanwhile. */ }
+
+
+			</div>
+
+
 
 			<p
 				className={ cssModObj.welErrPar }
