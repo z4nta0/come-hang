@@ -62,13 +62,65 @@ type SnaRecTyp = { // What: Snapshot Record Type. Why: An element's look, and wh
 const CON_PRO_ARR = [ 'color', 'background-color', 'border-color', 'transform', 'opacity' ]; // What: Control Property Array. Why: Hover and press feedback changes these, on a control and on what's inside it, such as an icon's lines. How: Each is compared between moments, and each that changes has to be transitioned.
 const FIE_PRO_ARR = [ 'border-color', 'outline-color', 'outline-width' ];                    // What: Field Property Array. Why: A field's focus changes its border and its outline. How: Each is compared between rest and focus, and each that changes has to be transitioned.
 const FOC_PRO_ARR = [ ...CON_PRO_ARR, 'outline-color', 'outline-offset', 'outline-width' ];  // What: Focus Property Array. Why: A control's focus can change its look as well as draw its ring. How: Each is compared between blurred and focused, and each that changes has to be transitioned.
-const SET_WAI_NUM = 400;                                                                     // What: Settle Wait Number. Why: Each look is read once its transition has finished, and the longest interface transition runs about 277ms. How: This is the pause, in milliseconds, before each look is read.
+const SET_WAI_NUM = 400;                                                                     // What: Settle Wait Number. Why: Each look is read once its transition has finished, and the longest interface transition runs about 277ms. How: This is the longest wait, in milliseconds, before a look is read, and the ring test's pause.
 
 // #endregion Constants
 
 
 
 // #region Helpers
+
+// #region aniWaiFun
+
+/**
+ * aniWaiFun = Animation Wait Function
+ *
+ * @summary
+ * Waits until the element's look has settled after a change, such as a hover
+ * or a press: it lets two frames pass, so a transition the change starts has
+ * begun, then waits for every animation and transition still running on the
+ * element, anything inside it, or their pseudo-elements, to finish, but no
+ * longer than the settle time. A look that changes nothing settles after the
+ * two frames, and so does every look under reduced motion, where nothing
+ * transitions. One that endlessly repeats is left out, since it never ends.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param eleCurObj - Element Current Object: The control or field whose look
+ *                    is about to be read.
+ *
+ * @returns A promise that settles once the look has settled, with no value.
+ *
+ * @example
+ * ```ts
+ * aniWaiFun(conCurObj) // => Promise<void>
+ * ```
+ *
+*/
+
+async function aniWaiFun ( eleCurObj : ElementHandle< Element > ) : Promise< void > {
+
+
+	await eleCurObj.evaluate( async ( eleCurEle, maxWaiNum ) => { // What: Settle Evaluate Call. Why: Only the page knows which animations are running. How: This waits inside it, handing in the settle time as the cap.
+
+
+		await new Promise( ( resFunObj ) => requestAnimationFrame( () => requestAnimationFrame( resFunObj ) ) ); // What: Two Frame Wait. Why: A transition the change starts exists only once the style has been recalculated. How: This lets two frames pass.
+
+
+		const aniRunArr = document.getAnimations().filter( ( aniCurObj ) => aniCurObj.effect instanceof KeyframeEffect && aniCurObj.effect.target !== null && eleCurEle.contains( aniCurObj.effect.target ) && aniCurObj.effect.getComputedTiming().iterations !== Infinity ); // What: Animation Running Array. Why: Only motion on the element or inside it changes the look being read. How: This keeps the animations whose target sits inside the element, leaving out endless ones.
+
+
+		await Promise.race( [ Promise.all( aniRunArr.map( ( aniCurObj ) => aniCurObj.finished.catch( () => undefined ) ) ), new Promise( ( resFunObj ) => setTimeout( resFunObj, maxWaiNum ) ) ] ); // What: Settle Race Call. Why: The look is read once its motion ends, while a stuck animation shouldn't hold the probe. How: This waits for every one to finish, or for the cap, whichever comes first, counting a cancelled one as finished.
+
+
+	}, SET_WAI_NUM );
+
+
+}
+
+// #endregion aniWaiFun
+
+
 
 // #region cliBloFun
 
@@ -435,7 +487,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		await curPagObj.mouse.move( 0, 0 ); // What: Pointer Away Call. Why: The resting look is read with nothing hovered. How: This moves the pointer to the page's top-left corner.
 
-		await curPagObj.waitForTimeout( SET_WAI_NUM ); // What: Rest Settle Wait. Why: Any earlier hover has to finish fading. How: This pauses for the settle time.
+		await aniWaiFun( conCurObj ); // What: Rest Settle Wait. Why: Any earlier hover has to finish fading. How: This waits for the control's motion to end, at most the settle time.
 
 
 		const resSnaArr = await conCurObj.evaluate( snaEleFun, CON_PRO_ARR ); // What: Rest Snapshot Array. Why: The resting look is what hover is compared with. How: This records the control and everything inside it.
@@ -443,7 +495,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		await conCurObj.hover(); // What: Control Hover Call. Why: Hover feedback is the first thing checked. How: This moves the pointer onto the control.
 
-		await curPagObj.waitForTimeout( SET_WAI_NUM ); // What: Hover Settle Wait. Why: The hover look is read once it has eased in. How: This pauses for the settle time.
+		await aniWaiFun( conCurObj ); // What: Hover Settle Wait. Why: The hover look is read once it has eased in. How: This waits for the control's motion to end, at most the settle time.
 
 
 		const hovSnaArr = await conCurObj.evaluate( snaEleFun, CON_PRO_ARR ); // What: Hover Snapshot Array. Why: The hovered look is compared with rest and with pressed. How: This records it.
@@ -451,7 +503,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		await curPagObj.mouse.down(); // What: Mouse Down Call. Why: A press shows while the button is held. How: This holds the mouse button down on the control.
 
-		await curPagObj.waitForTimeout( SET_WAI_NUM ); // What: Press Settle Wait. Why: The pressed look is read once it has eased in. How: This pauses for the settle time.
+		await aniWaiFun( conCurObj ); // What: Press Settle Wait. Why: The pressed look is read once it has eased in. How: This waits for the control's motion to end, at most the settle time.
 
 
 		const preSnaArr = await conCurObj.evaluate( snaEleFun, CON_PRO_ARR );                                            // What: Press Snapshot Array. Why: The pressed look is compared with hovered. How: This records it.
@@ -464,7 +516,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		await conCurObj.evaluate( ( conCurEle ) => { if ( conCurEle instanceof HTMLElement ) conCurEle.blur(); } ); // What: Control Blur Call. Why: The focus look is compared with the control unfocused, and a press or the hidden control's focus may have focused it. How: This blurs it, so a control that waits above the screen slides back out.
 
-		await curPagObj.waitForTimeout( SET_WAI_NUM ); // What: Blur Settle Wait. Why: The unfocused look is read once the hover and focus have faded. How: This pauses for the settle time.
+		await aniWaiFun( conCurObj ); // What: Blur Settle Wait. Why: The unfocused look is read once the hover and focus have faded. How: This waits for the control's motion to end, at most the settle time.
 
 
 		const bluSnaArr = await conCurObj.evaluate( snaEleFun, FOC_PRO_ARR ); // What: Blur Snapshot Array. Why: The unfocused look is what focus is compared with. How: This records the control and everything inside it, outline included.
@@ -472,7 +524,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		await conCurObj.evaluate( ( conCurEle ) => { if ( conCurEle instanceof HTMLElement ) conCurEle.focus( { focusVisible : true } ); } ); // What: Keyboard Focus Call. Why: The focus ring shows only for keyboard focus, and a script's focus counts as keyboard focus in every engine only when it asks to show the ring. How: This focuses the control with focusVisible set.
 
-		await curPagObj.waitForTimeout( SET_WAI_NUM ); // What: Focus Settle Wait. Why: The focused look is read once it has eased in. How: This pauses for the settle time.
+		await aniWaiFun( conCurObj ); // What: Focus Settle Wait. Why: The focused look is read once it has eased in. How: This waits for the control's motion to end, at most the settle time.
 
 
 		const focSnaArr = await conCurObj.evaluate( snaEleFun, FOC_PRO_ARR ); // What: Focus Snapshot Array. Why: The focused look is compared with unfocused. How: This records it.
@@ -570,7 +622,7 @@ async function fieProFun ( curPagObj : Page, redMotBoo : boolean ) : Promise< st
 		await curPagObj.keyboard.press( 'Shift+Tab' ); // What: Back Tab Press Call. Why: Focus has to arrive by keyboard, the way a keyboard user reaches the field. How: This steps focus back to the stop before the field.
 		await curPagObj.keyboard.press( 'Tab' );       // What: Tab Press Call. Why: The field is reached by keyboard. How: This steps focus forward onto the field again.
 
-		await curPagObj.waitForTimeout( SET_WAI_NUM ); // What: Focus Settle Wait. Why: The focused look is read once it has eased in. How: This pauses for the settle time.
+		await aniWaiFun( fieCurObj ); // What: Focus Settle Wait. Why: The focused look is read once it has eased in. How: This waits for the field's motion to end, at most the settle time.
 
 
 		const focFieBoo = await fieCurObj.evaluate( ( fieCurEle ) => fieCurEle === document.activeElement );             // What: Focused Field Boolean. Why: The focused look only counts when the Tab press landed on the field. How: This checks the field holds focus.
