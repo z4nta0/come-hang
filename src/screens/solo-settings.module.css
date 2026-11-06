@@ -1,0 +1,74 @@
+
+
+
+/**
+ * solo-settings.module.css = Solo Settings Module
+ *
+ * @summary
+ * Styles for SolSetCom: one column of capped width holding the heading, the
+ * phone's and account's parts, and their status, for screen readers alone,
+ * and alert, in the dark error color, scrolling on its own inside the
+ * content.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region solSetDiv */
+
+.solSetDiv { /* What: Solo Settings Div. Why: The heading and the parts read top to bottom inside the gutter, and scroll when they outgrow the content. How: This stacks them a tier 2 space apart at the top in one column of capped width, with the tier 2 space above and below and the gutter at the sides, scrolling on its own. */
+
+
+	align-content         : start;
+	display               : grid;
+	grid-template-columns : minmax( 0, calc( var( --ver-rhy-p14 ) * 1rem ) ); /* Vertical Rhythm Base Plus 14 ~= 746.867px */ /* What: Column Cap. Why: Fields stretched across a wide screen read poorly. How: The one column grows up to about 747px. */
+	min-height            : 0;
+	overflow-y            : auto;
+	padding               : var( --tie-ver-002 ) var( --gut-sid-pad );        /* Tier Vertical 2 ~= 25.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	row-gap               : var( --tie-ver-002 );                             /* Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+.setTitHea { /* What: Settings Title Heading. Why: The heading names the section. How: This sets it at Base Plus 3. */
+
+
+	font-size : var( --fon-siz-p03 ); /* Font Size Base Plus 3 ~= 25.572px */
+
+
+}
+
+.setStaPar { /* What: Settings Status Paragraph. Why: The page itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.setErrPar { /* What: Settings Error Paragraph. Why: A failed change should be clear below the parts. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.setErrPar:empty { /* What: Empty Settings Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the section's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-002 ) * -1 ); /* Tier Vertical 2 ~= -25.572px */
+
+
+}
+
+/* #endregion solSetDiv */
+
+

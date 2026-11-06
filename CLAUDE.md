@@ -50,9 +50,10 @@ notifications, Google linking and recovery with the group keys shared again,
 and buying the upgrade. The first screens are built: the landing page, which a
 phone holding no identity sees, with its trust section, its route through a
 get-together whose pins drop in and whose group gathers as the page scrolls,
-and its free tier beside the upgrade, the welcome, which a phone holding an
-identity in no group sees, the form for
-starting a group, the group frame with its rail, its switcher and sheet, and
+and its free tier beside the upgrade, the group frame with no group, which a
+phone holding an identity in no group sees, its group tabs turned off, saying
+why, its content the welcome, and its Settings the phone's and account's
+parts, the form for starting a group, the group frame with its rail, its switcher and sheet, and
 the group chat with its next event, pinned as a card that opens a sheet below
 1,100px and shown in a panel beside the chat from 1,100px, each with the live
 bring-list, the section tabs, the Events section with its form for planning,
@@ -83,7 +84,7 @@ link to copy, with a way to carry on in Safari, and where a browser offers its
 own install prompt, a note on the first screens and Settings offer it. The
 privacy policy and terms are written, as static pages at `/privacy` and
 `/terms` and in a sheet from Settings, and the landing page, the welcome, and
-the join form link both. Settings and, for a phone in no group, the welcome delete someone's
+the join form link both. Settings, with or without a group, deletes someone's
 data, handing each group they own to its earliest member. A sheet titled
 "While you were away" opens over any screen when notices are waiting, or
 arrive, such as a removal or an answered offer, and "Got it" or any other
@@ -225,9 +226,9 @@ emulators need Java, 21 installed.
   to that page then.
 - **Main content** (per the skip link rule): each screen holds its content
   in `<main>`, rendered by `MaiAreCom` in `src/ui/main-area.tsx`. On the
-  welcome and the form for starting a group that's the whole screen; in the
-  group frame it's the open section, past the rail, the bar, and the section
-  tabs.
+  form for starting a group that's the whole screen; in the group frame it's
+  the open section, or with no group the welcome or Settings, past the rail,
+  the bar, and the section tabs.
 - **Breakpoints** (per the breakpoint rule): 720px, where the group frame
   switches from the phone's bar, sheet, and bottom tabs to the wide screen's
   rail and column of sections, and 1100px (decided 2026-10-30), where the

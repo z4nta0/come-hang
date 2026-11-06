@@ -265,6 +265,14 @@
 
 
 }
+.fraNamHea--word { /* What: Frame Name Heading Word. Why: With no group, the heading is the app's name, set as its wordmark. How: This sets it in the brand font's extra bold, slightly tightened. */
+
+
+	font-weight    : 800;
+	letter-spacing : calc( var( --cdn-pow-014-rec ) * -1em ); /* Core-Design-Number to the Power of 14 Reciprocal ~= -0.020em */
+
+
+}
 
 .fraSwiBut { /* What: Frame Switcher Button. Why: On a phone the name is how someone reaches their other groups, and it should look like the heading it is. How: This sets the name and its chevron in one row, a tier 5 space apart, in the heading's own type on no background, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
 
@@ -385,6 +393,19 @@
 
 }
 
+.secLocSpa { /* What: Section Locked Span. Why: The reason a section is off is for screen readers, while sight gets the dimmed tab and its tooltip. How: This hides it from view with the standard visually hidden technique, out of the tabs' grid. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
 .secTabBut { /* What: Section Tab Button. Why: Each tab shows its icon over its name, quiet until it's the open one, and stays a full touch target. How: This stacks the icon over a small label in the muted text color on no background, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
 
 
@@ -429,6 +450,21 @@
 
 
 	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+.secTabBut[aria-disabled='true'] { /* What: Locked Section Tab Button. Why: A section that's off for want of a group should look it. How: This dims its muted color, with a cursor saying it's off. */
+
+
+	color  : oklch( from var( --tex-mut-col ) l c h / var( --cdn-pow-002-rec ) ); /* Text Muted Color = #5A5D7E @ 0.570 opacity */
+	cursor : not-allowed;
+
+
+}
+.secTabBut[aria-disabled='true']:hover { /* What: Hovered Locked Section Tab Button. Why: A dimmed tab still shows the pointer found it, its tooltip saying why it's off, without darkening as if it would open. How: This brings it back to the muted color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
 
 
 }
@@ -480,6 +516,13 @@
 
 
 		background-color : oklch( from var( --acc-tin-col ) calc( l - 0.04 ) c h ); /* Accent Tint Color = #E7E8FA, darkened by 0.04 lightness */
+
+
+	}
+	.secTabBut[aria-disabled='true']:hover { /* What: Hovered Locked Row Section Tab Button. Why: A row that's off shouldn't fill as if it would open, its color alone showing the pointer found it. How: This keeps it clear under the pointer. */
+
+
+		background-color : transparent;
 
 
 	}

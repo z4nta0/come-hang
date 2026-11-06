@@ -44,7 +44,7 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The policy set
 
 // #region Constants
 
-const POL_STA_ARR = STA_REC_ARR.filter( ( staRecObj ) => ![ 'chat', 'delete', 'edit', 'erase', 'event', 'events', 'form', 'group', 'helping', 'history', 'join', 'legal', 'map', 'member', 'notice', 'offered', 'people', 'requests', 'settings', 'sheet', 'waiting', 'welcome' ].includes( staRecObj.steStr ?? '' ) ); // What: Policy State Array. Why: A state that reaches a group needs Firebase, which the production build here has no project for. How: This keeps every state that needs no group.
+const POL_STA_ARR = STA_REC_ARR.filter( ( staRecObj ) => ![ 'chat', 'delete', 'edit', 'erase', 'event', 'events', 'form', 'group', 'helping', 'history', 'join', 'legal', 'map', 'member', 'notice', 'offered', 'people', 'requests', 'settings', 'sheet', 'solo', 'waiting', 'welcome' ].includes( staRecObj.steStr ?? '' ) ); // What: Policy State Array. Why: A state that reaches a group needs Firebase, which the production build here has no project for. How: This keeps every state that needs no group.
 
 // #endregion Constants
 

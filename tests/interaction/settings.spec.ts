@@ -30,7 +30,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * the owner deletes the group only once its name is typed, focus moving into
  * the confirmation and back, then landing on the next group or the welcome;
  * a member sees the settings without the form, and leaves after
- * confirming, focus moving to Stay and back, then landing on the welcome;
+ * confirming, focus moving to Stay and back, then landing on the welcome,
+ * whose group sections are off, saying why, while Settings still opens;
  * and the owner offers the group to a member and withdraws it, and the
  * member declines one offer and accepts the next, focus landing on what
  * replaces each button pressed, while an offer to a member who can't own
@@ -214,7 +215,7 @@ test( 'the owner deletes a group only once its name is typed, focus landing on t
 
 
 
-pagTesObj( 'a member sees the settings without the form and leaves after confirming, focus landing on the welcome', async ( { page : curPagObj, secPagObj } ) => { // What: Leave Test. Why: Any member but the owner can always leave (Section 9), and focus mustn't fall to the page once the group is gone. How: This checks the member's view, opens and closes the confirmation, then leaves, checking the focus, the status, and the membership.
+pagTesObj( 'a member sees the settings without the form and leaves after confirming, focus landing on the welcome, whose group sections are off', async ( { page : curPagObj, secPagObj } ) => { // What: Leave Test. Why: Any member but the owner can always leave (Section 9), and focus mustn't fall to the page once the group is gone. How: This checks the member's view, opens and closes the confirmation, then leaves, checking the focus, the status, and the membership.
 
 
 	await curPagObj.goto( '/' ); // What: Owner Page Load Call. Why: The owner's device needs the app's modules. How: This opens the app.
@@ -254,6 +255,26 @@ pagTesObj( 'a member sees the settings without the form and leaves after confirm
 	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang' } ) ).toBeFocused();                     // What: Welcome Focus Assertion. Why: With no group left, the welcome replaces it. How: This expects its heading focused.
 
 	expect( await docReaFun( setEnvObj, `groups/${ groIdeStr }/members/${ uidMemStr }` ) ).toBeUndefined(); // What: Gone Membership Assertion. Why: The leave reached the server. How: This expects the membership gone.
+
+
+
+	const secNavObj = secPagObj.getByRole( 'navigation', { name : 'Group sections' } ); // What: Section Nav Object. Why: The checks read the tabs. How: This finds their nav.
+	const chaTabObj = secNavObj.getByRole( 'button', { name : 'Chat' } );              // What: Chat Tab Object. Why: A group's section is off with no group. How: This finds its tab.
+
+	await expect( chaTabObj ).toHaveAttribute( 'aria-disabled', 'true' );                           // What: Locked Tab Assertion. Why: The chat has nothing to show without a group. How: This expects the tab marked off.
+	await expect( chaTabObj ).toHaveAccessibleDescription( 'Start or join a group first' );         // What: Reason Assertion. Why: A screen reader says why it's off. How: This reads the tab's description.
+	await expect( secNavObj.getByRole( 'button', { name : 'Settings' } ) ).not.toHaveAttribute( 'aria-disabled', 'true' ); // What: Open Settings Assertion. Why: Settings works without a group. How: This expects its tab not marked off.
+
+	await secNavObj.getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The phone's and account's settings still open. How: This presses the tab.
+
+	await expect( secPagObj.getByRole( 'button', { name : 'Delete my data' } ) ).toBeVisible(); // What: Account Part Assertion. Why: The account's part shows without a group. How: This waits for its deletion button.
+	await expect( secPagObj.getByRole( 'button', { name : 'Leave group' } ) ).toHaveCount( 0 ); // What: No Group Part Assertion. Why: There's no group to leave. How: This expects no leave button.
+
+	await chaTabObj.focus(); // What: Locked Focus Call. Why: A tab that's off stays reachable, and Playwright won't click a control marked off. How: This focuses the chat's tab.
+
+	await secPagObj.keyboard.press( 'Enter' ); // What: Locked Press Call. Why: A press on a section that's off leads to the welcome, which says how to get a group. How: This presses Enter on the tab, as a keyboard user would.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 2, name : "You're not in a group yet" } ) ).toBeVisible(); // What: Welcome Assertion. Why: The welcome returns in place of Settings. How: This waits for its heading.
 
 
 } );
