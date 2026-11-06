@@ -320,7 +320,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-						<div className={ cssModObj.herActDiv }>{ /* What: Hero Actions Div Element. Why: Starting and joining sit together. How: This sets them in a row that wraps onto two lines where it runs out of room. */ }
+						<div className={ cssModObj.herActDiv }>{ /* What: Hero Actions Div Element. Why: Starting and joining sit together. How: This sets them in a row that wraps onto two lines at about 360px wide and below, where each fills its line so both match. */ }
 
 
 							{ invNamStr === undefined ? ( // What: Invite Mode Check. Why: Opened from an invite, the page's one action leads back to joining. How: This shows starting and joining normally, and the way back otherwise.
@@ -329,7 +329,13 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 								<>{ /* What: Normal Actions Fragment. Why: Starting and joining sit side by side. How: This groups them without a wrapper. */ }
 
 
-									<ButBasCom onClick={ () => scrOpeFun( { scrStr : 'create' } ) }>Start a group</ButBasCom>{ /* What: Hero Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
+									<ButBasCom
+										className={ cssModObj.herStaBut }
+
+										onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
+									>Start a group</ButBasCom>{ /* What: Hero Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
+
+
 
 									<button
 										className={ cssModObj.herJoiBut }

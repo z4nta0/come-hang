@@ -200,7 +200,7 @@
 
 /* #region herActDiv */
 
-.herActDiv { /* What: Hero Actions Div. Why: Starting and joining sit together, each its own width, and wrap where the row runs out of room, which grid can't do without fixed tracks. How: This sets them in a wrapping flex row a tier 4 space apart, with the tier 2 space above it less the tier 3 gap, wrapping onto two lines at about 400px wide and below. */
+.herActDiv { /* What: Hero Actions Div. Why: Starting and joining sit together, each its own width, and wrap where the row runs out of room, at about 360px wide and below, each then filling its line, which grid can't do without fixed tracks. How: This sets them in a wrapping flex row a tier 4 space apart, with the tier 2 space above it less the tier 3 gap, wrapping onto two lines at about 400px wide and below. */
 
 
 	display    : flex;
@@ -212,13 +212,22 @@
 
 }
 
-.herJoiBut { /* What: Hero Join Button. Why: Joining with a link is a lighter action than starting a group, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+.herStaBut { /* What: Hero Start Button. Why: Once the buttons wrap onto lines of their own, they should be the same width. How: This lets it grow to fill its line, which leaves it its own width while the two share a row, since the row is only as wide as both. */
+
+
+	flex-grow : 1;
+
+
+}
+
+.herJoiBut { /* What: Hero Join Button. Why: Joining with a link is a lighter action than starting a group, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, growing to fill its line once the buttons wrap, and eases its hover background, press scale, and focus ring. */
 
 
 	background-color : transparent;
 	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
 	border-radius    : 999px;
 	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	flex-grow        : 1;
 	font             : inherit;
 	font-weight      : 700;
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
