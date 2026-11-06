@@ -28,6 +28,9 @@ import { test        } from '@playwright/test';     // What: Test. Why: Each sta
 
 
 
+test.describe.configure( { mode : 'parallel' } ); // What: Parallel Mode Call. Why: Each test opens its own state in its own page, so the file's tests needn't wait on one another, and run one at a time they kept a single worker busy long after the rest had finished. How: This lets the file's tests spread across every worker.
+
+
 for ( const staRecObj of STA_REC_ARR ) { // What: State Loop. Why: A stray comment can sit on any screen. How: This declares a test per state.
 
 
