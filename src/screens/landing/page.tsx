@@ -112,6 +112,10 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 
 ];
 
+
+
+const FAQ_COL_ARR = [ FAQ_REC_ARR.slice( 0, Math.ceil( FAQ_REC_ARR.length / 2 ) ), FAQ_REC_ARR.slice( Math.ceil( FAQ_REC_ARR.length / 2 ) ) ]; // What: Frequently Asked Question Column Array. Why: The questions sit in two columns on a wide screen, each its own list, so opening an answer lengthens only its column. How: This splits the questions in half, the first column taking the extra one when their number is odd.
+
 // #endregion Constants
 
 
@@ -720,13 +724,29 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-					<ul className={ cssModObj.faqLisUno }>{ /* What: FAQ List Unordered Element. Why: The questions read as one list. How: This stacks them. */ }
+					<div className={ cssModObj.faqColDiv }>{ /* What: FAQ Columns Div Element. Why: The questions fill the page's width on a wide screen, each answer opening without moving the other column. How: This sets the two halves side by side from 720px wide and up, one above the other below that, where they read as one list. */ }
 
 
-						{ FAQ_REC_ARR.map( ( faqRecObj ) => <FaqIteCom key={ faqRecObj.queStr } ansStr={ faqRecObj.ansStr } queStr={ faqRecObj.queStr } /> ) }{ /* What: Question Map. Why: Each question is drawn the same way. How: This renders one item per row, keyed by its question. */ }
+						{ FAQ_COL_ARR.map( ( colRecArr, colIndNum ) => ( // What: Column Map. Why: Each half of the questions is its own list. How: This renders one list per column, keyed by its place, since the columns never reorder.
 
 
-					</ul>
+							<ul
+								key={ colIndNum }
+
+								className={ cssModObj.faqLisUno }
+							>{ /* What: FAQ List Unordered Element. Why: A column's questions read as one list. How: This stacks them. */ }
+
+
+								{ colRecArr.map( ( faqRecObj ) => <FaqIteCom key={ faqRecObj.queStr } ansStr={ faqRecObj.ansStr } queStr={ faqRecObj.queStr } /> ) }{ /* What: Question Map. Why: Each question is drawn the same way. How: This renders one item per row, keyed by its question. */ }
+
+
+							</ul>
+
+
+						) ) }
+
+
+					</div>
 
 
 				</section>

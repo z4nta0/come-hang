@@ -7,12 +7,12 @@
  * @summary
  * Styles for LanPagCom: a main area of full-width sections, each holding its
  * content to the page's width with the gutter at the sides at least, then a
- * footer. The hero sets its text beside three leaning phones from 720px
- * wide and above them below; the trust and free sections sit on raised
- * bands; the steps and plans line up in columns from 720px wide; each
+ * footer. The hero sets its text beside three leaning phones from 720px wide
+ * and above them below; the trust and free sections sit on raised bands; the
+ * steps, plans, and questions line up in columns from 720px wide; each
  * question's answer grows into place; and the closing band sits on the main
- * accent. Its buttons and links ease their hover, press, and focus looks.
- * The route is styled in its own module.
+ * accent. Its buttons and links ease their hover, press, and focus looks. The
+ * route is styled in its own module.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -977,11 +977,11 @@
 
 /* #region faqSecSec */
 
-.faqSecSec { /* What: FAQ Section Section. Why: The questions read as their own block. How: This stacks the heading above the list in named areas, a tier 2 space apart, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
+.faqSecSec { /* What: FAQ Section Section. Why: The questions read as their own block. How: This stacks the heading above the questions in named areas, a tier 2 space apart, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
 
 
 	display             : grid;
-	grid-template-areas : 'secTitHea' 'faqLisUno';
+	grid-template-areas : 'secTitHea' 'faqColDiv';
 	padding             : 0 max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ) var( --tie-ver-001 ); /* Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px, Tier Vertical 1 ~= 44.876px */ /* What: Top Padding Note. Why: The install section above already ends with the frame tier. How: The top takes none. */
 	row-gap             : var( --tie-ver-002 );                                                                                   /* Tier Vertical 2 ~= 25.572px */
 
@@ -992,13 +992,40 @@
 
 
 
+/* #region faqColDiv */
+
+.faqColDiv { /* What: FAQ Columns Div. Why: Below 720px the two halves of the questions read as one list. How: This stacks them with no space between, packed at the top, in its own area. */
+
+
+	align-items : start;
+	display     : grid;
+	grid-area   : faqColDiv;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide FAQ Columns Div. Why: A wide screen has room for two columns of questions. How: This applies from 720px wide and up. */
+
+
+	.faqColDiv { /* What: Two Column FAQ Columns Div. Why: The questions fill the page's width, and each half takes its own column, so opening an answer lengthens only that column. How: This sets two equal columns a tier 2 space apart. */
+
+
+		column-gap            : var( --tie-hor-002 ); /* Tier Horizontal 2, about 25.572px - 33.876px */
+		grid-template-columns : 1fr 1fr;
+
+
+	}
+
+
+}
+
+
+
 /* #region faqLisUno */
 
-.faqLisUno { /* What: FAQ List Unordered. Why: The questions read as one list without the browser's bullets or indent. How: This stacks them by auto placement, since their number can change, capped at the base text width, in its own area. */
+.faqLisUno { /* What: FAQ List Unordered. Why: A column's questions read as one list without the browser's bullets or indent. How: This stacks them by auto placement, since their number can change, capped at the base text width. */
 
 
 	display    : grid;
-	grid-area  : faqLisUno;
 	list-style : none;
 	margin     : 0;
 	max-width  : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
@@ -1158,6 +1185,8 @@
 /* #endregion faqIteIte */
 
 /* #endregion faqLisUno */
+
+/* #endregion faqColDiv */
 
 /* #endregion faqSecSec */
 
