@@ -663,9 +663,10 @@
 
 /* #region staIteIte */
 
-.staIteIte { /* What: Starts Item Item. Why: A step's number sits beside its title and sentence. How: This sets the number in its own column beside the two, a tier 3 space across and a tier 5 space down, counting the step. */
+.staIteIte { /* What: Starts Item Item. Why: A step's number sits beside its title and sentence. How: This sets the number in its own column beside the two, a tier 3 space across and a tier 5 space down, packed at the top so a step stretched to its row's height keeps its sentence under its title, counting the step. */
 
 
+	align-content         : start;
 	align-items           : start;
 	counter-increment     : staIteCou;
 	display               : grid;
