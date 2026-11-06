@@ -463,6 +463,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 	const proLisArr : string[] = []; // What: Problem List Array. Why: Every problem should be reported, not just the first. How: This collects them.
 
 	const conHanArr = await conLisFun( curPagObj, conSelStr ); // What: Control Handle Array. Why: Every reachable control the selector matches is probed. How: This collects their handles.
+	const rooEleObj = ( await curPagObj.$( 'html' ) )!;        // What: Root Element Object. Why: An earlier control's motion, such as the skip link sliding back above the screen, can still cover the next control. How: This holds the page's root, whose motion the rest wait watches. // What: Non-Null Note. Why: Every page has an html element. How: The query can't come back empty.
 
 
 	if ( !conHanArr.length ) proLisArr.push( 'no control to probe' ); // What: Empty Probe Check. Why: A probe that finds nothing would pass without checking anything, and a probe of every link and button always finds at least the skip link. How: This records a problem when no control is found.
@@ -487,7 +488,7 @@ async function feeProFun ( curPagObj : Page, conSelStr : string, redMotBoo : boo
 
 		await curPagObj.mouse.move( 0, 0 ); // What: Pointer Away Call. Why: The resting look is read with nothing hovered. How: This moves the pointer to the page's top-left corner.
 
-		await aniWaiFun( conCurObj ); // What: Rest Settle Wait. Why: Any earlier hover has to finish fading. How: This waits for the control's motion to end, at most the settle time.
+		await aniWaiFun( rooEleObj ); // What: Rest Settle Wait. Why: Any earlier hover or focus has to finish fading, and an earlier control sliding away, such as the skip link, mustn't still cover this one. How: This waits for every motion on the page to end, at most the settle time.
 
 
 		const resSnaArr = await conCurObj.evaluate( snaEleFun, CON_PRO_ARR ); // What: Rest Snapshot Array. Why: The resting look is what hover is compared with. How: This records the control and everything inside it.
