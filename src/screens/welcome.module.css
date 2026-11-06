@@ -19,10 +19,10 @@
 
 /* #region welSecDiv */
 
-.welSecDiv { /* What: Welcome Section Div. Why: The welcome should sit in the middle of the content, and scroll when it outgrows a short screen. How: This fills the content as a one-column grid of named areas, centered both ways, with the frame tier above and below and the gutter at the sides. */
+.welSecDiv { /* What: Welcome Section Div. Why: The welcome should sit in the middle of the content, and scroll when it outgrows a short screen. How: This fills the content as a one-column grid of named areas, centered both ways while it fits, with the frame tier above and below and the gutter at the sides. */
 
 
-	align-content       : center;
+	align-content       : safe center;                                     /* What: Safe Center Note. Why: Centered content too tall for a short screen spilled past the top, where it couldn't be scrolled to, losing its space below the bar. How: The safe keyword centers it only while it fits, and otherwise starts it at the top with its full padding. */
 	display             : grid;
 	grid-template-areas : 'welMarSvg' 'welTitHea' 'welTagPar' 'welActDiv' 'welErrPar' 'welLegPar';
 	justify-items       : center;
