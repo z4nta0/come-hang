@@ -310,7 +310,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-						<p className={ cssModObj.herPitPar }>Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day.</p>{ /* What: Hero Pitch Paragraph Element. Why: A first visitor should know what the app does. How: This says it in one sentence. */ }
+						<p className={ cssModObj.herPitPar }>Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day of the event.</p>{ /* What: Hero Pitch Paragraph Element. Why: A first visitor should know what the app does. How: This says it in one sentence. */ }
 
 						<p
 							className={ cssModObj.herStaPar }
