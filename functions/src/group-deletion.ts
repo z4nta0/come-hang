@@ -163,7 +163,7 @@ const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > =>
 	await Promise.all( notUidArr.map( ( uidValStr ) => pusSenFun( uidValStr, 'groupDeleted', groSnaObj.get( 'name' ) ) ) ); // What: Deletion Push Call. Why: Each member is told at once too, by the group's name. How: This sends each their push, best effort.
 
 
-	for ( const colRefObj of await groSnaObj.ref.listCollections() ) await FIR_DAT_OBJ.recursiveDelete( colRefObj ); // What: Collection Delete Loop. Why: Events, their items, requests, and locations all go, including any collection added later. How: This deletes each of the group's collections with everything under it.
+	for ( const colRefObj of await groSnaObj.ref.listCollections() ) await FIR_DAT_OBJ.recursiveDelete( colRefObj ); // What: Collection Delete Loop. Why: Events, their items and photos, requests, and locations all go, including any collection added later. How: This deletes each of the group's collections with everything under it.
 
 
 
@@ -178,6 +178,7 @@ const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > =>
 	});
 
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groSnaObj.id }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
+	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `photos/${ groSnaObj.id }/` } );                // What: Photos Delete Call. Why: A full photo mustn't outlive its group, even one its trigger hasn't reached yet. How: This deletes every file under the group's folder.
 
 	await groSnaObj.ref.delete(); // What: Group Delete Call. Why: The group document goes last, so a retry can still check the owner. How: This deletes it.
 

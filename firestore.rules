@@ -80,6 +80,13 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * or a member, and each expires with its event, since Firestore's TTL leaves
  * an event's subcollections behind.
  *
+ * From an event's start until it's deleted, a member adds photos in their
+ * own name, each holding its encrypted thumbnail and expiring with its event,
+ * as the same batch raises the event's tally and the member's own by one,
+ * within caps that follow the owner's status. Members read them, and the
+ * uploader or the owner deletes one, while Cloud Functions keep them in step
+ * with their event and delete the full photos in Storage.
+ *
  * A member shares their own location for one event, from 3 hours before it
  * starts until it ends. Each update overwrites the last, stamped with the
  * server's time, and expires an hour later or at the event's end, whichever
@@ -210,6 +217,20 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region phoPatFun
+
+		function phoPatFun ( groIdeStr, eveIdeStr, phoIdeStr ) { // What: Photo Path Function. Why: A tally's rules check the photo it counts. How: This returns the photo document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/events/$(eveIdeStr)/photos/$(phoIdeStr); // What: Photo Path Return. Why: A lookup needs the full path. How: This builds it from the group, event, and photo IDs.
+
+
+		}
+
+		// #endregion phoPatFun
+
+
+
 		// #region reqPatFun
 
 		function reqPatFun ( groIdeStr, uidValStr ) { // What: Request Path Function. Why: Approving or blocking a joiner checks their pending request. How: This returns the join request document's path.
@@ -221,6 +242,20 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion reqPatFun
+
+
+
+		// #region talPatFun
+
+		function talPatFun ( groIdeStr, eveIdeStr, talIdeStr ) { // What: Tally Path Function. Why: A photo's rules check the counts it raises. How: This returns the tally document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/events/$(eveIdeStr)/photoTally/$(talIdeStr); // What: Tally Path Return. Why: A lookup needs the full path. How: This builds it from the group and event IDs and the tally's name, all or a UID.
+
+
+		}
+
+		// #endregion talPatFun
 
 
 
@@ -323,6 +358,34 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion ownCapFun
+
+
+
+		// #region phmCapFun
+
+		function phmCapFun ( uidValStr ) { // What: Photo-Member Cap Function. Why: The photos one member adds to an event are capped by the group owner's status (Section 20). How: This returns the cap for the owner given.
+
+
+			return isaPaiFun( uidValStr ) ? 60 : 30; // What: Photo-Member Cap Return. Why: A member may add 60 photos to an event in a paid owner's group, and 30 in a free owner's. How: This picks one.
+
+
+		}
+
+		// #endregion phmCapFun
+
+
+
+		// #region phoCapFun
+
+		function phoCapFun ( uidValStr ) { // What: Photo Cap Function. Why: An event's photos are capped by the group owner's status (Section 20). How: This returns the cap for the owner given.
+
+
+			return isaPaiFun( uidValStr ) ? 300 : 100; // What: Photo Cap Return. Why: An event in a paid owner's group may hold 300 photos, and in a free owner's 100. How: This picks one.
+
+
+		}
+
+		// #endregion phoCapFun
 
 		// #endregion Group Caps
 
@@ -1599,6 +1662,139 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #endregion updIteFun
 
+
+
+		// #region talRisFun
+
+		function talRisFun ( groIdeStr, eveIdeStr, talIdeStr, phoIdeStr, capValNum ) { // What: Tally Rise Function. Why: A photo is added only as its counts rise, so the caps can't be skipped (Section 20). How: This is true when the tally rises by exactly one for this photo once the batch is applied, staying within the cap.
+
+
+			let talPatStr = talPatFun( groIdeStr, eveIdeStr, talIdeStr ); // What: Tally Path String. Why: The tally is read before and after the batch. How: This names its path once.
+
+			let couBefNum = exists( talPatStr ) ? get( talPatStr ).data.count : 0; // What: Count Before Number. Why: A first photo starts from no tally. How: This reads the count before the batch, 0 when there's none.
+			let talAftObj = getAfter( talPatStr ).data;                            // What: Tally After Object. Why: The batch has to leave the tally raised. How: This reads it as the batch leaves it.
+
+			let capValBoo = talAftObj.count <= capValNum;       // What: Cap Valid Boolean. Why: A count past its cap means one photo too many. How: This compares the raised count with the cap.
+			let couRisBoo = talAftObj.count == couBefNum + 1;   // What: Count Rise Boolean. Why: Each photo raises its counts by one. How: This compares the counts after and before.
+			let lasPhoBoo = talAftObj.lastPhotoId == phoIdeStr; // What: Last Photo Boolean. Why: The rise is for this photo, so one rise can't cover two. How: This requires the tally to name it.
+
+			let talRisBoo = capValBoo && couRisBoo && lasPhoBoo; // What: Tally Rise Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return talRisBoo; // What: Tally Rise Return. Why: The photo's create check reads the answer for each tally. How: This returns it.
+
+
+		}
+
+		// #endregion talRisFun
+
+
+
+		// #region valPhoFun
+
+		function valPhoFun ( groIdeStr, eveIdeStr ) { // What: Valid Photo Function. Why: A photo holds its encrypted thumbnail, the full photo's IV, who added it, and its times, inside its event's window (Section 20). How: This checks the incoming photo's fields, sizes, and times against its event.
+
+
+			let eveDatObj = get( evePatFun( groIdeStr, eveIdeStr ) ).data; // What: Event Data Object. Why: The photo's window and deletion time follow its event. How: This reads the event, which has to exist.
+			let phoDatObj = request.resource.data;                         // What: Photo Data Object. Why: Every field check reads the incoming photo. How: This names it once.
+
+			let creNowBoo = phoDatObj.createdAt == request.time;                                                                             // What: Created Now Boolean. Why: A photo's order comes from when it was really added. How: This requires the server's time.
+			let expEveBoo = phoDatObj.expireAt == eveDatObj.expireAt;                                                                        // What: Expire Event Boolean. Why: A photo goes with its event. How: This requires the event's deletion time.
+			let fieAllBoo = phoDatObj.keys().toSet() == [ 'createdAt', 'expireAt', 'fullIv', 'thumbEnc', 'thumbIv', 'uploaderUid' ].toSet(); // What: Fields All Boolean. Why: A photo holds exactly its six fields. How: This compares them with the full set.
+			let fulIvaBoo = phoDatObj.fullIv is bytes && phoDatObj.fullIv.size() == 12;                                                      // What: Full IV Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let staOpeBoo = eveDatObj.startAt <= request.time && request.time < eveDatObj.expireAt;                                          // What: Started Open Boolean. Why: Photos open at the event's start and close as it's deleted, which its TTL can do a day late. How: This compares the server's time with both, two halves of one check, so they stay inline.
+			let thuIvaBoo = phoDatObj.thumbIv is bytes && phoDatObj.thumbIv.size() == 12;                                                    // What: Thumbnail IV Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
+			let thuValBoo = phoDatObj.thumbEnc is bytes && phoDatObj.thumbEnc.size() > 16 && phoDatObj.thumbEnc.size() <= 40000;             // What: Thumbnail Valid Boolean. Why: A thumbnail of about 320px fits in 40,000 bytes once encrypted, and the cap stops the field holding a full photo. How: This checks the type, then the size, which the type check guards.
+
+			let valPhoBoo = creNowBoo && expEveBoo && fieAllBoo && fulIvaBoo && staOpeBoo && thuIvaBoo && thuValBoo; // What: Valid Photo Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return valPhoBoo; // What: Valid Photo Return. Why: The photo's create check reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion valPhoFun
+
+
+
+		// #region crePhoFun
+
+		function crePhoFun ( groIdeStr, eveIdeStr, phoIdeStr ) { // What: Create Photo Function. Why: A member adds a photo in their own name from the event's start until it's deleted, within both caps (Section 20). How: This is true for a member writing a valid photo as its uploader while both tallies rise for it.
+
+
+			let ownUidStr = get( groPatFun( groIdeStr ) ).data.ownerUid; // What: Owner UID String. Why: The caps follow the group owner's status. How: This reads the owner.
+
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                 // What: Is-A Member Boolean. Why: Only members add photos. How: This requires the requester to be a member.
+			let isaUplBoo = isaOwnFun( request.resource.data.uploaderUid );                                         // What: Is-An Uploader Boolean. Why: Nobody adds a photo in someone else's name. How: This requires the requester to be named as the uploader.
+			let talAllBoo = talRisFun( groIdeStr, eveIdeStr, 'all', phoIdeStr, phoCapFun( ownUidStr ) );            // What: Tally All Boolean. Why: The event's photos are capped. How: This requires the event's tally to rise for this photo within its cap.
+			let talMemBoo = talRisFun( groIdeStr, eveIdeStr, request.auth.uid, phoIdeStr, phmCapFun( ownUidStr ) ); // What: Tally Member Boolean. Why: One member's photos are capped too. How: This requires the requester's tally to rise for this photo within its cap.
+			let valPhoBoo = valPhoFun( groIdeStr, eveIdeStr );                                                      // What: Valid Photo Boolean. Why: The photo keeps its shape and window. How: This checks it.
+
+			let creAllBoo = isaMemBoo && isaUplBoo && talAllBoo && talMemBoo && valPhoBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The photo's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion crePhoFun
+
+
+
+		// #region delPhoFun
+
+		function delPhoFun ( groIdeStr ) { // What: Delete Photo Function. Why: The member who added a photo, or the group's owner, deletes it (Section 20). How: This is true for a member who uploaded the photo or owns the group.
+
+
+			let isaMemBoo = isaMemFun( groIdeStr );                                   // What: Is-A Member Boolean. Why: Someone who has left deletes nothing more. How: This requires the requester to be a member.
+			let isaOwnBoo = isaOwnFun( get( groPatFun( groIdeStr ) ).data.ownerUid ); // What: Is-An Owner Boolean. Why: The owner can take down any photo. How: This requires the requester to own the group.
+			let isaUplBoo = isaOwnFun( resource.data.uploaderUid );                   // What: Is-An Uploader Boolean. Why: A member takes down their own photo. How: This requires the requester to be its uploader.
+
+			let delAllBoo = isaMemBoo && ( isaOwnBoo || isaUplBoo ); // What: Delete Allowed Boolean. Why: A member who's the uploader or owner may delete it. How: This combines them.
+
+
+
+			return delAllBoo; // What: Delete Allowed Return. Why: The photo's delete rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion delPhoFun
+
+
+
+		// #region setTalFun
+
+		function setTalFun ( groIdeStr, eveIdeStr, talIdeStr ) { // What: Set Tally Function. Why: A tally rises by one only as a photo is added in the same batch, under the event's name or the uploader's own (Section 20). How: This is true for a member raising the event's tally or their own by one, naming a photo the batch creates in their name.
+
+
+			let couBefNum = resource == null ? 0 : resource.data.count;   // What: Count Before Number. Why: A first photo starts the tally. How: This reads the count before the write, 0 when there's none.
+			let phoIdeStr = request.resource.data.lastPhotoId;            // What: Photo Identifier String. Why: The tally names the photo that raised it. How: This reads it.
+			let phoPatStr = phoPatFun( groIdeStr, eveIdeStr, phoIdeStr ); // What: Photo Path String. Why: The photo is checked before and after the batch. How: This names its path once.
+			let talDatObj = request.resource.data;                        // What: Tally Data Object. Why: The shape checks read the incoming tally. How: This names it once.
+
+			let couRisBoo = talDatObj.count == couBefNum + 1;                                                                               // What: Count Rise Boolean. Why: Each photo raises the tally by one. How: This compares the counts.
+			let fieAllBoo = talDatObj.keys().toSet() == [ 'count', 'lastPhotoId' ].toSet() && phoIdeStr is string;                          // What: Fields All Boolean. Why: A tally holds exactly its count and the photo that last raised it. How: This compares them with the full set and requires the photo's ID as text.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                                         // What: Is-A Member Boolean. Why: Only members add photos. How: This requires the requester to be a member.
+			let newPhoBoo = !exists( phoPatStr ) && existsAfter( phoPatStr ) && getAfter( phoPatStr ).data.uploaderUid == request.auth.uid; // What: New Photo Boolean. Why: A tally rises only for a photo being added now, by the requester. How: This requires the photo to be created by the batch in their name, three parts of one check that guard each other, so they stay inline.
+			let talNamBoo = talIdeStr == 'all' || isaOwnFun( talIdeStr );                                                                   // What: Tally Name Boolean. Why: A member raises the event's tally and their own, never another member's. How: This allows the event's name or the requester's UID.
+
+			let setAllBoo = couRisBoo && fieAllBoo && isaMemBoo && newPhoBoo && talNamBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return setAllBoo; // What: Set Allowed Return. Why: The tally's create and update rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion setTalFun
+
 		// #endregion Event Rules
 
 
@@ -2189,6 +2385,29 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 					allow create : if creIteFun( groIdeStr, eveIdeStr ); // What: Item Create Rule. Why: Any member adds an item. How: This allows it when creIteFun passes.
 					allow update : if updIteFun( groIdeStr, eveIdeStr ); // What: Item Update Rule. Why: Any member relabels, claims, releases, or reassigns an item. How: This allows it when updIteFun passes.
 					allow delete : if isaMemFun( groIdeStr );            // What: Item Delete Rule. Why: Any member removes an item (Section 11.5). How: This lets members delete one.
+
+
+				}
+
+
+
+				match /photos/{phoIdeStr} { // What: Photo Match. Why: Each shared photo is its own document, holding its encrypted thumbnail (Section 20). How: This matches one photo by ID.
+
+
+					allow read   : if isaMemFun( groIdeStr );                       // What: Photo Read Rule. Why: Members see the event's photos. How: This lets members fetch and list them.
+					allow create : if crePhoFun( groIdeStr, eveIdeStr, phoIdeStr ); // What: Photo Create Rule. Why: A member adds a photo within the caps. How: This allows it when crePhoFun passes.
+					allow delete : if delPhoFun( groIdeStr );                       // What: Photo Delete Rule. Why: The uploader or owner takes a photo down, and a Cloud Function deletes its full photo. How: This allows it when delPhoFun passes, while only Cloud Functions change a photo.
+
+
+				}
+
+
+
+				match /photoTally/{talIdeStr} { // What: Photo Tally Match. Why: The event's photo count and each member's are their own documents, so the caps can be checked (Section 20). How: This matches one tally, all or a UID.
+
+
+					allow read           : if isaMemFun( groIdeStr );                       // What: Tally Read Rule. Why: A member sees how many photos are left to add. How: This lets members fetch them.
+					allow create, update : if setTalFun( groIdeStr, eveIdeStr, talIdeStr ); // What: Tally Set Rule. Why: A tally rises only with a photo added beside it. How: This allows it when setTalFun passes, while only Cloud Functions delete one.
 
 
 				}
