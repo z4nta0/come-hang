@@ -23,6 +23,7 @@ import { purPaiFun            } from '../state/purchase.ts';      // What: Purch
 import { pusActFun            } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
 import { pusDisFun            } from '../state/push.ts';          // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
 import { pusEnaFun            } from '../state/push.ts';          // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
+import { SupForCom            } from './support-form.tsx';        // What: Support Form Component. Why: About offers a way to write to the maker. How: This draws the form.
 import { useEffect            } from 'react';                     // What: Use Effect. Why: The account is read as the parts open, and a link moves focus. How: This starts the read and moves the focus.
 import { useRef               } from 'react';                     // What: Use Reference. Why: A link replaces its button, so focus lands on the part's heading. How: This holds the heading.
 import { useState             } from 'react';                     // What: Use State. Why: The appearance, notifications, link, and upgrade change while the parts are open. How: This holds each.
@@ -537,22 +538,6 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 					</dd>
 
 
-					<dt className={ cssModObj.aboKeyTer }>Support</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the support address. */ }
-
-
-					<dd className={ cssModObj.aboValDet }>{ /* What: About Value Details Element. Why: Someone with a question or a problem can write in. How: This links the support address, opening an email to it. */ }
-
-
-						<a
-							className={ cssModObj.aboLinAnc }
-
-							href='mailto:support@comehang.app'
-						>support@comehang.app</a>{ /* What: About Link Anchor Element. Why: The value is a place to go. How: This links it. */ }
-
-
-					</dd>
-
-
 				</dl>
 
 
@@ -572,6 +557,10 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 				</div>
+
+
+
+				<SupForCom />{ /* What: Support Form Component. Why: Someone can write to the maker without leaving the app. How: This draws the note, the button, and the form it opens, below the tip. */ }
 
 
 			</section>

@@ -138,6 +138,10 @@ function PriPolCom () : React.JSX.Element {
 
 			<p>The upgrade is sold through Polar, which handles the payment as the merchant of record. Polar collects your payment details under its own privacy policy, and we never see them. We send Polar your email address and your app ID, and Polar tells us when an order is paid or refunded, which is how the app knows you have the upgrade. We keep a record of each of those messages for a day, so none is handled twice.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
+			<h3>Writing to us</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
+
+			<p>If you write to us through Settings, your message and its subject, the version of Come Hang and the browser you're using, and your email address if you give one, go to Netlify, which passes them on to us. We use them only to answer you, and your email address only to reply.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+
 			<h3>Keeping the service safe and running</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
 			<p>Our hosting and Firebase record technical details such as your IP address, your browser, and the time of each request, to run the service and protect it from abuse. Come Hang also uses Firebase App Check with Google reCAPTCHA Enterprise, which looks at signals from your browser and device to tell real use of the app from automated abuse. Google handles those signals under its own privacy policy.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
@@ -161,7 +165,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>Google Firebase</strong>, run by Google LLC, stores the app's information in the United States and provides its sign-in, notifications, and App Check, with reCAPTCHA Enterprise (<a href='https://policies.google.com/privacy' rel='noopener noreferrer' target='_blank'>Google's Privacy Policy</a>).</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>Netlify</strong> hosts the app's website (<a href='https://www.netlify.com/privacy/' rel='noopener noreferrer' target='_blank'>Netlify's Privacy Policy</a>).</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Netlify</strong> hosts the app's website and receives the messages you send us through Settings (<a href='https://www.netlify.com/privacy/' rel='noopener noreferrer' target='_blank'>Netlify's Privacy Policy</a>).</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Polar</strong> handles payment for the upgrade (<a href='https://polar.sh/legal/privacy' rel='noopener noreferrer' target='_blank'>Polar's Privacy Policy</a>).</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -194,6 +198,8 @@ function PriPolCom () : React.JSX.Element {
 				<li><strong>A group</strong> is kept until its owner deletes it, which deletes its members, events, and chat for everyone. When you leave a group or are removed, your membership is deleted.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you delete your data or ask us to. If you're in no group, haven't bought the upgrade or linked a Google account, and haven't opened the app for 180 days, it's deleted automatically.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
+				<li><strong>Messages you send us</strong> are kept only as long as we need them to answer you.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>What's on your device</strong> stays until you delete the app's data or uninstall it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 

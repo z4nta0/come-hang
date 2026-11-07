@@ -65,8 +65,9 @@ group, sets its chat retention, offers the group to a member, who accepts or
 declines, and deletes it by name, a member leaves, and anyone picks light or
 dark and turns notifications on or off for their device, links Google, buys
 the upgrade, and reads About, with the maker's note, the version, links to the
-maker's website, the source code, and support, and a tip on Ko-fi. The landing
-page and the welcome get a linked member's groups back on a new device.
+maker's website and the source code, a tip on Ko-fi, and a support form
+posting to Netlify Forms. The landing page and the welcome get a linked
+member's groups back on a new device.
 The Map section, drawn without a street map, shares a member's location for an
 event from 3 hours before it starts, lists everyone sharing with their
 distance, direction, and freshness around a plot, and posts "I'm on my way"
