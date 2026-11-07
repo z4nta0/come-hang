@@ -6,19 +6,20 @@
 import cssModObj from './group-events.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Planning an event is the section's leading action. How: This draws its button.
-import { eveBloFun } from '../utils/date.ts';       // What: Event Block Function. Why: Each card leads with when its event is. How: This gives its date block's lines.
-import { eveDelFun } from '../state/events.ts';     // What: Event Delete Function. Why: The creator or owner cancels an event. How: This deletes it and its items.
-import { EveDetCom } from './event-details.tsx';    // What: Event Details Component. Why: An event's sheet shows its details and bring-list. How: This draws them.
-import { EveForCom } from './event-form.tsx';       // What: Event Form Component. Why: Events are planned and changed through a form. How: This draws it.
-import { eveLisFun } from '../state/events.ts';     // What: Event List Function. Why: The section lists the group's events. How: This reads them, soonest first.
-import { eveRanFun } from '../utils/date.ts';       // What: Event Range Function. Why: Each card says the hours its event runs. How: This formats its range.
-import { ideEnsFun } from '../state/identity.ts';   // What: Identity Ensure Function. Why: An event's creator can change it. How: This reads the member's UID.
-import { memLisFun } from '../state/members.ts';    // What: Member List Function. Why: The bring-list names who's bringing each item. How: This lists the members.
-import { SheDiaCom } from '../ui/sheet.tsx';        // What: Sheet Dialog Component. Why: An event's details and the form open over the list. How: This draws each sheet.
-import { useEffect } from 'react';                  // What: Use Effect. Why: The section loads its parts when it opens. How: This starts the work.
-import { useRef    } from 'react';                  // What: Use Reference. Why: The sheets open through their handles, and the heading takes focus after a cancel. How: This holds each.
-import { useState  } from 'react';                  // What: Use State. Why: The events, the open event, and the messages change while the section is open. How: This holds each.
+import { ButBasCom } from '../ui/button.tsx';     // What: Button Base Component. Why: Planning an event is the section's leading action. How: This draws its button.
+import { eveBloFun } from '../utils/date.ts';     // What: Event Block Function. Why: Each card leads with when its event is. How: This gives its date block's lines.
+import { eveDelFun } from '../state/events.ts';   // What: Event Delete Function. Why: The creator or owner cancels an event. How: This deletes it and its items.
+import { EveDetCom } from './event-details.tsx';  // What: Event Details Component. Why: An event's sheet shows its details and bring-list. How: This draws them.
+import { EveForCom } from './event-form.tsx';     // What: Event Form Component. Why: Events are planned and changed through a form. How: This draws it.
+import { eveLisFun } from '../state/events.ts';   // What: Event List Function. Why: The section lists the group's events. How: This reads them, soonest first.
+import { eveRanFun } from '../utils/date.ts';     // What: Event Range Function. Why: Each card says the hours its event runs. How: This formats its range.
+import { ideEnsFun } from '../state/identity.ts'; // What: Identity Ensure Function. Why: An event's creator can change it. How: This reads the member's UID.
+import { memLisFun } from '../state/members.ts';  // What: Member List Function. Why: The bring-list names who's bringing each item. How: This lists the members.
+import { phoFluFun } from '../state/photos.ts';   // What: Photos Flush Function. Why: Closing an event's sheet ends the member's burst of photos. How: This posts its chat line.
+import { SheDiaCom } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: An event's details and the form open over the list. How: This draws each sheet.
+import { useEffect } from 'react';                // What: Use Effect. Why: The section loads its parts when it opens. How: This starts the work.
+import { useRef    } from 'react';                // What: Use Reference. Why: The sheets open through their handles, and the heading takes focus after a cancel. How: This holds each.
+import { useState  } from 'react';                // What: Use State. Why: The events, the open event, and the messages change while the section is open. How: This holds each.
 
 
 import type { EveRecTyp } from '../state/events.ts';  // What: Event Record Type. Why: The section lists and opens events. How: This types each.
@@ -458,7 +459,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 				ideStr='eveDetHea'
 				titStr={ selEveObj?.titTexStr ?? 'Event details' } // What: Sheet Title Fallback. Why: The sheet is in the page before any event is opened, and while a cancelled event's sheet slides closed, and an empty title is an empty heading. How: This names the open event, or falls back to a general title.
 
-				onCloFun={ () => { if ( focHeaRef.current ) { focHeaRef.current = false; heaEleRef.current?.focus(); } } } // What: Details Close Handler. Why: After a cancel the card that opened the sheet is gone. How: This focuses the heading when a cancel owes it.
+				onCloFun={ () => { phoFluFun(); if ( focHeaRef.current ) { focHeaRef.current = false; heaEleRef.current?.focus(); } } } // What: Details Close Handler. Why: Closing the event means the member is done adding photos, and after a cancel the card that opened the sheet is gone. How: This ends the burst of photos, then focuses the heading when a cancel owes it.
 			>{ /* What: Event Sheet Dialog Component. Why: A card opens its event's details over the list. How: This holds the creator's controls and the details, titled with the event. */ }
 
 

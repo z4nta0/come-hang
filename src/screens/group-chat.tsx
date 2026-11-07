@@ -22,6 +22,7 @@ import { linNorFun       } from '../core/text-limits.ts';    // What: Lines Norm
 import { memLisFun       } from '../state/members.ts';       // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
 import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
 import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
+import { phoFluFun       } from '../state/photos.ts';        // What: Photos Flush Function. Why: Closing the event's sheet ends the member's burst of photos. How: This posts its chat line.
 import { SheDiaCom       } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
 import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar and status dot wear their color. How: This names it.
 import { staDetFun       } from '../core/chat-status.ts';    // What: Status Details Function. Why: A photos line names its event. How: This reads the post's details.
@@ -749,6 +750,8 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 						ideStr='eveSheHea'
 						titStr={ eveNexObj.titTexStr }
+
+						onCloFun={ phoFluFun } // What: Sheet Close Handler. Why: Closing the event means the member is done adding photos, which the details stay mounted through. How: This ends the burst, posting its chat line.
 					>{ /* What: Event Sheet Dialog Component. Why: Below 1,100px wide, the pinned card opens the event's details over the chat. How: This holds them in a sheet titled with the event. */ }
 
 
