@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-07 (event photos designed, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-07 (event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -243,7 +243,7 @@ from Spark's 100 to 200,000.
 | Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
 | Events | Firestore | Under the owning group |
 | Notes / task-assignments | Firestore | Under the owning event; single-owner field per claimable item |
-| Event photos (designed, not built) | Firestore and Cloud Storage | Each photo's encrypted thumbnail in a doc under the owning event, its encrypted full photo in Storage; see Section 20 |
+| Event photos | Firestore and Cloud Storage | Each photo's encrypted thumbnail in a doc under the owning event, its encrypted full photo in Storage; see Section 20 |
 | Chat messages | RTDB | Under the owning conversation, each with a waiting-on list of who hasn't received it yet; see Sections 5 and 11.7 |
 | Membership mirror | RTDB | `/mirrors/{conversationId}`, written only by a Cloud Function, so the RTDB rules can check membership; see Section 11.7 |
 | Live location | Firestore | One doc per user per group, TTL-expired; see Section 11.4 for why this moved off RTDB |
@@ -330,7 +330,7 @@ retention window that feels inconsistent with the rest of the app.
 elapses; unlike chat, there's no recovery mechanism if 48 hours turns
 out to be too short for a given group, once it's gone, it's gone.
 
-### Photos (designed, not built)
+### Photos
 - Deleted from the server with their event, 48 hours after it ends, and
   kept on a device only until then unless the member saves them; see
   Section 20.
@@ -1052,9 +1052,9 @@ until their own TTL removes them.
 
 | `expireAt` | plaintext, TTL field | The event's own `expireAt`, which the rules check against the event as each write leaves it. When an event's end moves, the same batch moves every item's `expireAt`, and any member can bring an item that fell out of step back in line. |
 
-An event's photos (Section 20, designed, not built) will sit in a `photos`
-subcollection beside its items, carrying the same `expireAt` and moving
-with the event the same way.
+An event's photos (Section 20) sit in a `photos` subcollection beside its
+items, carrying the same `expireAt`, which a Cloud Function moves with the
+event's, and their counts in a `photoTally` subcollection.
 
 Any member adds or removes an item, claims an open one, and reassigns or
 releases anyone's claim (decided 2026-10-27), which is how the group
@@ -1489,7 +1489,7 @@ real, and the app is built against both:
   either platform; addressed via UX design (foreground + periodic +
   arrival check-in) rather than native app development.
 - Data already delivered to a device (chat history, notes, event
-  details, and photos once they're built) cannot be retroactively revoked
+  details, and photos) cannot be retroactively revoked
   if that member is later removed from the group.
 - A member recovered onto a new phone reads a group again only once
   another member shares its key (Section 6), so a group whose other
@@ -1540,13 +1540,11 @@ real, and the app is built against both:
   not just `joinedAt`. This is what replaces a priority/ranking system,
   under-qualified candidates never enter the claim race at all.
 
-- **Event photos (Section 20)**, designed 2026-11-07, with these still to
-  decide before building: whether they ship before or after launch; the
-  caps per event and per member, and how the count is enforced; when an
-  event starts taking photos (at its start, or earlier, as sharing a
-  location opens 3 hours before); whether new photos post a status line to
-  the chat or a push, batched so a burst isn't a flood; and the full
-  photo's size and format, once measured in each engine.
+- **Resolved (2026-11-07): event photos (Section 20)** ship at launch,
+  capped per event and per member by the owner's plan and counted through
+  tallies the rules check, open from the event's start, and announced by
+  one chat status line per burst of uploads. The full photo's size and
+  format are settled by measuring in each engine as it's built.
 
 **Resolved during the data-model pass** (kept here briefly for the
 record): location moves from RTDB to Firestore (11.4); the group's own
@@ -2696,14 +2694,13 @@ since it reuses chat:
 
 ---
 
-## 20. Event Photos (Designed, Not Built)
+## 20. Event Photos
 
-Designed 2026-11-07. Members share photos from an event with the group.
+Decided 2026-11-07, to ship at launch. Members share photos from an event with the group.
 People love to share pictures from a get-together, so it's an expected
 feature, but photos are far heavier than anything else the app moves, so
 the design keeps them small, encrypted, short-lived on the server, and kept
-on the devices that want them, the same shape as chat (Section 5). Whether
-it ships before or after launch is open (Section 13).
+on the devices that want them, the same shape as chat (Section 5).
 
 ### Where it lives
 - **In each event's details**, not a tab of its own, since the tab bar has
@@ -2726,9 +2723,12 @@ it ships before or after launch is open (Section 13).
    its long side, plus a thumbnail at about 320px. A phone photo of 3 to
    12 MB becomes roughly 200 to 400 KB. Redrawing also drops everything
    else the file carried, such as the GPS position most cameras embed, so a
-   photo never shares a location the member didn't choose to share. Safari
-   can't encode WebP from a canvas, so both are JPEG unless the browser
-   encodes WebP, to be measured in each engine. No library is needed.
+   photo never shares a location the member didn't choose to share. Both
+   are WebP where the browser can encode it from a canvas, and JPEG where it
+   can't, as in Safari, since every browser shows both. No library is
+   needed. JPEG XL was considered and set aside (decided 2026-11-07): no
+   browser encodes it from a canvas, so it would need an encoder shipped as
+   third-party code, and only Safari shows it by default.
 2. **Encrypted with the group key** (Section 6), the thumbnail and the full
    photo each under its own IV, so the server holds only ciphertext.
 3. **The thumbnail goes in Firestore**, inside the photo's document, and
@@ -2757,22 +2757,32 @@ it ships before or after launch is open (Section 13).
   encrypted full photo, typed as generic binary with no custom metadata,
   as history bundles are (Section 11.9), capped by the rules at about
   600 KB.
-- **Rules**: a member adds a photo document as its uploader while the
-  event allows photos, and uploads the full photo only to the path of a
-  document they added. Members read both. The uploader or the group's owner
-  deletes a photo. Nobody lists a Storage folder.
-- **Batches stay under Firestore's 500 writes**: changing an event moves
-  every item's and photo's `expireAt` in one batch, and cancelling deletes
-  them in one, so the caps below keep items plus photos well under 500.
-  Items have no cap yet, which this also needs.
+- **`/groups/{groupId}/events/{eventId}/photoTally/{tallyId}`**: the
+  counts the caps are checked against, one document named `all` for the
+  event and one per member under their UID, each holding its count and the
+  ID of the photo that last raised it. Adding a photo raises both in the
+  same transaction, which the rules require, so a count can't be skipped,
+  and deleting a photo doesn't lower them, so the caps count photos added.
+- **Rules**: a member adds a photo document as its uploader from the
+  event's start until it's deleted, with both counts raised within their
+  caps, and uploads the full photo only to the path of a document they
+  added. Members read both. The uploader or the group's owner deletes a
+  photo. Only Cloud Functions change a photo document. Nobody lists a
+  Storage folder.
+- **A Cloud Function keeps photos in step with their event**: when an
+  event's end moves, it moves each photo's `expireAt` with it, and when an
+  event is deleted, by its TTL, a cancel, or its group's deletion, it
+  deletes the event's photos and tallies. So an event's own batches never
+  touch its photos, and Firestore's 500-write limit on a batch never
+  bounds how many an event holds.
 
 ### Retention
 - **On the server, a photo goes with its event**: 48 hours after the event
   ends (Section 5), or when it's cancelled, when its group is deleted, or
   when its uploader or the owner deletes it.
-- **Firestore's TTL deletes the document, and a Cloud Function deletes the
-  full photo**: a trigger on a photo document's deletion removes its Storage
-  file, whatever deleted the document. The bucket's existing 15-day
+- **Each photo document's deletion deletes its full photo**: a Cloud
+  Function triggered on it removes the Storage file, whatever deleted the
+  document, its own TTL included. The bucket's existing 15-day
   lifecycle rule (Section 14's checklist) is the backstop, since no photo
   lives longer than a 7-day event plus 48 hours.
 - **On the device**, thumbnails and opened photos are kept in IndexedDB
@@ -2785,7 +2795,7 @@ it ships before or after launch is open (Section 13).
   on the server. Photos aren't part of history requests (Section 11.9),
   since a bundle of them would be far too large.
 
-### Limits (proposed, to decide)
+### Limits (decided 2026-11-07)
 
 | | Free owner | Paid owner |
 |---|---|---|
@@ -2793,11 +2803,26 @@ it ships before or after launch is open (Section 13).
 | Photos one member adds per event | 30 | 60 |
 
 The cap follows the group owner's status, as the member cap does
-(Section 18), so photos are one more thing the upgrade gives a group.
-Storage rules enforce each file's size; a count can't be checked by the
-rules alone, so the photo documents carry the count the way the group's
-`memberCount` does, or a Cloud Function enforces it, to decide when it's
-built.
+(Section 18), so photos are one more thing the upgrade gives a group, and
+the landing page's free and paid cards list them. The Firestore rules
+check the counts through the tallies above, and the Storage rules each
+file's size.
+
+### Taking photos
+- **From the event's start** until it's deleted, 48 hours after it ends
+  (decided 2026-11-07), though most photos will be shared during and after
+  it.
+- **One line in the chat per burst**: once a member has finished adding
+  photos, the chat gets one status line, "{name} just uploaded photos for
+  {event name}", rather than one per photo. It's posted 60 seconds after
+  their last photo finishes uploading with nothing else on its way, or as
+  soon as they leave the event's photos, by closing its details, moving to
+  another section, or switching away from the app, whichever comes first.
+  It's a status post like "I'm on my way" (Sections 10 and 11.7), carrying
+  the event's ID and its title as it stood, since the event is gone long
+  before the chat is, and a title that fails its limits shows as an update
+  this version can't show. Tapping it opens the event's photos while the
+  event exists.
 
 ### Cost
 On Blaze, Cloud Storage in us-central1 has no-cost usage of 5 GB stored
