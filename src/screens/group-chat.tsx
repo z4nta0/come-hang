@@ -30,6 +30,7 @@ import { staKinFun       } from '../core/chat-status.ts';    // What: Status Kin
 import { useEffect       } from 'react';                     // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
 import { useLayoutEffect } from 'react';                     // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
 import { useRef          } from 'react';                     // What: Use Reference. Why: The log's element and whether it sits at its bottom are read outside rendering. How: This holds both.
+import { useScrOpeFun    } from '../ui/screen.ts';           // What: Use Screen Open Function. Why: A photos line opens its event's photos in the Events section. How: This returns the function that opens a screen.
 import { useState        } from 'react';                     // What: Use State. Why: The messages, members, event, and composer change while the chat is open. How: This holds each.
 
 
@@ -75,7 +76,7 @@ import type { SheHanTyp } from '../ui/sheet.tsx';           // What: Sheet Handl
 
 // #region Types
 
-type ChaDatTyp = { chaErrStr : string, eveNexObj : EveRecTyp | null, memRecMap : Map< string, MemRecTyp >, mesAddFun : ( mesRecObj : MesRecTyp ) => void, mesRecArr : MesRecTyp[], uidValStr : string }; // What: Chat Data Type. Why: The chat reads everything it shows from one hook. How: This types what useChaDatFun returns.
+type ChaDatTyp = { chaErrStr : string, eveIdeArr : string[], eveNexObj : EveRecTyp | null, memRecMap : Map< string, MemRecTyp >, mesAddFun : ( mesRecObj : MesRecTyp ) => void, mesRecArr : MesRecTyp[], uidValStr : string }; // What: Chat Data Type. Why: The chat reads everything it shows from one hook. How: This types what useChaDatFun returns.
 
 // #endregion Types
 
@@ -147,6 +148,7 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 	const memUidRef = useRef( new Set< string >() ); // What: Member UID Reference. Why: A sender not yet known means someone joined since the members were read. How: This holds the UIDs read so far.
 
 	const [ chaErrStr, setChaErrStr ] = useState( '' );                                       // What: Chat Error String And Setter. Why: A chat that can't open says why. How: This holds the message, empty while it works.
+	const [ eveIdeArr, setEveIdeArr ] = useState< string[] >( [] );                           // What: Event Identifier Array And Setter. Why: A photos line opens its event only while the event still exists. How: This holds the IDs of the events not yet deleted.
 	const [ eveNexObj, setEveNexObj ] = useState< EveRecTyp | null >( null );                 // What: Event Next Object And Setter. Why: The next event is pinned. How: This holds it, null when none is planned.
 	const [ memRecMap, setMemRecMap ] = useState( new Map< string, MemRecTyp >() );           // What: Member Record Map And Setter. Why: Each message looks its sender up. How: This holds the members by UID.
 	const [ mesRecArr, setMesRecArr ] = useState< MesRecTyp[] >( [] );                        // What: Message Record Array And Setter. Why: The log shows the messages. How: This holds them in time order.
@@ -229,7 +231,19 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 
 		void ideEnsFun().then( ( ideRecObj ) => { if ( actValBoo ) setUidValStr( ideRecObj.uidValStr ); } ); // What: UID Read Call. Why: A member's own messages sit on their side. How: This reads their UID.
 
-		void eveLisFun( groIdeStr ).then( ( eveRecArr ) => { if ( actValBoo ) setEveNexObj( eveRecArr.find( ( eveRecObj ) => eveRecObj.endTimNum > Date.now() ) ?? null ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Event Read Call. Why: The next event that hasn't ended is pinned. How: This lists the events, soonest first, and keeps the first one still to come or under way.
+		void eveLisFun( groIdeStr ).then( ( eveRecArr ) => { // What: Event Read Call. Why: The next event that hasn't ended is pinned, and photos lines open events that still exist. How: This lists the events, soonest first, and keeps the first one still to come or under way, and every event's ID.
+
+
+			if ( !actValBoo ) return; // What: Stale Guard. Why: The chat may have closed. How: This ignores the result.
+
+
+
+			setEveIdeArr( eveRecArr.map( ( eveRecObj ) => eveRecObj.eveIdeStr ) ); // What: Identifiers Set Call. Why: A photos line opens its event while it's listed. How: This keeps every event's ID.
+
+			setEveNexObj( eveRecArr.find( ( eveRecObj ) => eveRecObj.endTimNum > Date.now() ) ?? null ); // What: Next Set Call. Why: The next event is pinned. How: This keeps the first still to come or under way.
+
+
+		}, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Read Failure Handler. Why: The failure stays visible to someone debugging. How: This logs it.
 
 		void mesLisFun( groIdeStr ).then( ( stoRecArr ) => { if ( actValBoo ) setMesRecArr( ( preRecArr ) => stoRecArr.reduce( mesMerFun, preRecArr ) ); } ); // What: History Read Call. Why: The chat opens with what the device kept. How: This merges each stored message in.
 
@@ -256,7 +270,7 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 
 
 
-	return { chaErrStr, eveNexObj, memRecMap, mesAddFun, mesRecArr, uidValStr }; // What: Chat Data Return. Why: The chat shows each part. How: This returns them.
+	return { chaErrStr, eveIdeArr, eveNexObj, memRecMap, mesAddFun, mesRecArr, uidValStr }; // What: Chat Data Return. Why: The chat shows each part. How: This returns them.
 
 
 };
@@ -392,7 +406,9 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 	const [ texValStr, setTexValStr ] = useState( '' );    // What: Text Value String And Setter. Why: The composer shows what's typed. How: This holds it.
 
 
-	const { chaErrStr, eveNexObj, memRecMap, mesAddFun, mesRecArr, uidValStr } = useChaDatFun( groIdeStr ); // What: Chat Data. Why: The chat shows what the hook loads. How: This reads each part.
+	const scrOpeFun = useScrOpeFun(); // What: Screen Open Function. Why: A photos line opens its event in the Events section. How: This reads the function that opens a screen.
+
+	const { chaErrStr, eveIdeArr, eveNexObj, memRecMap, mesAddFun, mesRecArr, uidValStr } = useChaDatFun( groIdeStr ); // What: Chat Data. Why: The chat shows what the hook loads. How: This reads each part.
 
 
 
@@ -556,11 +572,13 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 						{ mesRecArr.map( ( mesRecObj, mesIndNum ) => { // What: Message Map. Why: Each message gets its own entry. How: This renders one per message, joining a sender's messages close together into one run.
 
 
-							const memRecObj = memRecMap.get( mesRecObj.senUidStr );                                // What: Member Record Object. Why: The message shows its sender. How: This looks them up, undefined for someone who left.
-							const ownMesBoo = mesRecObj.senUidStr === uidValStr;                                   // What: Own Message Boolean. Why: The member's own messages sit on their side. How: This compares the sender with them.
-							const preRecObj = mesRecArr[ mesIndNum - 1 ] as MesRecTyp | undefined;                 // What: Previous Record Object. Why: A message close after its sender's last continues their run. How: This reads the one before it. // What: Type Assertion Note. Why: The first message has none before it. How: The as reads it as possibly missing.
-							const senNamStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' ); // What: Sender Name String. Why: A message names its sender, even one with no name yet or who left. How: This takes their name, or a stand-in.
-							const staKinStr = staKinFun( mesRecObj.texValStr );                                    // What: Status Kind String. Why: A status post shows as a line rather than a message. How: This reads its kind, null for a typed message.
+							const memRecObj = memRecMap.get( mesRecObj.senUidStr );                                                                  // What: Member Record Object. Why: The message shows its sender. How: This looks them up, undefined for someone who left.
+							const ownMesBoo = mesRecObj.senUidStr === uidValStr;                                                                     // What: Own Message Boolean. Why: The member's own messages sit on their side. How: This compares the sender with them.
+							const preRecObj = mesRecArr[ mesIndNum - 1 ] as MesRecTyp | undefined;                                                   // What: Previous Record Object. Why: A message close after its sender's last continues their run. How: This reads the one before it. // What: Type Assertion Note. Why: The first message has none before it. How: The as reads it as possibly missing.
+							const senNamStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' );                                   // What: Sender Name String. Why: A message names its sender, even one with no name yet or who left. How: This takes their name, or a stand-in.
+							const staKinStr = staKinFun( mesRecObj.texValStr );                                                                      // What: Status Kind String. Why: A status post shows as a line rather than a message. How: This reads its kind, null for a typed message.
+							const phoDetObj = staKinStr === 'pho' ? staDetFun( mesRecObj.texValStr ) : null;                                         // What: Photos Details Object. Why: A photos line opens its event. How: This reads the post's event, null for any other line.
+							const staLinStr = staKinStr === null ? '' : STA_LIN_OBJ[ staKinStr ]( ownMesBoo ? '' : senNamStr, mesRecObj.texValStr ); // What: Status Line String. Why: A status post reads as its line. How: This words it for its kind, empty for a typed message.
 
 
 							if ( staKinStr !== null ) return ( // What: Status Return. Why: A status post says who's on their way, has arrived, or just shared photos, in a line of its own. How: This returns its list item.
@@ -580,7 +598,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 										aria-hidden='true'
 									/>{ /* What: Status Dot Span Element. Why: The member's color ties the line to them at a glance. How: This draws a small circle, hidden from screen readers, which read the name. */ }
 
-									<p className={ cssModObj.staTexPar }>{ STA_LIN_OBJ[ staKinStr ]( ownMesBoo ? '' : senNamStr, mesRecObj.texValStr ) } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when. How: This shows the line for its kind and the time after it. */ }
+									<p className={ cssModObj.staTexPar }>{ phoDetObj !== null && eveIdeArr.includes( phoDetObj.eveIdeStr ) ? <button className={ cssModObj.staPhoBut } type='button' onClick={ () => scrOpeFun( { eveStr : phoDetObj.eveIdeStr, groStr : groIdeStr, scrStr : 'group', secStr : 'events' } ) }>{ staLinStr }</button> : staLinStr } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when, and a photos line leads to its photos while its event still exists (Section 20). How: This shows the line for its kind, as a button that opens the event's photos in the Events section for a photos line whose event is still listed, and the time after it. */ }
 
 
 								</li>

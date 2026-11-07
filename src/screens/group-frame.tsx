@@ -82,7 +82,7 @@ const SEC_TAB_ARR : SecTabTyp[] = [ // What: Section Tab Array. Why: Every group
 
 // #region Components
 
-type GfcProTyp = { curGroObj : GroRecTyp | null, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, onRecFun : () => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, or the welcome with none, focuses it when asked, and hands on a group left or deleted and an identity brought back. How: This types GroFraCom's props.
+type GfcProTyp = { curGroObj : GroRecTyp | null, eveIdeStr? : string, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, onRecFun : () => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, or the welcome with none, can open one event in its Events section, focuses it when asked, and hands on a group left or deleted and an identity brought back. How: This types GroFraCom's props.
 
 // #region GroFraCom
 
@@ -106,6 +106,9 @@ type GfcProTyp = { curGroObj : GroRecTyp | null, focBoo : boolean, groRecArr : G
  *
  * @param props.curGroObj - Current Group Object: The open group, or null
  *                          when the phone is in no group.
+ * @param props.eveIdeStr - Event Identifier String: An event whose photos
+ *                          the Events section opens, as from a chat line,
+ *                          or undefined.
  * @param props.focBoo    - Focus Boolean: Whether the heading takes focus,
  *                          as it does for a group just created, or one
  *                          opened after another was left or deleted.
@@ -126,7 +129,7 @@ type GfcProTyp = { curGroObj : GroRecTyp | null, focBoo : boolean, groRecArr : G
  *
 */
 
-function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, onRecFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
+function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
 
 
 	const curIdeStr = curGroObj?.ideStr;                    // What: Current Identifier String. Why: The rail, sheet, tabs, and focus all compare against the open group. How: This holds its ID, undefined with no group.
@@ -392,6 +395,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, onRecFun, secNamS
 						key={ curGroObj.ideStr } // What: Events Key. Why: Another group's events have to start afresh. How: This remounts the section for each group.
 
 						groIdeStr={ curGroObj.ideStr }
+						opeIdeStr={ eveIdeStr }
 						ownBoo={ curGroObj.ownBoo }
 					/> // What: Group Events Component. Why: The group plans its events here. How: This shows the open group's Events section.
 

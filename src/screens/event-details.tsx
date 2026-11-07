@@ -221,7 +221,7 @@ function IteEdiCom ( { asgMemObj, ideStr, iteRecObj, memRecMap, onCanFun, onSavF
 
 
 
-type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, ownBoo : boolean, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members, marking the member's own claims, and letting the owner delete any photo, in the sheet or the panel. How: This types EveDetCom's props.
+type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, ownBoo : boolean, phoJumBoo? : boolean, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members, marking the member's own claims, and letting the owner delete any photo, in the sheet or the panel. How: This types EveDetCom's props.
 
 // #region EveDetCom
 
@@ -247,6 +247,8 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  * @param props.memRecMap - Member Record Map: The group's members, by UID.
  * @param props.ownBoo    - Owner Boolean: Whether the member owns the
  *                          group.
+ * @param props.phoJumBoo - Photos Jump Boolean: Whether the details open
+ *                          scrolled to their photos, false by default.
  * @param props.uidValStr - UID Value String: This member's UID.
  * @param props.varStr    - Variant String: Where the details sit, pan for
  *                          the panel or she for the sheet.
@@ -260,7 +262,7 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  *
 */
 
-function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, uidValStr, varStr } : EdcProTyp ) : React.JSX.Element {
+function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, phoJumBoo = false, uidValStr, varStr } : EdcProTyp ) : React.JSX.Element {
 
 
 	const addIdeStr = `briAddInp--${ varStr }`; // What: Add Identifier String. Why: The sheet and the panel both hold a box, and IDs have to be unique. How: This names the box with its variant.
@@ -702,6 +704,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, uidValStr, varSt
 				eveRecObj={ eveRecObj }
 				groIdeStr={ groIdeStr }
 				memRecMap={ memRecMap }
+				jumBoo={ phoJumBoo }
 				ownBoo={ ownBoo }
 				uidValStr={ uidValStr }
 				varStr={ varStr }

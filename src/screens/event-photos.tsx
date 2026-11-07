@@ -14,6 +14,7 @@ import { phoDelFun    } from '../state/photos.ts';      // What: Photo Delete Fu
 import { phoFluFun    } from '../state/photos.ts';      // What: Photos Flush Function. Why: Leaving the photos means the member is done adding them. How: This ends the burst, posting its chat line.
 import { phoGetFun    } from '../state/photos.ts';      // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
 import { phoWatFun    } from '../state/photos.ts';      // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
+import { redMotFun    } from '../utils/motion.ts';      // What: Reduced Motion Function. Why: A jump to the photos scrolls smoothly unless the member asked for less motion. How: This reads the preference.
 import { SheDiaCom    } from '../ui/sheet.tsx';         // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
 import { useEffect    } from 'react';                   // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
 import { useRef       } from 'react';                   // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
@@ -281,7 +282,7 @@ function PhoThuCom ( { bytValArr } : PtcProTyp ) : React.JSX.Element | null {
 
 
 
-type EpcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, ownBoo : boolean, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Photos Component Props Type. Why: The part shows one event's photos, names who shared them, and lets the uploader or owner delete one, in the sheet or the panel. How: This types EvePhoCom's props.
+type EpcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, jumBoo : boolean, memRecMap : Map< string, MemRecTyp >, ownBoo : boolean, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Photos Component Props Type. Why: The part shows one event's photos, names who shared them, lets the uploader or owner delete one, and can open scrolled into view, in the sheet or the panel. How: This types EvePhoCom's props.
 
 // #region EvePhoCom
 
@@ -297,13 +298,16 @@ type EpcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  * a confirmation. The part's status and alert announce the uploads, and the
  * viewer's own announce what happens inside it, since the part behind the
  * viewer is inert while it's open. The variant keeps the viewer's IDs unique
- * when the sheet and the panel both hold the part. Leaving the part ends the
- * member's burst of uploads.
+ * when the sheet and the panel both hold the part. Asked to jump, it scrolls
+ * itself into view as it opens. Leaving the part ends the member's burst of
+ * uploads.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param props.eveRecObj - Event Record Object: The event.
  * @param props.groIdeStr - Group Identifier String: The event's group.
+ * @param props.jumBoo    - Jump Boolean: Whether the part scrolls into view
+ *                          as it opens, as from a chat line about photos.
  * @param props.memRecMap - Member Record Map: The group's members, by UID.
  * @param props.ownBoo    - Owner Boolean: Whether the member owns the
  *                          group.
@@ -320,10 +324,11 @@ type EpcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  *
 */
 
-function EvePhoCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, uidValStr, varStr } : EpcProTyp ) : React.JSX.Element {
+function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValStr, varStr } : EpcProTyp ) : React.JSX.Element {
 
 
 	const filInpRef = useRef< HTMLInputElement >( null ); // What: File Input Reference. Why: Add photos opens the hidden file picker. How: This holds it.
+	const secEleRef = useRef< HTMLElement >( null );      // What: Section Element Reference. Why: A jump scrolls the part into view. How: This holds its section.
 	const vieHanRef = useRef< SheHanTyp >( null );        // What: Viewer Handle Reference. Why: A thumbnail opens the viewer, and a delete closes it. How: This holds its handle.
 
 	const [ addCouNum, setAddCouNum ] = useState( 0 );                                            // What: Add Count Number And Setter. Why: The status says how many photos are on their way. How: This holds the count.
@@ -348,6 +353,24 @@ function EvePhoCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, uidValStr, varSt
 
 
 	useEffect( () => phoWatFun( groIdeStr, eveRecObj.eveIdeStr, setPhoRecArr, ( errCatObj ) => { console.warn( errCatObj ); setLisErrBoo( true ); } ), [ eveRecObj.eveIdeStr, groIdeStr ] ); // What: Photos Watch Effect. Why: Every member's photos show while the part is open. How: This watches them, logs and shows a failure, and stops the watch when the part goes. // What: Effect Dependency Note. Why: The watch belongs to one event of one group. How: eveRecObj.eveIdeStr and groIdeStr name it.
+
+
+
+	useEffect( () => { // What: Jump Effect. Why: A chat line about photos opens its event at them. How: This scrolls the part to the top of its sheet a frame after it opens, smoothly unless the member asked for less motion.
+
+
+		if ( !jumBoo ) return; // What: Stay Guard. Why: An event opened from its card starts at its top. How: This returns.
+
+
+
+		const fraIdeNum = requestAnimationFrame( () => secEleRef.current?.scrollIntoView( { behavior : redMotFun() ? 'instant' : 'smooth', block : 'start' } ) ); // What: Frame Identifier Number. Why: The sheet has to have laid out before it can scroll. How: This scrolls on the next frame, keeping the request to cancel it.
+
+
+
+		return () => cancelAnimationFrame( fraIdeNum ); // What: Cleanup Return. Why: A part gone before the frame mustn't scroll. How: This cancels the request.
+
+
+	}, [ jumBoo ] ); // What: Effect Dependency Array. Why: The jump happens as the part opens asked to. How: jumBoo changes with the ask.
 
 
 
@@ -591,6 +614,8 @@ function EvePhoCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, uidValStr, varSt
 
 
 		<section
+			ref={ secEleRef }
+
 			className={ cssModObj.evePhoSec }
 
 			aria-labelledby={ `phoParHea--${ varStr }` }

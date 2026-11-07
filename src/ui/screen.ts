@@ -42,6 +42,7 @@ type SecNamTyp = 'chat' | 'events' | 'map' | 'people' | 'settings'; // What: Sec
 type ScrStaTyp = { // What: Screen State Type. Why: Each history entry records the screen it shows. How: This types the state an entry holds.
 
 
+	eveStr? : string,                                          // What: Event String. Why: The Events section can open one event's photos, as a chat line about them asks. How: This is the event's ID.
 	focBoo? : boolean,                                         // What: Focus Boolean. Why: A screen that replaces a group just created, left, or deleted takes focus on its heading. How: This is true on the entry that change opens.
 	groStr? : string,                                          // What: Group String. Why: A group's screen shows one group, and a join screen remembers the group it asked to join. How: This is the group's ID.
 	namStr? : string,                                          // What: Name String. Why: A join screen still names the group it's waiting on after its link changes, and the landing page opened from it names the group to go back to joining. How: This is the group's name as the invite gave it.
@@ -74,8 +75,8 @@ const SEC_NAM_ARR : SecNamTyp[]             = [ 'chat', 'events', 'map', 'people
  *
  * @summary
  * Checks a history entry's state is a screen this version knows: an object
- * naming one of SCR_NAM_ARR's screens, whose group, name, and token, when it
- * has them, are strings, whose focus flag, when it has one, is a
+ * naming one of SCR_NAM_ARR's screens, whose event, group, name, and token,
+ * when it has them, are strings, whose focus flag, when it has one, is a
  * boolean, and whose section, when it names one, is one this version knows.
  * A join screen also needs its token.
  *
@@ -99,6 +100,7 @@ const isaScrFun = ( staValAny : unknown ) : staValAny is ScrStaTyp => { // What:
 
 
 
+	const eveValAny : unknown = Reflect.get( staValAny, 'eveStr' ); // What: Event Value Any. Why: The event is optional. How: This reads it, untyped.
 	const focValAny : unknown = Reflect.get( staValAny, 'focBoo' ); // What: Focus Value Any. Why: The focus flag is optional. How: This reads it, untyped.
 	const groValAny : unknown = Reflect.get( staValAny, 'groStr' ); // What: Group Value Any. Why: The group is optional. How: This reads it, untyped.
 	const namValAny : unknown = Reflect.get( staValAny, 'namStr' ); // What: Name Value Any. Why: The group's name is optional. How: This reads it, untyped.
@@ -106,6 +108,7 @@ const isaScrFun = ( staValAny : unknown ) : staValAny is ScrStaTyp => { // What:
 	const secValAny : unknown = Reflect.get( staValAny, 'secStr' ); // What: Section Value Any. Why: The section is optional. How: This reads it, untyped.
 	const tokValAny : unknown = Reflect.get( staValAny, 'tokStr' ); // What: Token Value Any. Why: Only a join screen has a token, and needs one. How: This reads it, untyped.
 
+	const eveOkaBoo = eveValAny === undefined || typeof eveValAny === 'string';                                // What: Event Okay Boolean. Why: An event of any other type isn't one this version wrote. How: This is true when it's absent or a string.
 	const focOkaBoo = focValAny === undefined || typeof focValAny === 'boolean';                               // What: Focus Okay Boolean. Why: A flag of any other type isn't one this version wrote. How: This is true when it's absent or a boolean.
 	const groOkaBoo = groValAny === undefined || typeof groValAny === 'string';                                // What: Group Okay Boolean. Why: A group of any other type isn't one this version wrote. How: This is true when it's absent or a string.
 	const namOkaBoo = namValAny === undefined || typeof namValAny === 'string';                                // What: Name Okay Boolean. Why: A name of any other type isn't one this version wrote. How: This is true when it's absent or a string.
@@ -115,7 +118,7 @@ const isaScrFun = ( staValAny : unknown ) : staValAny is ScrStaTyp => { // What:
 
 
 
-	return focOkaBoo && groOkaBoo && namOkaBoo && scrOkaBoo && secOkaBoo && tokOkaBoo; // What: Check Return. Why: The state is a screen only when every field is. How: This combines the six checks.
+	return eveOkaBoo && focOkaBoo && groOkaBoo && namOkaBoo && scrOkaBoo && secOkaBoo && tokOkaBoo; // What: Check Return. Why: The state is a screen only when every field is. How: This combines the seven checks.
 
 
 };
