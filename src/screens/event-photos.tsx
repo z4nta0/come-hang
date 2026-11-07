@@ -688,7 +688,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 			) : ( // What: Grid Branch. Why: Photos to show get their tiles. How: This shows the grid.
 
 
-				<ul className={ cssModObj.phoGriUno }>{ /* What: Photos Grid Unordered List Element. Why: The photos read as one list. How: This lays them three to a row, a short last row centered. */ }
+				<ul className={ cssModObj.phoGriUno }>{ /* What: Photos Grid Unordered List Element. Why: The photos read as one list. How: This lays them three to a row on a narrow screen and more where the row is wide, a short last row centered. */ }
 
 
 					{ phoRecArr.map( ( phoRecObj, phoIndNum ) => ( // What: Thumbnail Map. Why: Each photo gets its own tile. How: This renders one per photo.

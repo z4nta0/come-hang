@@ -6,11 +6,11 @@
  *
  * @summary
  * Styles for EvePhoCom: the Photos heading with its actions beside it, a
- * grid of square thumbnails three to a row, and the messages below it, then
- * the viewer sheet's photo shown whole above who shared it, the previous and
- * next buttons, and its actions. The part's status shows in the muted color
- * while the viewer's is for screen readers alone, and failures show in the
- * dark error color.
+ * grid of square thumbnails three to a row on a narrow screen and more where
+ * the row is wide, and the messages below it, then the viewer sheet's photo
+ * shown whole above who shared it, the previous and next buttons, and its
+ * actions. The part's status shows in the muted color while the viewer's is
+ * for screen readers alone, and failures show in the dark error color.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -120,7 +120,7 @@
 
 /* #region phoGriUno */
 
-.phoGriUno { /* What: Photos Grid Unordered List. Why: The photos read as one grid of equal tiles, three to a row, a short last row centered at the others' width, since the count changes with every photo and often has no column count that divides it. How: This lays the tiles out in a wrapping flex row a tier 5 space apart, centered, which grid can't do for a short last row. */
+.phoGriUno { /* What: Photos Grid Unordered List. Why: The photos read as one grid of equal tiles, three to a row until the row is wide enough for more, a short last row centered at the others' width, since the count changes with every photo and often has no column count that divides it. How: This lays the tiles out in a wrapping flex row a tier 5 space apart, centered, which grid can't do for a short last row. */
 
 
 	display         : flex;
@@ -134,10 +134,10 @@
 
 }
 
-.phoTilIte { /* What: Photo Tile Item. Why: Every tile takes a third of the row. How: This sets its width to a third of what's left after the two gaps. */
+.phoTilIte { /* What: Photo Tile Item. Why: Every tile takes a third of the row on a narrow screen, but a third of a wide column would outgrow the viewer's own photo and stretch the 320px thumbnail past sharp. How: This sets its width to a third of what's left after the two gaps, at most rhythm step p08, so a wider row fits more tiles. */
 
 
-	flex : 0 0 calc( ( 100% - var( --tie-hor-005 ) * 2 ) / 3 ); /* Tier Horizontal 5, about 4.732px - 6.268px */
+	flex : 0 0 min( calc( ( 100% - var( --tie-hor-005 ) * 2 ) / 3 ), calc( var( --ver-rhy-p08 ) * 1rem ) ); /* Tier Horizontal 5, about 4.732px - 6.268px, Vertical Rhythm Base Plus 8 ~= 138.204px */
 
 
 }
