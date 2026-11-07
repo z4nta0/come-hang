@@ -107,13 +107,14 @@
 
 /* #region supForDiv */
 
-.supForDiv { /* What: Support Form Div. Why: The form grows into place below the button and closes the same way, pushing what follows, which a transform can't do, and adds no gap while closed. How: This holds it in a row that eases from no height, pulled up by the part's row gap while closed, leaving on the accelerating curve. */
+.supForDiv { /* What: Support Form Div. Why: The form grows into place below the button and closes the same way, pushing what follows, which a transform can't do, and adds no gap while closed. How: This holds it in a row that eases from no height, pulled up by the part's row gap while closed, leaving on the accelerating curve, with a tier 2 space kept below it when it's scrolled into view. */
 
 
-	display            : grid;
-	grid-template-rows : 0fr;
-	margin-top         : calc( var( --tie-ver-003 ) * -1 );                                                                     /* Tier Vertical 3 ~= -14.572px */
-	transition         : grid-template-rows var( --dur-tra-p03 ) var( --mot-acc-eas ), margin-top var( --dur-tra-p03 ) var( --mot-acc-eas ); /* Duration Transition Base Plus 3 ~= 366.4ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+	display              : grid;
+	grid-template-rows   : 0fr;
+	margin-top           : calc( var( --tie-ver-003 ) * -1 );                                                                     /* Tier Vertical 3 ~= -14.572px */
+	scroll-margin-bottom : var( --tie-ver-002 );                                                                                  /* Tier Vertical 2 ~= 25.572px */
+	transition           : grid-template-rows var( --dur-tra-p03 ) var( --mot-acc-eas ), margin-top var( --dur-tra-p03 ) var( --mot-acc-eas ); /* Duration Transition Base Plus 3 ~= 366.4ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
 
 
 }

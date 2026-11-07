@@ -8,6 +8,7 @@ import cssModObj from './support-form.module.css'; // What: CSS Module Object. W
 
 import { broNamFun } from '../utils/browser.ts'; // What: Browser Name Function. Why: A message says which browser it came from. How: This names it from the user agent string.
 import { ButBasCom } from '../ui/button.tsx';    // What: Button Base Component. Why: Sending is the form's leading action. How: This draws its button.
+import { redMotFun } from '../utils/motion.ts';  // What: Reduced Motion Function. Why: The scroll to an opened form jumps under reduced motion. How: This reads the preference.
 import { useEffect } from 'react';               // What: Use Effect. Why: Opening the form moves focus into it. How: This focuses the subject once the form is open.
 import { useRef    } from 'react';               // What: Use Reference. Why: Focus moves between the toggle and the fields. How: This holds them.
 import { useState  } from 'react';               // What: Use State. Why: The fields, their problems, and the form's open and sending states change while it's used. How: This holds each.
@@ -59,15 +60,16 @@ const SUP_EMA_STR = 'support@comehang.app';        // What: Support Email String
  * Renders the support note, the "Contact support" button, which opens and
  * closes the form, saying which through aria-expanded, a status that says a
  * message was sent, and the form below them, inert while closed. Opening it
- * focuses the subject. Send checks that there's a subject and a message, and
- * that an email, if given, looks like one, focusing the first field with a
- * problem; then it posts the fields, the version, and the browser to Netlify
- * Forms, its button reading "Sending…" meanwhile. A sent message empties the
- * form and closes it, focus returning to the button while the status
- * announces it. One that fails stays in the form, and the alert says so,
- * giving the support address with a button that copies it. Cancel closes the
- * form, keeping what was typed, and returns focus to the button. A hidden
- * field only a bot would fill marks the message as spam to Netlify.
+ * focuses the subject, and once the form has grown, scrolls it into view. Send
+ * checks that there's a subject and a message, and that an email, if given,
+ * looks like one, focusing the first field with a problem; then it posts the
+ * fields, the version, and the browser to Netlify Forms, its button reading
+ * "Sending…" meanwhile. A sent message empties the form and closes it, focus
+ * returning to the button while the status announces it. One that fails stays
+ * in the form, and the alert says so, giving the support address with a button
+ * that copies it. Cancel closes the form, keeping what was typed, and returns
+ * focus to the button. A hidden field only a bot would fill marks the message
+ * as spam to Netlify.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -87,6 +89,7 @@ function SupForCom () : React.JSX.Element {
 
 	const emaInpRef = useRef< HTMLInputElement >( null );    // What: Email Input Reference. Why: An email with a problem takes focus. How: This holds the box.
 	const focOpeRef = useRef( false );                       // What: Focus Open Reference. Why: Only opening the form from the button owes focus to the subject. How: This is true until it's given.
+	const forDivRef = useRef< HTMLDivElement >( null );      // What: Form Div Reference. Why: An opened form is scrolled into view once it has grown. How: This holds the row it grows in.
 	const mesTexRef = useRef< HTMLTextAreaElement >( null ); // What: Message Textarea Reference. Why: A missing message takes focus. How: This holds the box.
 	const subInpRef = useRef< HTMLInputElement >( null );    // What: Subject Input Reference. Why: Opening the form focuses the subject, and a missing one takes focus. How: This holds the box.
 	const togButRef = useRef< HTMLButtonElement >( null );   // What: Toggle Button Reference. Why: Closing or sending the form returns focus to the button that opened it. How: This holds the button.
@@ -108,19 +111,60 @@ function SupForCom () : React.JSX.Element {
 
 
 
-	useEffect( () => { // What: Open Focus Effect. Why: Someone who opens the form should land in its first field. How: Once the form is open and no longer inert, this focuses the subject when focus is owed.
+	// #region Open Focus And Scroll
+
+	/**
+	 * support-form.tsx = Open Focus And Scroll
+	 *
+	 * @summary
+	 * When the form opens from the button, the subject takes focus without the
+	 * browser jumping to it, since the form is still growing. Once the form's
+	 * row has finished growing, the form scrolls into view, only as far as it
+	 * needs to, which matters most when the button sits near the bottom of
+	 * the screen. The scroll is smooth, and under reduced motion, where the
+	 * row opens at once, it happens at once. Closing the form before it has
+	 * grown cancels the scroll.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	*/
+
+	useEffect( () => { // What: Open Focus Effect. Why: Someone who opens the form should land in its first field and see the whole form. How: Once the form is open and no longer inert, this focuses the subject when focus is owed, and scrolls the form into view once it has grown.
 
 
-		if ( !forOpeBoo || !focOpeRef.current ) return; // What: Owed Guard. Why: Only an opening from the button owes focus. How: This returns otherwise.
+		const forDivEle = forDivRef.current; // What: Form Div Element. Why: The row's growing is what the scroll waits for. How: This reads it.
+
+
+		if ( !forOpeBoo || !focOpeRef.current || !forDivEle ) return; // What: Owed Guard. Why: Only an opening from the button owes focus and the scroll. How: This returns otherwise.
 
 
 
 		focOpeRef.current = false; // What: Focus Owed Reset. Why: The focus is given once. How: This clears the debt.
 
-		subInpRef.current?.focus(); // What: Subject Focus Call. Why: The form starts with its subject. How: This focuses the box.
+		subInpRef.current?.focus( { preventScroll : true } ); // What: Subject Focus Call. Why: The form starts with its subject, while a jump to it now would land mid-growth. How: This focuses the box without scrolling.
 
 
-	}, [ forOpeBoo ] ); // What: Effect Dependency Array. Why: Focus is owed only when the form opens. How: forOpeBoo changes when it opens or closes.
+
+		const scrForFun = () : void => forDivEle.scrollIntoView( { behavior : redMotFun() ? 'auto' : 'smooth', block : 'nearest' } ); // What: Scroll Form Function. Why: A form opened near the bottom of the screen grows out of sight. How: This scrolls it just into view, smoothly unless reduced motion is asked for.
+
+
+		if ( redMotFun() ) { scrForFun(); return; } // What: Reduced Motion Guard. Why: Under reduced motion the row opens at once, with no transition to wait for. How: This scrolls at once and returns.
+
+
+
+		const endGroFun = ( traEveObj : TransitionEvent ) : void => { if ( traEveObj.target === forDivEle && traEveObj.propertyName === 'grid-template-rows' ) { forDivEle.removeEventListener( 'transitionend', endGroFun ); scrForFun(); } }; // What: End Grow Function. Why: The form's full height is known only once its row has grown. How: This scrolls once the row's own transition ends, ignoring its children's, and stops listening.
+
+
+		forDivEle.addEventListener( 'transitionend', endGroFun ); // What: Grow Listener Call. Why: The scroll waits for the row to finish growing. How: This listens for its transition's end.
+
+
+
+		return () => forDivEle.removeEventListener( 'transitionend', endGroFun ); // What: Cleanup Return. Why: A form closed before it has grown shouldn't scroll afterwards. How: This stops listening.
+
+
+	}, [ forOpeBoo ] ); // What: Effect Dependency Array. Why: Focus and the scroll are owed only when the form opens. How: forOpeBoo changes when it opens or closes.
+
+	// #endregion Open Focus And Scroll
 
 
 
@@ -320,6 +364,7 @@ function SupForCom () : React.JSX.Element {
 
 
 			<div
+				ref={ forDivRef }
 				id='supForDiv'
 
 				className={ cssModObj.supForDiv }
