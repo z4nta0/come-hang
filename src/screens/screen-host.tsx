@@ -6,30 +6,31 @@
 import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Why: The host's status is styled in its own module, whose class names Vite hashes. How: Its element reads its class from this object.
 
 
-import { CreGroCom       } from './create-group.tsx';     // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
-import { GroFraCom       } from './group-frame.tsx';      // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
-import { groWatFun       } from '../state/groups.ts';     // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
-import { ideHasFun       } from '../state/deletion.ts';   // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
-import { InsIosCom       } from './install-ios.tsx';      // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
-import { isaInsFun       } from '../platform/install.ts'; // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
-import { isaIosFun       } from '../platform/install.ts'; // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
-import { JoiGroCom       } from './join-group.tsx';       // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
-import { LanPagCom       } from './landing/page.tsx';     // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
-import { LoaScrCom       } from './loading.tsx';          // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
-import { NotSheCom       } from './notices.tsx';          // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
-import { PasInvCom       } from './paste-invite.tsx';     // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
-import { safConFun       } from '../platform/install.ts'; // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
-import { scrReaFun       } from '../ui/scroll-top.ts';    // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
-import { shaEndFun       } from '../state/sharing.ts';    // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
-import { shaGetFun       } from '../state/sharing.ts';    // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
-import { shaResFun       } from '../state/sharing.ts';    // What: Sharing Resume Function. Why: Sharing kept from before a reload resumes as the app opens. How: This resumes it.
-import { useCallback     } from 'react';                  // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
-import { useEffect       } from 'react';                  // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing is checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing.
-import { useLayoutEffect } from 'react';                  // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
-import { useRef          } from 'react';                  // What: Use Reference. Why: Carrying on in Safari owes focus to the screen that follows. How: This holds whether it's owed.
-import { useScrOpeFun    } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
-import { useScrStaFun    } from '../ui/screen.ts';        // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
-import { useState        } from 'react';                  // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
+import { CreGroCom       } from './create-group.tsx';         // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
+import { GroFraCom       } from './group-frame.tsx';          // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
+import { groWatFun       } from '../state/groups.ts';         // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
+import { ideHasFun       } from '../state/deletion.ts';       // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
+import { InsIosCom       } from './install-ios.tsx';          // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
+import { isaInsFun       } from '../platform/install.ts';     // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
+import { isaIosFun       } from '../platform/install.ts';     // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
+import { JoiGroCom       } from './join-group.tsx';           // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
+import { LanPagCom       } from './landing/page.tsx';         // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
+import { LoaScrCom       } from './loading.tsx';              // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
+import { NotSheCom       } from './notices.tsx';              // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
+import { PasInvCom       } from './paste-invite.tsx';         // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
+import { plaPruFun       } from '../platform/place-store.ts'; // What: Place Prune Function. Why: A group's event places shouldn't stay on a device that's no longer in it. How: This removes the places of every group not listed.
+import { safConFun       } from '../platform/install.ts';     // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
+import { scrReaFun       } from '../ui/scroll-top.ts';        // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
+import { shaEndFun       } from '../state/sharing.ts';        // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
+import { shaGetFun       } from '../state/sharing.ts';        // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
+import { shaResFun       } from '../state/sharing.ts';        // What: Sharing Resume Function. Why: Sharing kept from before a reload resumes as the app opens. How: This resumes it.
+import { useCallback     } from 'react';                      // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
+import { useEffect       } from 'react';                      // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing and the kept places are checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing and the places.
+import { useLayoutEffect } from 'react';                      // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
+import { useRef          } from 'react';                      // What: Use Reference. Why: Carrying on in Safari owes focus to the screen that follows. How: This holds whether it's owed.
+import { useScrOpeFun    } from '../ui/screen.ts';            // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
+import { useScrStaFun    } from '../ui/screen.ts';            // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
+import { useState        } from 'react';                      // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
 
 
 import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
@@ -306,6 +307,17 @@ function ScrHosCom () : React.JSX.Element {
 
 
 	}, [ groRecArr ] ); // What: Effect Dependency Array. Why: Sharing is checked against each report. How: groRecArr changes as the watch reports.
+
+
+
+
+	useEffect( () => { // What: Places Prune Effect. Why: The event places kept for a group the member left, was removed from, or deleted shouldn't stay on the device. How: This removes the places of every group the watch no longer lists.
+
+
+		if ( groRecArr !== null ) plaPruFun( groRecArr.map( ( groRecObj ) => groRecObj.ideStr ) ).catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Prune Call. Why: Only the member's groups keep their places, and a failed removal shouldn't break the screen. How: This prunes once the groups are known, logging a failure.
+
+
+	}, [ groRecArr ] ); // What: Effect Dependency Array. Why: The places are checked against each report. How: groRecArr changes as the watch reports.
 
 
 

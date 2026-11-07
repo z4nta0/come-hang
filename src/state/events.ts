@@ -3,24 +3,25 @@
 
 // #region Imports
 
-import { Bytes      } from 'firebase/firestore';      // What: Bytes. Why: An event's encrypted details and IV are stored as Firestore bytes. How: This wraps and reads raw bytes.
-import { collection } from 'firebase/firestore';      // What: Collection. Why: A group's events and an event's items are listed together. How: This names a collection.
-import { decTexFun  } from '../platform/crypto.ts';   // What: Decrypt Text Function. Why: An event's details are stored encrypted. How: This decrypts them.
-import { doc        } from 'firebase/firestore';      // What: Doc. Why: Each event is named by path. How: This builds a reference.
-import { encTexFun  } from '../platform/crypto.ts';   // What: Encrypt Text Function. Why: An event's details are stored encrypted. How: This encrypts them under the group key.
-import { eveDesFun  } from '../core/text-limits.ts';  // What: Event Description Function. Why: A description is checked by the app alone. How: This applies the limits.
-import { eveLocFun  } from '../core/text-limits.ts';  // What: Event Location Function. Why: A location is checked by the app alone. How: This applies the limits.
-import { eveTitFun  } from '../core/text-limits.ts';  // What: Event Title Function. Why: A title is checked by the app alone. How: This applies the limits.
-import { firGetFun  } from '../platform/firebase.ts'; // What: Firebase Get Function. Why: Events live in Firestore. How: This returns the services.
-import { getDocs    } from 'firebase/firestore';      // What: Get Docs. Why: Events and their items are read together. How: This reads a collection.
-import { ideEnsFun  } from './identity.ts';           // What: Identity Ensure Function. Why: An event names its creator. How: This reads the identity.
-import { jsoObjFun  } from '../utils/json.ts';        // What: JSON Object Function. Why: Another member wrote the bundle, so it may not be JSON. How: This parses it safely.
-import { keyLoaFun  } from './groups.ts';             // What: Key Load Function. Why: Details are encrypted with the group key. How: This loads it.
-import { linNorFun  } from '../core/text-limits.ts';  // What: Lines Normalize Function. Why: A description keeps its line breaks while it's tidied. How: This normalizes it.
-import { setDoc     } from 'firebase/firestore';      // What: Set Doc. Why: A new event is written whole. How: This writes it.
-import { texNorFun  } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: A title and location are tidied before they're checked. How: This normalizes them.
-import { Timestamp  } from 'firebase/firestore';      // What: Timestamp. Why: An event's times are stored as timestamps. How: This builds and reads them.
-import { writeBatch } from 'firebase/firestore';      // What: Write Batch. Why: A changed or cancelled event moves or deletes its items with it. How: This groups the writes.
+import { Bytes      } from 'firebase/firestore';         // What: Bytes. Why: An event's encrypted details and IV are stored as Firestore bytes. How: This wraps and reads raw bytes.
+import { collection } from 'firebase/firestore';         // What: Collection. Why: A group's events and an event's items are listed together. How: This names a collection.
+import { decTexFun  } from '../platform/crypto.ts';      // What: Decrypt Text Function. Why: An event's details are stored encrypted. How: This decrypts them.
+import { doc        } from 'firebase/firestore';         // What: Doc. Why: Each event is named by path. How: This builds a reference.
+import { encTexFun  } from '../platform/crypto.ts';      // What: Encrypt Text Function. Why: An event's details are stored encrypted. How: This encrypts them under the group key.
+import { eveDesFun  } from '../core/text-limits.ts';     // What: Event Description Function. Why: A description is checked by the app alone. How: This applies the limits.
+import { eveLocFun  } from '../core/text-limits.ts';     // What: Event Location Function. Why: A location is checked by the app alone. How: This applies the limits.
+import { eveTitFun  } from '../core/text-limits.ts';     // What: Event Title Function. Why: A title is checked by the app alone. How: This applies the limits.
+import { firGetFun  } from '../platform/firebase.ts';    // What: Firebase Get Function. Why: Events live in Firestore. How: This returns the services.
+import { getDocs    } from 'firebase/firestore';         // What: Get Docs. Why: Events and their items are read together. How: This reads a collection.
+import { ideEnsFun  } from './identity.ts';              // What: Identity Ensure Function. Why: An event names its creator. How: This reads the identity.
+import { jsoObjFun  } from '../utils/json.ts';           // What: JSON Object Function. Why: Another member wrote the bundle, so it may not be JSON. How: This parses it safely.
+import { keyLoaFun  } from './groups.ts';                // What: Key Load Function. Why: Details are encrypted with the group key. How: This loads it.
+import { linNorFun  } from '../core/text-limits.ts';     // What: Lines Normalize Function. Why: A description keeps its line breaks while it's tidied. How: This normalizes it.
+import { plaAddFun  } from '../platform/place-store.ts'; // What: Place Add Function. Why: The device remembers where a group's events are, for the form's suggestions. How: This keeps the places.
+import { setDoc     } from 'firebase/firestore';         // What: Set Doc. Why: A new event is written whole. How: This writes it.
+import { texNorFun  } from '../core/text-limits.ts';     // What: Text Normalize Function. Why: A title and location are tidied before they're checked. How: This normalizes them.
+import { Timestamp  } from 'firebase/firestore';         // What: Timestamp. Why: An event's times are stored as timestamps. How: This builds and reads them.
+import { writeBatch } from 'firebase/firestore';         // What: Write Batch. Why: A changed or cancelled event moves or deletes its items with it. How: This groups the writes.
 
 // #endregion Imports
 
@@ -41,7 +42,8 @@ import { writeBatch } from 'firebase/firestore';      // What: Write Batch. Why:
  * ahead. Moving an event's end moves every item's deletion time in the same
  * batch, and cancelling an event deletes its items with it. Any member lists
  * the events with their details decrypted, where details that won't read
- * come back empty.
+ * come back empty. Every place planned, changed, or listed is kept on the
+ * device too, so the event form can suggest it after the event is gone.
  *
  * Sections:
  *  - Types
@@ -156,6 +158,46 @@ const eveFieFun = async ( groIdeStr : string, eveInpObj : EveInpTyp ) : Promise<
 
 
 
+// #region plaKeeFun
+
+/**
+ * plaKeeFun = Places Keep Function
+ *
+ * @summary
+ * Keeps a group's event places on the device without waiting: each place is
+ * tidied, and only those that are filled in and within the place's limits
+ * are kept, since another member wrote them. A write that fails is logged,
+ * never thrown, so it can't break planning or listing an event.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param locTexArr - Location Text Array: The places, most recent first.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * plaKeeFun('Xk3...', ['The park']) // => void
+ * ```
+ *
+*/
+
+const plaKeeFun = ( groIdeStr : string, locTexArr : string[] ) : void => { // What: Places Keep Function. Why: The form suggests where the group has met, after the server deletes the event. How: This tidies and checks the places and keeps them, logging a failure.
+
+
+	const locNorArr = locTexArr.map( ( locTexStr ) => texNorFun( locTexStr ) ).filter( ( locNorStr ) => locNorStr !== '' && eveLocFun( locNorStr ) ); // What: Location Normalized Array. Why: Only a real place within its limits is suggested. How: This tidies each and keeps the filled-in ones that pass.
+
+
+	plaAddFun( groIdeStr, locNorArr ).catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Places Add Call. Why: A failed write shouldn't stop the event's own work. How: This keeps the places, logging a failure.
+
+
+};
+
+// #endregion plaKeeFun
+
+
+
 // #region eveCreFun
 
 /**
@@ -163,8 +205,9 @@ const eveFieFun = async ( groIdeStr : string, eveInpObj : EveInpTyp ) : Promise<
  *
  * @summary
  * Plans an event in a group as this identity, named as its creator, and
- * resolves with the event's ID. Rejects with a RangeError for text or times
- * outside their limits, before anything is written.
+ * resolves with the event's ID, keeping its place on the device. Rejects
+ * with a RangeError for text or times outside their limits, before anything
+ * is written.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -191,6 +234,8 @@ const eveCreFun = async ( groIdeStr : string, eveInpObj : EveInpTyp ) : Promise<
 
 
 	await setDoc( eveRefObj, { ...eveFieObj, createdByUid : uidValStr } ); // What: Event Set Call. Why: The event is planned. How: This writes its fields and creator.
+
+	plaKeeFun( groIdeStr, [ eveInpObj.locTexStr ] ); // What: Place Keep Call. Why: The form suggests this place next time. How: This keeps it on the device.
 
 
 
@@ -260,7 +305,8 @@ type EveRecTyp = EveInpTyp & { creUidStr : string, eveIdeStr : string }; // What
  * decrypted under the group key. An event past its deletion time is left
  * out, since its TTL deletion can run a day late. Details are untrusted, as
  * any member could have written them, so a bundle that won't decrypt or
- * parse, or a part that isn't text, comes back empty.
+ * parse, or a part that isn't text, comes back empty. Each listed place is
+ * also kept on the device, for the event form's suggestions.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -310,7 +356,13 @@ const eveLisFun = async ( groIdeStr : string ) : Promise< EveRecTyp[] > => { // 
 
 
 
-	return eveRecArr.sort( ( recOneObj, recTwoObj ) => recOneObj.staTimNum - recTwoObj.staTimNum ); // What: Events Return. Why: The next event is listed first. How: This returns the records by start time.
+	eveRecArr.sort( ( recOneObj, recTwoObj ) => recOneObj.staTimNum - recTwoObj.staTimNum ); // What: Events Sort Call. Why: The next event is listed first. How: This orders the records by start time.
+
+	plaKeeFun( groIdeStr, eveRecArr.map( ( eveRecObj ) => eveRecObj.locTexStr ) ); // What: Places Keep Call. Why: The form suggests the group's places after their events are gone. How: This keeps each listed event's place on the device.
+
+
+
+	return eveRecArr; // What: Events Return. Why: The caller shows the events. How: This returns the sorted records.
 
 
 };
@@ -327,8 +379,9 @@ const eveLisFun = async ( groIdeStr : string ) : Promise< EveRecTyp[] > => { // 
  * @summary
  * Changes an event's details and times as its creator or the group's owner,
  * moving every item's deletion time with the event's in the same batch, as
- * the rules require. Rejects with a RangeError for text or times outside
- * their limits, before anything is written.
+ * the rules require, and keeps its place on the device. Rejects with a
+ * RangeError for text or times outside their limits, before anything is
+ * written.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -361,6 +414,8 @@ const eveUpdFun = async ( groIdeStr : string, eveIdeStr : string, eveInpObj : Ev
 	iteSnaObj.docs.forEach( ( iteDocObj ) => batWriObj.update( iteDocObj.ref, { expireAt : eveFieObj.expireAt } ) ); // What: Item Update Calls. Why: An item goes when its event does. How: This moves each one's deletion time to the event's.
 
 	await batWriObj.commit(); // What: Batch Commit Call. Why: The event and its items change together. How: This commits the batch.
+
+	plaKeeFun( groIdeStr, [ eveInpObj.locTexStr ] ); // What: Place Keep Call. Why: The form suggests this place next time. How: This keeps it on the device.
 
 
 };

@@ -57,7 +57,8 @@ parts, the form for starting a group, the group frame with its rail, its switche
 the group chat with its next event, pinned as a card that opens a sheet below
 1,100px and shown in a panel beside the chat from 1,100px, each with the live
 bring-list, the section tabs, the Events section with its form for planning,
-changing, and cancelling events, the People section with the invite link, the
+changing, and cancelling events, whose place field suggests the group's
+earlier places kept on the device, the People section with the invite link, the
 people waiting to join, whom any member approves, declines, or blocks, the
 members waiting on a new phone for the group's key, which any other member
 shares, and the members, and the Settings section. There the owner renames the

@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-07 (Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist)
+Last updated: 2026-11-07 (the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14)
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -311,6 +311,12 @@ does).
   events/notes the way chat has via Section 11.9's history-sync) and
   staying consistent with this design's overall minimal-retention
   philosophy.
+- **Places stay on each device** (decided 2026-11-07): so the event form
+  can suggest where a group has met before, each member's device keeps the
+  places of the group's events it has seen, and only the places, the most
+  recent 20 per group, in IndexedDB. Nothing about them reaches the server
+  or any outside service, and they're removed when the member leaves, is
+  removed, or the group is deleted, and with the rest of the device's data.
 
 **Pros**: bounded, predictable storage growth; matches the natural
 lifecycle of the data (nobody needs an event's logistics once it's
@@ -1849,7 +1855,11 @@ the Blaze change.
   confirming, focus then landing on the section's heading. Plan an event
   opens the same form empty: a title, when it starts and ends, a place, and
   notes, each field saying what's wrong with it beside it and the first one
-  with a problem taking focus. Each plan, change, and cancel is announced. The chat pins the group's next event that
+  with a problem taking focus. The place field suggests the group's earlier
+  places, kept on the device by `src/platform/place-store.ts` (built
+  2026-11-07), through the browser's own datalist, alongside the addresses
+  the browser has saved, with no map or address service, since one would
+  see every place typed. Each plan, change, and cancel is announced. The chat pins the group's next event that
   hasn't ended at its top, opens with the history kept on the device, then
   watches the chat, starting the watch again a second later while the rules
   refuse it, as they do until the membership mirror holds a new member, and
@@ -1966,9 +1976,10 @@ the Blaze change.
   the device, acknowledged, cleared of departed members' entries (after
   rereading the members, so a new member isn't taken for gone), and deleted
   once nobody waits on it or it's past the retention. The device's history
-  lives in `src/platform/chat-store.ts`, beside the keys in the app's one
-  IndexedDB database, which `src/platform/local-db.ts` opens at version 2,
-  creating whichever stores are missing.
+  lives in `src/platform/chat-store.ts`, beside the keys and the groups'
+  event places in the app's one IndexedDB database, which
+  `src/platform/local-db.ts` opens at version 3, creating whichever stores
+  are missing.
 - `src/state/presence.ts` marks a member online with an entry the server
   clears if the device drops, clears it on going offline, and watches who's
   online (Section 11.8). `src/state/history.ts` is peer-assisted history

@@ -148,7 +148,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>What stays on your device</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Your encryption keys, your chat history, and settings such as light or dark mode are stored on your device, in your browser's storage. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Your encryption keys, your chat history, the places of your groups' events, and settings such as light or dark mode are stored on your device, in your browser's storage. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>How we use information</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -185,7 +185,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>Chat messages</strong> are deleted from the server once every member's device has them, or after the period the group's owner sets, from 7 to 180 days, 30 by default.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>Events and their bring-lists</strong> are deleted 48 hours after the event ends.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Events and their bring-lists</strong> are deleted 48 hours after the event ends. Your device keeps only each event's place, to suggest it when your group plans its next event, until you leave the group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Your location</strong> is deleted an hour after your last update, or when the event ends.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
