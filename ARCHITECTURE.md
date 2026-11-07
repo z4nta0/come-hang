@@ -2850,6 +2850,10 @@ newest is an optimization if that grows. The budget alerts and billing
 cutoff (Section 15) cover a runaway.
 
 ### Safety
+- **The security policy allows `blob:` images** (`img-src 'self' blob:` in
+  `public/_headers`), since a photo is decrypted on the device and shown
+  from a temporary address only the page itself can make; nothing else
+  from another origin is allowed.
 - Photos are encrypted, so nothing can be scanned. Groups are invite-only
   with every join approved (Section 17), the owner can delete any photo and
   remove a member, and a removed member's photos stay until their event's

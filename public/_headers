@@ -15,9 +15,11 @@
 # such as the one for fonts, so those need no lines of their own. The
 # directives listed either need a different value than 'self', are never
 # covered by default-src at all, such as frame-ancestors, or just state the
-# default for clarity, such as script-src. style-src needs no 'unsafe-inline':
-# the build ships no inline styles, and a style React sets later through the
-# DOM isn't restricted by the policy.
+# default for clarity, such as script-src. img-src adds blob: for event photos,
+# which are decrypted on the device and shown, and shrunk before they're
+# shared, from temporary addresses only this page can make. style-src needs no
+# 'unsafe-inline': the build ships no inline styles, and a style React sets
+# later through the DOM isn't restricted by the policy.
 #
 # Strict-Transport-Security keeps browsers on HTTPS for two years across every
 # subdomain, leaving out preload, which commits the domain to the browsers'
@@ -30,7 +32,7 @@
 
 # What: Security Headers Rule. Why: Every response should refuse framing, sniffing, plain HTTP, referrer leaks to other sites, unused browser features, and anything loaded from another origin but its own Firebase project. How: This applies the Content-Security-Policy, its project's placeholders filled in by the build, the permissions and referrer policies, HSTS, a nosniff content type, and a deny on framing to every path.
 /*
-	Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'%FIREBASE_CONNECT%; form-action 'self'; frame-ancestors 'none'; frame-src %FIREBASE_FRAME%; object-src 'none'; script-src 'self'%FIREBASE_SCRIPT%; style-src 'self'
+	Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'%FIREBASE_CONNECT%; form-action 'self'; frame-ancestors 'none'; frame-src %FIREBASE_FRAME%; img-src 'self' blob:; object-src 'none'; script-src 'self'%FIREBASE_SCRIPT%; style-src 'self'
 	Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()
 	Referrer-Policy: same-origin
 	Strict-Transport-Security: max-age=63072000; includeSubDomains
