@@ -364,7 +364,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 				ref={ detHanRef }
 
 				ideStr='eveDetHea'
-				titStr={ selEveObj?.titTexStr ?? '' }
+				titStr={ selEveObj?.titTexStr ?? 'Event details' } // What: Sheet Title Fallback. Why: The sheet is in the page before any event is opened, and while a cancelled event's sheet slides closed, and an empty title is an empty heading. How: This names the open event, or falls back to a general title.
 
 				onCloFun={ () => { if ( focHeaRef.current ) { focHeaRef.current = false; heaEleRef.current?.focus(); } } } // What: Details Close Handler. Why: After a cancel the card that opened the sheet is gone. How: This focuses the heading when a cancel owes it.
 			>{ /* What: Event Sheet Dialog Component. Why: A card opens its event's details over the list. How: This holds the creator's controls and the details, titled with the event. */ }
