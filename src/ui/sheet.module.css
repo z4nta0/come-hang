@@ -18,7 +18,7 @@
 
 /* #region sheModDia */
 
-.sheModDia { /* What: Sheet Modal Dialog. Why: The sheet covers the whole screen, its own scrim dimming the page rather than the browser's backdrop. How: This makes the dialog a borderless, transparent layer the size of the screen, its text in the main color. */
+.sheModDia { /* What: Sheet Modal Dialog. Why: The sheet covers the whole screen, its own scrim dimming the page rather than the browser's backdrop. How: This makes the dialog a borderless, transparent layer the size of the screen that never scrolls, its text in the main color. */
 
 
 	background-color : transparent;
@@ -28,6 +28,7 @@
 	inset            : 0;
 	max-height       : none;
 	max-width        : none;
+	overflow         : clip;                 /* What: Clip Overflow Note. Why: A modal dialog scrolls by default, so the panel sliding up from below the screen gave the dialog room to scroll, and the browser scrolled it to the focused close button and kept correcting as the room shrank, jittering the panel as it landed. How: Clipping makes the dialog no scroll container at all, while the panel still scrolls its own content. */
 	width            : 100%;
 
 
