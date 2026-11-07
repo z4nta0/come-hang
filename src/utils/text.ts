@@ -5,10 +5,10 @@
  * text.ts = Text Helpers
  *
  * @summary
- * Small helpers for showing text, such as the initials that stand in for a
- * name where there's only room for a letter or two. They split text by
- * what a reader sees as one character, so an emoji or an accented letter is
- * never cut in half.
+ * Small helpers for text, such as the initials that stand in for a name
+ * where there's only room for a letter or two, or a plain piece of a file
+ * name. Initials split text by what a reader sees as one character, so an
+ * emoji or an accented letter is never cut in half.
  *
  * Sections:
  *  - Helpers
@@ -21,6 +21,47 @@
 
 
 // #region Helpers
+
+// #region filNamFun
+
+/**
+ * filNamFun = File Name Function
+ *
+ * @summary
+ * Turns text into a piece of a file name that every system accepts: its
+ * accents and apostrophes dropped, lowercased, and every run of anything but
+ * a letter or a digit made one hyphen, with none left at either end, at most
+ * 40 characters long. Text with nothing left, such as one made only of
+ * emoji, gives an empty piece, for the caller to fill.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param texValStr - Text Value String: The text to name a file after.
+ *
+ * @returns The piece of the name, which may be empty.
+ *
+ * @example
+ * ```ts
+ * filNamFun('Café night!') // => 'cafe-night'
+ * ```
+ *
+*/
+
+const filNamFun = ( texValStr : string ) : string => { // What: File Name Function. Why: A downloaded file is named after what it holds, which may carry accents, spaces, or symbols. How: This keeps plain letters and digits, joined by hyphens.
+
+
+	const plaTexStr = texValStr.normalize( 'NFKD' ).replace( /[\u0300-\u036f'\u2019]/g, '' ).toLowerCase(); // What: Plain Text String. Why: An accented letter should keep its plain letter, and an apostrophe shouldn't split a word. How: This splits each letter from its accent, drops the accents and apostrophes, and lowercases the rest.
+
+
+
+	return plaTexStr.replace( /[^a-z0-9]+/g, '-' ).replace( /^-+|-+$/g, '' ).slice( 0, 40 ).replace( /-+$/, '' ); // What: Name Return. Why: A name piece should read plainly and stay short. How: This makes each run of other characters a hyphen, trims hyphens from both ends, and cuts it to 40 characters, trimming a hyphen the cut leaves.
+
+
+};
+
+// #endregion filNamFun
+
+
 
 // #region iniTexFun
 
@@ -66,7 +107,7 @@ const iniTexFun = ( namValStr : string ) : string => { // What: Initials Text Fu
 
 // #region Exports
 
-export { iniTexFun }; // What: Named Export. Why: The group rail shows each group by its initials. How: This exports iniTexFun.
+export { filNamFun, iniTexFun }; // What: Named Exports. Why: The group rail shows each group by its initials, and a download is named after what it holds. How: This exports both.
 
 // #endregion Exports
 

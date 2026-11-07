@@ -7,6 +7,7 @@ import cssModObj from './event-photos.module.css'; // What: CSS Module Object. W
 
 
 import { ButBasCom    } from '../ui/button.tsx';        // What: Button Base Component. Why: Adding photos is the part's main action. How: This draws its button.
+import { filNamFun    } from '../utils/text.ts';        // What: File Name Function. Why: The archive of an event's photos is named after the event. How: This turns its title into a plain piece of a file name.
 import { IcoSvgCom    } from '../ui/icon.tsx';          // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
 import { imaTypFun    } from '../platform/image.ts';    // What: Image Type Function. Why: A shared photo's bytes carry no type. How: This reads it from their first bytes.
 import { mesTimFun    } from '../utils/date.ts';        // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
@@ -21,6 +22,7 @@ import { useCallback  } from 'react';                   // What: Use Callback. W
 import { useEffect    } from 'react';                   // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
 import { useRef       } from 'react';                   // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
 import { useState     } from 'react';                   // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
+import { zipBuiFun    } from '../utils/zip.ts';         // What: ZIP Build Function. Why: Several photos download to a computer as one file. How: This packs them into one archive.
 
 
 import type { EveRecTyp } from '../state/events.ts';  // What: Event Record Type. Why: The part belongs to one event. How: This types it.
@@ -104,38 +106,89 @@ const errMesFun = ( errCatObj : unknown ) : string => { // What: Error Message F
 
 
 
+// #region dowFilFun
+
+/**
+ * dowFilFun = Download File Function
+ *
+ * @summary
+ * Downloads a file under the given name through a link off the page, freeing
+ * the link's temporary address a minute later, once the download has had
+ * time to read it.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param blbValObj - Blob Value Object: The file's contents.
+ * @param namValStr - Name Value String: The name it's saved under.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * dowFilFun(zipBlbObj, 'come-hang-lake-day-photos.zip') // => void
+ * ```
+ *
+*/
+
+const dowFilFun = ( blbValObj : Blob, namValStr : string ) : void => { // What: Download File Function. Why: A computer keeps photos as downloads. How: This clicks a link to the file off the page.
+
+
+	const ancEleObj = document.createElement( 'a' );    // What: Anchor Element Object. Why: A download starts from a link. How: This makes one off the page.
+	const objUrlStr = URL.createObjectURL( blbValObj ); // What: Object URL String. Why: The link needs an address for the file. How: This makes a temporary one.
+
+
+	ancEleObj.download = namValStr; // What: Download Assignment. Why: The file keeps its name. How: This names it.
+	ancEleObj.href     = objUrlStr; // What: Address Assignment. Why: The link points at the file. How: This sets its address.
+
+
+	ancEleObj.click(); // What: Download Click Call. Why: The download starts as if the link were tapped. How: This clicks it.
+
+
+	window.setTimeout( () => URL.revokeObjectURL( objUrlStr ), 60000 ); // What: Address Free Call. Why: The download needs the address a little while. How: This frees it a minute later.
+
+
+};
+
+// #endregion dowFilFun
+
+
+
 // #region savFilFun
 
 /**
  * savFilFun = Save Files Function
  *
  * @summary
- * Hands photos to the device: through the share sheet where the browser can
- * share files, which on a phone saves them to its photo library, and as
- * downloads otherwise. A share the member backs out of is no error.
+ * Hands photos to the device. On a touch screen that can share files, the
+ * share sheet takes them, which on a phone saves them to its photo library,
+ * and a share the member backs out of is no error. Anywhere else one photo
+ * downloads as itself, and several download as one ZIP archive under the
+ * given name, so a computer gets one file rather than one download, and in
+ * some browsers one tab, per photo.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param bytValArr - Bytes Value Array: Each photo's bytes.
+ * @param zipNamStr - ZIP Name String: The archive's name, for several photos.
  *
  * @returns A promise that settles once the photos are handed over, with no
  *          value.
  *
  * @example
  * ```ts
- * savFilFun([fulBytArr]) // => Promise<void>
+ * savFilFun([fulBytArr], 'come-hang-photos.zip') // => Promise<void>
  * ```
  *
 */
 
-const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[] ) : Promise< void > => { // What: Save Files Function. Why: Photos leave the server with their event, so members keep them on their own device. How: This shares them as files, or downloads them.
+const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[], zipNamStr : string ) : Promise< void > => { // What: Save Files Function. Why: Photos leave the server with their event, so members keep them on their own device. How: This shares them on a touch screen, or downloads them as one file.
 
 
 	const filValArr = bytValArr.map( ( bytValObj, filIndNum ) => new File( [ bytValObj ], `come-hang-photo-${ filIndNum + 1 }.${ imaTypFun( bytValObj ) === 'image/jpeg' ? 'jpg' : 'webp' }`, { type : imaTypFun( bytValObj ) } ) ); // What: File Value Array. Why: Each photo is saved as a typed file with a plain name. How: This wraps each photo's bytes, numbered in order.
 
 
 
-	if ( navigator.canShare?.( { files : filValArr } ) ) { // What: Share Check. Why: A phone saves shared photos to its library. How: This shares them where the browser can share files.
+	if ( navigator.canShare?.( { files : filValArr } ) && window.matchMedia( '(pointer: coarse)' ).matches ) { // What: Share Check. Why: A phone or tablet saves shared photos to its library, while a computer's share sheet sends them on rather than keeping them. How: This shares them where the browser can share files on a touch screen.
 
 
 		await navigator.share( { files : filValArr } ).catch( ( errCatObj : unknown ) => { if ( Reflect.get( Object( errCatObj ), 'name' ) !== 'AbortError' ) throw errCatObj; } ); // What: Share Call. Why: Backing out of the share sheet isn't a failure. How: This shares the files, ignoring a cancel.
@@ -148,24 +201,11 @@ const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[] ) : Promise< v
 
 
 
-	for ( const filValObj of filValArr ) { // What: Download Loop. Why: A browser that can't share files downloads them. How: This downloads each.
+	if ( filValArr.length === 1 ) { dowFilFun( filValArr[ 0 ], filValArr[ 0 ].name ); return; } // What: One Photo Guard. Why: A single photo downloads as itself. How: This downloads it and returns.
 
 
-		const ancEleObj = document.createElement( 'a' );       // What: Anchor Element Object. Why: A download starts from a link. How: This makes one off the page.
-		const objUrlStr = URL.createObjectURL( filValObj );    // What: Object URL String. Why: The link needs an address for the file. How: This makes a temporary one.
 
-
-		ancEleObj.download = filValObj.name; // What: Download Assignment. Why: The file keeps its name. How: This names it.
-		ancEleObj.href     = objUrlStr;      // What: Address Assignment. Why: The link points at the file. How: This sets its address.
-
-
-		ancEleObj.click(); // What: Download Click Call. Why: The download starts as if the link were tapped. How: This clicks it.
-
-
-		window.setTimeout( () => URL.revokeObjectURL( objUrlStr ), 60000 ); // What: Address Free Call. Why: The download needs the address a little while. How: This frees it a minute later.
-
-
-	}
+	dowFilFun( zipBuiFun( filValArr.map( ( filValObj, filIndNum ) => ( { bytArr : bytValArr[ filIndNum ], namStr : filValObj.name } ) ), new Date() ), zipNamStr ); // What: Archive Download Call. Why: Many photos should download as one file. How: This packs every photo under its name into one archive dated now and downloads it.
 
 
 };
@@ -693,7 +733,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 		try { // What: Save Attempt. Why: A failed save should say so. How: This saves inside a try.
 
 
-			await savFilFun( await Promise.all( ( phoRecArr ?? [] ).map( ( phoRecObj ) => phoGetFun( groIdeStr, eveRecObj.eveIdeStr, phoRecObj ) ) ) ); // What: Save Call. Why: Every photo is saved together. How: This loads each full photo, then saves them.
+			await savFilFun( await Promise.all( ( phoRecArr ?? [] ).map( ( phoRecObj ) => phoGetFun( groIdeStr, eveRecObj.eveIdeStr, phoRecObj ) ) ), `come-hang-${ filNamFun( eveRecObj.titTexStr ) || 'event' }-photos.zip` ); // What: Save Call. Why: Every photo is saved together, an archive of them named after the event. How: This loads each full photo, then saves them, naming the archive from the event's title, or "event" when nothing of the title is left.
 
 
 		}
@@ -1033,7 +1073,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 										disabled={ fulBytArr === null }
 										type='button'
 
-										onClick={ () => { setVieErrStr( '' ); savFilFun( [ fulBytArr! ] ).then( () => setVieStaStr( 'Saved the photo.' ), ( errCatObj : unknown ) => { console.warn( errCatObj ); setVieErrStr( "The photo couldn't be saved. Try again." ); } ); } } // What: Save Click Handler. Why: The member keeps the photo, and a failure should say so. How: This saves the full photo, announcing it or the failure. // What: Non-Null Note. Why: The button is off until the full photo has loaded. How: The ! reads it as present.
+										onClick={ () => { setVieErrStr( '' ); savFilFun( [ fulBytArr! ], '' ).then( () => setVieStaStr( 'Saved the photo.' ), ( errCatObj : unknown ) => { console.warn( errCatObj ); setVieErrStr( "The photo couldn't be saved. Try again." ); } ); } } // What: Save Click Handler. Why: The member keeps the photo, and a failure should say so. How: This saves the full photo, announcing it or the failure. // What: Non-Null Note. Why: The button is off until the full photo has loaded. How: The ! reads it as present.
 									>Save to device</button>{ /* What: Viewer Plain Button Element. Why: Photos leave the server with the event, so members keep the ones they want. How: This saves the full photo, off until it's loaded. */ }
 
 
