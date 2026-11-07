@@ -178,6 +178,8 @@ const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[] ) : Promise< v
 
 // #region Hooks
 
+type UrlRecTyp = { bytArr : Uint8Array< ArrayBuffer >, urlStr : string }; // What: URL Record Type. Why: An address is made a render after its bytes, so a caller has to tell which bytes it shows. How: This pairs the address with the bytes it was made for.
+
 // #region useBytUrlFun
 
 /**
@@ -186,39 +188,42 @@ const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[] ) : Promise< v
  * @summary
  * Turns a photo's bytes into a temporary address an image can show, typed
  * from its first bytes, freeing the address when the bytes change or the
- * caller goes. Returns null while there are no bytes.
+ * caller goes. The address is made a render after the bytes arrive, so it
+ * comes paired with the bytes it was made for, letting a caller that
+ * switches photos hold back an address left from the last one. Returns null
+ * while there are no bytes.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param bytValArr - Bytes Value Array: The photo's bytes, or null.
  *
- * @returns The address, or null.
+ * @returns The address with its bytes, or null.
  *
  * @example
  * ```ts
- * useBytUrlFun(thuBytArr) // => 'blob:...'
+ * useBytUrlFun(thuBytArr) // => { bytArr, urlStr : 'blob:...' }
  * ```
  *
 */
 
-const useBytUrlFun = ( bytValArr : Uint8Array< ArrayBuffer > | null ) : string | null => { // What: Use Bytes URL Function. Why: An image shows a photo by address. How: This makes and frees a temporary address for the bytes.
+const useBytUrlFun = ( bytValArr : Uint8Array< ArrayBuffer > | null ) : UrlRecTyp | null => { // What: Use Bytes URL Function. Why: An image shows a photo by address. How: This makes and frees a temporary address for the bytes.
 
 
-	const [ urlValStr, setUrlValStr ] = useState< string | null >( null ); // What: URL Value String And Setter. Why: The image reads the address once it's made. How: This holds it, null without bytes.
+	const [ urlRecObj, setUrlRecObj ] = useState< UrlRecTyp | null >( null ); // What: URL Record Object And Setter. Why: The image reads the address once it's made. How: This holds it with its bytes, null without bytes.
 
 
 
 	useEffect( () => { // What: Address Effect. Why: Each set of bytes needs its own address, freed once it's done. How: This makes one for the bytes and frees it on cleanup.
 
 
-		if ( bytValArr === null ) { setUrlValStr( null ); return; } // What: Empty Guard. Why: No bytes means no address. How: This clears it and returns.
+		if ( bytValArr === null ) { setUrlRecObj( null ); return; } // What: Empty Guard. Why: No bytes means no address. How: This clears it and returns.
 
 
 
 		const objUrlStr = URL.createObjectURL( new Blob( [ bytValArr ], { type : imaTypFun( bytValArr ) } ) ); // What: Object URL String. Why: The image needs an address for the photo. How: This makes one, typed from the bytes.
 
 
-		setUrlValStr( objUrlStr ); // What: Address Set Call. Why: The image shows the new address. How: This keeps it.
+		setUrlRecObj( { bytArr : bytValArr, urlStr : objUrlStr } ); // What: Address Set Call. Why: The image shows the new address. How: This keeps it with the bytes it was made for.
 
 
 
@@ -229,7 +234,7 @@ const useBytUrlFun = ( bytValArr : Uint8Array< ArrayBuffer > | null ) : string |
 
 
 
-	return urlValStr; // What: Address Return. Why: The caller shows the photo. How: This returns the address.
+	return urlRecObj; // What: Address Return. Why: The caller shows the photo. How: This returns the address with its bytes.
 
 
 };
@@ -271,7 +276,7 @@ type PtcProTyp = { bytValArr : Uint8Array< ArrayBuffer > | null }; // What: Phot
 function PhoThuCom ( { bytValArr } : PtcProTyp ) : React.JSX.Element | null {
 
 
-	const urlValStr = useBytUrlFun( bytValArr ); // What: URL Value String. Why: The image shows the thumbnail by address. How: This makes one for the bytes.
+	const urlValStr = useBytUrlFun( bytValArr )?.urlStr ?? null; // What: URL Value String. Why: The image shows the thumbnail by address. How: This makes one for the bytes, null until then.
 
 
 
@@ -339,13 +344,14 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const [ addCouNum, setAddCouNum ] = useState( 0 );                                            // What: Add Count Number And Setter. Why: The status says how many photos are on their way. How: This holds the count.
 	const [ delConBoo, setDelConBoo ] = useState( false );                                        // What: Delete Confirm Boolean And Setter. Why: Deleting a photo asks first. How: This is true while the confirmation shows.
 	const [ errMesStr, setErrMesStr ] = useState( '' );                                           // What: Error Message String And Setter. Why: A share that fails is announced. How: This holds the alert's text.
-	const [ fulBytArr, setFulBytArr ] = useState< Uint8Array< ArrayBuffer > | null >( null );     // What: Full Bytes Array And Setter. Why: The viewer shows the full photo once it's loaded. How: This holds its bytes, null until then.
+	const [ fulRecObj, setFulRecObj ] = useState< { bytArr : Uint8Array< ArrayBuffer >, ideStr : string } | null >( null ); // What: Full Record Object And Setter. Why: The viewer shows the full photo once it's loaded, and a step mustn't show the last photo's for a moment. How: This holds its bytes with its photo's ID, null until then.
 	const [ fulErrBoo, setFulErrBoo ] = useState( false );                                        // What: Full Error Boolean And Setter. Why: A full photo still on its way says so. How: This is true when it couldn't load.
 	const [ lisErrBoo, setLisErrBoo ] = useState( false );                                        // What: List Error Boolean And Setter. Why: Photos that can't load say so. How: This is true once the watch fails.
 	const [ phoRecArr, setPhoRecArr ] = useState< PhoRecTyp[] | null >( null );                   // What: Photo Record Array And Setter. Why: The grid shows each photo. How: This holds them, null until the first report.
 	const [ staMesStr, setStaMesStr ] = useState( '' );                                           // What: Status Message String And Setter. Why: Shared photos are announced. How: This holds the status's text.
 	const [ vieErrStr, setVieErrStr ] = useState( '' );                                           // What: Viewer Error String And Setter. Why: A failed delete or save is announced inside the viewer. How: This holds its alert's text.
 	const [ vieIdeStr, setVieIdeStr ] = useState( '' );                                           // What: Viewer Identifier String And Setter. Why: The viewer follows one photo, even as others come and go. How: This holds its ID, empty when none is open.
+	const [ steDirStr, setSteDirStr ] = useState< '' | 'next' | 'previous' >( '' );            // What: Step Direction String And Setter. Why: A stepped-to photo slides in from the side it came from. How: This holds the last step's way, empty for a photo opened from its thumbnail.
 	const [ vieStaStr, setVieStaStr ] = useState( '' );                                           // What: Viewer Status String And Setter. Why: A save is announced inside the viewer. How: This holds its status's text.
 
 
@@ -353,7 +359,10 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const vieIndNum = phoRecArr?.findIndex( ( phoRecObj ) => phoRecObj.phoIdeStr === vieIdeStr ) ?? -1;   // What: Viewer Index Number. Why: The viewer's place in the photos picks its title and neighbors. How: This finds the open photo, -1 when none is.
 	const vieRecObj = vieIndNum >= 0 ? phoRecArr![ vieIndNum ] : null;                                     // What: Viewer Record Object. Why: The viewer shows the open photo. How: This reads it, null when none is open. // What: Non-Null Note. Why: An index of 0 or more was found in the photos. How: The ! reads them as present.
 
-	const vieUrlStr = useBytUrlFun( fulBytArr ?? vieRecObj?.thuBytArr ?? null ); // What: Viewer URL String. Why: The viewer shows the thumbnail until the full photo arrives. How: This makes an address for whichever it has.
+	const fulBytArr = fulRecObj !== null && fulRecObj.ideStr === vieIdeStr ? fulRecObj.bytArr : null; // What: Full Bytes Array. Why: The viewer shows the open photo's full bytes alone. How: This reads them when they belong to the open photo, null otherwise.
+	const vieUrlObj = useBytUrlFun( fulBytArr ?? vieRecObj?.thuBytArr ?? null );                       // What: Viewer URL Object. Why: The viewer shows the thumbnail until the full photo arrives. How: This makes an address for whichever it has.
+
+	const vieUrlStr = vieUrlObj !== null && vieRecObj !== null && ( vieUrlObj.bytArr === fulBytArr || vieUrlObj.bytArr === vieRecObj.thuBytArr ) ? vieUrlObj.urlStr : null; // What: Viewer URL String. Why: Just after a step the address still shows the last photo, which mustn't flash under the new one. How: This keeps the address only while it's for the open photo's thumbnail or full photo.
 
 
 
@@ -389,12 +398,12 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 		let actValBoo = true; // What: Active Value Boolean. Why: A photo that loads after another opened mustn't replace it. How: This is true until the cleanup runs.
 
 
-		setFulBytArr( null ); // What: Full Clear Call. Why: The last photo shouldn't show under a new one. How: This clears it.
+		setFulRecObj( null ); // What: Full Clear Call. Why: The last photo shouldn't show under a new one. How: This clears it.
 
 		setFulErrBoo( false ); // What: Error Clear Call. Why: A new photo starts without the last one's failure. How: This clears it.
 
 
-		if ( vieRecObj !== null ) phoGetFun( groIdeStr, eveRecObj.eveIdeStr, vieRecObj ).then( ( bytValArr ) => { if ( actValBoo ) setFulBytArr( bytValArr ); }, ( errCatObj : unknown ) => { console.warn( errCatObj ); if ( actValBoo ) setFulErrBoo( true ); } ); // What: Full Read Call. Why: The full photo replaces its thumbnail once it's in. How: This loads it, logging a failure and saying so.
+		if ( vieRecObj !== null ) phoGetFun( groIdeStr, eveRecObj.eveIdeStr, vieRecObj ).then( ( bytValArr ) => { if ( actValBoo ) setFulRecObj( { bytArr : bytValArr, ideStr : vieRecObj.phoIdeStr } ); }, ( errCatObj : unknown ) => { console.warn( errCatObj ); if ( actValBoo ) setFulErrBoo( true ); } ); // What: Full Read Call. Why: The full photo replaces its thumbnail once it's in. How: This loads it, logging a failure and saying so.
 
 
 
@@ -451,6 +460,8 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 		setVieErrStr( '' ); // What: Error Clear Call. Why: The last photo's failure doesn't carry over. How: This clears it.
 
 		setVieStaStr( '' ); // What: Status Clear Call. Why: The last photo's save message doesn't carry over. How: This clears it.
+
+		setSteDirStr( offValNum < 0 ? 'previous' : 'next' ); // What: Direction Set Call. Why: The photo slides in from the side it came from. How: This records the step's way.
 
 		setVieIdeStr( phoRecArr[ newIndNum ].phoIdeStr ); // What: Open Photo Call. Why: The viewer follows the neighbor now. How: This names it.
 
@@ -704,7 +715,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 
-	const opeVieFun = ( phoIdeStr : string ) : void => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoIdeStr ); vieHanRef.current?.opeFun(); }; // What: Open Viewer Function. Why: A thumbnail opens its photo with nothing left from the last one. How: This resets the viewer, picks the photo, and opens the sheet.
+	const opeVieFun = ( phoIdeStr : string ) : void => { setDelConBoo( false ); setSteDirStr( '' ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoIdeStr ); vieHanRef.current?.opeFun(); }; // What: Open Viewer Function. Why: A thumbnail opens its photo with nothing left from the last one, rising with the sheet rather than sliding in. How: This resets the viewer and its step's way, picks the photo, and opens the sheet.
 
 
 
@@ -897,14 +908,20 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 								<img
-									className={ cssModObj.vieImaIma }
+									key={ vieRecObj.phoIdeStr } // What: Photo Key. Why: A stepped-to photo plays its slide as it appears, while its full photo replacing the thumbnail shouldn't. How: This makes a new image for each photo, keeping it as its address changes.
+
+									className={` ${ cssModObj.vieImaIma }   ${ steDirStr === 'next' ? cssModObj.vieImaImaNext : '' }   ${ steDirStr === 'previous' ? cssModObj.vieImaImaPrevious : '' } `}
 
 									alt={ `Photo shared by ${ vieNamFun( vieRecObj ) }` }
 									src={ vieUrlStr }
-								/> // What: Viewer Image Image Element. Why: The member sees the photo. How: This shows the full photo, or its thumbnail until then.
+								/> // What: Viewer Image Image Element. Why: The member sees the photo. How: This shows the full photo, or its thumbnail until then, sliding in from the side a step came from.
 
 
 							) }
+
+
+
+							{ fulBytArr === null && <p className={ cssModObj.vieNotPar }>{ fulErrBoo ? 'The full photo is still on its way, so try again in a moment.' : 'Loading the full photo…' }</p> }{ /* What: Viewer Note Check. Why: The thumbnail stands in until the full photo arrives, which may still be uploading, and the note shouldn't move what's below when it goes. How: This says it's loading, or still on its way, over the photo's foot. */ }
 
 
 
@@ -970,8 +987,6 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 						<p className={ cssModObj.vieMetPar }>{ vieRecObj.uplUidStr === uidValStr ? 'You shared this' : `Shared by ${ vieNamFun( vieRecObj ) }` } <span className={ cssModObj.vieTimSpa }>{ mesTimFun( vieRecObj.creTimNum, Date.now() ) }</span></p>{ /* What: Viewer Meta Paragraph Element. Why: A photo says who shared it and when. How: This names them, then the time in the muted color. */ }
-
-						{ fulBytArr === null && <p className={ cssModObj.vieNotPar }>{ fulErrBoo ? 'The full photo is still on its way, so try again in a moment.' : 'Loading the full photo…' }</p> }{ /* What: Viewer Note Check. Why: The thumbnail stands in until the full photo arrives, which may still be uploading. How: This says it's loading, or still on its way. */ }
 
 
 

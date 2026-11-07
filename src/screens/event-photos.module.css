@@ -255,14 +255,15 @@
 
 /* #region vieImaDiv */
 
-.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen, and the steps to its neighbors sit over its sides. How: This centers it in a rounded frame at least a third of the screen tall, its one area holding the photo and both steps stacked, and keeps a sideways swipe for the viewer. */
+.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen, and the viewer mustn't jump as a thumbnail, its full photo, or the next photo arrives. How: This centers it in a rounded frame of one fixed height, its one area holding the photo, its note, and both steps stacked, and keeps a sideways swipe for the viewer. */
 
 
 	background-color    : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
 	border-radius       : var( --rad-bor-sma ); /* Radius Border Small ~= 8.304px */
 	display             : grid;
 	grid-template-areas : 'vieImaIma';
-	min-height          : 33svh;
+	grid-template-rows  : minmax( 0, 1fr );
+	height              : 60svh;
 	overflow            : hidden;
 	place-items         : center;
 	touch-action        : pan-y pinch-zoom; /* What: Touch Action Note. Why: A sideways swipe steps to the next photo, so the browser shouldn't take it for a scroll, while scrolling up and down and pinching still work. How: This leaves the browser the upright pan and the pinch. */
@@ -270,13 +271,83 @@
 
 }
 
-.vieImaIma { /* What: Viewer Image Image. Why: The whole photo shows, leaving room for its actions below. How: This fits it within the frame's width and 60% of the screen's height, in the frame's one area. */
+.vieImaIma { /* What: Viewer Image Image. Why: The whole photo shows at one size whatever it is, so a small thumbnail and its full photo fill the same space. How: This fills the frame's one area, fitting the photo within it. */
 
 
 	grid-area  : vieImaIma;
-	max-height : 60svh;
-	max-width  : 100%;
+	height     : 100%;
 	object-fit : contain;
+	width      : 100%;
+
+
+}
+.vieImaIma--next { /* What: Viewer Image Image Next. Why: A photo stepped on to arrives from the right, the way the row of photos runs. How: This slides it in from a tier 3 space to the right as it fades in. */
+
+
+	--ima-ste-off : var( --tie-hor-003 ); /* Tier Horizontal 3, about 14.572px - 19.304px */
+
+	animation : vieImaImaStepSlideIn var( --dur-ani-p01 ) var( --mot-dec-eas ); /* Duration Animation Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.vieImaIma--previous { /* What: Viewer Image Image Previous. Why: A photo stepped back to arrives from the left. How: This slides it in from a tier 3 space to the left as it fades in. */
+
+
+	--ima-ste-off : calc( var( --tie-hor-003 ) * -1 ); /* Tier Horizontal 3, about -14.572px - -19.304px */
+
+	animation : vieImaImaStepSlideIn var( --dur-ani-p01 ) var( --mot-dec-eas ); /* Duration Animation Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Viewer Image Image. Why: Someone who asked for less motion should see the next photo at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.vieImaIma--next,
+	.vieImaIma--previous { /* What: Motionless Viewer Image Image Steps. Why: The stepped-to photo should simply appear. How: This turns the slide off. */
+
+
+		animation : none;
+
+
+	}
+
+
+}
+@keyframes vieImaImaStepSlideIn { /* What: Viewer Image Image Step Slide In. Why: A stepped-to photo eases in from the side it came from, quick and small. How: This runs it from clear and offset by its step's distance to full and in place. */
+
+
+	from {
+
+
+		opacity   : 0;
+		transform : translateX( var( --ima-ste-off ) );
+
+
+	}
+
+	to {
+
+
+		opacity   : 1;
+		transform : translateX( 0 );
+
+
+	}
+
+
+}
+
+.vieNotPar { /* What: Viewer Note Paragraph. Why: A full photo still loading or on its way is a quiet note that shouldn't move what's below when it goes. How: This sets it in the muted text color on a rounded surface chip over the photo's foot, a tier 4 space up from its edge. */
+
+
+	align-self       : end;
+	background-color : var( --bac-sur-col );                             /* Background Surface Color = #FFFFFF */
+	border-radius    : var( --rad-bor-sma );                             /* Radius Border Small ~= 8.304px */
+	color            : var( --tex-mut-col );                             /* Text Muted Color = #5A5D7E */
+	grid-area        : vieImaIma;
+	margin           : 0 var( --tie-hor-004 ) var( --tie-ver-004 );      /* Tier Horizontal 4, about 8.304px - 11px, Tier Vertical 4 ~= 8.304px */
+	padding          : var( --spa-ver-m04 ) var( --spa-ver-m02 );        /* Spacing Vertical Base Minus 4 ~= 4.732px, Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Chip Padding Note. Why: A chip's own padding shapes it rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	text-align       : center;
 
 
 }
@@ -365,16 +436,6 @@
 }
 
 /* #endregion vieMetPar */
-
-
-
-.vieNotPar { /* What: Viewer Note Paragraph. Why: A full photo still loading or on its way is a quiet note. How: This sets it in the muted text color. */
-
-
-	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
-
-
-}
 
 
 
