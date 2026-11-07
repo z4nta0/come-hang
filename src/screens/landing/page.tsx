@@ -85,8 +85,8 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 	{ // What: Lost Phone Question Row. Why: With no account, people wonder what a lost phone costs them. How: This answers it.
 
 
-		ansStr : "Link a Google account in Settings, and your groups come back on a new phone. Earlier chat comes back if a friend's phone still has it and sends it.",
-		queStr : 'What if I lose my phone?'
+		ansStr : "Link a Google account in Settings, and your groups come back on a new device. Earlier chat comes back if a friend's device still has it and sends it.",
+		queStr : 'What if I lose my device?'
 
 
 	},
@@ -270,7 +270,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 		sessionStorage.removeItem( DEL_STO_STR ); // What: Note Clear Call. Why: The note is said once. How: This removes it.
 
-		setStaMesStr( 'Your data has been deleted from Come Hang and this phone.' ); // What: Status Set Call. Why: The person should know the deletion finished. How: This announces it.
+		setStaMesStr( 'Your data has been deleted from Come Hang and this device.' ); // What: Status Set Call. Why: The person should know the deletion finished. How: This announces it.
 
 
 	}, [] ); // What: Effect Dependency Array. Why: The note is read once, when the page opens. How: The empty array runs the effect once.
@@ -359,7 +359,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-						{ invNamStr === undefined && <p className={ cssModObj.herRecPar }>New phone? <button className={ cssModObj.herRecBut } type='button' onClick={ () => void recGroFun() }>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button></p> }{ /* What: Hero Recover Paragraph Element. Why: Someone who used the app on another phone brings their groups here, a smaller action than starting or joining, and not while an invite waits. How: This asks the question and offers the button, which signs in with Google, reading "Signing in…" meanwhile. */ }
+						{ invNamStr === undefined && <p className={ cssModObj.herRecPar }>New device? <button className={ cssModObj.herRecBut } type='button' onClick={ () => void recGroFun() }>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button></p> }{ /* What: Hero Recover Paragraph Element. Why: Someone who used the app on another phone brings their groups here, a smaller action than starting or joining, and not while an invite waits. How: This asks the question and offers the button, which signs in with Google, reading "Signing in…" meanwhile. */ }
 
 						<p
 							className={ cssModObj.herErrPar }
@@ -475,9 +475,9 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 								<span className={ cssModObj.truIcoSpa }><IcoSvgCom icoNamStr='lock' sizSteStr='bas' /></span>{ /* What: Trust Icon Span Element. Why: An icon marks each promise at a glance. How: This sets a lock in a tinted square. */ }
 
-								<h3 className={ cssModObj.truIteHea }>Encrypted on your phone</h3>{ /* What: Trust Item Heading Element. Why: Each promise has a short name. How: This sets it. */ }
+								<h3 className={ cssModObj.truIteHea }>Encrypted on your device</h3>{ /* What: Trust Item Heading Element. Why: Each promise has a short name. How: This sets it. */ }
 
-								<p className={ cssModObj.truItePar }>Messages, events, bring-lists, names, and locations are locked on your phone before they're sent. We can't read them.</p>{ /* What: Trust Item Paragraph Element. Why: The promise is said plainly and exactly. How: This says it. */ }
+								<p className={ cssModObj.truItePar }>Messages, events, bring-lists, names, and locations are locked on your device before they're sent. We can't read them.</p>{ /* What: Trust Item Paragraph Element. Why: The promise is said plainly and exactly. How: This says it. */ }
 
 
 							</li>
@@ -686,7 +686,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 							<li className={ cssModObj.freNotIte }>Full refund within 14 days.</li>{ /* What: Free Note Item Element. Why: The terms promise a refund on request. How: This says so. */ }
 
-							<li className={ cssModObj.freNotIte }>Needs a linked Google account, so your purchase can't be lost with your phone.</li>{ /* What: Free Note Item Element. Why: Buying needs Google linked, which is better said before checkout. How: This says so and why. */ }
+							<li className={ cssModObj.freNotIte }>Needs a linked Google account, so your purchase can't be lost with your device.</li>{ /* What: Free Note Item Element. Why: Buying needs Google linked, which is better said before checkout. How: This says so and why. */ }
 
 							<li className={ cssModObj.freNotIte }>Buy it any time in Settings.</li>{ /* What: Free Note Item Element. Why: The upgrade is bought inside the app. How: This says where. */ }
 

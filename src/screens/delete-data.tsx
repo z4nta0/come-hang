@@ -47,7 +47,7 @@ const DEL_POI_ARR = [ // What: Delete Point Array. Why: Someone should know ever
 
 	'Your Google link and the upgrade go too, if you have them.',
 
-	'Everything Come Hang keeps on this phone is cleared.'
+	'Everything Come Hang keeps on this device is cleared.'
 
 
 ];
@@ -221,7 +221,7 @@ function DelDatCom ( { className = '' } : DdcProTyp ) : React.JSX.Element {
 
 					</ul>
 
-					<p className={ cssModObj.delNotPar }>{ "Messages you've sent stay on other members' phones. This can't be undone." }</p>{ /* What: Delete Note Paragraph Element. Why: Deleting can't reach other phones or be reversed. How: This says both. */ }
+					<p className={ cssModObj.delNotPar }>{ "Messages you've sent stay on other members' devices. This can't be undone." }</p>{ /* What: Delete Note Paragraph Element. Why: Deleting can't reach other phones or be reversed. How: This says both. */ }
 
 					<label
 						className={ cssModObj.fieNamLab }

@@ -223,7 +223,7 @@ test( 'a key request pushes every other member, and other membership changes pus
 
 	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/members/bob' ), { keyRequestedAt : Timestamp.now() } ) ); // What: Request Call. Why: Bob is on a new phone. How: This files his request.
 
-	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : "A member on a new phone is waiting for this group's key.", title : 'Picnic' } ] ); // What: Alice Pushed Check. Why: Alice holds the key to share. How: This waits for her push.
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : "A member on a new device is waiting for this group's key.", title : 'Picnic' } ] ); // What: Alice Pushed Check. Why: Alice holds the key to share. How: This waits for her push.
 	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toHaveLength( 1 );                                                                                      // What: Carol Pushed Check. Why: Carol can share it too. How: This waits for her push.
 
 	expect( await pusTarFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { groupId : 'gro1', section : 'people' } ] ); // What: Key Target Check. Why: A tap opens People, where the key is shared. How: This expects the push to name the group and People.

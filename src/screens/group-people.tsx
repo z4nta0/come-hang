@@ -862,7 +862,7 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 						tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here once a request is answered and others wait, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
 					>{ "Waiting for the group's key" }</h3>{ /* What: Key Title Heading Element. Why: The part needs a heading. How: This names it. */ }
 
-					<p className={ cssModObj.keyIntPar }>These members got their account back on a new phone. Share the key so they can read the group again.</p>{ /* What: Key Intro Paragraph Element. Why: The member should know why someone is waiting (Section 6). How: This says it. */ }
+					<p className={ cssModObj.keyIntPar }>These members got their account back on a new device. Share the key so they can read the group again.</p>{ /* What: Key Intro Paragraph Element. Why: The member should know why someone is waiting (Section 6). How: This says it. */ }
 
 
 

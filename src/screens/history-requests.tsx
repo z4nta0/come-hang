@@ -269,7 +269,7 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 				tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here as a pressed button goes, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
 			>Asking for chat history</h3>{ /* What: History Title Heading Element. Why: The part needs a heading. How: This names it. */ }
 
-			<p className={ cssModObj.hisIntPar }>These members are missing chat on their phone. A member whose phone holds it can send a copy, encrypted so only the group can read it.</p>{ /* What: History Intro Paragraph Element. Why: A member should know what's asked and that sending is safe (Section 11.9). How: This says both. */ }
+			<p className={ cssModObj.hisIntPar }>These members are missing chat on their device. A member whose device holds it can send a copy, encrypted so only the group can read it.</p>{ /* What: History Intro Paragraph Element. Why: A member should know what's asked and that sending is safe (Section 11.9). How: This says both. */ }
 
 
 
@@ -297,7 +297,7 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 
 							<span className={ cssModObj.hisNamSpa }>{ askNamStr }</span>{ /* What: History Name Span Element. Why: The asker is known by their name. How: This shows it. */ }
 
-							<span className={ cssModObj.hisKinSpa }>{ hisRecObj.kinValStr === 'recovery' ? 'Asked for the chat since they joined, on a new phone.' : 'Asked for the chat from before they joined.' }</span>{ /* What: History Kind Span Element. Why: The two kinds ask for different chat. How: This says which. */ }
+							<span className={ cssModObj.hisKinSpa }>{ hisRecObj.kinValStr === 'recovery' ? 'Asked for the chat since they joined, on a new device.' : 'Asked for the chat from before they joined.' }</span>{ /* What: History Kind Span Element. Why: The two kinds ask for different chat. How: This says which. */ }
 
 
 
@@ -352,7 +352,7 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 							{ hisRecObj.staValStr === 'pending' && covMapObj[ hisRecObj.uidReqStr ] === false && ( // What: Uncovered Check. Why: A member who can't fill a request should know why there's no button. How: This says so once the check has answered.
 
 
-								<span className={ cssModObj.hisStaSpa }>{ "Your phone doesn't hold all of it, so another member will need to send it." }</span> // What: History Status Span Element. Why: A member who can't send should know why. How: This says another member will need to.
+								<span className={ cssModObj.hisStaSpa }>{ "Your device doesn't hold all of it, so another member will need to send it." }</span> // What: History Status Span Element. Why: A member who can't send should know why. How: This says another member will need to.
 
 
 							) }

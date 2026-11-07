@@ -422,7 +422,7 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 				>{ /* What: History Banner Section Element. Why: The request reads as one part above the chat. How: This holds its line and its button. */ }
 
 
-					<p className={ cssModObj.hisTexPar }>{ ownRecObj.staValStr === 'claimed' ? "A member is sending your chat history. It's added here as soon as it arrives." : 'You asked the group for chat history. A member whose phone holds it can send a copy.' }</p>{ /* What: History Text Paragraph Element. Why: The member should know where the request stands. How: This says whether it waits or is being sent. */ }
+					<p className={ cssModObj.hisTexPar }>{ ownRecObj.staValStr === 'claimed' ? "A member is sending your chat history. It's added here as soon as it arrives." : 'You asked the group for chat history. A member whose device holds it can send a copy.' }</p>{ /* What: History Text Paragraph Element. Why: The member should know where the request stands. How: This says whether it waits or is being sent. */ }
 
 					<button
 						className={ cssModObj.hisSecBut }
@@ -454,7 +454,7 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 				>{ /* What: History Banner Section Element. Why: The offer reads as one part above the chat. How: This holds its line, its choices, and its buttons. */ }
 
 
-					<p className={ cssModObj.hisTexPar }>{ hisProObj.kinValStr === 'backlog' ? 'Want to see the chat from before you joined? Ask the group to send it.' : "This phone has none of this group's chat. Ask the group to send the chat since you joined?" }</p>{ /* What: History Text Paragraph Element. Why: The member should know what they'd be asking for. How: This words the offer for its kind. */ }
+					<p className={ cssModObj.hisTexPar }>{ hisProObj.kinValStr === 'backlog' ? 'Want to see the chat from before you joined? Ask the group to send it.' : "This device has none of this group's chat. Ask the group to send the chat since you joined?" }</p>{ /* What: History Text Paragraph Element. Why: The member should know what they'd be asking for. How: This words the offer for its kind. */ }
 
 
 

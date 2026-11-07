@@ -420,7 +420,7 @@ test( "this phone's appearance applies at once and stays, and one button turns n
 	await expect( curPagObj.getByRole( 'radio', { name : 'Dark' } ) ).toBeChecked();  // What: Dark Kept Assertion. Why: The kept choice shows as chosen. How: This expects Dark checked.
 	await expect( htmEleObj ).toHaveAttribute( 'data-color-mode-choice', 'dark' ); // What: Dark Kept Root Assertion. Why: The kept choice applies as the app starts. How: This reads the root's attribute.
 
-	await curPagObj.getByRole( 'radio', { name : 'Match this phone' } ).check(); // What: System Check Call. Why: The member goes back to the phone's setting. How: This picks it.
+	await curPagObj.getByRole( 'radio', { name : 'Match this device' } ).check(); // What: System Check Call. Why: The member goes back to the phone's setting. How: This picks it.
 
 	await expect( htmEleObj ).not.toHaveAttribute( 'data-color-mode-choice' ); // What: System Applied Assertion. Why: The page follows the phone again. How: This expects no attribute.
 
@@ -433,13 +433,13 @@ test( "this phone's appearance applies at once and stays, and one button turns n
 
 	await notButObj.click(); // What: On Click Call. Why: The member turns notifications on. How: This presses the button again.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are on for this phone.' ); // What: On Status Assertion. Why: The change is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are on for this device.' ); // What: On Status Assertion. Why: The change is announced. How: This reads the status.
 	await expect( notButObj ).toHaveText( 'Turn off notifications' );                                                     // What: On Button Assertion. Why: The button says what it will do next. How: This reads it.
 	await expect( notButObj ).toBeFocused();                                                                             // What: Kept Focus Assertion. Why: The button stays as its label changes. How: This expects it focused.
 
 	await notButObj.click(); // What: Off Click Call. Why: The member turns notifications off. How: This presses the button.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are off for this phone.' ); // What: Off Status Assertion. Why: The change is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are off for this device.' ); // What: Off Status Assertion. Why: The change is announced. How: This reads the status.
 	await expect( notButObj ).toHaveText( 'Turn on notifications' );                                                       // What: Off Button Assertion. Why: The button says what it will do next. How: This reads it.
 
 
@@ -458,7 +458,7 @@ test( 'the account links Google through its popup, focus landing on its heading,
 
 	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The account is in the Settings section. How: This opens it.
 
-	await expect( curPagObj.getByText( 'Link a Google account so you can get your groups back on a new phone.', { exact : false } ) ).toBeVisible(); // What: Unlinked Note Assertion. Why: The member learns what linking is for. How: This waits for the note.
+	await expect( curPagObj.getByText( 'Link a Google account so you can get your groups back on a new device.', { exact : false } ) ).toBeVisible(); // What: Unlinked Note Assertion. Why: The member learns what linking is for. How: This waits for the note.
 	await expect( curPagObj.getByText( 'Buying it needs a linked Google account', { exact : false } ) ).toBeVisible();                             // What: Upgrade Needs Assertion. Why: The upgrade needs Google linked first. How: This waits for the note.
 	await expect( curPagObj.getByRole( 'button', { name : 'Buy the upgrade' } ) ).toHaveCount( 0 );                                                 // What: No Buy Assertion. Why: An unlinked account can't buy. How: This expects no button.
 

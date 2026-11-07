@@ -74,9 +74,9 @@ const BUY_ERR_OBJ : Record< string, string > = { // What: Buy Error Object. Why:
 const COL_MOD_ARR : { labStr : string, modStr : ColModTyp }[] = [ // What: Color Mode Array. Why: The appearance follows the phone or is set light or dark (Section 14). How: Each row names a choice and its mode.
 
 
-	{ labStr : 'Match this phone', modStr : 'system' }, // What: System Choice. Why: Most people want the phone's own setting. How: This names it first.
-	{ labStr : 'Light',            modStr : 'light'  }, // What: Light Choice. Why: Someone can keep the app light. How: This names it.
-	{ labStr : 'Dark',             modStr : 'dark'   }  // What: Dark Choice. Why: Someone can keep the app dark. How: This names it.
+	{ labStr : 'Match this device', modStr : 'system' }, // What: System Choice. Why: Most people want the device's own setting. How: This names it first.
+	{ labStr : 'Light',             modStr : 'light'  }, // What: Light Choice. Why: Someone can keep the app light. How: This names it.
+	{ labStr : 'Dark',              modStr : 'dark'   }  // What: Dark Choice. Why: Someone can keep the app dark. How: This names it.
 
 
 ];
@@ -219,7 +219,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 		if ( pusActBoo ) { // What: Turn Off Block. Why: Notifications on are turned off. How: This turns them off and says so once it lands.
 
 
-			if ( await actRunFun( 'push', pusDisFun ) ) { setPusActBoo( false ); setStaMesStr( 'Notifications are off for this phone.' ); } // What: Off Call. Why: The button and the member learn the change. How: This turns them off, then updates the state and announces it.
+			if ( await actRunFun( 'push', pusDisFun ) ) { setPusActBoo( false ); setStaMesStr( 'Notifications are off for this device.' ); } // What: Off Call. Why: The button and the member learn the change. How: This turns them off, then updates the state and announces it.
 
 
 
@@ -242,7 +242,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 		setPusActBoo( ansValStr === 'granted' ); // What: State Set Call. Why: Notifications are on only once the browser allows them. How: This keeps whether it did.
 
-		if ( ansValStr === 'granted' ) setStaMesStr( 'Notifications are on for this phone.' ); // What: On Status Call. Why: The member hears it worked. How: This announces it.
+		if ( ansValStr === 'granted' ) setStaMesStr( 'Notifications are on for this device.' ); // What: On Status Call. Why: The member hears it worked. How: This announces it.
 
 		else if ( ansValStr === 'default' ) setStaMesStr( 'Notifications are still off.' ); // What: Dismissed Status Call. Why: A dismissed prompt changes nothing. How: This says they're still off.
 
@@ -272,7 +272,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 					id='devSetHea'
 
 					className={ cssModObj.devTitHea }
-				>This phone</h3>{ /* What: Device Title Heading Element. Why: The part needs a heading saying these settings are the phone's own. How: This names it. */ }
+				>This device</h3>{ /* What: Device Title Heading Element. Why: The part needs a heading saying these settings are the phone's own. How: This names it. */ }
 
 
 
@@ -318,7 +318,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 
-				<p className={ cssModObj.devNotPar }>{ pusActBoo ? "This phone gets a notification when there's news in your groups, such as a new message." : "Get a notification on this phone when there's news in your groups, such as a new message." }</p>{ /* What: Device Note Paragraph Element. Why: The member should know what notifications bring before turning them on or off. How: This says it, by whether they're on. */ }
+				<p className={ cssModObj.devNotPar }>{ pusActBoo ? "This device gets a notification when there's news in your groups, such as a new message." : "Get a notification on this device when there's news in your groups, such as a new message." }</p>{ /* What: Device Note Paragraph Element. Why: The member should know what notifications bring before turning them on or off. How: This says it, by whether they're on. */ }
 
 
 
@@ -409,7 +409,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 					<>{ /* What: Account Fragment. Why: The notes and buttons sit in the part as its own children. How: This groups them without adding an element. */ }
 
 
-						<p className={ cssModObj.accNotPar }>{ gooLinBoo ? 'Your account is linked to Google. On a new phone, choose "Get my groups back" when you open Come Hang to bring your groups with you.' : "Link a Google account so you can get your groups back on a new phone. Google only confirms it's you, and your messages stay encrypted." }</p>{ /* What: Account Note Paragraph Element. Why: The member should know what linking is for, and once it's done, how to use it. How: This says either, by whether Google is linked. */ }
+						<p className={ cssModObj.accNotPar }>{ gooLinBoo ? 'Your account is linked to Google. On a new device, choose "Get my groups back" when you open Come Hang to bring your groups with you.' : "Link a Google account so you can get your groups back on a new device. Google only confirms it's you, and your messages stay encrypted." }</p>{ /* What: Account Note Paragraph Element. Why: The member should know what linking is for, and once it's done, how to use it. How: This says either, by whether Google is linked. */ }
 
 
 
@@ -438,7 +438,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 						{ upgPaiBoo !== null && ( // What: Upgrade Check. Why: The upgrade can be described once the account's flag is read. How: This shows its note, and its button when it can be bought.
 
 
-							<p className={ cssModObj.accNotPar }>{ upgPaiBoo ? 'You have the upgrade: you can own up to 10 groups, belong to up to 20, and have up to 50 members in each group you own.' : `The upgrade is a one-time $9.99 purchase. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20.${ gooLinBoo ? '' : ' Buying it needs a linked Google account, so it follows you to a new phone.' }` }</p> // What: Account Note Paragraph Element. Why: The member should know what the upgrade gives and what it needs (Section 18). How: This says whether it's bought, or what it costs and gives, and that it needs Google linked when it isn't.
+							<p className={ cssModObj.accNotPar }>{ upgPaiBoo ? 'You have the upgrade: you can own up to 10 groups, belong to up to 20, and have up to 50 members in each group you own.' : `The upgrade is a one-time $9.99 purchase. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20.${ gooLinBoo ? '' : ' Buying it needs a linked Google account, so it follows you to a new device.' }` }</p> // What: Account Note Paragraph Element. Why: The member should know what the upgrade gives and what it needs (Section 18). How: This says whether it's bought, or what it costs and gives, and that it needs Google linked when it isn't.
 
 
 						) }

@@ -56,7 +56,7 @@ function PriPolCom () : React.JSX.Element {
 		<>{ /* What: Privacy Policy Fragment. Why: The policy's headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 4, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 7, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>Come Hang is an app for planning get-togethers with a group. It's made and run by Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below). This policy explains what information Come Hang handles, why, who else handles it, how long it's kept, and the choices you have. If you have a question, write to <a href='mailto:support@comehang.app'>support@comehang.app</a>.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -67,9 +67,9 @@ function PriPolCom () : React.JSX.Element {
 			<ul>{ /* What: Body List Element. Why: Related points read more easily as a list. How: This holds them. */ }
 
 
-				<li>You don't sign up. The app makes an anonymous identity on your phone the first time you start or join a group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>You don't sign up. The app makes an anonymous identity on your device the first time you start or join a group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li>What you write and share in a group, such as messages, events, your name in the group, and your location, is encrypted on your phone before it's sent, so we can't read it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>What you write and share in a group, such as messages, events, your name in the group, and your location, is encrypted on your device before it's sent, so we can't read it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>Some details have to stay readable for the app to work, such as your group's name, who's in it, and when messages were sent. They're listed below.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -86,11 +86,11 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>Your identity</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>The first time you start or join a group, the app signs your phone in anonymously through Firebase Authentication, which gives it a random ID, and makes a pair of encryption keys on your phone. The private key never leaves your phone. The public key is stored with your ID, so other members can share a group's key with you. We also keep a record of which groups you own or belong to, and whether you've bought the upgrade.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>The first time you start or join a group, the app signs your device in anonymously through Firebase Authentication, which gives it a random ID, and makes a pair of encryption keys on your device. The private key never leaves your device. The public key is stored with your ID, so other members can share a group's key with you. We also keep a record of which groups you own or belong to, and whether you've bought the upgrade.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h3>What you share in a group</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Chat messages, events and their bring-lists, the name you use in each group, and your location are encrypted on your phone, with a key only the group's members hold, before they're sent to our servers. We store them, but we can't read them.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Chat messages, events and their bring-lists, the name you use in each group, and your location are encrypted on your device, with a key only the group's members hold, before they're sent to our servers. We store them, but we can't read them.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h3>What stays readable</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
@@ -124,7 +124,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>Your location</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Your location is shared only when you turn sharing on for an event, from 3 hours before the event starts until it ends. While it's on, your phone sends your position, precise to about 0.1 meters, how accurate it is, and whether you've arrived, encrypted so only your group can read them. Each update replaces the one before, so no record of where you've been builds up, and your position is deleted an hour after your last update or when the event ends, whichever comes first.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Your location is shared only when you turn sharing on for an event, from 3 hours before the event starts until it ends. While it's on, your device sends your position, precise to about 0.1 meters, how accurate it is, and whether you've arrived, encrypted so only your group can read them. Each update replaces the one before, so no record of where you've been builds up, and your position is deleted an hour after your last update or when the event ends, whichever comes first.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h3>Notifications</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
@@ -132,7 +132,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>Linking a Google account</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Linking a Google account is optional, and lets you get your groups back on a new phone. When you link one, Google shares your email address with Firebase Authentication, along with your name and profile picture if your Google account has them, and Firebase keeps them with your identity. Come Hang uses the link to recognize you on a new phone, and your email address to fill in the checkout if you buy the upgrade. It never shows them to other members.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Linking a Google account is optional, and lets you get your groups back on a new device. When you link one, Google shares your email address with Firebase Authentication, along with your name and profile picture if your Google account has them, and Firebase keeps them with your identity. Come Hang uses the link to recognize you on a new device, and your email address to fill in the checkout if you buy the upgrade. It never shows them to other members.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h3>Buying the upgrade</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
@@ -142,9 +142,9 @@ function PriPolCom () : React.JSX.Element {
 
 			<p>Our hosting and Firebase record technical details such as your IP address, your browser, and the time of each request, to run the service and protect it from abuse. Come Hang also uses Firebase App Check with Google reCAPTCHA Enterprise, which looks at signals from your browser and device to tell real use of the app from automated abuse. Google handles those signals under its own privacy policy.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
-			<h3>What stays on your phone</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
+			<h3>What stays on your device</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Your encryption keys, your chat history, and settings such as light or dark mode are stored on your phone, in your browser's storage. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Your encryption keys, your chat history, and settings such as light or dark mode are stored on your device, in your browser's storage. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>How we use information</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -179,7 +179,7 @@ function PriPolCom () : React.JSX.Element {
 			<ul>{ /* What: Body List Element. Why: Related points read more easily as a list. How: This holds them. */ }
 
 
-				<li><strong>Chat messages</strong> are deleted from the server once every member's phone has them, or after the period the group's owner sets, from 7 to 180 days, 30 by default.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Chat messages</strong> are deleted from the server once every member's device has them, or after the period the group's owner sets, from 7 to 180 days, 30 by default.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Events and their bring-lists</strong> are deleted 48 hours after the event ends.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -189,20 +189,20 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>Earlier chat sent between members</strong> is deleted once it's collected, and in any case within 15 days.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>Notices</strong> are deleted after 30 days, and <strong>push tokens</strong> 60 days after your phone last opened the app.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Notices</strong> are deleted after 30 days, and <strong>push tokens</strong> 60 days after your device last opened the app.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>A group</strong> is kept until its owner deletes it, which deletes its members, events, and chat for everyone. When you leave a group or are removed, your membership is deleted.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you delete your data or ask us to. If you're in no group, haven't bought the upgrade or linked a Google account, and haven't opened the app for 180 days, it's deleted automatically.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>What's on your phone</strong> stays until you delete the app's data or uninstall it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>What's on your device</strong> stays until you delete the app's data or uninstall it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 
 			</ul>
 
 
 
-			<p>Messages already delivered to other members stay on their phones, and we can't delete them there.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Messages already delivered to other members stay on their devices, and we can't delete them there.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Your choices and rights</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -211,7 +211,7 @@ function PriPolCom () : React.JSX.Element {
 			<ul>{ /* What: Body List Element. Why: Related points read more easily as a list. How: This holds them. */ }
 
 
-				<li>You can delete your data at any time, from the account part of Settings, or from the welcome screen if you're in no group. You leave every group you're in, each group you own passes to the member who joined it earliest, or is deleted if no one else is in it, and everything we keep for you is deleted, with your sign-in and any linked Google account, along with what Come Hang keeps on the phone you use.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>You can delete your data at any time, from the account part of Settings, or from the welcome screen if you're in no group. You leave every group you're in, each group you own passes to the member who joined it earliest, or is deleted if no one else is in it, and everything we keep for you is deleted, with your sign-in and any linked Google account, along with what Come Hang keeps on the device you use.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>You can leave a group at any time, and a group's owner can delete it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -228,11 +228,11 @@ function PriPolCom () : React.JSX.Element {
 
 
 
-			<p>Because what you share is encrypted, we can't read it, export it, or recover it for you. Your phone holds your copy.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Because what you share is encrypted, we can't read it, export it, or recover it for you. Your device holds your copy.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Security</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>Information travels to and from our servers over encrypted connections, what you share is encrypted on your phone before it's sent, and the servers' access rules let each person reach only what they're allowed to. Come Hang isn't end-to-end encrypted in the strictest sense: it doesn't verify each member's devices, and the details listed above as readable are visible to the service. No system is perfectly secure, so we can't promise that information will never be reached without permission.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Information travels to and from our servers over encrypted connections, what you share is encrypted on your device before it's sent, and the servers' access rules let each person reach only what they're allowed to. Come Hang isn't end-to-end encrypted in the strictest sense: it doesn't verify each member's devices, and the details listed above as readable are visible to the service. No system is perfectly secure, so we can't promise that information will never be reached without permission.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Age</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -291,7 +291,7 @@ function TerSerCom () : React.JSX.Element {
 		<>{ /* What: Terms Service Fragment. Why: The terms' headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 3, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 7, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>These terms are an agreement between you and Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below), who makes and runs Come Hang. By starting or joining a group, or otherwise using the app, you agree to them, and to the <a href='/privacy'>Privacy Policy</a>, which explains how your information is handled. If you don't agree, please don't use Come Hang.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -303,15 +303,15 @@ function TerSerCom () : React.JSX.Element {
 
 			<p>Come Hang lets a group chat, plan events and who's bringing what, and share locations on the day of an event. It's free to use, with an optional one-time upgrade. It keeps changing as it's worked on, so features may change, and we may stop offering some or all of it. If we decide to shut Come Hang down, we'll try to give you reasonable notice.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
-			<h2>Your identity and your phone</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
+			<h2>Your identity and your device</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>Come Hang has no account to sign up for. Your identity, your encryption keys, and your chat history live on your phone, in your browser's storage. If you delete the app's data, lose your phone, or uninstall the app, you lose access to your groups, unless you've linked a Google account, which lets you get your groups back on a new phone. Even then, earlier chat comes back only if another member's phone still has it and sends it. Because what you share is encrypted, we can't recover it for you. Keeping your phone and your Google account secure is up to you.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Come Hang has no account to sign up for. Your identity, your encryption keys, and your chat history live on your device, in your browser's storage. If you delete the app's data, lose your device, or uninstall the app, you lose access to your groups, unless you've linked a Google account, which lets you get your groups back on a new device. Even then, earlier chat comes back only if another member's device still has it and sends it. Because what you share is encrypted, we can't recover it for you. Keeping your device and your Google account secure is up to you.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Your content</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
 			<p>You keep ownership of what you post: messages, events, bring-lists, names, and anything else you share (your content). You give us permission to store, encrypt, send, and delete your content as needed to run Come Hang, and for nothing else. That permission ends once your content is deleted from our servers.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
-			<p>Your content is shared with the members of the group you post it in. They can read it, keep it, take screenshots of it, or pass it on, and a message delivered to their phones can't be taken back. Only share what you're comfortable sharing with them. You're responsible for your content, and you confirm you have the right to share it.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Your content is shared with the members of the group you post it in. They can read it, keep it, take screenshots of it, or pass it on, and a message delivered to their devices can't be taken back. Only share what you're comfortable sharing with them. You're responsible for your content, and you confirm you have the right to share it.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Groups</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -319,7 +319,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>Location sharing</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>Sharing your location is always optional, and only works from 3 hours before an event until it ends. Positions come from your phone and may be late, inaccurate, or missing, especially while the app isn't open. Only share your location with people you trust, and never share someone else's location without their permission. Come Hang isn't a safety or emergency service, so don't rely on it to find someone in an emergency. If anyone is in danger, call 911 or your local emergency number.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Sharing your location is always optional, and only works from 3 hours before an event until it ends. Positions come from your device and may be late, inaccurate, or missing, especially while the app isn't open. Only share your location with people you trust, and never share someone else's location without their permission. Come Hang isn't a safety or emergency service, so don't rely on it to find someone in an emergency. If anyone is in danger, call 911 or your local emergency number.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Acceptable use</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -355,7 +355,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>The upgrade</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>Owning more than one group needs the upgrade, a one-time purchase of $9.99 in US dollars, plus any tax that applies. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20. Buying it needs a linked Google account, so the upgrade follows you to a new phone. It's a single payment, not a subscription.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Owning more than one group needs the upgrade, a one-time purchase of $9.99 in US dollars, plus any tax that applies. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20. Buying it needs a linked Google account, so the upgrade follows you to a new device. It's a single payment, not a subscription.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<p>Polar processes the payment as the merchant of record, so your purchase is also covered by <a href='https://polar.sh/legal/terms' rel='noopener noreferrer' target='_blank'>Polar's terms</a>. The price may change in the future, which won't affect an upgrade you've already bought.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -369,7 +369,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>Ending your use</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>You can stop using Come Hang at any time by deleting your data, from Settings or the welcome screen, which deletes what we keep for you and what Come Hang keeps on your phone. We may suspend or end your access if you break these terms, or if we have to for legal or security reasons. The parts of these terms that by their nature should last, such as the disclaimers, the limits on liability, and the governing law, keep applying after your use ends.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>You can stop using Come Hang at any time by deleting your data, from Settings or the welcome screen, which deletes what we keep for you and what Come Hang keeps on your device. We may suspend or end your access if you break these terms, or if we have to for legal or security reasons. The parts of these terms that by their nature should last, such as the disclaimers, the limits on liability, and the governing law, keep applying after your use ends.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Disclaimers</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 

@@ -445,7 +445,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 								id='detTtlHin'
 
 								className={ cssModObj.fieHinPar }
-							>{ "How long the server keeps a message for someone who hasn't received it. Phones keep the chat they already have." }</p>{ /* What: Field Hint Paragraph Element. Why: The owner should know what the retention controls (Section 5). How: This says it. */ }
+							>{ "How long the server keeps a message for someone who hasn't received it. Devices keep the chat they already have." }</p>{ /* What: Field Hint Paragraph Element. Why: The owner should know what the retention controls (Section 5). How: This says it. */ }
 
 
 						</div>
@@ -806,7 +806,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 					<>{ /* What: Leave Fragment. Why: The note and the leave sit in the part as its own children. How: This groups them without adding an element. */ }
 
 
-						<p className={ cssModObj.endNotPar }>{ "Leaving takes the group off this phone. To come back, you'll need its link and a member's approval." }</p>{ /* What: End Note Paragraph Element. Why: A member should know what leaving does before they do it. How: This says it. */ }
+						<p className={ cssModObj.endNotPar }>{ "Leaving takes the group off this device. To come back, you'll need its link and a member's approval." }</p>{ /* What: End Note Paragraph Element. Why: A member should know what leaving does before they do it. How: This says it. */ }
 
 
 
