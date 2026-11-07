@@ -8,9 +8,10 @@
  * Styles for EvePhoCom: the Photos heading with its actions beside it, a
  * grid of square thumbnails three to a row on a narrow screen and more where
  * the row is wide, and the messages below it, then the viewer sheet's photo
- * shown whole above who shared it, the previous and next buttons, and its
- * actions. The part's status shows in the muted color while the viewer's is
- * for screen readers alone, and failures show in the dark error color.
+ * shown whole with round previous and next steps over its sides, above who
+ * shared it and its actions. The part's status shows in the muted color while
+ * the viewer's is for screen readers alone, and failures show in the dark
+ * error color.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -254,25 +255,87 @@
 
 /* #region vieImaDiv */
 
-.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen. How: This centers it in a rounded frame at least a third of the screen tall. */
+.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen, and the steps to its neighbors sit over its sides. How: This centers it in a rounded frame at least a third of the screen tall, its one area holding the photo and both steps stacked. */
 
 
-	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
-	border-radius    : var( --rad-bor-sma ); /* Radius Border Small ~= 8.304px */
-	display          : grid;
-	min-height       : 33svh;
-	overflow         : hidden;
-	place-items      : center;
+	background-color    : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+	border-radius       : var( --rad-bor-sma ); /* Radius Border Small ~= 8.304px */
+	display             : grid;
+	grid-template-areas : 'vieImaIma';
+	min-height          : 33svh;
+	overflow            : hidden;
+	place-items         : center;
 
 
 }
 
-.vieImaIma { /* What: Viewer Image Image. Why: The whole photo shows, leaving room for its actions below. How: This fits it within the frame's width and 60% of the screen's height. */
+.vieImaIma { /* What: Viewer Image Image. Why: The whole photo shows, leaving room for its actions below. How: This fits it within the frame's width and 60% of the screen's height, in the frame's one area. */
 
 
+	grid-area  : vieImaIma;
 	max-height : 60svh;
 	max-width  : 100%;
 	object-fit : contain;
+
+
+}
+
+.vieSteBut { /* What: Viewer Step Button. Why: Stepping to a neighbor is a round arrow over the photo's side, a full touch target that stands out on any photo. How: This draws a bordered circle on the surface color at the touch target size, in the accent color, sitting in the photo's area a tier 4 space in from its edge, and eases its hover background, press scale, and focus ring. */
+
+
+	align-self       : center;
+	background-color : var( --bac-sur-col );                            /* Background Surface Color = #FFFFFF */
+	border           : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	border-radius    : 50%;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	display          : grid;
+	grid-area        : vieImaIma;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	margin           : 0 var( --tie-hor-004 );                          /* Tier Horizontal 4, about 8.304px - 11px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.vieSteBut:hover { /* What: Hovered Viewer Step Button. Why: A control over the photo shows it's live by color, since a lift would read as the photo shifting. How: This fills the circle with the hover color. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+
+
+}
+.vieSteBut:active { /* What: Pressed Viewer Step Button. Why: A press should register before the next photo shows. How: This presses the circle in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Viewer Step Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.vieSteBut { /* What: Motionless Viewer Step Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+.vieSteBut--previous { /* What: Viewer Step Button Previous. Why: Stepping back sits on the photo's left. How: This sets it against the area's start. */
+
+
+	justify-self : start;
+
+
+}
+.vieSteBut--next { /* What: Viewer Step Button Next. Why: Stepping on sits on the photo's right. How: This sets it against the area's end. */
+
+
+	justify-self : end;
 
 
 }
@@ -314,14 +377,15 @@
 
 
 
-/* #region vieNavDiv */
+/* #region vieActDiv */
 
-.vieNavDiv { /* What: Viewer Navigation Div. Why: Previous and next are a pair. How: This sets them side by side in two equal columns a tier 4 space apart. */
+.vieActDiv { /* What: Viewer Actions Div. Why: Saving and deleting, or the delete's question and answers, sit together in a row, wrapping when the sheet is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
 
 
-	column-gap            : var( --tie-hor-004 ); /* Tier Horizontal 4, about 8.304px - 11px */
-	display               : grid;
-	grid-template-columns : 1fr 1fr;
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
 
 
 }
@@ -355,7 +419,7 @@
 
 
 }
-.viePlaBut:disabled { /* What: Off Viewer Plain Button. Why: Previous at the first photo, Next at the last, and Save before the photo loads do nothing, and should look it. How: This draws it in the muted text color with a muted border. */
+.viePlaBut:disabled { /* What: Off Viewer Plain Button. Why: Save before the photo loads, and the confirmation's answers while a delete runs, do nothing, and should look it. How: This draws it in the muted text color with a muted border. */
 
 
 	border-color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
@@ -374,23 +438,6 @@
 
 
 	}
-
-
-}
-
-/* #endregion vieNavDiv */
-
-
-
-/* #region vieActDiv */
-
-.vieActDiv { /* What: Viewer Actions Div. Why: Saving and deleting, or the delete's question and answers, sit together in a row, wrapping when the sheet is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
-
-
-	align-items : center;
-	display     : flex;
-	flex-wrap   : wrap;
-	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
 
 
 }

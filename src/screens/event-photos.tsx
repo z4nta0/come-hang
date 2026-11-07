@@ -7,6 +7,7 @@ import cssModObj from './event-photos.module.css'; // What: CSS Module Object. W
 
 
 import { ButBasCom    } from '../ui/button.tsx';        // What: Button Base Component. Why: Adding photos is the part's main action. How: This draws its button.
+import { IcoSvgCom    } from '../ui/icon.tsx';          // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
 import { imaTypFun    } from '../platform/image.ts';    // What: Image Type Function. Why: A shared photo's bytes carry no type. How: This reads it from their first bytes.
 import { mesTimFun    } from '../utils/date.ts';        // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
 import { phoAddFun    } from '../state/photos.ts';      // What: Photo Add Function. Why: A member shares photos from the event. How: This shrinks, encrypts, and shares one.
@@ -327,9 +328,11 @@ type EpcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, jumBoo : boolean, 
 function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValStr, varStr } : EpcProTyp ) : React.JSX.Element {
 
 
-	const filInpRef = useRef< HTMLInputElement >( null ); // What: File Input Reference. Why: Add photos opens the hidden file picker. How: This holds it.
-	const secEleRef = useRef< HTMLElement >( null );      // What: Section Element Reference. Why: A jump scrolls the part into view. How: This holds its section.
-	const vieHanRef = useRef< SheHanTyp >( null );        // What: Viewer Handle Reference. Why: A thumbnail opens the viewer, and a delete closes it. How: This holds its handle.
+	const filInpRef = useRef< HTMLInputElement >( null );  // What: File Input Reference. Why: Add photos opens the hidden file picker. How: This holds it.
+	const nexButRef = useRef< HTMLButtonElement >( null ); // What: Next Button Reference. Why: Stepping back to the first photo takes Previous away, and focus shouldn't fall to the page. How: This holds Next, which takes focus then.
+	const preButRef = useRef< HTMLButtonElement >( null ); // What: Previous Button Reference. Why: Stepping on to the last photo takes Next away, and focus shouldn't fall to the page. How: This holds Previous, which takes focus then.
+	const secEleRef = useRef< HTMLElement >( null );       // What: Section Element Reference. Why: A jump scrolls the part into view. How: This holds its section.
+	const vieHanRef = useRef< SheHanTyp >( null );         // What: Viewer Handle Reference. Why: A thumbnail opens the viewer, and a delete closes it. How: This holds its handle.
 
 	const [ addCouNum, setAddCouNum ] = useState( 0 );                                            // What: Add Count Number And Setter. Why: The status says how many photos are on their way. How: This holds the count.
 	const [ delConBoo, setDelConBoo ] = useState( false );                                        // What: Delete Confirm Boolean And Setter. Why: Deleting a photo asks first. How: This is true while the confirmation shows.
@@ -762,7 +765,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 					<div className={ cssModObj.phoVieDiv }>{ /* What: Photo Viewer Div Element. Why: The photo, its line, and its actions read top to bottom. How: This stacks them. */ }
 
 
-						<div className={ cssModObj.vieImaDiv }>{ /* What: Viewer Image Div Element. Why: The photo shows whole, however it's shaped. How: This frames it on a sunken tint. */ }
+						<div className={ cssModObj.vieImaDiv }>{ /* What: Viewer Image Div Element. Why: The photo shows whole, however it's shaped, with the steps to its neighbors over its sides. How: This frames it on a sunken tint, stacking the steps on it. */ }
 
 
 							{ vieUrlStr !== null && ( // What: Image Check. Why: A photo whose thumbnail won't decrypt has nothing to show until its full photo arrives. How: This shows whichever it has.
@@ -779,6 +782,64 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 							) }
 
 
+
+							{ vieIndNum > 0 && ( // What: Previous Check. Why: The first photo has nothing before it. How: This shows Previous from the second photo on.
+
+
+								<button
+									ref={ preButRef }
+
+									className={` ${ cssModObj.vieSteBut }   ${ cssModObj.vieSteButPrevious } `}
+
+									type='button'
+
+									aria-label='Previous photo'
+
+									onClick={ () => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoRecArr![ vieIndNum - 1 ].phoIdeStr ); if ( vieIndNum === 1 ) nexButRef.current?.focus(); } } // What: Previous Click Handler. Why: The viewer steps back with nothing left from this photo, and reaching the first takes this button away. How: This resets the viewer, opens the photo before, and at the first moves focus to Next. // What: Non-Null Note. Why: A photo is open, so the photos are in. How: The ! reads them as present.
+								>{ /* What: Viewer Step Button Previous Element. Why: The member steps back through the photos. How: This opens the one before, over the photo's left side. */ }
+
+
+									<IcoSvgCom
+										icoNamStr='back'
+										sizSteStr='p01'
+									/>{ /* What: Back Icon SVG Component. Why: An arrow pointing left says it steps back. How: This draws it at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
+
+
+								</button>
+
+
+							) }
+
+
+
+							{ phoRecArr !== null && vieIndNum < phoRecArr.length - 1 && ( // What: Next Check. Why: The last photo has nothing after it. How: This shows Next up to the photo before the last.
+
+
+								<button
+									ref={ nexButRef }
+
+									className={` ${ cssModObj.vieSteBut }   ${ cssModObj.vieSteButNext } `}
+
+									type='button'
+
+									aria-label='Next photo'
+
+									onClick={ () => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoRecArr[ vieIndNum + 1 ].phoIdeStr ); if ( vieIndNum === phoRecArr.length - 2 ) preButRef.current?.focus(); } } // What: Next Click Handler. Why: The viewer steps on with nothing left from this photo, and reaching the last takes this button away. How: This resets the viewer, opens the photo after, and at the last moves focus to Previous.
+								>{ /* What: Viewer Step Button Next Element. Why: The member steps on through the photos. How: This opens the one after, over the photo's right side. */ }
+
+
+									<IcoSvgCom
+										icoNamStr='forward'
+										sizSteStr='p01'
+									/>{ /* What: Forward Icon SVG Component. Why: An arrow pointing right says it steps on. How: This draws it at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
+
+
+								</button>
+
+
+							) }
+
+
 						</div>
 
 
@@ -786,32 +847,6 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 						<p className={ cssModObj.vieMetPar }>{ vieRecObj.uplUidStr === uidValStr ? 'You shared this' : `Shared by ${ vieNamFun( vieRecObj ) }` } <span className={ cssModObj.vieTimSpa }>{ mesTimFun( vieRecObj.creTimNum, Date.now() ) }</span></p>{ /* What: Viewer Meta Paragraph Element. Why: A photo says who shared it and when. How: This names them, then the time in the muted color. */ }
 
 						{ fulBytArr === null && <p className={ cssModObj.vieNotPar }>{ fulErrBoo ? 'The full photo is still on its way, so try again in a moment.' : 'Loading the full photo…' }</p> }{ /* What: Viewer Note Check. Why: The thumbnail stands in until the full photo arrives, which may still be uploading. How: This says it's loading, or still on its way. */ }
-
-
-
-						<div className={ cssModObj.vieNavDiv }>{ /* What: Viewer Navigation Div Element. Why: Stepping through the photos is quicker than closing and reopening. How: This lays the two buttons side by side. */ }
-
-
-							<button
-								className={ cssModObj.viePlaBut }
-
-								disabled={ vieIndNum === 0 }
-								type='button'
-
-								onClick={ () => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoRecArr![ vieIndNum - 1 ].phoIdeStr ); } } // What: Previous Click Handler. Why: The viewer steps back with nothing left from this photo. How: This resets the viewer and opens the photo before. // What: Non-Null Note. Why: A photo is open, so the photos are in. How: The ! reads them as present.
-							>Previous</button>{ /* What: Viewer Plain Button Element. Why: The member steps back through the photos. How: This opens the one before, off at the first. */ }
-
-							<button
-								className={ cssModObj.viePlaBut }
-
-								disabled={ phoRecArr === null || vieIndNum === phoRecArr.length - 1 }
-								type='button'
-
-								onClick={ () => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoRecArr![ vieIndNum + 1 ].phoIdeStr ); } } // What: Next Click Handler. Why: The viewer steps on with nothing left from this photo. How: This resets the viewer and opens the photo after. // What: Non-Null Note. Why: A photo is open, so the photos are in. How: The ! reads them as present.
-							>Next</button>{ /* What: Viewer Plain Button Element. Why: The member steps on through the photos. How: This opens the one after, off at the last. */ }
-
-
-						</div>
 
 
 
