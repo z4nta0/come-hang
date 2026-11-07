@@ -281,7 +281,7 @@
 
 
 }
-.vieImaIma--next { /* What: Viewer Image Image Next. Why: A photo stepped on to arrives from the right, the way the row of photos runs. How: This slides it in from a tier 3 space to the right as it fades in. */
+.vieImaIma--next { /* What: Viewer Image Image Next. Why: A photo stepped on to arrives from the right, the way the row of photos runs. How: This slides it in from a tier 3 space to the right as it fades in., while the photo it replaces goes at once, since stepped content only arrives. */
 
 
 	--ima-ste-off : var( --tie-hor-003 ); /* Tier Horizontal 3, about 14.572px - 19.304px */
@@ -290,7 +290,7 @@
 
 
 }
-.vieImaIma--previous { /* What: Viewer Image Image Previous. Why: A photo stepped back to arrives from the left. How: This slides it in from a tier 3 space to the left as it fades in. */
+.vieImaIma--previous { /* What: Viewer Image Image Previous. Why: A photo stepped back to arrives from the left. How: This slides it in from a tier 3 space to the left as it fades in., while the photo it replaces goes at once, since stepped content only arrives. */
 
 
 	--ima-ste-off : calc( var( --tie-hor-003 ) * -1 ); /* Tier Horizontal 3, about -14.572px - -19.304px */
