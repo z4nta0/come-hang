@@ -255,7 +255,7 @@
 
 /* #region vieImaDiv */
 
-.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen, and the steps to its neighbors sit over its sides. How: This centers it in a rounded frame at least a third of the screen tall, its one area holding the photo and both steps stacked. */
+.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen, and the steps to its neighbors sit over its sides. How: This centers it in a rounded frame at least a third of the screen tall, its one area holding the photo and both steps stacked, and keeps a sideways swipe for the viewer. */
 
 
 	background-color    : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
@@ -265,6 +265,7 @@
 	min-height          : 33svh;
 	overflow            : hidden;
 	place-items         : center;
+	touch-action        : pan-y pinch-zoom; /* What: Touch Action Note. Why: A sideways swipe steps to the next photo, so the browser shouldn't take it for a scroll, while scrolling up and down and pinching still work. How: This leaves the browser the upright pan and the pinch. */
 
 
 }

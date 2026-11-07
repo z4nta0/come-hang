@@ -17,6 +17,7 @@ import { phoGetFun    } from '../state/photos.ts';      // What: Photo Get Funct
 import { phoWatFun    } from '../state/photos.ts';      // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
 import { redMotFun    } from '../utils/motion.ts';      // What: Reduced Motion Function. Why: A jump to the photos scrolls smoothly unless the member asked for less motion. How: This reads the preference.
 import { SheDiaCom    } from '../ui/sheet.tsx';         // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
+import { useCallback  } from 'react';                   // What: Use Callback. Why: The arrow keys step the viewer through a listener that shouldn't change on every render. How: This keeps the step function the same between renders.
 import { useEffect    } from 'react';                   // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
 import { useRef       } from 'react';                   // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
 import { useState     } from 'react';                   // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
@@ -332,6 +333,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const nexButRef = useRef< HTMLButtonElement >( null ); // What: Next Button Reference. Why: Stepping back to the first photo takes Previous away, and focus shouldn't fall to the page. How: This holds Next, which takes focus then.
 	const preButRef = useRef< HTMLButtonElement >( null ); // What: Previous Button Reference. Why: Stepping on to the last photo takes Next away, and focus shouldn't fall to the page. How: This holds Previous, which takes focus then.
 	const secEleRef = useRef< HTMLElement >( null );       // What: Section Element Reference. Why: A jump scrolls the part into view. How: This holds its section.
+	const swiStaRef = useRef< { xcoNum : number, ycoNum : number } | null >( null ); // What: Swipe Start Reference. Why: A swipe across the photo steps to its neighbor, judged by where the touch began. How: This holds the touch's start, null when none is down.
 	const vieHanRef = useRef< SheHanTyp >( null );         // What: Viewer Handle Reference. Why: A thumbnail opens the viewer, and a delete closes it. How: This holds its handle.
 
 	const [ addCouNum, setAddCouNum ] = useState( 0 );                                            // What: Add Count Number And Setter. Why: The status says how many photos are on their way. How: This holds the count.
@@ -401,6 +403,103 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps -- What: Deliberate Dependency Narrowing. Why: The full photo belongs to the open photo alone, and its record is rebuilt with every report. How: Only the photo's ID re-runs the load.
 	}, [ vieRecObj?.phoIdeStr ] ); // What: Effect Dependency Array. Why: The full photo is loaded again only when another photo opens. How: vieRecObj's ID changes with the open photo.
+
+
+
+	// #region steVieFun
+
+	/**
+	 * steVieFun = Step Viewer Function
+	 *
+	 * @summary
+	 * Steps the viewer to a neighbor of the open photo, for the arrow buttons,
+	 * the arrow keys, and a swipe. It clears what the last photo left (the
+	 * delete's question, the viewer's messages) and opens the photo the given
+	 * number of places on, doing nothing past either end. Stepping onto the
+	 * first or last photo takes away the button that led there, so when that
+	 * button holds focus, focus moves to the other one rather than falling to
+	 * the page.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param offValNum - Offset Value Number: -1 for the photo before, 1 for
+	 *                    the one after.
+	 *
+	 * @returns This function does not return anything.
+	 *
+	 * @example
+	 * ```ts
+	 * steVieFun(1)
+	 * // => void
+	 * ```
+	 *
+	 */
+
+	const steVieFun = useCallback( ( offValNum : number ) : void => { // What: Step Viewer Function. Why: The buttons, keys, and swipes step through the photos alike. How: This opens the neighbor, keeping focus on a step.
+
+
+		const newIndNum = vieIndNum + offValNum; // What: New Index Number. Why: The step lands a place on from the open photo. How: This adds the offset.
+
+
+
+		if ( phoRecArr === null || vieIndNum < 0 || newIndNum < 0 || newIndNum >= phoRecArr.length ) return; // What: Edge Guard. Why: There's nothing to step to with no photo open or past either end. How: This returns.
+
+
+
+		setDelConBoo( false ); // What: Confirm Clear Call. Why: The last photo's question doesn't carry over. How: This clears it.
+
+		setVieErrStr( '' ); // What: Error Clear Call. Why: The last photo's failure doesn't carry over. How: This clears it.
+
+		setVieStaStr( '' ); // What: Status Clear Call. Why: The last photo's save message doesn't carry over. How: This clears it.
+
+		setVieIdeStr( phoRecArr[ newIndNum ].phoIdeStr ); // What: Open Photo Call. Why: The viewer follows the neighbor now. How: This names it.
+
+
+
+		if ( newIndNum === 0 && document.activeElement === preButRef.current ) nexButRef.current?.focus(); // What: First Focus Call. Why: The first photo has no Previous, which held focus. How: This moves focus to Next.
+
+
+
+		if ( newIndNum === phoRecArr.length - 1 && document.activeElement === nexButRef.current ) preButRef.current?.focus(); // What: Last Focus Call. Why: The last photo has no Next, which held focus. How: This moves focus to Previous.
+
+
+	}, [ phoRecArr, vieIndNum ] ); // What: Callback Dependency Array. Why: The step reads the photos and the open photo's place. How: phoRecArr changes as photos come and go, and vieIndNum with each step.
+
+	// #endregion steVieFun
+
+
+
+	useEffect( () => { // What: Arrow Keys Effect. Why: A keyboard user steps through the photos with the left and right arrow keys while the viewer is open. How: This listens for them on the document, stepping back or on.
+
+
+		if ( vieIdeStr === '' ) return; // What: Closed Guard. Why: The keys step only an open viewer. How: This returns.
+
+
+
+		const keyDowFun = ( keyEveObj : KeyboardEvent ) : void => { // What: Key Down Function. Why: Only a bare left or right arrow steps the viewer. How: This steps back for the left arrow and on for the right.
+
+
+			if ( keyEveObj.altKey || keyEveObj.ctrlKey || keyEveObj.metaKey || keyEveObj.shiftKey ) return; // What: Modifier Guard. Why: A held modifier means a browser or system shortcut. How: This returns.
+
+
+
+			if ( keyEveObj.key === 'ArrowLeft' ) steVieFun( -1 ); // What: Left Step Call. Why: The left arrow points back. How: This opens the photo before.
+
+			else if ( keyEveObj.key === 'ArrowRight' ) steVieFun( 1 ); // What: Right Step Call. Why: The right arrow points on. How: This opens the photo after.
+
+
+		};
+
+
+
+		document.addEventListener( 'keydown', keyDowFun ); // What: Listener Add Call. Why: The keys work wherever focus sits in the viewer. How: This listens on the document.
+
+
+
+		return () => document.removeEventListener( 'keydown', keyDowFun ); // What: Cleanup Return. Why: A closed viewer, or a new step function, takes the old listener away. How: This removes it.
+
+
+	}, [ steVieFun, vieIdeStr ] ); // What: Effect Dependency Array. Why: The listener belongs to the open viewer and its current step. How: vieIdeStr opens and closes the viewer, and steVieFun changes with the photos.
 
 
 
@@ -674,11 +773,10 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 				multiple
 				type='file'
 
-				aria-hidden='true'
-				tabIndex={ -1 }
+				aria-label='Add photos'
 
 				onChange={ ( chaEveObj ) => { const filValArr = [ ...chaEveObj.target.files ?? [] ]; chaEveObj.target.value = ''; if ( filValArr.length > 0 ) void addFilFun( filValArr ); } } // What: Pick Change Handler. Why: The picked photos are shared, and picking the same ones again should still work. How: This copies the files, empties the picker, and shares them.
-			/>{ /* What: Photos File Input Element. Why: The device's own picker chooses photos, and Add photos stands in for its plain look. How: This is hidden from sight, screen readers, and the Tab order. */ }
+			/>{ /* What: Photos File Input Element. Why: The device's own picker chooses photos, and Add photos stands in for its plain look. How: This is taken out of the layout, which hides it from sight, screen readers, and the Tab order, and named for the button that opens it, so a checker that reads hidden fields still finds a label. */ }
 
 
 
@@ -765,7 +863,34 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 					<div className={ cssModObj.phoVieDiv }>{ /* What: Photo Viewer Div Element. Why: The photo, its line, and its actions read top to bottom. How: This stacks them. */ }
 
 
-						<div className={ cssModObj.vieImaDiv }>{ /* What: Viewer Image Div Element. Why: The photo shows whole, however it's shaped, with the steps to its neighbors over its sides. How: This frames it on a sunken tint, stacking the steps on it. */ }
+						<div
+							className={ cssModObj.vieImaDiv }
+
+							onPointerCancel={ () => { swiStaRef.current = null; } } // What: Pointer Cancel Handler. Why: A touch the browser takes over, such as a pinch, isn't a swipe. How: This forgets its start.
+							onPointerDown={ ( poiEveObj ) => { swiStaRef.current = poiEveObj.pointerType === 'mouse' ? null : { xcoNum : poiEveObj.clientX, ycoNum : poiEveObj.clientY }; } } // What: Pointer Down Handler. Why: A swipe is a finger or pen's, since a mouse drags the photo instead. How: This records a touch's start, ignoring a mouse.
+							onPointerUp={ ( poiEveObj ) => { // What: Pointer Up Handler. Why: A sideways swipe across the photo steps to its neighbor, the way a phone's own gallery does. How: This steps on for a swipe left and back for a swipe right, once the touch has moved 50px, mostly sideways.
+
+
+								const staPoiObj = swiStaRef.current; // What: Start Point Object. Why: The swipe is measured from where the touch began. How: This reads it.
+
+								swiStaRef.current = null; // What: Start Clear Assignment. Why: The next touch starts fresh. How: This forgets the start.
+
+
+
+								if ( staPoiObj === null ) return; // What: No Start Guard. Why: A mouse, or a touch the browser took over, has nothing to measure. How: This returns.
+
+
+
+								const difXcoNum = poiEveObj.clientX - staPoiObj.xcoNum; // What: Difference X-Coordinate Number. Why: A swipe moves sideways. How: This measures how far.
+								const difYcoNum = poiEveObj.clientY - staPoiObj.ycoNum; // What: Difference Y-Coordinate Number. Why: A mostly upright move is a scroll, not a swipe. How: This measures how far.
+
+
+
+								if ( Math.abs( difXcoNum ) >= 50 && Math.abs( difXcoNum ) > Math.abs( difYcoNum ) ) steVieFun( difXcoNum < 0 ? 1 : -1 ); // What: Swipe Step Call. Why: A finger dragged left pulls the next photo in, and dragged right the one before. How: This steps once the move passes 50px, a literal that only tunes the gesture, and is more sideways than upright.
+
+
+							} }
+						>{ /* What: Viewer Image Div Element. Why: The photo shows whole, however it's shaped, with the steps to its neighbors over its sides, and a swipe across it steps too. How: This frames it on a sunken tint, stacking the steps on it, and reads a touch's swipe. */ }
 
 
 							{ vieUrlStr !== null && ( // What: Image Check. Why: A photo whose thumbnail won't decrypt has nothing to show until its full photo arrives. How: This shows whichever it has.
@@ -795,7 +920,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 									aria-label='Previous photo'
 
-									onClick={ () => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoRecArr![ vieIndNum - 1 ].phoIdeStr ); if ( vieIndNum === 1 ) nexButRef.current?.focus(); } } // What: Previous Click Handler. Why: The viewer steps back with nothing left from this photo, and reaching the first takes this button away. How: This resets the viewer, opens the photo before, and at the first moves focus to Next. // What: Non-Null Note. Why: A photo is open, so the photos are in. How: The ! reads them as present.
+									onClick={ () => steVieFun( -1 ) }
 								>{ /* What: Viewer Step Button Previous Element. Why: The member steps back through the photos. How: This opens the one before, over the photo's left side. */ }
 
 
@@ -824,7 +949,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 									aria-label='Next photo'
 
-									onClick={ () => { setDelConBoo( false ); setVieErrStr( '' ); setVieStaStr( '' ); setVieIdeStr( phoRecArr[ vieIndNum + 1 ].phoIdeStr ); if ( vieIndNum === phoRecArr.length - 2 ) preButRef.current?.focus(); } } // What: Next Click Handler. Why: The viewer steps on with nothing left from this photo, and reaching the last takes this button away. How: This resets the viewer, opens the photo after, and at the last moves focus to Previous.
+									onClick={ () => steVieFun( 1 ) }
 								>{ /* What: Viewer Step Button Next Element. Why: The member steps on through the photos. How: This opens the one after, over the photo's right side. */ }
 
 
