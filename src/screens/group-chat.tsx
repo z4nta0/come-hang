@@ -24,6 +24,7 @@ import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message Li
 import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
 import { SheDiaCom       } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
 import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar and status dot wear their color. How: This names it.
+import { staDetFun       } from '../core/chat-status.ts';    // What: Status Details Function. Why: A photos line names its event. How: This reads the post's details.
 import { staKinFun       } from '../core/chat-status.ts';    // What: Status Kind Function. Why: A status post shows as a line rather than a message. How: This reads its kind.
 import { useEffect       } from 'react';                     // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
 import { useLayoutEffect } from 'react';                     // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
@@ -87,12 +88,13 @@ const RET_MIL_NUM = 1000;                                                       
 
 
 
-const STA_LIN_OBJ = { // What: Status Line Object. Why: Each kind of status post reads as its own line, naming its sender, or "You" for the member's own. How: This maps each kind to a function of the sender's name, empty for the member themselves.
+const STA_LIN_OBJ = { // What: Status Line Object. Why: Each kind of status post reads as its own line, naming its sender, or "You" for the member's own. How: This maps each kind to a function of the sender's name, empty for the member themselves, and the post's text, which a photos line reads its event from.
 
 
-	arr : ( namValStr : string ) : string => namValStr === '' ? 'You arrived' : `${ namValStr } arrived`,                                       // What: Arrived Line. Why: An arrival is said plainly. How: This names who arrived.
-	unk : ( namValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } posted an update this version of Come Hang can't show`, // What: Unknown Line. Why: A later version may post a kind this one doesn't know, which still shouldn't vanish. How: This says an update was posted.
-	way : ( namValStr : string ) : string => namValStr === '' ? "You're on the way" : `${ namValStr } is on the way`                            // What: Way Line. Why: Leaving is said plainly. How: This names who's on the way.
+	arr : ( namValStr : string ) : string => namValStr === '' ? 'You arrived' : `${ namValStr } arrived`,                                                                   // What: Arrived Line. Why: An arrival is said plainly. How: This names who arrived.
+	pho : ( namValStr : string, texValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } just uploaded photos for ${ staDetFun( texValStr )!.titTexStr }`, // What: Photos Line. Why: A burst of shared photos is said once, naming the event (Section 20). How: This names who shared them and the event's title as it stood. // What: Non-Null Note. Why: A post reads as the photos kind only once its details read well. How: The ! reads them as present.
+	unk : ( namValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } posted an update this version of Come Hang can't show`,                             // What: Unknown Line. Why: A later version may post a kind this one doesn't know, which still shouldn't vanish. How: This says an update was posted.
+	way : ( namValStr : string ) : string => namValStr === '' ? "You're on the way" : `${ namValStr } is on the way`                                                        // What: Way Line. Why: Leaving is said plainly. How: This names who's on the way.
 
 
 };
@@ -343,7 +345,7 @@ function PinEveCom ( { eveRecObj, onOpeFun } : PecProTyp ) : React.JSX.Element {
 
 
 
-type GccProTyp = { groIdeStr : string, groNamStr : string }; // What: Group Chat Component Props Type. Why: The chat belongs to one group, whose name the composer shows. How: This types GroChaCom's props.
+type GccProTyp = { groIdeStr : string, groNamStr : string, ownBoo : boolean }; // What: Group Chat Component Props Type. Why: The chat belongs to one group, whose name the composer shows and whose owner can delete any photo of the next event. How: This types GroChaCom's props.
 
 // #region GroChaCom
 
@@ -365,17 +367,19 @@ type GccProTyp = { groIdeStr : string, groNamStr : string }; // What: Group Chat
  *                          is.
  * @param props.groNamStr - Group Name String: The group's name, shown in the
  *                          composer's hint.
+ * @param props.ownBoo    - Owner Boolean: Whether the member owns the
+ *                          group, so can delete any of the event's photos.
  *
  * @returns The chat.
  *
  * @example
  * ```tsx
- * GroChaCom({ groIdeStr, groNamStr }) // => <GroChaCom />
+ * GroChaCom({ groIdeStr, groNamStr, ownBoo }) // => <GroChaCom />
  * ```
  *
 */
 
-function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element {
+function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.Element {
 
 
 	const logBotRef = useRef( true );                   // What: Log Bottom Reference. Why: The log follows new messages only while someone reads at its end. How: This holds whether it sits at its bottom.
@@ -558,14 +562,14 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 							const staKinStr = staKinFun( mesRecObj.texValStr );                                    // What: Status Kind String. Why: A status post shows as a line rather than a message. How: This reads its kind, null for a typed message.
 
 
-							if ( staKinStr !== null ) return ( // What: Status Return. Why: A status post says who's on their way or has arrived, in a line of its own. How: This returns its list item.
+							if ( staKinStr !== null ) return ( // What: Status Return. Why: A status post says who's on their way, has arrived, or just shared photos, in a line of its own. How: This returns its list item.
 
 
 								<li
 									key={ mesRecObj.mesIdeStr }
 
 									className={ cssModObj.chaStaIte }
-								>{ /* What: Chat Status Item Element. Why: Leaving and arriving show at a glance in the chat (Section 10). How: This centers the sender's color dot beside the line and its time. */ }
+								>{ /* What: Chat Status Item Element. Why: Leaving, arriving, and shared photos show at a glance in the chat (Sections 10 and 20). How: This centers the sender's color dot beside the line and its time. */ }
 
 
 									<span
@@ -575,7 +579,7 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 										aria-hidden='true'
 									/>{ /* What: Status Dot Span Element. Why: The member's color ties the line to them at a glance. How: This draws a small circle, hidden from screen readers, which read the name. */ }
 
-									<p className={ cssModObj.staTexPar }>{ STA_LIN_OBJ[ staKinStr ]( ownMesBoo ? '' : senNamStr ) } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when. How: This shows the line for its kind and the time after it. */ }
+									<p className={ cssModObj.staTexPar }>{ STA_LIN_OBJ[ staKinStr ]( ownMesBoo ? '' : senNamStr, mesRecObj.texValStr ) } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when. How: This shows the line for its kind and the time after it. */ }
 
 
 								</li>
@@ -730,6 +734,7 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 							eveRecObj={ eveNexObj }
 							groIdeStr={ groIdeStr }
 							memRecMap={ memRecMap }
+							ownBoo={ ownBoo }
 							uidValStr={ uidValStr }
 							varStr='pan'
 						/>{ /* What: Event Details Component. Why: The panel shows the event's details and bring-list. How: This draws them. */ }
@@ -753,6 +758,7 @@ function GroChaCom ( { groIdeStr, groNamStr } : GccProTyp ) : React.JSX.Element 
 							eveRecObj={ eveNexObj }
 							groIdeStr={ groIdeStr }
 							memRecMap={ memRecMap }
+							ownBoo={ ownBoo }
 							uidValStr={ uidValStr }
 							varStr='she'
 						/>{ /* What: Event Details Component. Why: The sheet shows the event's details and bring-list. How: This draws them. */ }

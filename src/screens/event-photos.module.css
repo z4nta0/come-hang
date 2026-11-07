@@ -1,0 +1,489 @@
+
+
+
+/**
+ * event-photos.module.css = Event Photos Module
+ *
+ * @summary
+ * Styles for EvePhoCom: the Photos heading with its actions beside it, a
+ * grid of square thumbnails three to a row, and the messages below it, then
+ * the viewer sheet's photo shown whole above who shared it, the previous and
+ * next buttons, and its actions. The part's status shows in the muted color
+ * while the viewer's is for screen readers alone, and failures show in the
+ * dark error color.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region evePhoSec */
+
+.evePhoSec { /* What: Event Photos Section. Why: The heading, the grid, and the messages read top to bottom. How: This stacks them a tier 3 space apart. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+
+/* #region phoTopDiv */
+
+.phoTopDiv { /* What: Photos Top Div. Why: The heading and its actions share a line, wrapping when the sheet is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.phoParHea { /* What: Photos Part Heading. Why: The part starts a new part of the details, with its actions at the row's far end. How: This sets its heading at Base Plus 2 and lets it take the row's spare room. */
+
+
+	flex-grow : 1;
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.phoSavBut { /* What: Photos Save Button. Why: Saving every photo is a lighter action than adding them, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.phoSavBut:hover { /* What: Hovered Photos Save Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.phoSavBut:active { /* What: Pressed Photos Save Button. Why: A press should register before the photos are gathered. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Photos Save Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.phoSavBut { /* What: Motionless Photos Save Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion phoTopDiv */
+
+
+
+.phoFilInp { /* What: Photos File Input. Why: The device's picker opens from Add photos, so its own plain control shouldn't show. How: This takes it out of the layout, while a script can still open it. */
+
+
+	display : none;
+
+
+}
+
+.phoNotPar { /* What: Photos Note Paragraph. Why: A loading, failed, empty, or not yet open grid is a quiet note. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+/* #region phoGriUno */
+
+.phoGriUno { /* What: Photos Grid Unordered List. Why: The photos read as one grid of equal tiles, three to a row, a short last row centered at the others' width, since the count changes with every photo and often has no column count that divides it. How: This lays the tiles out in a wrapping flex row a tier 5 space apart, centered, which grid can't do for a short last row. */
+
+
+	display         : flex;
+	flex-wrap       : wrap;
+	gap             : var( --tie-ver-005 ) var( --tie-hor-005 ); /* Tier Vertical 5 ~= 4.732px, Tier Horizontal 5, about 4.732px - 6.268px */
+	justify-content : center;
+	list-style      : none;
+	margin          : 0;
+	padding         : 0;
+
+
+}
+
+.phoTilIte { /* What: Photo Tile Item. Why: Every tile takes a third of the row. How: This sets its width to a third of what's left after the two gaps. */
+
+
+	flex : 0 0 calc( ( 100% - var( --tie-hor-005 ) * 2 ) / 3 ); /* Tier Horizontal 5, about 4.732px - 6.268px */
+
+
+}
+
+
+
+/* #region phoTilBut */
+
+.phoTilBut { /* What: Photo Tile Button. Why: Each photo is a square tile that opens it, tinted while its thumbnail loads, and lifts like a card. How: This fills the tile square with rounded corners, clips the thumbnail to them, and eases its hover lift, press scale, and focus ring. */
+
+
+	aspect-ratio     : 1;
+	background-color : var( --acc-tin-col );                  /* Accent Tint Color = #E7E8FA */
+	border           : 0;
+	border-radius    : var( --rad-bor-sma );                  /* Radius Border Small ~= 8.304px */
+	cursor           : pointer;
+	display          : grid;
+	overflow         : hidden;
+	padding          : 0;
+	transition       : transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : 100%;
+
+
+}
+.phoTilBut:hover { /* What: Hovered Photo Tile Button. Why: A tile that repeats as an item lifts to show it opens. How: This raises it 2px, a literal since no spacing step lands within 10%. */
+
+
+	transform : translateY( -2px );
+
+
+}
+.phoTilBut:active { /* What: Pressed Photo Tile Button. Why: A press should register before the viewer opens, undoing the lift. How: This presses the tile in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Photo Tile Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.phoTilBut { /* What: Motionless Photo Tile Button. Why: The lift, press, and focus looks should switch at once, still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.phoThuIma { /* What: Photo Thumbnail Image. Why: A thumbnail fills its square, however the photo is shaped. How: This covers the tile, cropping what overflows. */
+
+
+	height     : 100%;
+	object-fit : cover;
+	width      : 100%;
+
+
+}
+
+/* #endregion phoTilBut */
+
+/* #endregion phoGriUno */
+
+
+
+.phoStaPar { /* What: Photos Status Paragraph. Why: How many photos are on their way, or were added, is worth seeing as well as hearing. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+.phoStaPar:empty { /* What: Empty Photos Status Paragraph. Why: The status stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the part's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+.phoErrPar { /* What: Photos Error Paragraph. Why: A failed share or save should be clear below the grid. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.phoErrPar:empty { /* What: Empty Photos Error Paragraph. Why: The alert stays in the page while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the part's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+
+
+/* #region phoVieDiv */
+
+.phoVieDiv { /* What: Photo Viewer Div. Why: The photo, its line, and its actions read top to bottom. How: This stacks them a tier 3 space apart. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+
+/* #region vieImaDiv */
+
+.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the actions off a short screen. How: This centers it in a rounded frame at least a third of the screen tall. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+	border-radius    : var( --rad-bor-sma ); /* Radius Border Small ~= 8.304px */
+	display          : grid;
+	min-height       : 33svh;
+	overflow         : hidden;
+	place-items      : center;
+
+
+}
+
+.vieImaIma { /* What: Viewer Image Image. Why: The whole photo shows, leaving room for its actions below. How: This fits it within the frame's width and 60% of the screen's height. */
+
+
+	max-height : 60svh;
+	max-width  : 100%;
+	object-fit : contain;
+
+
+}
+
+/* #endregion vieImaDiv */
+
+
+
+/* #region vieMetPar */
+
+.vieMetPar { /* What: Viewer Meta Paragraph. Why: Who shared the photo leads the line. How: This sets it bold. */
+
+
+	font-weight : 700;
+
+
+}
+
+.vieTimSpa { /* What: Viewer Time Span. Why: When it was shared is a quieter fact after the name. How: This sets it in the muted text color at the normal weight. */
+
+
+	color       : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-weight : 400;
+
+
+}
+
+/* #endregion vieMetPar */
+
+
+
+.vieNotPar { /* What: Viewer Note Paragraph. Why: A full photo still loading or on its way is a quiet note. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+/* #region vieNavDiv */
+
+.vieNavDiv { /* What: Viewer Navigation Div. Why: Previous and next are a pair. How: This sets them side by side in two equal columns a tier 4 space apart. */
+
+
+	column-gap            : var( --tie-hor-004 ); /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-columns : 1fr 1fr;
+
+
+}
+
+.viePlaBut { /* What: Viewer Plain Button. Why: The viewer's actions are lighter than the photo, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, focus ring, and the color and border it loses when off. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), border-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.viePlaBut:hover:enabled { /* What: Hovered Viewer Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row, and one that's off isn't live. How: This fills it with the accent tint while it's on. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.viePlaBut:active:enabled { /* What: Pressed Viewer Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly while it's on. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+.viePlaBut:disabled { /* What: Off Viewer Plain Button. Why: Previous at the first photo, Next at the last, and Save before the photo loads do nothing, and should look it. How: This draws it in the muted text color with a muted border. */
+
+
+	border-color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	color        : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	cursor       : default;
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Viewer Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.viePlaBut { /* What: Motionless Viewer Plain Button. Why: The hover, press, focus, and off looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion vieNavDiv */
+
+
+
+/* #region vieActDiv */
+
+.vieActDiv { /* What: Viewer Actions Div. Why: Saving and deleting, or the delete's question and answers, sit together in a row, wrapping when the sheet is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.vieAskPar { /* What: Viewer Ask Paragraph. Why: The question reads before its answers, on a line of its own. How: This sets it bold across the whole row. */
+
+
+	flex-basis  : 100%;
+	font-weight : 700;
+
+
+}
+
+.vieDanBut { /* What: Viewer Danger Button. Why: Confirming a delete is a destructive step and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.vieDanBut:hover { /* What: Hovered Viewer Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
+
+
+	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
+
+
+}
+.vieDanBut:active { /* What: Pressed Viewer Danger Button. Why: A press should register before the photo is deleted. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Viewer Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.vieDanBut { /* What: Motionless Viewer Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* What: Viewer Plain Button Pointer. Why: Saving, deleting, and keeping use the viewer's plain button. How: Its rule sits in the vieNavDiv region. */
+
+/* #endregion vieActDiv */
+
+
+
+.vieStaPar { /* What: Viewer Status Paragraph. Why: The viewer shows a save to sight already, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.vieErrPar { /* What: Viewer Error Paragraph. Why: A failed save or delete should be clear below the actions. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.vieErrPar:empty { /* What: Empty Viewer Error Paragraph. Why: The alert stays in the viewer while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the viewer's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+/* #endregion phoVieDiv */
+
+/* #endregion evePhoSec */
+
+

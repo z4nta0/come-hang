@@ -43,6 +43,8 @@ const DEL_POI_ARR = [ // What: Delete Point Array. Why: Someone should know ever
 
 	"You leave every group you're in.",
 
+	"The photos you've shared are deleted.",
+
 	'Each group you own passes to the member who joined it earliest, or is deleted if no one else is in it.',
 
 	'Your Google link and the upgrade go too, if you have them.',

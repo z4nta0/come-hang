@@ -76,7 +76,7 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 	{ // What: Free Question Row. Why: Price is the first question. How: This answers it.
 
 
-		ansStr : 'Yes. Chat, events, bring-lists, and location sharing are free for everyone. The one-time upgrade only raises how many groups you can start, and how many people they hold.',
+		ansStr : 'Yes. Chat, events, bring-lists, photos, and location sharing are free for everyone. The one-time upgrade only raises how many groups you can start, and how many people and photos they hold.',
 		queStr : 'Is it really free?'
 
 
@@ -603,7 +603,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 						<h2 className={ cssModObj.secTitHea }>Free for your whole group</h2>{ /* What: Section Title Heading Element. Why: The section's point is said first. How: This sets it as the heading. */ }
 
-						<p className={ cssModObj.freLeaPar }>Chat, events, bring-lists, and location sharing are all free. The upgrade is for people who start more than one group.</p>{ /* What: Free Lead Paragraph Element. Why: Everything that matters is free. How: This says so before the numbers. */ }
+						<p className={ cssModObj.freLeaPar }>Chat, events, bring-lists, photos, and location sharing are all free. The upgrade is for people who start more than one group, and gives their groups more room.</p>{ /* What: Free Lead Paragraph Element. Why: Everything that matters is free. How: This says so before the numbers. */ }
 
 
 
@@ -633,6 +633,14 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 									<dt className={ cssModObj.plaLimTer }>People in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
 
 									<dd className={ cssModObj.plaLimDet }>20</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos per event in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>100</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos each person adds to one</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>30</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
 
 
 								</dl>
@@ -665,6 +673,14 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 									<dt className={ cssModObj.plaLimTer }>People in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
 
 									<dd className={ cssModObj.plaLimDet }>50</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos per event in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>300</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos each person adds to one</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>60</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
 
 
 								</dl>

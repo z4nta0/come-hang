@@ -34,9 +34,11 @@ import type { SheHanTyp } from '../ui/sheet.tsx';     // What: Sheet Handle Type
  *
  * @summary
  * The open group's Events section: a button to plan an event and a card for
- * each event that hasn't ended, soonest first. A card opens a sheet with the
- * event's details and bring-list, where its creator or the group's owner can
- * change it, in a form sheet over it, or cancel it after confirming. Each
+ * each event that hasn't ended, soonest first, then under "Recently ended" the
+ * events that have ended but not yet been deleted, so their photos and bring-
+ * lists can still be reached, the most recent first. A card opens a sheet with
+ * the event's details and bring-list, where its creator or the group's owner
+ * can change it, in a form sheet over it, or cancel it after confirming. Each
  * plan, change, and cancel is announced, and the list reads the events again.
  *
  * Sections:
@@ -50,6 +52,88 @@ import type { SheHanTyp } from '../ui/sheet.tsx';     // What: Sheet Handle Type
 
 
 // #region Components
+
+type EccProTyp = { eveRecObj : EveRecTyp, onOpeFun : () => void }; // What: Event Card Component Props Type. Why: A card shows one event and opens its details. How: This types EveCarCom's props.
+
+// #region EveCarCom
+
+/**
+ * EveCarCom = Event Card Component
+ *
+ * @summary
+ * Renders one event's card in a list: a date block with its month and day,
+ * or "Today" and its start hour, beside its title and a line with its hours
+ * and, when it has one, its place. The card is a button that calls onOpeFun
+ * to open the event's details.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param props.eveRecObj - Event Record Object: The event to show.
+ * @param props.onOpeFun  - On Open Function: Opens the event's details.
+ *
+ * @returns The card's list item.
+ *
+ * @example
+ * ```tsx
+ * EveCarCom({ eveRecObj, onOpeFun }) // => <EveCarCom />
+ * ```
+ *
+*/
+
+function EveCarCom ( { eveRecObj, onOpeFun } : EccProTyp ) : React.JSX.Element {
+
+
+	const eveBloObj = eveBloFun( eveRecObj.staTimNum, Date.now() );          // What: Event Block Object. Why: The card leads with when the event is. How: This gives the block's two lines.
+	const eveRanStr = eveRanFun( eveRecObj.staTimNum, eveRecObj.endTimNum ); // What: Event Range String. Why: The line leads with the hours. How: This formats them.
+
+
+
+	return (
+
+
+		<li>{ /* What: Event Item Element. Why: Each event is one entry in its list. How: This holds its card. */ }
+
+
+			<button
+				className={ cssModObj.eveCarBut }
+
+				type='button'
+
+				aria-haspopup='dialog'
+
+				onClick={ onOpeFun }
+			>{ /* What: Event Card Button Element. Why: Each event is a card that opens its details and bring-list. How: This lays the date block beside the title and line. */ }
+
+
+				<span className={ cssModObj.carDatSpa }>{ /* What: Card Date Span Element. Why: The date is the first thing read. How: This stacks the block's small and large lines on a tint. */ }
+
+
+					<span className={ cssModObj.datTopSpa }>{ eveBloObj.topStr }</span>{ /* What: Date Top Span Element. Why: The month, or "Today", tops the block. How: This shows the small line. */ }
+
+					<span className={ cssModObj.datBotSpa }>{ eveBloObj.botStr }</span>{ /* What: Date Bottom Span Element. Why: The day, or today's start hour, is the block's large line. How: This shows it. */ }
+
+
+				</span>
+
+				<span className={ cssModObj.carTitSpa }>{ eveRecObj.titTexStr }</span>{ /* What: Card Title Span Element. Why: The event is known by its title. How: This shows it. */ }
+
+				<span className={ cssModObj.carLinSpa }>{ eveRanStr }{ eveRecObj.locTexStr !== '' && <><span aria-hidden='true'> · </span><span className={ cssModObj.carHidSpa }>, </span>{ eveRecObj.locTexStr }</> }</span>{ /* What: Card Line Span Element. Why: The hours and place say when and where, and a screen reader should hear a comma where sight sees a dot. How: This shows the hours, then the place after a dot hidden from screen readers and a comma hidden from sight, when there is a place. */ }
+
+
+			</button>
+
+
+		</li>
+
+
+	);
+
+
+}
+
+// #endregion EveCarCom
+
+
 
 type GecProTyp = { groIdeStr : string, ownBoo : boolean }; // What: Group Events Component Props Type. Why: The section belongs to one group, whose owner can change any event. How: This types GroEveCom's props.
 
@@ -98,7 +182,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 	const [ canConBoo, setCanConBoo ] = useState( false );                                    // What: Cancel Confirm Boolean And Setter. Why: Cancelling asks to confirm first. How: This is true while the confirmation shows.
 	const [ canErrStr, setCanErrStr ] = useState( '' );                                       // What: Cancel Error String And Setter. Why: A failed cancel is announced in the sheet. How: This holds the message, empty when there's none.
-	const [ eveRecArr, setEveRecArr ] = useState< EveRecTyp[] | null >( null );               // What: Event Record Array And Setter. Why: The section lists the events. How: This holds those that haven't ended, null until read.
+	const [ eveRecArr, setEveRecArr ] = useState< EveRecTyp[] | null >( null );               // What: Event Record Array And Setter. Why: The section lists the events. How: This holds those not yet deleted, null until read.
 	const [ forEveObj, setForEveObj ] = useState< EveRecTyp | null >( null );                 // What: Form Event Object And Setter. Why: The form plans a new event or changes this one. How: This holds the event being changed, null for a new one.
 	const [ forKeyNum, setForKeyNum ] = useState( 0 );                                        // What: Form Key Number And Setter. Why: Each opening of the form starts afresh. How: This counts the openings, keying the form.
 	const [ lisErrBoo, setLisErrBoo ] = useState( false );                                    // What: List Error Boolean And Setter. Why: A list that can't load says so. How: This is true once a read fails.
@@ -111,6 +195,9 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 	const selEveObj = eveRecArr?.find( ( eveRecObj ) => eveRecObj.eveIdeStr === selIdeStr ) ?? null; // What: Selected Event Object. Why: The sheet shows the open event as the list last read it. How: This finds it, null when none is open or it's gone.
 	const ediAllBoo = selEveObj !== null && ( ownBoo || selEveObj.creUidStr === uidValStr );         // What: Edit Allowed Boolean. Why: Only the creator or the owner changes or cancels an event. How: This is true for them.
+
+	const endRecArr = ( eveRecArr ?? [] ).filter( ( eveRecObj ) => eveRecObj.endTimNum <= Date.now() ).reverse(); // What: Ended Record Array. Why: Ended events are listed apart, the most recent first. How: This keeps those that have ended, newest first.
+	const upcRecArr = eveRecArr?.filter( ( eveRecObj ) => eveRecObj.endTimNum > Date.now() ) ?? null;             // What: Upcoming Record Array. Why: The main list shows what's still to come or under way. How: This keeps those that haven't ended, null until read.
 
 
 
@@ -133,7 +220,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 
 
-	useEffect( () => { // What: Events Load Effect. Why: The list reads the events when it opens and after each change. How: This reads them and keeps those that haven't ended.
+	useEffect( () => { // What: Events Load Effect. Why: The list reads the events when it opens and after each change. How: This reads them, ended ones included until they're deleted.
 
 
 		let actValBoo = true; // What: Active Value Boolean. Why: A read finishing after another began, or after the section closed, mustn't change it. How: This is true until the cleanup runs.
@@ -146,7 +233,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 
 
-			setEveRecArr( lisRecArr.filter( ( eveRecObj ) => eveRecObj.endTimNum > Date.now() ) ); // What: Events Set Call. Why: An event that has ended is no longer planned. How: This keeps those still to come or under way.
+			setEveRecArr( lisRecArr ); // What: Events Set Call. Why: Events to come and those just ended are both shown. How: This keeps every event not yet deleted.
 
 			setLisErrBoo( false ); // What: List Error Clear Call. Why: A read that worked replaces an earlier failure. How: This clears the flag.
 
@@ -251,6 +338,10 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 
 
+	const opeEveFun = ( eveIdeStr : string ) : void => { setSelIdeStr( eveIdeStr ); setCanConBoo( false ); setCanErrStr( '' ); detHanRef.current?.opeFun(); }; // What: Open Event Function. Why: A card opens its event's details with no confirmation or failure left from before. How: This picks the event, resets the cancel, and opens the sheet.
+
+
+
 	return (
 
 
@@ -281,71 +372,72 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 
 
 
-			{ eveRecArr === null || eveRecArr.length === 0 ? ( // What: List Empty Check. Why: An empty space would read as broken. How: This says the list is loading, couldn't load, or is empty, or else shows the cards.
+			{ upcRecArr === null || upcRecArr.length === 0 ? ( // What: List Empty Check. Why: An empty space would read as broken. How: This says the list is loading, couldn't load, or has nothing to come, or else shows the cards.
 
 
-				<p className={ cssModObj.eveNotPar }>{ eveRecArr !== null ? 'Nothing planned yet.' : lisErrBoo ? "The events couldn't load." : 'Loading events…' }</p> // What: Events Note Paragraph Element. Why: The list's state should be said. How: This shows the note that fits.
+				<p className={ cssModObj.eveNotPar }>{ upcRecArr !== null ? 'Nothing planned yet.' : lisErrBoo ? "The events couldn't load." : 'Loading events…' }</p> // What: Events Note Paragraph Element. Why: The list's state should be said. How: This shows the note that fits.
 
 
-			) : ( // What: List Branch. Why: Events to show get their cards. How: This shows the list.
+			) : ( // What: List Branch. Why: Events to come get their cards. How: This shows the list.
 
 
 				<ul className={ cssModObj.eveLisUno }>{ /* What: Events List Unordered List Element. Why: The events read as one list. How: This stacks a card for each. */ }
 
 
-					{ eveRecArr.map( ( eveRecObj ) => { // What: Event Card Map. Why: Each event gets its own card. How: This renders one per event.
+					{ upcRecArr.map( ( eveRecObj ) => ( // What: Event Card Map. Why: Each event to come gets its own card. How: This renders one per event.
 
 
-						const eveBloObj = eveBloFun( eveRecObj.staTimNum, Date.now() );              // What: Event Block Object. Why: The card leads with when the event is. How: This gives the block's two lines.
-						const eveRanStr = eveRanFun( eveRecObj.staTimNum, eveRecObj.endTimNum ); // What: Event Range String. Why: The line leads with the hours. How: This formats them.
+						<EveCarCom
+							key={ eveRecObj.eveIdeStr }
+
+							eveRecObj={ eveRecObj }
+
+							onOpeFun={ () => opeEveFun( eveRecObj.eveIdeStr ) }
+						/> // What: Event Card Component. Why: A card opens its event's details. How: This draws it.
 
 
-
-						return (
-
-
-							<li key={ eveRecObj.eveIdeStr }>{ /* What: Event Item Element. Why: Each event is one entry in the list. How: This holds its card. */ }
-
-
-								<button
-									className={ cssModObj.eveCarBut }
-
-									type='button'
-
-									aria-haspopup='dialog'
-
-									onClick={ () => { setSelIdeStr( eveRecObj.eveIdeStr ); setCanConBoo( false ); setCanErrStr( '' ); detHanRef.current?.opeFun(); } } // What: Card Click Handler. Why: A card opens its event's details with no confirmation or failure left from before. How: This picks the event, resets the cancel, and opens the sheet.
-								>{ /* What: Event Card Button Element. Why: Each event is a card that opens its details and bring-list. How: This lays the date block beside the title and line. */ }
-
-
-									<span className={ cssModObj.carDatSpa }>{ /* What: Card Date Span Element. Why: The date is the first thing read. How: This stacks the block's small and large lines on a tint. */ }
-
-
-										<span className={ cssModObj.datTopSpa }>{ eveBloObj.topStr }</span>{ /* What: Date Top Span Element. Why: The month, or "Today", tops the block. How: This shows the small line. */ }
-
-										<span className={ cssModObj.datBotSpa }>{ eveBloObj.botStr }</span>{ /* What: Date Bottom Span Element. Why: The day, or today's start hour, is the block's large line. How: This shows it. */ }
-
-
-									</span>
-
-									<span className={ cssModObj.carTitSpa }>{ eveRecObj.titTexStr }</span>{ /* What: Card Title Span Element. Why: The event is known by its title. How: This shows it. */ }
-
-									<span className={ cssModObj.carLinSpa }>{ eveRanStr }{ eveRecObj.locTexStr !== '' && <><span aria-hidden='true'> · </span><span className={ cssModObj.carHidSpa }>, </span>{ eveRecObj.locTexStr }</> }</span>{ /* What: Card Line Span Element. Why: The hours and place say when and where, and a screen reader should hear a comma where sight sees a dot. How: This shows the hours, then the place after a dot hidden from screen readers and a comma hidden from sight, when there is a place. */ }
-
-
-								</button>
-
-
-							</li>
-
-
-						);
-
-
-					} ) }
+					) ) }
 
 
 				</ul>
+
+
+			) }
+
+
+
+			{ endRecArr.length > 0 && ( // What: Ended Check. Why: An event that has ended stays until it's deleted, 48 hours later, so its photos and list can still be reached (Section 20). How: This lists the ended events under their own heading.
+
+
+				<>{ /* What: Ended Fragment. Why: The heading and its list show together. How: This groups them without adding an element. */ }
+
+
+					<h3 className={ cssModObj.endLisHea }>Recently ended</h3>{ /* What: Ended List Heading Element. Why: Ended events are set apart from those to come. How: This names their list. */ }
+
+
+
+					<ul className={ cssModObj.eveLisUno }>{ /* What: Events List Unordered List Element. Why: The ended events read as one list. How: This stacks a card for each, the most recent first. */ }
+
+
+						{ endRecArr.map( ( eveRecObj ) => ( // What: Ended Card Map. Why: Each ended event gets its own card. How: This renders one per event.
+
+
+							<EveCarCom
+								key={ eveRecObj.eveIdeStr }
+
+								eveRecObj={ eveRecObj }
+
+								onOpeFun={ () => opeEveFun( eveRecObj.eveIdeStr ) }
+							/> // What: Event Card Component. Why: A card opens its event's details. How: This draws it.
+
+
+						) ) }
+
+
+					</ul>
+
+
+				</>
 
 
 			) }
@@ -418,15 +510,22 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 									<>{ /* What: Controls Fragment. Why: Changing and cancelling sit side by side. How: This groups them without adding an element. */ }
 
 
-										<button
-											className={ cssModObj.actPlaBut }
+										{ selEveObj.endTimNum > Date.now() && ( // What: Change Check. Why: An event that has ended stays as it was for its review window, as the rules require. How: This offers Change only until it ends.
 
-											type='button'
 
-											aria-haspopup='dialog'
+											<button
+												className={ cssModObj.actPlaBut }
 
-											onClick={ () => { setForEveObj( selEveObj ); setForKeyNum( ( preKeyNum ) => preKeyNum + 1 ); forHanRef.current?.opeFun(); } } // What: Change Click Handler. Why: Changing starts from the event's own details. How: This fills the form with the event, starts it afresh, and opens its sheet over this one.
-										>Change</button>{ /* What: Action Plain Button Element. Why: The creator or owner changes the event. How: This opens the form. */ }
+												type='button'
+
+												aria-haspopup='dialog'
+
+												onClick={ () => { setForEveObj( selEveObj ); setForKeyNum( ( preKeyNum ) => preKeyNum + 1 ); forHanRef.current?.opeFun(); } } // What: Change Click Handler. Why: Changing starts from the event's own details. How: This fills the form with the event, starts it afresh, and opens its sheet over this one.
+											>Change</button> // What: Action Plain Button Element. Why: The creator or owner changes the event. How: This opens the form.
+
+
+										) }
+
 
 										<button
 											ref={ canButRef }
@@ -464,6 +563,7 @@ function GroEveCom ( { groIdeStr, ownBoo } : GecProTyp ) : React.JSX.Element {
 							eveRecObj={ selEveObj }
 							groIdeStr={ groIdeStr }
 							memRecMap={ memRecMap }
+							ownBoo={ ownBoo }
 							uidValStr={ uidValStr }
 							varStr='she'
 						/>{ /* What: Event Details Component. Why: The sheet shows the event's details and bring-list. How: This draws them. */ }

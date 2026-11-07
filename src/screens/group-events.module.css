@@ -246,6 +246,19 @@
 /* #endregion eveLisUno */
 
 
+
+.endLisHea { /* What: Ended List Heading. Why: Ended events are set apart from those to come, and a heading sits closer to its list than the section's parts sit to each other. How: This sets it at Base Plus 2 and pulls the list up to a tier 3 space below it. */
+
+
+	font-size     : var( --fon-siz-p02 );                                /* Font Size Base Plus 2 ~= 19.304px */
+	margin-bottom : calc( var( --tie-ver-003 ) - var( --tie-ver-002 ) ); /* Tier Vertical 3 ~= 14.572px, Tier Vertical 2 ~= 25.572px */
+
+
+}
+
+/* What: Events List Unordered List Pointer. Why: The ended events' list shares the first list's look. How: Its rule sits in the eveLisUno region above. */
+
+
 .eveStaPar { /* What: Events Status Paragraph. Why: The list itself shows a change to sight, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
 
 

@@ -701,7 +701,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 					<>{ /* What: Delete Fragment. Why: The note and the deletion sit in the part as its own children. How: This groups them without adding an element. */ }
 
 
-						<p className={ cssModObj.endNotPar }>{ "As the owner, you can't leave the group. Hand it to another member first, or delete it. Deleting removes its chat, events, and members for everyone, and can't be undone." }</p>{ /* What: End Note Paragraph Element. Why: The owner should know why there's no leave, and what deleting does. How: This says both. */ }
+						<p className={ cssModObj.endNotPar }>{ "As the owner, you can't leave the group. Hand it to another member first, or delete it. Deleting removes its chat, events, photos, and members for everyone, and can't be undone." }</p>{ /* What: End Note Paragraph Element. Why: The owner should know why there's no leave, and what deleting does. How: This says both. */ }
 
 
 

@@ -26,6 +26,7 @@ import { ref             } from 'firebase/database';         // What: Ref. Why: 
 import { remove          } from 'firebase/database';         // What: Remove. Why: Waiting-on entries and delivered messages are deleted. How: This deletes one.
 import { serverTimestamp } from 'firebase/database';         // What: Server Timestamp. Why: The rules require a message's time to be the server's. How: This asks the server to fill it in.
 import { set             } from 'firebase/database';         // What: Set. Why: A message is written under an ID drawn first. How: This writes it there.
+import { staPhoFun       } from '../core/chat-status.ts';    // What: Status Photos Function. Why: A photos post is sent as a message's text. How: This builds it.
 import { startAt         } from 'firebase/database';         // What: Start At. Why: The rules let a member read from their own join time exactly. How: This starts the query there.
 import { staTexFun       } from '../core/chat-status.ts';    // What: Status Text Function. Why: A status post is sent as a message's text. How: This builds it.
 
@@ -381,7 +382,8 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 
 
-const chaStaFun = async ( groIdeStr : string, staKinStr : StaKinTyp ) : Promise< string > => mesSenFun( groIdeStr, staTexFun( staKinStr ) ); // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat (Section 10). How: This sends the status post's text and returns its ID.
+const chaPhoFun = ( groIdeStr : string, eveIdeStr : string, titTexStr : string ) : Promise< string > => mesSenFun( groIdeStr, staPhoFun( eveIdeStr, titTexStr ) ); // What: Chat Photos Function. Why: A burst of shared photos posts one status line to the chat (Section 20). How: This sends the photos post's text, naming the event, and returns its ID.
+const chaStaFun = ( groIdeStr : string, staKinStr : StaKinTyp ) : Promise< string > => mesSenFun( groIdeStr, staTexFun( staKinStr ) );                                   // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat (Section 10). How: This sends the status post's text and returns its ID.
 
 
 
@@ -504,7 +506,7 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 // #region Exports
 
-export { chaSenFun, chaStaFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The screens send messages and status posts, catch up, and watch through these. How: This exports the functions.
+export { chaPhoFun, chaSenFun, chaStaFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The screens send messages and status posts, catch up, and watch through these. How: This exports the functions.
 
 // #endregion Exports
 

@@ -381,6 +381,7 @@ function GroFraCom ( { curGroObj, focBoo, groRecArr, onGonFun, onRecFun, secNamS
 
 						groIdeStr={ curGroObj.ideStr }
 						groNamStr={ curGroObj.namStr }
+						ownBoo={ curGroObj.ownBoo }
 					/> // What: Group Chat Component. Why: The chat is the group's first section. How: This shows the open group's chat.
 
 

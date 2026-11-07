@@ -69,7 +69,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li>You don't sign up. The app makes an anonymous identity on your device the first time you start or join a group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li>What you write and share in a group, such as messages, events, your name in the group, and your location, is encrypted on your device before it's sent, so we can't read it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>What you write and share in a group, such as messages, events, photos, your name in the group, and your location, is encrypted on your device before it's sent, so we can't read it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>Some details have to stay readable for the app to work, such as your group's name, who's in it, and when messages were sent. They're listed below.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -90,7 +90,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>What you share in a group</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Chat messages, events and their bring-lists, the name you use in each group, and your location are encrypted on your device, with a key only the group's members hold, before they're sent to our servers. We store them, but we can't read them.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Chat messages, events and their bring-lists, photos, the name you use in each group, and your location are encrypted on your device, with a key only the group's members hold, before they're sent to our servers. We store them, but we can't read them.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h3>What stays readable</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
@@ -110,6 +110,8 @@ function PriPolCom () : React.JSX.Element {
 				<li>who sent each message and when, and which members haven't received it yet</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>each event's start and end times, who planned it, and who has claimed each item on its bring-list</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
+				<li>who shared each photo and when, the size of its file, and how many photos each member has added to an event</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>whether a member has the app open right now</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -148,7 +150,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>What stays on your device</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Your encryption keys, your chat history, the places of your groups' events, and settings such as light or dark mode are stored on your device, in your browser's storage. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Your encryption keys, your chat history, the places of your groups' events, and settings such as light or dark mode are stored on your device, in your browser's storage. Photos you open are kept only while the app is open, unless you save them to your device. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>How we use information</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -187,6 +189,8 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>Events and their bring-lists</strong> are deleted 48 hours after the event ends. Your device keeps only each event's place, to suggest it when your group plans its next event, until you leave the group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
+				<li><strong>Photos</strong> are deleted with their event, 48 hours after it ends, or sooner when the member who shared one or the group's owner deletes it. Before a photo is shared, your device shrinks it, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
 				<li><strong>Your location</strong> is deleted an hour after your last update, or when the event ends.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Requests to join</strong> are deleted once they're answered, or after 7 days.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
@@ -195,7 +199,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>Notices</strong> are deleted after 30 days, and <strong>push tokens</strong> 60 days after your device last opened the app.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>A group</strong> is kept until its owner deletes it, which deletes its members, events, and chat for everyone. When you leave a group or are removed, your membership is deleted.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>A group</strong> is kept until its owner deletes it, which deletes its members, events, photos, and chat for everyone. When you leave a group or are removed, your membership is deleted.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Your identity</strong>, meaning your ID, your public key, your list of groups, and whether you've bought the upgrade, is kept while you use the app, and deleted when you delete your data or ask us to. If you're in no group, haven't bought the upgrade or linked a Google account, and haven't opened the app for 180 days, it's deleted automatically.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -315,13 +319,13 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>Your content</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>You keep ownership of what you post: messages, events, bring-lists, names, and anything else you share (your content). You give us permission to store, encrypt, send, and delete your content as needed to run Come Hang, and for nothing else. That permission ends once your content is deleted from our servers.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>You keep ownership of what you post: messages, photos, events, bring-lists, names, and anything else you share (your content). You give us permission to store, encrypt, send, and delete your content as needed to run Come Hang, and for nothing else. That permission ends once your content is deleted from our servers.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<p>Your content is shared with the members of the group you post it in. They can read it, keep it, take screenshots of it, or pass it on, and a message delivered to their devices can't be taken back. Only share what you're comfortable sharing with them. You're responsible for your content, and you confirm you have the right to share it.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Groups</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>A group's owner controls its settings, can remove members, and can delete the group, which deletes its chat, events, and members for everyone. Any member can let in someone who asks to join, or decline or block them. If an owner deletes their data, each group they own passes to the member who joined it earliest. We don't moderate groups, and we can't read what's said in them, so we aren't responsible for what members post or for disagreements between them. You can leave a group at any time.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>A group's owner controls its settings, can remove members and delete anyone's photos, and can delete the group, which deletes its chat, events, photos, and members for everyone. Any member can let in someone who asks to join, or decline or block them. If an owner deletes their data, each group they own passes to the member who joined it earliest. We don't moderate groups, and we can't read what's said in them, so we aren't responsible for what members post or for disagreements between them. You can leave a group at any time.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Location sharing</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
@@ -340,7 +344,7 @@ function TerSerCom () : React.JSX.Element {
 
 				<li>harass, threaten, stalk, or bully anyone, or follow someone's location without their permission</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li>share content that sexualizes minors, promotes violence, or infringes someone else's rights, such as their copyright or privacy</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>share content that sexualizes minors, promotes violence, or infringes someone else's rights, such as their copyright or privacy, including photos of people who haven't agreed to be shared</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>pretend to be someone else, or mislead people about who you are</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 

@@ -8,6 +8,7 @@ import cssModObj from './event-details.module.css'; // What: CSS Module Object. 
 
 import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Adding to the list and saving an item's edit are the details' leading actions. How: This draws their buttons.
 import { eveDatFun } from '../utils/date.ts';       // What: Event Date Function. Why: The details give the event's full date and hours. How: This formats them.
+import { EvePhoCom } from './event-photos.tsx';     // What: Event Photos Component. Why: An event's photos sit with its details. How: This draws the Photos part.
 import { IcoSvgCom } from '../ui/icon.tsx';         // What: Icon SVG Component. Why: Each item's remove button shows a cross. How: This draws it.
 import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Function. Why: A claim shows its member's avatar. How: This takes their initials.
 import { iteAddFun } from '../state/items.ts';      // What: Item Add Function. Why: Any member adds to the list. How: This adds an open item.
@@ -220,7 +221,7 @@ function IteEdiCom ( { asgMemObj, ideStr, iteRecObj, memRecMap, onCanFun, onSavF
 
 
 
-type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members and marking the member's own claims, in the sheet or the panel. How: This types EveDetCom's props.
+type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, ownBoo : boolean, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members, marking the member's own claims, and letting the owner delete any photo, in the sheet or the panel. How: This types EveDetCom's props.
 
 // #region EveDetCom
 
@@ -228,14 +229,14 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  * EveDetCom = Event Details Component
  *
  * @summary
- * Renders an event's details and its bring-list, watching the list while
- * shown. Claiming, letting go, and removing act on one item, adding takes
- * what's typed, and one change runs at a time. Choosing an item's label turns
- * its row into a form for its label and who's bringing it, and once the form
- * saves or cancels, focus returns to the label. A change that lands is
- * announced through a status region, and one that fails through an alert,
- * saying when someone already claimed the item or a label is outside its
- * limits. A list that can't load says so. The variant keeps the box's ID
+ * Renders an event's details, its bring-list, and its Photos part, watching
+ * the list while shown. Claiming, letting go, and removing act on one item,
+ * adding takes what's typed, and one change runs at a time. Choosing an item's
+ * label turns its row into a form for its label and who's bringing it, and
+ * once the form saves or cancels, focus returns to the label. A change that
+ * lands is announced through a status region, and one that fails through an
+ * alert, saying when someone already claimed the item or a label is outside
+ * its limits. A list that can't load says so. The variant keeps the box's ID
  * unique when the sheet and the panel both hold the details. Key it by the
  * event, so another event starts afresh.
  *
@@ -244,6 +245,8 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  * @param props.eveRecObj - Event Record Object: The event to show.
  * @param props.groIdeStr - Group Identifier String: The event's group.
  * @param props.memRecMap - Member Record Map: The group's members, by UID.
+ * @param props.ownBoo    - Owner Boolean: Whether the member owns the
+ *                          group.
  * @param props.uidValStr - UID Value String: This member's UID.
  * @param props.varStr    - Variant String: Where the details sit, pan for
  *                          the panel or she for the sheet.
@@ -257,7 +260,7 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  *
 */
 
-function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : EdcProTyp ) : React.JSX.Element {
+function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, ownBoo, uidValStr, varStr } : EdcProTyp ) : React.JSX.Element {
 
 
 	const addIdeStr = `briAddInp--${ varStr }`; // What: Add Identifier String. Why: The sheet and the panel both hold a box, and IDs have to be unique. How: This names the box with its variant.
@@ -440,7 +443,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 	return (
 
 
-		<div className={ cssModObj.eveDetDiv }>{ /* What: Event Details Div Element. Why: The details and the list read top to bottom. How: This stacks the facts, the list, and the add form. */ }
+		<div className={ cssModObj.eveDetDiv }>{ /* What: Event Details Div Element. Why: The details, the list, and the photos read top to bottom. How: This stacks the facts, the list, the add form, and the Photos part. */ }
 
 
 			<p className={ cssModObj.detDatPar }>{ eveDatFun( eveRecObj.staTimNum, eveRecObj.endTimNum ) }</p>{ /* What: Details Date Paragraph Element. Why: When the event is comes first. How: This shows its full date and hours. */ }
@@ -692,6 +695,17 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 				role='alert'
 			>{ errMesStr }</p>{ /* What: Bring Error Paragraph Element. Why: A change that fails has to be told at once. How: This holds the alert, empty from the first render. */ }
+
+
+
+			<EvePhoCom
+				eveRecObj={ eveRecObj }
+				groIdeStr={ groIdeStr }
+				memRecMap={ memRecMap }
+				ownBoo={ ownBoo }
+				uidValStr={ uidValStr }
+				varStr={ varStr }
+			/>{ /* What: Event Photos Component. Why: An event's photos sit with its details, below the bring-list. How: This draws the Photos part. */ }
 
 
 		</div>
