@@ -40,13 +40,15 @@ import type { SarRetTyp } from './settings-actions.ts';     // What: Settings Ac
  * personal-settings.tsx = Personal Settings
  *
  * @summary
- * The parts of Settings that belong to this phone and the member's account
- * rather than a group, so they show whether or not the member is in one:
- * this phone's appearance, notifications, and how to install the app until
- * it's installed; the account's Google link, upgrade, and the deletion of
- * the member's data; and the privacy policy and the terms, each opening in
- * a sheet. Each change is announced, and a change that fails says why,
- * through a status and an alert of the parts' own.
+ * The parts of Settings that belong to this device and the member's account
+ * rather than a group, so they show whether or not the member is in one: this
+ * device's appearance, notifications, and how to install the app until it's
+ * installed; the account's Google link, upgrade, and the deletion of the
+ * member's data; About, with a note from the app's maker, its version, links
+ * to the maker's website, the source code, and support, and a tip on Ko-fi;
+ * and the privacy policy and the terms, each opening in a sheet. Each change
+ * is announced, and a change that fails says why, through the status and alert
+ * of the Settings section holding them.
  *
  * Sections:
  *  - Constants
@@ -107,16 +109,17 @@ type PscProTyp = { setActObj : SarRetTyp }; // What: Personal Settings Component
  * PerSetCom = Personal Settings Component
  *
  * @summary
- * Renders the phone's part, the account's part, and the legal documents'
- * part as siblings in whatever Settings column holds them, running their
- * changes through the section's own runners, so the section's one status
+ * Renders the device's part, the account's part, About, and the legal
+ * documents' part as siblings in whatever Settings column holds them, running
+ * their changes through the section's own runners, so the section's one status
  * and alert announce them. Picking an appearance applies and keeps it at once;
- * the notifications button turns them on or off for this phone; Install
- * shows the browser's prompt where it can; Link Google account links
- * through Google's popup, focus then landing on the account part's
- * heading; and Buy the upgrade opens Polar's checkout once Google is
- * linked. The account is read as the parts open, and the part says it's
- * checking until it's read.
+ * the notifications button turns them on or off for this device; Install shows
+ * the browser's prompt where it can; Link Google account links through
+ * Google's popup, focus then landing on the account part's heading; and Buy
+ * the upgrade opens Polar's checkout once Google is linked. About's links and
+ * its tip open in a new tab, except the support address, which opens an email.
+ * The account is read as the parts open, and the part says it's checking until
+ * it's read.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -468,6 +471,107 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 				) }
+
+
+			</section>
+
+
+
+			<section
+				className={ cssModObj.aboSetSec }
+
+				aria-labelledby='aboSetHea'
+			>{ /* What: About Settings Section Element. Why: Someone can learn who makes Come Hang, find its source code, support it, and reach its maker. How: This holds its heading, note, details, and tip. */ }
+
+
+				<h3
+					id='aboSetHea'
+
+					className={ cssModObj.aboTitHea }
+				>About</h3>{ /* What: About Title Heading Element. Why: The part needs a heading. How: This names it. */ }
+
+				<p className={ cssModObj.aboNotPar }>You can find out more information about myself by visiting the link below to my personal website, including links to some of my other projects. You will also find the link to this app's source code on GitHub. Its source is available under the PolyForm Noncommercial License 1.0.0, which allows anyone to freely fork and modify the project's source code for any noncommercial purpose (so no selling the software or making money off it in any way), as long as the license and its notice come along with it. Please be responsible with the source code, because I am just one person maintaining the project in their free time trying to make a living. This is not some big company with vast resources trying to extract every dollar that they can.</p>{ /* What: About Note Paragraph Element. Why: The maker introduces themself and the app's license in their own words. How: This points to the links below it. */ }
+
+
+
+				<dl className={ cssModObj.aboInfDes }>{ /* What: About Information Description List Element. Why: The app's version and where to find its maker, its source code, and its support read as names and values. How: This pairs them. */ }
+
+
+					<dt className={ cssModObj.aboKeyTer }>Version</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the version. */ }
+
+					<dd className={ cssModObj.aboValDet }>{ __APP_VERSION__ }</dd>{ /* What: About Value Details Element. Why: Someone reporting a problem can say which release they have. How: This shows the version the build was made from. */ }
+
+					<dt className={ cssModObj.aboKeyTer }>Creator</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the maker's website. */ }
+
+
+					<dd className={ cssModObj.aboValDet }>{ /* What: About Value Details Element. Why: The note points to the maker's website. How: This links it, opening in a new tab. */ }
+
+
+						<a
+							className={ cssModObj.aboLinAnc }
+
+							href='https://techgeek.dev/'
+							rel='noopener noreferrer'
+							target='_blank'
+						>techgeek.dev</a>{ /* What: About Link Anchor Element. Why: The value is a place to go. How: This links it, opening in a new tab. */ }
+
+
+					</dd>
+
+
+					<dt className={ cssModObj.aboKeyTer }>Source code</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the source code. */ }
+
+
+					<dd className={ cssModObj.aboValDet }>{ /* What: About Value Details Element. Why: The note points to the app's source code. How: This links its repository, opening in a new tab. */ }
+
+
+						<a
+							className={ cssModObj.aboLinAnc }
+
+							href='https://github.com/z4nta0/come-hang'
+							rel='noopener noreferrer'
+							target='_blank'
+						>github.com/z4nta0/come-hang</a>{ /* What: About Link Anchor Element. Why: The value is a place to go. How: This links it, opening in a new tab. */ }
+
+
+					</dd>
+
+
+					<dt className={ cssModObj.aboKeyTer }>Support</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the support address. */ }
+
+
+					<dd className={ cssModObj.aboValDet }>{ /* What: About Value Details Element. Why: Someone with a question or a problem can write in. How: This links the support address, opening an email to it. */ }
+
+
+						<a
+							className={ cssModObj.aboLinAnc }
+
+							href='mailto:support@comehang.app'
+						>support@comehang.app</a>{ /* What: About Link Anchor Element. Why: The value is a place to go. How: This links it. */ }
+
+
+					</dd>
+
+
+				</dl>
+
+
+
+				<p className={ cssModObj.aboNotPar }>Enjoying Come Hang? You can support it with a tip on Ko-fi. It's never required, and always appreciated.</p>{ /* What: About Note Paragraph Element. Why: The app is free, and a tip helps keep it going. How: This invites one, saying it's never required. */ }
+
+				<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The tip's link sits below its note, like the other parts' buttons. How: This holds it in a row that wraps. */ }
+
+
+					<a
+						className={ cssModObj.aboTipAnc }
+
+						href='https://ko-fi.com/techgeekdev'
+						rel='noopener noreferrer'
+						target='_blank'
+					>Buy me a coffee</a>{ /* What: About Tip Anchor Element. Why: A tip is given on Ko-fi, outside the app. How: This opens the maker's Ko-fi page in a new tab, drawn as an outlined pill. */ }
+
+
+				</div>
 
 
 			</section>
