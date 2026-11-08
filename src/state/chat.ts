@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { briTexFun       } from '../core/chat-status.ts';    // What: Bring Text Function. Why: A bring-list post is sent as a message's text. How: This builds it.
 import { chaMesFun       } from '../core/text-limits.ts';    // What: Chat Message Function. Why: A message is checked by the app alone. How: This applies the limits.
 import { child           } from 'firebase/database';         // What: Child. Why: A message's waiting-on entries sit under it. How: This names one.
 import { collection      } from 'firebase/firestore';        // What: Collection. Why: The waiting-on list names every other member. How: This names the members collection.
@@ -31,6 +32,7 @@ import { startAt         } from 'firebase/database';         // What: Start At. 
 import { staTexFun       } from '../core/chat-status.ts';    // What: Status Text Function. Why: A status post is sent as a message's text. How: This builds it.
 
 
+import type { BriKinTyp    } from '../core/chat-status.ts';    // What: Bring Kind Type. Why: A bring-list post names its kind. How: This types it.
 import type { DataSnapshot } from 'firebase/database';         // What: Data Snapshot. Why: Each message arrives as one. How: This types it.
 import type { MesRecTyp    } from '../platform/chat-store.ts'; // What: Message Record Type. Why: A handled message is stored and handed on as a record. How: This types it.
 import type { StaKinTyp    } from '../core/chat-status.ts';    // What: Status Kind Type. Why: A status post names its kind. How: This types it.
@@ -86,6 +88,7 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: Chat retent
 
 // #region Module State
 
+const ownLisMap = new Map< string, Set< ( mesRecObj : MesRecTyp ) => void > >(); // What: Own Listener Map. Why: A watch skips this device's own message while it's being sent, so a post made away from the chat, such as a bring-list line, would wait for a reload. How: This holds each group's open watches, which a send hands its message to once it's kept.
 const senPenSet = new Set< string >(); // What: Send Pending Set. Why: The database tells this device's listeners of its own write at once, before the server accepts or refuses it, and a refused message mustn't be shown or kept. How: This holds the IDs of messages this device is sending until the server answers.
 
 // #endregion Module State
@@ -253,16 +256,19 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  * @summary
  * Sends a message's text to a group's chat as given, encrypted under the
  * group key, stamped with the server's time, and waiting on every other
- * member. While the server decides on it, this
- * device's own watch skips it, so a refused message is never shown or kept.
- * Once it's accepted, the sender's device keeps its own copy, and a message
- * nobody waits on, in a group of one, is deleted from the server.
- * Resolves with the message's ID.
+ * member, marked quiet when asked, so it pushes nobody. While the server
+ * decides on it, this device's own watch skips it, so a refused message is
+ * never shown or kept. Once it's accepted, the sender's device keeps its own
+ * copy, which the group's open watches are handed too, and a message nobody
+ * waits on, in a group of one, is deleted from the server. Resolves with
+ * the message's ID.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param groIdeStr - Group Identifier String: The group's ID.
  * @param mesTexStr - Message Text String: The message's text, as sent.
+ * @param quiValBoo - Quiet Value Boolean: Whether the message pushes
+ *                    nobody, false by default.
  *
  * @returns A promise that resolves with the message's ID.
  *
@@ -273,7 +279,7 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  *
 */
 
-const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
+const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = false ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
 
 
 	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The message names its sender. How: This reads the identity.
@@ -299,7 +305,9 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 			iv         : b64EncFun( mesEncObj.iniVecArr ),                                           // What: IV. Why: The message decrypts with it. How: This encodes it.
 			senderUid  : uidValStr,                                                                  // What: Sender UID. Why: The rules require the sender's own UID. How: This names them.
 			sentAt     : serverTimestamp(),                                                          // What: Sent At. Why: The rules require the server's time. How: This asks the server to fill it in.
-			waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ) // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
+			waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ), // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
+
+			...( quiValBoo ? { quiet : true } : {} ) // What: Quiet Spread. Why: A bring-list line shouldn't push anyone, and the push function can't read the encrypted text. How: This marks the message quiet in the clear when asked, and adds nothing otherwise.
 
 
 		} );
@@ -315,7 +323,7 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 
 
-	await mesPutFun({ // What: Store Call. Why: The sender keeps their own message. How: This stores it, timed by the server's clock as the device estimates it.
+	const ownRecObj : MesRecTyp = { // What: Own Record Object. Why: The sender keeps their own message, and their open chat shows it. How: This builds the record, timed by the server's clock as the device estimates it.
 
 
 		groIdeStr,                     // What: Group Identifier String. Why: The message is kept under its group. How: This names it.
@@ -325,7 +333,12 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 		texValStr : mesTexStr          // What: Text Value String. Why: The history shows the text. How: This keeps the text as sent.
 
 
-	});
+	};
+
+
+	await mesPutFun( ownRecObj ); // What: Store Call. Why: The sender keeps their own message. How: This stores it.
+
+	ownLisMap.get( groIdeStr )?.forEach( ( onMesFun ) => onMesFun( ownRecObj ) ); // What: Own Hand Call. Why: An open chat shows the message even when it was sent from elsewhere, such as a bring-list line. How: This hands it to each of the group's watches, which merge it without repeats.
 
 
 
@@ -382,6 +395,7 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 
 
+const chaBriFun = ( groIdeStr : string, kinValStr : BriKinTyp, eveIdeStr : string, titTexStr : string, labArr : string[], couNum : number ) : Promise< string > => mesSenFun( groIdeStr, briTexFun( kinValStr, eveIdeStr, titTexStr, labArr, couNum ), true ); // What: Chat Bring Function. Why: A burst of bring-list changes posts one quiet status line to the chat (Section 11.5). How: This sends the bring-list post, marked quiet.
 const chaPhoFun = ( groIdeStr : string, eveIdeStr : string, titTexStr : string ) : Promise< string > => mesSenFun( groIdeStr, staPhoFun( eveIdeStr, titTexStr ) ); // What: Chat Photos Function. Why: A burst of shared photos posts one status line to the chat (Section 20). How: This sends the photos post's text, naming the event, and returns its ID.
 const chaStaFun = ( groIdeStr : string, staKinStr : StaKinTyp ) : Promise< string > => mesSenFun( groIdeStr, staTexFun( staKinStr ) );                                   // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat (Section 10). How: This sends the status post's text and returns its ID.
 
@@ -448,7 +462,9 @@ const chaSynFun = async ( groIdeStr : string ) : Promise< number > => { // What:
  * @summary
  * Watches a group's chat from this member's join time, handling each
  * message as it arrives, those already waiting first, and handing each
- * readable one to the callback. A read the rules refuse, such as one made
+ * readable one to the callback, along with each message this device sends
+ * to the group while the watch is open, once it's kept. A read the rules
+ * refuse, such as one made
  * before the membership mirror holds this member, ends the watch and calls
  * onErrFun, when given, so the caller can start it again. Resolves with the
  * function that stops watching.
@@ -478,7 +494,16 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 
 
-	return onChildAdded( query( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ), orderByChild( 'sentAt' ), startAt( chaCtxObj.joiTimNum ) ), ( chiSnaObj ) => { // What: Watch Return. Why: The caller stops watching when the chat closes. How: This listens from the join time and returns the listener's unsubscribe.
+	const ownLisSet = ownLisMap.get( groIdeStr ) ?? new Set< ( mesRecObj : MesRecTyp ) => void >(); // What: Own Listener Set. Why: The watch is handed this device's own messages too. How: This reads the group's set, or makes one.
+
+
+	ownLisSet.add( onMesFun ); // What: Own Add Call. Why: A send hands its message to every open watch. How: This adds the callback.
+
+	ownLisMap.set( groIdeStr, ownLisSet ); // What: Own Keep Call. Why: A new set has to be found by the next send. How: This keeps it under the group.
+
+
+
+	const stoWatFun = onChildAdded( query( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ), orderByChild( 'sentAt' ), startAt( chaCtxObj.joiTimNum ) ), ( chiSnaObj ) => { // What: Stop Watch Function. Why: The listener has to stop when the chat closes. How: This listens from the join time and keeps the listener's unsubscribe.
 
 
 		queProObj = queProObj.then( async () => { // What: Queue Assignment. Why: A message's handling has to finish before the next one's starts. How: This chains it after the last.
@@ -493,7 +518,19 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 		} );
 
 
-	}, onErrFun ); // What: Cancel Callback. Why: A refused read ends the listener, which the caller should hear about. How: This hands the error to onErrFun.
+	}, ( errCatObj ) => { ownLisSet.delete( onMesFun ); onErrFun( errCatObj ); } ); // What: Cancel Callback. Why: A refused read ends the listener, which the caller should hear about, and an ended watch shouldn't be handed messages. How: This drops the callback, then hands the error to onErrFun.
+
+
+
+	return () => { // What: Stop Return. Why: The caller stops watching when the chat closes. How: This returns the function that stops both.
+
+
+		stoWatFun(); // What: Watch Stop Call. Why: The listener closes. How: This stops it.
+
+		ownLisSet.delete( onMesFun ); // What: Own Drop Call. Why: A closed chat shouldn't be handed messages. How: This drops the callback.
+
+
+	};
 
 
 };
@@ -506,7 +543,7 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 // #region Exports
 
-export { chaPhoFun, chaSenFun, chaStaFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The screens send messages and status posts, catch up, and watch through these. How: This exports the functions.
+export { chaBriFun, chaPhoFun, chaSenFun, chaStaFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The screens send messages and status posts, catch up, and watch through these. How: This exports the functions.
 
 // #endregion Exports
 

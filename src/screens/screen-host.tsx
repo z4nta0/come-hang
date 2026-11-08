@@ -597,7 +597,8 @@ function ScrHosCom () : React.JSX.Element {
 
 			<GroFraCom
 				curGroObj={ curGroObj }
-				eveIdeStr={ scrStaObj?.groStr === curGroObj?.ideStr ? scrStaObj?.eveStr : undefined } // What: Event Choice. Why: A chat line opens its event's photos in the Events section, only in the group it names. How: This reads the entry's event when it's for the group shown.
+				eveIdeStr={ scrStaObj?.groStr === curGroObj?.ideStr ? scrStaObj?.eveStr : undefined } // What: Event Choice. Why: A chat line opens its event in the Events section, only in the group it names. How: This reads the entry's event when it's for the group shown.
+				eveParStr={ scrStaObj?.groStr === curGroObj?.ideStr ? scrStaObj?.parStr : undefined } // What: Event Part Choice. Why: A bring-list line opens its event at the list rather than its photos, only in the group it names. How: This reads the entry's part when it's for the group shown.
 				focBoo={ scrStaObj?.focBoo === true && ( scrStaObj.groStr === undefined || curGroObj?.ideStr === scrStaObj.groStr ) } // What: Focus Request. Why: Only a group opened by a creation, a leave, a deletion, or getting groups back takes focus, and only the one the entry names, or the first, or the frame with no group, when it names none. How: This is true for the entry that change opened.
 				groRecArr={ visGroArr }
 				secNamStr={ scrStaObj?.groStr === undefined || scrStaObj.groStr === curGroObj?.ideStr ? scrStaObj?.secStr ?? 'chat' : 'chat' } // What: Section Name Choice. Why: The entry names the open section, and a group opened without one, or one that's gone, starts at its chat, which with no group is the welcome, while an entry naming no group, such as Settings opened before a first group arrived, keeps its section. How: This reads the entry's section when it's for the group shown or for none, else the chat.

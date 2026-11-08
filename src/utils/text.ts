@@ -6,9 +6,10 @@
  *
  * @summary
  * Small helpers for text, such as the initials that stand in for a name
- * where there's only room for a letter or two, or a plain piece of a file
- * name. Initials split text by what a reader sees as one character, so an
- * emoji or an accented letter is never cut in half.
+ * where there's only room for a letter or two, a plain piece of a file name,
+ * or a short list of names read as a phrase. Initials split text by what a
+ * reader sees as one character, so an emoji or an accented letter is never
+ * cut in half.
  *
  * Sections:
  *  - Helpers
@@ -101,13 +102,58 @@ const iniTexFun = ( namValStr : string ) : string => { // What: Initials Text Fu
 
 // #endregion iniTexFun
 
+
+
+// #region lisPhrFun
+
+/**
+ * lisPhrFun = List Phrase Function
+ *
+ * @summary
+ * Reads a list of names as an English phrase: one alone, two joined by
+ * "and", three with commas and a final "and", and past three the first two
+ * then how many more, from the total. It expects at least one name, and up
+ * to three, or the first three when the total is higher.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param namValArr - Name Value Array: The names to read, in order.
+ * @param totValNum - Total Value Number: How many names there are in all.
+ *
+ * @returns The phrase.
+ *
+ * @example
+ * ```ts
+ * lisPhrFun(['Chips', 'Salsa', 'Dip'], 5) // => 'Chips, Salsa, and 3 more'
+ * ```
+ *
+*/
+
+const lisPhrFun = ( namValArr : string[], totValNum : number ) : string => { // What: List Phrase Function. Why: A line naming a few things reads better as a sentence than as a list. How: This joins the names the way English does, counting the rest past three.
+
+
+	if ( totValNum > 3 ) return `${ namValArr[ 0 ] }, ${ namValArr[ 1 ] }, and ${ ( totValNum - 2 ).toLocaleString( 'en-US' ) } more`; // What: Many Return. Why: A long list would crowd the line. How: This names the first two and counts the rest.
+
+
+
+	if ( namValArr.length === 3 ) return `${ namValArr[ 0 ] }, ${ namValArr[ 1 ] }, and ${ namValArr[ 2 ] }`; // What: Three Return. Why: Three names read with commas and a final "and". How: This joins them so.
+
+
+
+	return namValArr.join( ' and ' ); // What: Few Return. Why: One name stands alone and two are joined by "and". How: This joins them.
+
+
+};
+
+// #endregion lisPhrFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { filNamFun, iniTexFun }; // What: Named Exports. Why: The group rail shows each group by its initials, and a download is named after what it holds. How: This exports both.
+export { filNamFun, iniTexFun, lisPhrFun }; // What: Named Exports. Why: The group rail shows each group by its initials, a download is named after what it holds, and a chat line names a few items. How: This exports the three.
 
 // #endregion Exports
 

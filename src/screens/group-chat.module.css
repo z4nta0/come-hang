@@ -455,7 +455,7 @@
 
 }
 
-.staPhoBut { /* What: Status Photos Button. Why: A photos line leads to its photos, so it reads as a link and presses like one. How: This sets it as text in the main accent, underlined, with no button chrome, and eases its hover color, press dim, and focus ring. */
+.staEveBut { /* What: Status Event Button. Why: A photos or bring-list line leads to its event's photos or list, so it reads as a link and presses like one. How: This sets it as text in the main accent, underlined, with no button chrome, and eases its hover color, press dim, and focus ring. */
 
 
 	background-color : transparent;
@@ -469,24 +469,24 @@
 
 
 }
-.staPhoBut:hover { /* What: Hovered Status Photos Button. Why: A text link shows it's live by color alone. How: This darkens it a step. */
+.staEveBut:hover { /* What: Hovered Status Event Button. Why: A text link shows it's live by color alone. How: This darkens it a step. */
 
 
 	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
 
 
 }
-.staPhoBut:active { /* What: Pressed Status Photos Button. Why: A button styled as text presses like a text link, by dimming. How: This dims it. */
+.staEveBut:active { /* What: Pressed Status Event Button. Why: A button styled as text presses like a text link, by dimming. How: This dims it. */
 
 
 	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
 
 
 }
-@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Status Photos Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Status Event Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
 
 
-	.staPhoBut { /* What: Motionless Status Photos Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+	.staEveBut { /* What: Motionless Status Event Button. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
 
 
 		transition : none;

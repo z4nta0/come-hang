@@ -6,6 +6,8 @@
 import cssModObj from './group-chat.module.css'; // What: CSS Module Object. Why: The chat is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
+import { briDetFun       } from '../core/chat-status.ts';    // What: Bring Details Function. Why: A bring-list line names its event and items. How: This reads the post's details.
+import { briFluFun       } from '../state/bring-lines.ts';   // What: Bring Flush Function. Why: Closing the event's sheet ends the member's bursts of list changes. How: This posts their chat lines.
 import { chaMesFun       } from '../core/text-limits.ts';    // What: Chat Message Function. Why: A message with characters the chat refuses is caught before it's sent. How: This checks it.
 import { chaSenFun       } from '../state/chat.ts';          // What: Chat Send Function. Why: The composer sends messages. How: This encrypts and sends one.
 import { chaWatFun       } from '../state/chat.ts';          // What: Chat Watch Function. Why: Messages show as they're sent. How: This watches the group's chat.
@@ -19,6 +21,7 @@ import { ideEnsFun       } from '../state/identity.ts';      // What: Identity E
 import { iniTexFun       } from '../utils/text.ts';          // What: Initials Text Function. Why: Each sender's avatar shows their initials. How: This takes them from the name.
 import { KEY_WAI_STR     } from '../state/groups.ts';        // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its chat. How: The chat shows this message then.
 import { linNorFun       } from '../core/text-limits.ts';    // What: Lines Normalize Function. Why: A message keeps its line breaks while each line is tidied. How: This tidies it as it'll be sent.
+import { lisPhrFun       } from '../utils/text.ts';          // What: List Phrase Function. Why: A bring-list line names its items as a phrase. How: This joins them the way English does.
 import { memLisFun       } from '../state/members.ts';       // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
 import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
 import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
@@ -30,7 +33,7 @@ import { staKinFun       } from '../core/chat-status.ts';    // What: Status Kin
 import { useEffect       } from 'react';                     // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
 import { useLayoutEffect } from 'react';                     // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
 import { useRef          } from 'react';                     // What: Use Reference. Why: The log's element and whether it sits at its bottom are read outside rendering. How: This holds both.
-import { useScrOpeFun    } from '../ui/screen.ts';           // What: Use Screen Open Function. Why: A photos line opens its event's photos in the Events section. How: This returns the function that opens a screen.
+import { useScrOpeFun    } from '../ui/screen.ts';           // What: Use Screen Open Function. Why: A photos or bring-list line opens its event's photos or list in the Events section. How: This returns the function that opens a screen.
 import { useState        } from 'react';                     // What: Use State. Why: The messages, members, event, and composer change while the chat is open. How: This holds each.
 
 
@@ -90,13 +93,15 @@ const RET_MIL_NUM = 1000;                                                       
 
 
 
-const STA_LIN_OBJ = { // What: Status Line Object. Why: Each kind of status post reads as its own line, naming its sender, or "You" for the member's own. How: This maps each kind to a function of the sender's name, empty for the member themselves, and the post's text, which a photos line reads its event from.
+const STA_LIN_OBJ = { // What: Status Line Object. Why: Each kind of status post reads as its own line, naming its sender, or "You" for the member's own. How: This maps each kind to a function of the sender's name, empty for the member themselves, and the post's text, which a photos or bring-list line reads its details from.
 
 
-	arr : ( namValStr : string ) : string => namValStr === '' ? 'You arrived' : `${ namValStr } arrived`,                                                                   // What: Arrived Line. Why: An arrival is said plainly. How: This names who arrived.
+	add : ( namValStr : string, texValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } added ${ lisPhrFun( briDetFun( texValStr )!.labArr, briDetFun( texValStr )!.couNum ) } to ${ briDetFun( texValStr )!.titTexStr }'s list`, // What: Added Line. Why: A burst of items added to an event's list is said once (Section 11.5). How: This names who added them, the items, and the event's title as it stood. // What: Non-Null Note. Why: The line is chosen only for a post whose details read well. How: The ! reads them as present.
+	arr : ( namValStr : string ) : string => namValStr === '' ? 'You arrived' : `${ namValStr } arrived`,                                                                     // What: Arrived Line. Why: An arrival is said plainly. How: This names who arrived.
+	cla : ( namValStr : string, texValStr : string ) : string => `${ namValStr === '' ? "You're" : `${ namValStr } is` } bringing ${ lisPhrFun( briDetFun( texValStr )!.labArr, briDetFun( texValStr )!.couNum ) } to ${ briDetFun( texValStr )!.titTexStr }`, // What: Claimed Line. Why: A burst of items claimed from an event's list is said once (Section 11.5). How: This names who's bringing them, the items, and the event's title as it stood. // What: Non-Null Note. Why: The line is chosen only for a post whose details read well. How: The ! reads them as present.
 	pho : ( namValStr : string, texValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } just uploaded photos for ${ staDetFun( texValStr )!.titTexStr }`, // What: Photos Line. Why: A burst of shared photos is said once, naming the event (Section 20). How: This names who shared them and the event's title as it stood. // What: Non-Null Note. Why: A post reads as the photos kind only once its details read well. How: The ! reads them as present.
-	unk : ( namValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } posted an update this version of Come Hang can't show`,                             // What: Unknown Line. Why: A later version may post a kind this one doesn't know, which still shouldn't vanish. How: This says an update was posted.
-	way : ( namValStr : string ) : string => namValStr === '' ? "You're on the way" : `${ namValStr } is on the way`                                                        // What: Way Line. Why: Leaving is said plainly. How: This names who's on the way.
+	unk : ( namValStr : string ) : string => `${ namValStr === '' ? 'You' : namValStr } posted an update this version of Come Hang can't show`,                               // What: Unknown Line. Why: A later version may post a kind this one doesn't know, which still shouldn't vanish. How: This says an update was posted.
+	way : ( namValStr : string ) : string => namValStr === '' ? "You're on the way" : `${ namValStr } is on the way`                                                          // What: Way Line. Why: Leaving is said plainly. How: This names who's on the way.
 
 
 };
@@ -577,18 +582,21 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 							const preRecObj = mesRecArr[ mesIndNum - 1 ] as MesRecTyp | undefined;                                                   // What: Previous Record Object. Why: A message close after its sender's last continues their run. How: This reads the one before it. // What: Type Assertion Note. Why: The first message has none before it. How: The as reads it as possibly missing.
 							const senNamStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' );                                   // What: Sender Name String. Why: A message names its sender, even one with no name yet or who left. How: This takes their name, or a stand-in.
 							const staKinStr = staKinFun( mesRecObj.texValStr );                                                                      // What: Status Kind String. Why: A status post shows as a line rather than a message. How: This reads its kind, null for a typed message.
+							const briDetObj = staKinStr === 'add' || staKinStr === 'cla' ? briDetFun( mesRecObj.texValStr ) : null;                  // What: Bring Details Object. Why: A bring-list line opens its event at the list. How: This reads the post's details, null for any other line.
 							const phoDetObj = staKinStr === 'pho' ? staDetFun( mesRecObj.texValStr ) : null;                                         // What: Photos Details Object. Why: A photos line opens its event. How: This reads the post's event, null for any other line.
+							const linEveStr = phoDetObj?.eveIdeStr ?? briDetObj?.eveIdeStr;                                                          // What: Line Event String. Why: A photos or bring-list line leads to its event. How: This reads the event's ID, undefined for any other line.
 							const staLinStr = staKinStr === null ? '' : STA_LIN_OBJ[ staKinStr ]( ownMesBoo ? '' : senNamStr, mesRecObj.texValStr ); // What: Status Line String. Why: A status post reads as its line. How: This words it for its kind, empty for a typed message.
 
 
-							if ( staKinStr !== null ) return ( // What: Status Return. Why: A status post says who's on their way, has arrived, or just shared photos, in a line of its own. How: This returns its list item.
+
+							if ( staKinStr !== null ) return ( // What: Status Return. Why: A status post says who's on their way, has arrived, just shared photos, or added to or claimed from a list, in a line of its own. How: This returns its list item.
 
 
 								<li
 									key={ mesRecObj.mesIdeStr }
 
 									className={ cssModObj.chaStaIte }
-								>{ /* What: Chat Status Item Element. Why: Leaving, arriving, and shared photos show at a glance in the chat (Sections 10 and 20). How: This centers the sender's color dot beside the line and its time. */ }
+								>{ /* What: Chat Status Item Element. Why: Leaving, arriving, shared photos, and bring-list changes show at a glance in the chat (Sections 10, 11.5, and 20). How: This centers the sender's color dot beside the line and its time. */ }
 
 
 									<span
@@ -598,7 +606,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 										aria-hidden='true'
 									/>{ /* What: Status Dot Span Element. Why: The member's color ties the line to them at a glance. How: This draws a small circle, hidden from screen readers, which read the name. */ }
 
-									<p className={ cssModObj.staTexPar }>{ phoDetObj !== null && eveIdeArr.includes( phoDetObj.eveIdeStr ) ? <button className={ cssModObj.staPhoBut } type='button' onClick={ () => scrOpeFun( { eveStr : phoDetObj.eveIdeStr, groStr : groIdeStr, scrStr : 'group', secStr : 'events' } ) }>{ staLinStr }</button> : staLinStr } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when, and a photos line leads to its photos while its event still exists (Section 20). How: This shows the line for its kind, as a button that opens the event's photos in the Events section for a photos line whose event is still listed, and the time after it. */ }
+									<p className={ cssModObj.staTexPar }>{ linEveStr !== undefined && eveIdeArr.includes( linEveStr ) ? <button className={ cssModObj.staEveBut } type='button' onClick={ () => scrOpeFun( { eveStr : linEveStr, groStr : groIdeStr, parStr : briDetObj !== null ? 'list' : undefined, scrStr : 'group', secStr : 'events' } ) }>{ staLinStr }</button> : staLinStr } <span className={ cssModObj.staTimSpa }>{ mesTimFun( mesRecObj.sntTimNum, Date.now() ) }</span></p>{ /* What: Status Text Paragraph Element. Why: The line says who and what, then when, and a photos or bring-list line leads to its photos or list while its event still exists (Sections 11.5 and 20). How: This shows the line for its kind, as a button that opens the event in the Events section at its photos or list for such a line whose event is still listed, and the time after it. */ }
 
 
 								</li>
@@ -769,7 +777,15 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 						ideStr='eveSheHea'
 						titStr={ eveNexObj.titTexStr }
 
-						onCloFun={ phoFluFun } // What: Sheet Close Handler. Why: Closing the event means the member is done adding photos, which the details stay mounted through. How: This ends the burst, posting its chat line.
+						onCloFun={ () => { // What: Sheet Close Handler. Why: Closing the event means the member is done adding photos and changing the list, which the details stay mounted through. How: This ends the bursts of photos and list changes, posting their chat lines.
+
+
+							phoFluFun(); // What: Photos Flush Call. Why: The details stay mounted through the close, so leaving them can't end the burst. How: This posts the photos line now.
+
+							briFluFun(); // What: Bring Flush Call. Why: The same holds for the list's changes. How: This posts the list lines now.
+
+
+						} }
 					>{ /* What: Event Sheet Dialog Component. Why: Below 1,100px wide, the pinned card opens the event's details over the chat. How: This holds them in a sheet titled with the event. */ }
 
 
