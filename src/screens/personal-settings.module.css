@@ -8,8 +8,9 @@
  * Styles for PerSetCom: this device's part with its appearance choices,
  * note, and buttons, the account's part with its notes and buttons, the About
  * part with its note, linked details, and tip, and each part's row of
- * buttons. The parts sit in whichever Settings column holds them, which
- * spaces them and holds their status and alert.
+ * buttons. Each part sits below a line, unless it leads the column, so the
+ * parts read apart. The parts sit in whichever Settings column holds them,
+ * which spaces them and holds their status and alert.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -19,11 +20,21 @@
 
 /* #region devSetSec */
 
-.devSetSec { /* What: Device Settings Section. Why: The heading, the appearance choice, the note, and the button read as one part. How: This stacks them a tier 3 space apart, in order, since the button's row shares its class with the other parts. */
+.devSetSec { /* What: Device Settings Section. Why: The heading, the appearance choice, the note, and the button read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order, since the button's row shares its class with the other parts. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+.devSetSec:first-of-type { /* What: Leading Device Settings Section. Why: With no group, this part comes first, straight below the title, where a line would divide nothing. How: This drops the line and its space. */
+
+
+	border-top  : 0;
+	padding-top : 0;
 
 
 }
@@ -194,11 +205,13 @@
 
 /* #region accSetSec */
 
-.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
+.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -243,11 +256,13 @@
 
 /* #region aboSetSec */
 
-.aboSetSec { /* What: About Settings Section. Why: The heading, note, details, and tip read as one part. How: This stacks them a tier 3 space apart. */
+.aboSetSec { /* What: About Settings Section. Why: The heading, note, details, and tip read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
