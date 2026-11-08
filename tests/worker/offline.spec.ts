@@ -41,14 +41,15 @@ test( 'the service worker takes over and opens the app without a connection', as
 
 	await page.reload(); // What: Offline Reload. Why: The cached page opens the app. How: This reloads with no network.
 
-	await expect( page.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Offline Root Check. Why: The app rendered from the cache. How: This waits for its heading.
+	await expect( page.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Offline Root Check. Why: The app rendered from the cache. How: This waits for the landing page's headline.
+	await expect( page.getByText( "You're offline.", { exact : false } ) ).toBeVisible();                             // What: Offline Banner Check. Why: Someone offline should be told what still works (Section 14). How: This waits for the banner's words.
 
 	expect( await page.evaluate( () => document.fonts.ready.then( () => [ ...new Set( [ ...document.fonts ].filter( ( fonFacObj ) => fonFacObj.status === 'loaded' ).map( ( fonFacObj ) => fonFacObj.family.replaceAll( '"', '' ) ) ) ].sort() ) ) ).toEqual( [ 'Bricolage Grotesque', 'Figtree' ] ); // What: Offline Fonts Check. Why: The app should keep its own fonts with no connection, which only works when the worker cached them. How: This waits for the page's fonts to settle and lists the families with a face loaded, which a font the cache missed would leave out.
 
 	await page.goto( '/somewhere/else' ); // What: Offline Unknown Visit. Why: Every address the app answers is served the app's page, as Netlify does. How: This opens an address with no file of its own.
 
-	await expect( page.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Come Hang' ); // What: Offline Unknown Check. Why: The worker served the app's page, which replaces the address with its root. How: This waits for the heading.
-	await expect( page ).toHaveURL( '/' );                                                // What: Root Address Check. Why: The app keeps no address it doesn't use. How: This waits for the root.
+	await expect( page.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Offline Unknown Check. Why: The worker served the app's page, which replaces the address with its root. How: This waits for the landing page's headline.
+	await expect( page ).toHaveURL( '/' );                                                                             // What: Root Address Check. Why: The app keeps no address it doesn't use. How: This waits for the root.
 
 
 } );
