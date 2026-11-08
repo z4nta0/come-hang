@@ -101,7 +101,8 @@ offer of a group, each once per device, with a Review that opens the section
 at the item and flashes it, and a coral dot marks the tabs, the rail, the
 switcher, and the group sheet while anything waits. Adding to or claiming
 from a bring-list posts a quiet line to the chat, which opens the event at
-its list. The app's one service worker opens it offline and shows pushes, a tap on one opening its
+its list, and a card above the chat offers notifications once on a device.
+The app's one service worker opens it offline and shows pushes, a tap on one opening its
 group at the section its news is in. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per
 member. Next steps are in ARCHITECTURE.md's Section 14.

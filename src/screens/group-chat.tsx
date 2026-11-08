@@ -26,6 +26,7 @@ import { memLisFun       } from '../state/members.ts';       // What: Member Lis
 import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
 import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
 import { phoFluFun       } from '../state/photos.ts';        // What: Photos Flush Function. Why: Closing the event's sheet ends the member's burst of photos. How: This posts its chat line.
+import { PusNudCom       } from './push-nudge.tsx';          // What: Push Nudge Component. Why: The chat offers notifications once on a device. How: This draws the card.
 import { SheDiaCom       } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
 import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar and status dot wear their color. How: This names it.
 import { staDetFun       } from '../core/chat-status.ts';    // What: Status Details Function. Why: A photos line names its event. How: This reads the post's details.
@@ -539,6 +540,10 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 				onHisFun={ () => void mesLisFun( groIdeStr ).then( ( stoRecArr ) => stoRecArr.forEach( mesAddFun ) ) } // What: History Handler. Why: History sent by another member should show at once. How: This reads the device's history again and merges each message into the log.
 			/>{ /* What: History Banner Component. Why: A phone missing the group's chat is offered it, and a request's progress shows (Section 11.9). How: This shows the banner between the pinned event and the log. */ }
+
+
+
+			<PusNudCom className={ cssModObj.pusNudDiv } />{ /* What: Push Nudge Component. Why: A device that hasn't been asked about notifications is offered them once, with no pressure (Section 11.1). How: This shows the card below the history banner. */ }
 
 
 
