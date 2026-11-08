@@ -332,6 +332,9 @@
 
 }
 
+
+/* #region mesAvaSpa */
+
 .mesAvaSpa { /* What: Message Avatar Span. Why: An avatar in the sender's color tells members apart at a glance, plain for someone who left. How: This draws a circle in the border color, which the member's own color replaces, with their initials small and bold, at the top of its area. */
 
 
@@ -349,6 +352,20 @@
 
 
 }
+
+.mesAvaIma { /* What: Message Avatar Image. Why: A profile photo fills the avatar, leaving the member's color showing as a ring. How: This draws it as a circle a large border's width in from each edge, cropped to fill. */
+
+
+	border-radius : 50%;
+	height        : calc( 100% - var( --bor-wid-lar ) * 2 ); /* Border Width Large ~= 2.035px */
+	object-fit    : cover;
+	width         : calc( 100% - var( --bor-wid-lar ) * 2 ); /* Border Width Large ~= 2.035px */
+
+
+}
+
+/* #endregion mesAvaSpa */
+
 
 
 /* #region mesMetPar */

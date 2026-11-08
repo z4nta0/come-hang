@@ -66,7 +66,7 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: Activity is
 
 // #region Helpers
 
-type MemRecTyp = { colSloNum : number, joiTimNum : number, namTexStr : string, uidValStr : string }; // What: Member Record Type. Why: The member list shows each person's name, color, and when they joined. How: This types one member as memLisFun lists them.
+type MemRecTyp = { avaIdeStr : string, avaIvaArr : Uint8Array< ArrayBuffer > | null, colSloNum : number, joiTimNum : number, namTexStr : string, uidValStr : string }; // What: Member Record Type. Why: The member list shows each person's name, color, photo, and when they joined. How: This types one member as memLisFun lists them.
 
 // #region memLisFun
 
@@ -75,8 +75,9 @@ type MemRecTyp = { colSloNum : number, joiTimNum : number, namTexStr : string, u
  *
  * @summary
  * Resolves with a group's members, longest-standing first, each with their
- * color slot and their name decrypted under the group key, a slot that isn't
- * a whole number reading as 0. A name that's missing or won't
+ * color slot, their name decrypted under the group key, and their profile
+ * photo's ID and IV, a slot that isn't a whole number reading as 0 and a
+ * photo whose fields don't read well as none. A name that's missing or won't
  * decrypt, such as one a member wrote under the wrong key, comes back
  * empty, so one bad name can't hide the rest.
  *
@@ -107,11 +108,21 @@ const memLisFun = async ( groIdeStr : string ) : Promise< MemRecTyp[] > => { // 
 		const iniBytObj = memDocObj.get( 'iv' ) as Bytes | undefined;             // What: Initialization Bytes Object. Why: The name decrypts with its IV. How: This reads it, undefined when absent. // What: Type Assertion Note. Why: The rules store the IV as bytes beside the name. How: The as reads it as bytes or missing.
 		const namTexStr = encBytObj && iniBytObj ? await decTexFun( groKeyObj, encBytObj.toUint8Array() as Uint8Array< ArrayBuffer >, iniBytObj.toUint8Array() as Uint8Array< ArrayBuffer > ).catch( () => '' ) : ''; // What: Name Text String. Why: A missing or unreadable name shows as no name rather than failing the list. How: This decrypts the name when it's there, empty otherwise or on failure. // What: Type Assertion Note. Why: toUint8Array returns an array over a plain buffer. How: The two as read them as such.
 
+		const avaIdeAny : unknown = memDocObj.get( 'avatarId' ); // What: Avatar Identifier Any. Why: A member's profile photo is named by its ID (Section 21). How: This reads it, untyped.
+		const avaIvaAny : unknown = memDocObj.get( 'avatarIv' ); // What: Avatar IV Any. Why: The photo decrypts with its IV. How: This reads it, untyped.
+
+		const ideValBoo = typeof avaIdeAny === 'string' && avaIdeAny !== ''; // What: Identifier Valid Boolean. Why: A photo is named by a non-empty ID. How: This checks it's a string with something in it.
+		const ivaValBoo = avaIvaAny instanceof Bytes;                       // What: IV Valid Boolean. Why: The photo decrypts only with its IV. How: This checks it's bytes.
+
+		const avaValBoo = ideValBoo && ivaValBoo; // What: Avatar Valid Boolean. Why: A photo counts only with both its ID and its IV. How: This combines the checks.
+
 
 
 		return { // What: Record Return. Why: Each membership becomes one record. How: This returns its fields.
 
 
+			avaIdeStr : avaValBoo ? avaIdeAny as string : '',                                                                // What: Avatar Identifier String. Why: A member's photo shows once it's fetched, and again only when it changes. How: This holds its ID, empty when there's none. // What: Type Assertion Note. Why: avaValBoo confirms it's a string. How: The as reads it as one.
+			avaIvaArr : avaValBoo ? ( avaIvaAny as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer > : null,             // What: Avatar IV Array. Why: The photo decrypts with it. How: This reads it, null when there's no photo. // What: Type Assertion Note. Why: avaValBoo confirms it's bytes, and toUint8Array returns an array over a plain buffer. How: The two as read them as such.
 			colSloNum : Number.isInteger( memDocObj.get( 'colorSlot' ) ) ? memDocObj.get( 'colorSlot' ) as number : 0, // What: Color Slot Number. Why: Each member wears their own color (Section 11.3). How: This reads their slot, 0 when it isn't a whole number. // What: Type Assertion Note. Why: The check before it proves the slot is a whole number. How: The as reads it as one.
 			joiTimNum : ( memDocObj.get( 'joinedAt', { serverTimestamps : 'estimate' } ) as Timestamp ).toMillis(),    // What: Joined Time Number. Why: The list orders members by how long they've been in. How: This reads the join time, estimating one the server hasn't confirmed yet. // What: Type Assertion Note. Why: The rules store the time as a timestamp. How: The as reads it as one.
 			namTexStr,                                                                                                 // What: Name Text String. Why: Members recognize each other by it. How: This holds the decrypted name, empty when there's none.

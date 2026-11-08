@@ -18,6 +18,7 @@ import { insSubFun            } from '../platform/install.ts';    // What: Insta
 import { isaInsFun            } from '../platform/install.ts';    // What: Is-An Installed Function. Why: An installed app needs no install part. How: This checks whether it runs installed.
 import { isaIosFun            } from '../platform/install.ts';    // What: Is-An iOS Function. Why: An iPhone installs through Safari's own menu. How: This checks for an iPhone or iPad.
 import { LegDocCom            } from '../legal/docs.tsx';         // What: Legal Documents Component. Why: Settings holds the privacy policy and the terms. How: This draws their part and its sheet.
+import { ProSetCom            } from './profile-settings.tsx';    // What: Profile Settings Component. Why: Settings holds the member's profile photo. How: This draws its part.
 import { purBuyFun            } from '../state/purchase.ts';      // What: Purchase Buy Function. Why: The upgrade is bought once (Section 18). How: This asks for the checkout's address.
 import { purPaiFun            } from '../state/purchase.ts';      // What: Purchase Paid Function. Why: The account part says whether the upgrade is bought. How: This reads it.
 import { pusActFun            } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
@@ -110,17 +111,17 @@ type PscProTyp = { setActObj : SarRetTyp }; // What: Personal Settings Component
  * PerSetCom = Personal Settings Component
  *
  * @summary
- * Renders the device's part, the account's part, About, and the legal
- * documents' part as siblings in whatever Settings column holds them, running
- * their changes through the section's own runners, so the section's one status
- * and alert announce them. Picking an appearance applies and keeps it at once;
- * the notifications button turns them on or off for this device; Install shows
- * the browser's prompt where it can; Link Google account links through
- * Google's popup, focus then landing on the account part's heading; and Buy
- * the upgrade opens Polar's checkout once Google is linked. About's links and
- * its tip open in a new tab, except the support address, which opens an email.
- * The account is read as the parts open, and the part says it's checking until
- * it's read.
+ * Renders the profile part, the device's part, the account's part, About, and
+ * the legal documents' part as siblings in whatever Settings column holds
+ * them, running their changes through the section's own runners, so the
+ * section's one status and alert announce them. Picking an appearance applies
+ * and keeps it at once; the notifications button turns them on or off for this
+ * device; Install shows the browser's prompt where it can; Link Google account
+ * links through Google's popup, focus then landing on the account part's
+ * heading; and Buy the upgrade opens Polar's checkout once Google is linked.
+ * About's links and its tip open in a new tab, except the support address,
+ * which opens an email. The account is read as the parts open, and the part
+ * says it's checking until it's read.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -263,6 +264,10 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 		<>{ /* What: Personal Settings Fragment. Why: The parts sit in the Settings column beside whatever else it holds. How: This groups them without a wrapper. */ }
+
+
+			<ProSetCom setActObj={ setActObj } />{ /* What: Profile Settings Component. Why: The member's photo shows in every group they're in, so it sits with their own settings (Section 21). How: This draws the "Your profile" part first. */ }
+
 
 
 			<section

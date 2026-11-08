@@ -35,11 +35,11 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  * drops the group from every account and leaves each other member a notice,
  * and each gets a push once it lands. The group's other Firestore collections
  * go next, then its chat, presence, and mirror in the Realtime Database and
- * its history transfers in Storage, and the group document goes last. A
- * failure partway leaves the group document, so the owner's retry passes the
- * owner check and finishes the job, and once the group document is gone a call
- * does nothing. A data deletion runs the same stages for a group its owner
- * was alone in (data-deletion.ts).
+ * its files in Storage, such as profile photos, and the group document goes
+ * last. A failure partway leaves the group document, so the owner's retry
+ * passes the owner check and finishes the job, and once the group document is
+ * gone a call does nothing. A data deletion runs the same stages for a group
+ * its owner was alone in (data-deletion.ts).
  *
  * Sections:
  *  - Helpers
@@ -135,11 +135,11 @@ const firBatFun = async ( groSnaObj : DocumentSnapshot ) : Promise< string[] > =
  *
  * @summary
  * Deletes a group in its stages: the first batch, with its notices, then a
- * push to each member told, the group's other Firestore collections, its
- * chat, presence, and mirror in the Realtime Database, its history
- * transfers in Storage, and the group document last, so a failure partway
- * leaves something a retry can finish. It checks nothing about who asked,
- * which its callers do.
+ * push to each member told, the group's other Firestore collections, its chat,
+ * presence, and mirror in the Realtime Database, its files in Storage, such as
+ * profile photos, and the group document last, so a failure partway leaves
+ * something a retry can finish. It checks nothing about who asked, which its
+ * callers do.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -177,6 +177,7 @@ const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > =>
 
 	});
 
+	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `avatars/${ groSnaObj.id }/` } );               // What: Avatars Delete Call. Why: The members' profile photos go with the group, whatever the membership trigger missed. How: This deletes every file under the group's folder.
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groSnaObj.id }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `photos/${ groSnaObj.id }/` } );                // What: Photos Delete Call. Why: A full photo mustn't outlive its group, even one its trigger hasn't reached yet. How: This deletes every file under the group's folder.
 

@@ -6,6 +6,7 @@
 import cssModObj from './group-chat.module.css'; // What: CSS Module Object. Why: The chat is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
+import { AvaConCom       } from '../ui/member-avatar.tsx';   // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
 import { briDetFun       } from '../core/chat-status.ts';    // What: Bring Details Function. Why: A bring-list line names its event and items. How: This reads the post's details.
 import { briFluFun       } from '../state/bring-lines.ts';   // What: Bring Flush Function. Why: Closing the event's sheet ends the member's bursts of list changes. How: This posts their chat lines.
 import { chaMesFun       } from '../core/text-limits.ts';    // What: Chat Message Function. Why: A message with characters the chat refuses is caught before it's sent. How: This checks it.
@@ -644,7 +645,21 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 											style={{ backgroundColor : memRecObj ? sloColFun( memRecObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
 
 											aria-hidden='true'
-										>{ iniTexFun( senNamStr ) }</span> // What: Message Avatar Span Element. Why: An avatar in the sender's color tells members apart at a glance, while their name is read beside it. How: This shows their initials, hidden from screen readers.
+										> // What: Message Avatar Span Element. Why: An avatar in the sender's color tells members apart at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers.
+
+
+											<AvaConCom
+												className={ cssModObj.mesAvaIma }
+
+												avaIdeStr={ memRecObj?.avaIdeStr ?? '' }
+												avaIvaArr={ memRecObj?.avaIvaArr ?? null }
+												groIdeStr={ groIdeStr }
+												iniTexStr={ iniTexFun( senNamStr ) }
+												uidValStr={ mesRecObj.senUidStr }
+											/>{ /* What: Avatar Contents Component. Why: A member with a profile photo is shown by it, and anyone else by their initials (Section 21). How: This fills the circle with the photo once it loads, or the initials. */ }
+
+
+										</span>
 
 
 									) }

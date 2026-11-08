@@ -56,7 +56,7 @@ function PriPolCom () : React.JSX.Element {
 		<>{ /* What: Privacy Policy Fragment. Why: The policy's headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 7, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 8, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>Come Hang is an app for planning get-togethers with a group. It's made and run by Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below). This policy explains what information Come Hang handles, why, who else handles it, how long it's kept, and the choices you have. If you have a question, write to <a href='mailto:support@comehang.app'>support@comehang.app</a>.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -69,7 +69,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li>You don't sign up. The app makes an anonymous identity on your device the first time you start or join a group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li>What you write and share in a group, such as messages, events, photos, your name in the group, and your location, is encrypted on your device before it's sent, so we can't read it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>What you write and share in a group, such as messages, events, photos, your name and profile photo in the group, and your location, is encrypted on your device before it's sent, so we can't read it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>Some details have to stay readable for the app to work, such as your group's name, who's in it, and when messages were sent. They're listed below.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -90,7 +90,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>What you share in a group</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Chat messages, events and their bring-lists, photos, the name you use in each group, and your location are encrypted on your device, with a key only the group's members hold, before they're sent to our servers. We store them, but we can't read them.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Chat messages, events and their bring-lists, photos, the name and profile photo you use in each group, and your location are encrypted on your device, with a key only the group's members hold, before they're sent to our servers. We store them, but we can't read them.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h3>What stays readable</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
@@ -190,6 +190,8 @@ function PriPolCom () : React.JSX.Element {
 				<li><strong>Events and their bring-lists</strong> are deleted 48 hours after the event ends. Your device keeps only each event's place, to suggest it when your group plans its next event, until you leave the group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Photos</strong> are deleted with their event, 48 hours after it ends, or sooner when the member who shared one or the group's owner deletes it. Before a photo is shared, your device shrinks it, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
+				<li><strong>Your profile photo</strong>, if you add one, is kept in each group you're in until you remove it or your membership ends, when it's deleted from that group. Your device shrinks it first, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Your location</strong> is deleted an hour after your last update, or when the event ends.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 

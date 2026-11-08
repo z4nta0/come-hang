@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-08 (bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-08 (profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -239,6 +239,7 @@ from Spark's 100 to 200,000.
 | User account (memberships, paid flag) | Firestore | `/accounts/{uid}`, readable only by its owner |
 | Notices (what happened while away) | Firestore | `/accounts/{uid}/notices/{noticeId}`, readable and dismissable only by its owner, written only by Cloud Functions |
 | Group membership | Firestore | Subcollection `/groups/{groupId}/members/{uid}` |
+| Profile photos | Cloud Storage | `avatars/{groupId}/{uid}`, one encrypted copy of a member's photo in each group, named on the membership; see Section 21 |
 | Removed-member blocklist | Firestore | `/groups/{groupId}.removedUids` (or subcollection) |
 | Invite token | Firestore | `/invites/{token} → { groupId }`, one active token per group |
 | Events | Firestore | Under the owning group |
@@ -334,6 +335,10 @@ out to be too short for a given group, once it's gone, it's gone.
 - Deleted from the server with their event, 48 hours after it ends, and
   kept on a device only until then unless the member saves them; see
   Section 20.
+
+### Profile photos
+- Deleted from a group with the membership, and removed from every group
+  when the member removes it; see Section 21.
 
 ### Chat
 Strictly sync-based, not time-based, with these refinements:
@@ -983,6 +988,7 @@ confirmed as a deliberate, narrow exception (re-confirmed 2026-10-22).
 | `displayNameEnc` / `iv` | ciphertext bytes | Per-group, not global, chosen deliberately: the same person may want a different name recognized in different groups. Follows the person name limits (Section 11.10), which the app enforces before encrypting, while the rules cap the ciphertext at 136 bytes (40 characters at 3 bytes each, plus the 16-byte tag) and the IV at 12. Written with the membership itself: the creator's as the group is created, and a joiner's by the approving member, who encrypts the name from the join request (Section 17). The rules also accept a membership without one, and the member may change it at any time. |
 | `lastActiveAt` | plaintext | Updated at most once a day on app open, by the member alone, and only to the server's time. Used only to let members claim ownership from an owner inactive for 30 days (Section 18). |
 | `colorSlot` | plaintext number, 0 to 49 | Which of the 50 member colors this member wears (decided 2026-10-29, built 2026-10-30): written with the membership, as the lowest slot no current member holds, so no two members share a color while the group has room, and kept for as long as they stay, so their color never changes. The creator's is 0. Two approvals at the same moment could pick the same slot, which only means two members share a color, so the rules check the range, a whole number from 0 to 49, and not uniqueness, and refuse any change to it. It reveals nothing beyond the order people joined in, which `joinedAt` already shows. |
+| `avatarId` / `avatarIv` / `avatarAt` | plaintext ID, IV bytes, and time, all absent without a photo | The member's profile photo (decided 2026-11-08, Section 21): the 22-character ID every group's copy shares, the 12-byte IV its encrypted file in Storage opens with, and the server's time it was set. Only the member changes them, all three together. |
 | `keyRequestedAt` | plaintext, absent unless asking | Set by the member alone, to the server's time, when the wrap won't open on a phone they were recovered onto, and removed by the member who answers by replacing `wrappedGroupKey` (Section 6). |
 
 A subcollection, not a map field on the group doc, specifically so many
@@ -2947,3 +2953,87 @@ member who never saves them loses them; a new device or late joiner can't
 get earlier photos once they're gone; device storage fills faster than with
 chat, and Safari may clear it under pressure; and encrypted photos can't be
 moderated by anyone but the group.
+
+## 21. Profile Photos
+
+Decided and built 2026-11-08, to ship at launch. A member can add one
+profile photo, which shows in place of their colored initials wherever their
+avatar shows. People expect it of an app with chat, and a face tells members
+apart better than a color. The colors stay: everyone gets one as the default
+before they add a photo, some never will, and the status lines in the chat
+wear them. A photo shows inside its member's circle, a little smaller, so
+the color stays as a ring around it. The app's side is `src/state/avatars.ts`,
+with the cropping in `src/platform/image.ts`, the device's copies in
+`src/platform/avatar-store.ts`, the circles' contents in
+`src/ui/member-avatar.tsx`, and the Settings part in
+`src/screens/profile-settings.tsx`. The server's side is
+`functions/src/avatars.ts`, with the rules in `firestore.rules` and
+`storage.rules`.
+
+### One photo, every group
+- **Set once, in Settings**: a "Your profile" part, first among the
+  member's own parts, picks a photo with "Add a photo", previews it, and
+  saves it with "Save photo", or sets it aside with "Cancel". A saved photo
+  can be changed or removed with "Remove photo", which brings back the
+  colored initials. With no group, the part says one comes first, since a
+  photo is kept in a group.
+- **A copy in each group**: every group the member is in keeps its own copy,
+  encrypted under that group's key, like everything else in it, so Firebase
+  never sees the photo and a group's members can read only their own group's
+  copy. Every copy carries the same ID.
+- **Kept in step**: whenever the member's groups change, as when they join
+  one, and whenever the Settings part opens, the app finds the copy set most
+  recently and copies it, under the same ID, into any group missing it or
+  holding an older one. Removing the photo removes every copy, so no group is
+  left to copy it back from. A removal that fails partway can leave a copy
+  the next sync spreads again, which removing once more fixes.
+
+### Data model
+- **The file**: `avatars/{groupId}/{uid}` in Cloud Storage, the photo
+  encrypted with AES-GCM under the group key, one opaque file of at most
+  64 KB with no custom metadata. Members of the group read it, and only the
+  member writes or deletes their own, while still in the group.
+- **The membership** (11.3) names it with three fields, all present or all
+  absent: `avatarId`, the 22-character ID every copy shares; `avatarIv`, the
+  12-byte IV; and `avatarAt`, the server's time it was set, which decides
+  the newest copy. Only the member changes them, and changing them changes
+  nothing else on the membership. The file is uploaded before the fields
+  name it, so a reader never finds a name without its file.
+- **On the device**: each member's photo is kept decrypted in the device's
+  database (an `avatars` store) under its group and member, with its ID, so
+  it downloads once, shows offline, and downloads again only when the ID
+  changes.
+
+### Limits (decided 2026-11-08)
+- **Cropped and shrunk on the device**: the picked image is turned upright,
+  cropped to the square at its middle, and drawn at up to 256px a side, as
+  WebP where the browser can and JPEG where it can't, at the highest of a
+  few qualities that fits 64 KB. Avatars show at about 26 to 34px, and 256px
+  stays sharp on the densest screens. Redrawing drops everything else the
+  file carried, such as a camera's position.
+- **What can be picked**: anything the browser can decode, the same as event
+  photos (Section 20). A file it can't read, such as HEIC on a computer,
+  says so and asks for a JPEG, PNG, or WebP.
+- **No cropper**: the middle square is used. A drag-and-zoom cropper can
+  come later.
+
+### Where it shows
+The circles in the chat beside a member's first message in a run, the
+People section's member rows, the bring-list's claims, and the Map section's
+list. The Map's plot keeps its colored dots with initials, since it's drawn
+as one SVG.
+
+### Retention
+A photo goes with its membership: a Cloud Function deletes the file when
+the membership document is deleted, however that happens, whether the
+member leaves, is removed, deletes their data, or the group is deleted, and
+deleting a group also clears its whole `avatars` folder. A member who
+removes their photo clears the fields and deletes the file themselves.
+
+**Pros**: members are easier to tell apart, as people expect; photos fit
+the encryption model; and they're tiny, so storage and downloads cost next
+to nothing.
+**Cons**: the photo is stored once per group, a few KB each; an avatar
+already on screen keeps its old photo until its section loads again; and
+the middle square may cut a face that isn't centered until a cropper is
+added.

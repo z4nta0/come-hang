@@ -6,12 +6,13 @@
  *
  * @summary
  * Shrinks a picked photo on the device before it's shared (ARCHITECTURE.md
- * Section 20), through the browser's own image decoder and canvas, with no
- * library. The photo is drawn upright, the way the browser shows it, at up
- * to 1,600px on its long side, and again as a thumbnail of up to 320px, each
- * encoded as WebP where the browser can and JPEG where it can't, at the
- * highest of a few qualities that fits its size limit, drawn smaller still
- * when none does. Drawing it anew leaves behind everything else the file
+ * Sections 20 and 21), through the browser's own image decoder and canvas,
+ * with no library. A profile photo is cropped to the square at its middle and
+ * drawn at up to 256px. The photo is drawn upright, the way the browser shows
+ * it, at up to 1,600px on its long side, and again as a thumbnail of up to
+ * 320px, each encoded as WebP where the browser can and JPEG where it can't,
+ * at the highest of a few qualities that fits its size limit, drawn smaller
+ * still when none does. Drawing it anew leaves behind everything else the file
  * carried, such as the position a camera records. A shared photo's bytes are
  * typed again from their first bytes when they're shown.
  *
@@ -28,6 +29,8 @@
 
 // #region Constants
 
+const AVA_MAX_NUM = 64 * 1024 - 16;            // What: Avatar Maximum Number. Why: A profile photo has to fit the Storage rules' 64 KB once encrypted, which adds a 16-byte tag. How: This is the most its bytes may be.
+const AVA_SID_NUM = 256;                        // What: Avatar Side Number. Why: A profile photo shows at most about 64px across, so 256px stays sharp on the densest screens. How: This is the side it's drawn at, at most.
 const FUL_MAX_NUM = 1024 * 1024 - 16;           // What: Full Maximum Number. Why: A full photo has to fit the Storage rules' 1 MB once encrypted, which adds a 16-byte tag. How: This is the most its bytes may be.
 const FUL_SID_NUM = 1600;                       // What: Full Side Number. Why: A photo 1,600px on its long side looks sharp on a phone at a fraction of a camera's size. How: This is the long side it's drawn at, at most.
 const QUA_STE_ARR = [ 0.82, 0.72, 0.62, 0.52 ]; // What: Quality Steps Array. Why: The best quality that fits the limit should win. How: This lists the qualities tried, highest first.
@@ -159,6 +162,85 @@ const sidFitFun = async ( imaEleObj : HTMLImageElement, sidMaxNum : number, bytM
 
 
 
+// #region avaShrFun
+
+/**
+ * avaShrFun = Avatar Shrink Function
+ *
+ * @summary
+ * Decodes a picked photo the way the browser shows it, upright, crops the
+ * square at its middle, and resolves with it drawn at up to 256px a side,
+ * encoded at the highest quality that fits 64 KB. Rejects when the browser
+ * can't decode the file, or no quality fits.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param filValObj - File Value Object: The picked photo.
+ *
+ * @returns A promise that resolves with the profile photo's bytes.
+ *
+ * @example
+ * ```ts
+ * avaShrFun(filValObj) // => Uint8Array
+ * ```
+ *
+*/
+
+const avaShrFun = async ( filValObj : Blob ) : Promise< Uint8Array< ArrayBuffer > > => { // What: Avatar Shrink Function. Why: A profile photo is small and square wherever it shows. How: This crops the photo's middle square and encodes it within its limit.
+
+
+	const canEleObj = document.createElement( 'canvas' ); // What: Canvas Element Object. Why: The photo is redrawn to crop and shrink it and leave its metadata behind. How: This makes a canvas off the page.
+	const imaEleObj = new Image();                        // What: Image Element Object. Why: An image element decodes the photo upright, as the browser shows it. How: This makes one off the page.
+	const objUrlStr = URL.createObjectURL( filValObj );    // What: Object URL String. Why: The image element reads the file by address. How: This makes a temporary one.
+
+
+
+	try { // What: Decode Attempt. Why: The temporary address has to be freed however decoding ends. How: This decodes, crops, and encodes inside it.
+
+
+		imaEleObj.src = objUrlStr; // What: Source Assignment. Why: The element loads the file. How: This points it at the address.
+
+
+		await imaEleObj.decode(); // What: Decode Call. Why: The photo has to be decoded before it's drawn. How: This waits for it, rejecting for a file the browser can't show.
+
+
+		const sidShoNum = Math.min( imaEleObj.naturalWidth, imaEleObj.naturalHeight ); // What: Side Short Number. Why: The largest square that fits is as wide as the photo's short side. How: This reads it.
+
+
+		canEleObj.width  = Math.min( AVA_SID_NUM, sidShoNum ); // What: Canvas Width Assignment. Why: The square is never drawn larger than the photo. How: This takes the smaller of the limit and the short side.
+		canEleObj.height = canEleObj.width;                     // What: Canvas Height Assignment. Why: The photo is square. How: This matches the width.
+
+
+		canEleObj.getContext( '2d' )!.drawImage( imaEleObj, ( imaEleObj.naturalWidth - sidShoNum ) / 2, ( imaEleObj.naturalHeight - sidShoNum ) / 2, sidShoNum, sidShoNum, 0, 0, canEleObj.width, canEleObj.height ); // What: Draw Call. Why: A face is usually near a photo's middle. How: This paints the middle square across the canvas. // What: Non-Null Note. Why: A new canvas always has a 2D context. How: The ! reads it as present.
+
+
+		for ( const quaValNum of QUA_STE_ARR ) { // What: Quality Loop. Why: The highest quality that fits wins. How: This tries each, highest first.
+
+
+			const blbValObj = await blbEncFun( canEleObj, quaValNum ); // What: Blob Value Object. Why: Each quality gives a different size. How: This encodes at one.
+
+
+			if ( blbValObj.size <= AVA_MAX_NUM ) return new Uint8Array( await blbValObj.arrayBuffer() ); // What: Fit Return. Why: The first fit is the best quality that fits. How: This returns its bytes.
+
+
+		}
+
+
+
+		throw new RangeError( "The photo couldn't be made small enough." ); // What: Too Large Throw. Why: A photo that fits no quality can't be used. How: This rejects.
+
+
+	}
+
+	finally { URL.revokeObjectURL( objUrlStr ); } // What: Address Free. Why: A temporary address holds the file in memory until it's freed. How: This frees it.
+
+
+};
+
+// #endregion avaShrFun
+
+
+
 // #region imaShrFun
 
 /**
@@ -227,7 +309,7 @@ const imaTypFun = ( bytValArr : Uint8Array ) : string => bytValArr[ 0 ] === 0xFF
 
 // #region Exports
 
-export { imaShrFun, imaTypFun }; // What: Named Exports. Why: Sharing a photo shrinks it, and showing one types its bytes. How: This exports the shrink and the type check.
+export { avaShrFun, imaShrFun, imaTypFun }; // What: Named Exports. Why: Sharing a photo or a profile photo shrinks it, and showing one types its bytes. How: This exports the shrinks and the type check.
 
 // #endregion Exports
 

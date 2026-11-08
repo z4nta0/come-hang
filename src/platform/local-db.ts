@@ -16,8 +16,9 @@ import { proKeyFun } from './dev-profile.ts'; // What: Profile Key Function. Why
  * Opens the app's one IndexedDB database on this device, in raw IndexedDB
  * with no wrapper library (ARCHITECTURE.md Section 14), and names its object
  * stores: the keys (key-store.ts), the chat history (chat-store.ts), the
- * groups' event places (place-store.ts), and the waiting items the notices
- * sheet has shown (seen-store.ts). The database is at version 4, and an
+ * groups' event places (place-store.ts), the waiting items the notices sheet
+ * has shown (seen-store.ts), and the members' profile photos
+ * (avatar-store.ts). The database is at version 5, and an
  * upgrade creates whichever stores it doesn't have yet, so a device that
  * opened an earlier version keeps what it holds and gains the stores it
  * lacks. In development, each member the switcher can act as opens a
@@ -36,8 +37,9 @@ import { proKeyFun } from './dev-profile.ts'; // What: Profile Key Function. Why
 
 // #region Constants
 
+const AVA_STO_STR = 'avatars';                 // What: Avatar Store String. Why: The members' profile photos live apart from everything else. How: This names their object store.
 const DAT_BAS_STR = proKeyFun( 'come-hang' ); // What: Database Base String. Why: The app's IndexedDB database needs a name of its own, and each development member one apart. How: This names it after the app, with the member's profile appended in development.
-const DAT_VER_NUM = 4;                         // What: Database Version Number. Why: Adding the seen store needs an upgrade from version 3. How: This asks for version 4.
+const DAT_VER_NUM = 5;                         // What: Database Version Number. Why: Adding the avatar store needs an upgrade from version 4. How: This asks for version 5.
 const KEY_STO_STR = 'keys';                    // What: Key Store String. Why: Keys live apart from anything else the app stores. How: This names their object store.
 const MES_STO_STR = 'messages';                // What: Message Store String. Why: The chat history lives apart from the keys. How: This names its object store.
 const PLA_STO_STR = 'places';                  // What: Place Store String. Why: The groups' event places live apart from the keys and the chat. How: This names their object store.
@@ -80,7 +82,7 @@ const datOpeFun = () : Promise< IDBDatabase > => new Promise( ( resValFun, rejVa
 	opeReqObj.onupgradeneeded = () => { // What: Upgrade Handler. Why: A new or older database lacks some stores. How: This creates each one that's missing.
 
 
-		for ( const stoNamStr of [ KEY_STO_STR, MES_STO_STR, PLA_STO_STR, SEE_STO_STR ] ) if ( !opeReqObj.result.objectStoreNames.contains( stoNamStr ) ) opeReqObj.result.createObjectStore( stoNamStr ); // What: Store Create Loop. Why: An upgrade keeps the stores already there. How: This creates only the missing ones.
+		for ( const stoNamStr of [ AVA_STO_STR, KEY_STO_STR, MES_STO_STR, PLA_STO_STR, SEE_STO_STR ] ) if ( !opeReqObj.result.objectStoreNames.contains( stoNamStr ) ) opeReqObj.result.createObjectStore( stoNamStr ); // What: Store Create Loop. Why: An upgrade keeps the stores already there. How: This creates only the missing ones.
 
 
 	};
@@ -138,7 +140,7 @@ const datDelFun = () : Promise< void > => new Promise( ( resValFun, rejValFun ) 
 
 // #region Exports
 
-export { datDelFun, datOpeFun, KEY_STO_STR, MES_STO_STR, PLA_STO_STR, SEE_STO_STR }; // What: Named Exports. Why: The key store, the chat history, the places, and the seen items open the database and name their stores, and deleting someone's data deletes it. How: This exports the opener, the delete, and the store names.
+export { AVA_STO_STR, datDelFun, datOpeFun, KEY_STO_STR, MES_STO_STR, PLA_STO_STR, SEE_STO_STR }; // What: Named Exports. Why: The key store, the chat history, the places, the seen items, and the profile photos open the database and name their stores, and deleting someone's data deletes it. How: This exports the opener, the delete, and the store names.
 
 // #endregion Exports
 

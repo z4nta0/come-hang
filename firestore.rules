@@ -764,6 +764,37 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region avaSetFun
+
+		function avaSetFun ( uidValStr ) { // What: Avatar Set Function. Why: A member names their own profile photo on their membership, or clears it (ARCHITECTURE.md Section 21). How: This is true for the member changing only the photo's fields, leaving all three valid together or none.
+
+
+			let memNewObj = request.resource.data; // What: Member New Object. Why: The checks read the membership as it will be. How: This names it.
+
+			let avaAbsBoo = !memNewObj.keys().hasAny( [ 'avatarAt', 'avatarId', 'avatarIv' ] );                                         // What: Avatar Absent Boolean. Why: Removing the photo clears every field. How: This is true when none is left.
+			let fieOnlBoo = memNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'avatarAt', 'avatarId', 'avatarIv' ] );           // What: Fields Only Boolean. Why: A photo changes nothing else on the membership. How: This allows the photo's fields alone.
+			let ideValBoo = memNewObj.avatarId is string && memNewObj.avatarId.matches( '^[A-Za-z0-9_-]{22}$' );                        // What: Identifier Valid Boolean. Why: Every copy of a photo shares a 22-character ID. How: This checks the type, then the form, which the type check guards.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                                                                     // What: Is-An Owner Boolean. Why: Only the member sets their own photo. How: This requires the requester to be the member.
+			let iniVecBoo = memNewObj.avatarIv is bytes && memNewObj.avatarIv.size() == 12;                                             // What: Initialization Vector Boolean. Why: The photo decrypts with a 12-byte AES-GCM IV (Section 6). How: This checks the type, then the size, which the type check guards.
+			let timNowBoo = memNewObj.avatarAt == request.time;                                                                         // What: Time Now Boolean. Why: The newest photo wins when groups disagree, so its time can't be made up. How: This requires the server's time.
+
+			let avaPreBoo = ideValBoo && iniVecBoo && timNowBoo; // What: Avatar Present Boolean. Why: A photo is found by its ID, decrypts with its IV, and is dated. How: This requires all three valid together.
+
+			let avaValBoo = avaAbsBoo || avaPreBoo; // What: Avatar Valid Boolean. Why: A member may have a photo or not. How: This is true when the fields are all absent or all valid.
+
+			let avaAllBoo = fieOnlBoo && isaOwnBoo && avaValBoo; // What: Avatar Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return avaAllBoo; // What: Avatar Allowed Return. Why: The rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion avaSetFun
+
+
+
 		// #region updMemFun
 
 		function updMemFun ( groIdeStr, uidValStr ) { // What: Update Member Function. Why: A member writes their own encrypted display name, and marks when they were last active, while the rest of the membership stays as it was granted. How: This is true for the member changing only those fields, validly.
@@ -2322,7 +2353,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 				allow read   : if isaMemFun( groIdeStr );                                                                           // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
 				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr );                           // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
-				allow update : if updMemFun( groIdeStr, uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr, uidValStr ); // What: Member Update Rule. Why: A member writes their own name and activity time, asks for the group key on a new phone, or shares it with a member who asked. How: This allows it when updMemFun, keyReqFun, or keyShaFun passes.
+				allow update : if updMemFun( groIdeStr, uidValStr ) || avaSetFun( uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr, uidValStr ); // What: Member Update Rule. Why: A member writes their own name, activity time, or profile photo, asks for the group key on a new phone, or shares it with a member who asked. How: This allows it when updMemFun, avaSetFun, keyReqFun, or keyShaFun passes.
 				allow delete : if delMemFun( groIdeStr, uidValStr );                                                                // What: Member Delete Rule. Why: A member leaves, or the owner removes them. How: This allows it when delMemFun passes.
 
 

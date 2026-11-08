@@ -6,6 +6,7 @@
 import cssModObj from './event-details.module.css'; // What: CSS Module Object. Why: The details are styled in their own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
+import { AvaConCom } from '../ui/member-avatar.tsx'; // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
 import { briAddFun } from '../state/bring-lines.ts'; // What: Bring Add Function. Why: An item added or claimed joins the chat line about the list. How: This counts it into its burst.
 import { briDroFun } from '../state/bring-lines.ts'; // What: Bring Drop Function. Why: An item removed or let go leaves the chat line about the list. How: This takes it out of its burst.
 import { briFluFun } from '../state/bring-lines.ts'; // What: Bring Flush Function. Why: Leaving the list means the member is done for now. How: This posts the lines waiting.
@@ -578,7 +579,21 @@ function EveDetCom ( { eveRecObj, groIdeStr, lisJumBoo = false, memRecMap, ownBo
 													style={{ backgroundColor : asgMemObj ? sloColFun( asgMemObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
 
 													aria-hidden='true'
-												>{ iniTexFun( asgMemObj ? asgMemObj.namTexStr : '?' ) }</span> // What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their initials, hidden from screen readers.
+												> // What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers.
+
+
+													<AvaConCom
+														className={ cssModObj.iteAvaIma }
+
+														avaIdeStr={ asgMemObj?.avaIdeStr ?? '' }
+														avaIvaArr={ asgMemObj?.avaIvaArr ?? null }
+														groIdeStr={ groIdeStr }
+														iniTexStr={ iniTexFun( asgMemObj ? asgMemObj.namTexStr : '?' ) }
+														uidValStr={ asgMemObj?.uidValStr ?? '' }
+													/>{ /* What: Avatar Contents Component. Why: A member with a profile photo is shown by it, and anyone else by their initials (Section 21). How: This fills the circle with the photo once it loads, or the initials. */ }
+
+
+												</span>
 
 
 											) }

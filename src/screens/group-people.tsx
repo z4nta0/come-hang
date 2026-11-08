@@ -6,29 +6,30 @@
 import cssModObj from './group-people.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom    } from '../ui/button.tsx';       // What: Button Base Component. Why: Copying the link and saving a name are the section's leading actions. How: This draws their buttons.
-import { HisReqCom    } from './history-requests.tsx'; // What: History Requests Component. Why: Members see who is asking for chat history and can send it. How: This shows the list in People.
-import { ideEnsFun    } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member's own row offers a name change. How: This reads their UID.
-import { iniTexFun    } from '../utils/text.ts';       // What: Initials Text Function. Why: Each member's avatar shows their initials. How: This takes them from the name.
-import { invRotFun    } from '../state/groups.ts';     // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
-import { keyLisFun    } from '../state/key-share.ts';  // What: Key List Function. Why: Members see who's waiting on a new phone for the group's key (Section 6). How: This reads the standing requests.
-import { keyShaFun    } from '../state/key-share.ts';  // What: Key Share Function. Why: Any member shares the key with someone on a new phone. How: This wraps it for their new key.
-import { memLisFun    } from '../state/members.ts';    // What: Member List Function. Why: The section lists the group's members. How: This reads them.
-import { memRemFun    } from '../state/members.ts';    // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
-import { mesTimFun    } from '../utils/date.ts';       // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
-import { namSetFun    } from '../state/members.ts';    // What: Name Set Function. Why: A member changes their own name in the group. How: This saves it.
-import { perNamFun    } from '../core/text-limits.ts'; // What: Person Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
-import { reqAppFun    } from '../state/joins.ts';      // What: Request Approve Function. Why: Any member lets a joiner in (Section 17). How: This approves their request.
-import { reqBloFun    } from '../state/joins.ts';      // What: Request Block Function. Why: A request from someone unwelcome is ended for good. How: This blocks its sender.
-import { reqDecFun    } from '../state/joins.ts';      // What: Request Decline Function. Why: Any member turns a request down. How: This declines it.
-import { reqWatFun    } from '../state/joins.ts';      // What: Request Watch Function. Why: A new request, or one another member answered, shows at once. How: This watches them.
-import { sloColFun    } from '../ui/member-color.ts';  // What: Slot Color Function. Why: Each member's avatar wears their color. How: This names it.
-import { texNorFun    } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: A name is checked as it'll be saved. How: This tidies it.
-import { useEffect    } from 'react';                  // What: Use Effect. Why: The section reads its members and watches its requests, and an edit or an answer moves focus. How: This starts the reads and the watch and moves focus.
-import { useIteJumFun } from '../ui/item-jump.ts';     // What: Use Item Jump Function. Why: The notices sheet can open the section at one item waiting on the member. How: This waits for its row and jumps there.
-import { useRef       } from 'react';                  // What: Use Reference. Why: Focus moves between a control and the form it opens, and to a heading after an answer. How: This holds the elements.
-import { useScrOpeFun } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: A jump done, the entry drops the item it named. How: This returns the function that opens a screen.
-import { useState     } from 'react';                  // What: Use State. Why: The members, the open form, and the messages change while the section is open. How: This holds each.
+import { AvaConCom    } from '../ui/member-avatar.tsx'; // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
+import { ButBasCom    } from '../ui/button.tsx';        // What: Button Base Component. Why: Copying the link and saving a name are the section's leading actions. How: This draws their buttons.
+import { HisReqCom    } from './history-requests.tsx';  // What: History Requests Component. Why: Members see who is asking for chat history and can send it. How: This shows the list in People.
+import { ideEnsFun    } from '../state/identity.ts';    // What: Identity Ensure Function. Why: The member's own row offers a name change. How: This reads their UID.
+import { iniTexFun    } from '../utils/text.ts';        // What: Initials Text Function. Why: Each member's avatar shows their initials. How: This takes them from the name.
+import { invRotFun    } from '../state/groups.ts';      // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
+import { keyLisFun    } from '../state/key-share.ts';   // What: Key List Function. Why: Members see who's waiting on a new phone for the group's key (Section 6). How: This reads the standing requests.
+import { keyShaFun    } from '../state/key-share.ts';   // What: Key Share Function. Why: Any member shares the key with someone on a new phone. How: This wraps it for their new key.
+import { memLisFun    } from '../state/members.ts';     // What: Member List Function. Why: The section lists the group's members. How: This reads them.
+import { memRemFun    } from '../state/members.ts';     // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
+import { mesTimFun    } from '../utils/date.ts';        // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
+import { namSetFun    } from '../state/members.ts';     // What: Name Set Function. Why: A member changes their own name in the group. How: This saves it.
+import { perNamFun    } from '../core/text-limits.ts';  // What: Person Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
+import { reqAppFun    } from '../state/joins.ts';       // What: Request Approve Function. Why: Any member lets a joiner in (Section 17). How: This approves their request.
+import { reqBloFun    } from '../state/joins.ts';       // What: Request Block Function. Why: A request from someone unwelcome is ended for good. How: This blocks its sender.
+import { reqDecFun    } from '../state/joins.ts';       // What: Request Decline Function. Why: Any member turns a request down. How: This declines it.
+import { reqWatFun    } from '../state/joins.ts';       // What: Request Watch Function. Why: A new request, or one another member answered, shows at once. How: This watches them.
+import { sloColFun    } from '../ui/member-color.ts';   // What: Slot Color Function. Why: Each member's avatar wears their color. How: This names it.
+import { texNorFun    } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: A name is checked as it'll be saved. How: This tidies it.
+import { useEffect    } from 'react';                   // What: Use Effect. Why: The section reads its members and watches its requests, and an edit or an answer moves focus. How: This starts the reads and the watch and moves focus.
+import { useIteJumFun } from '../ui/item-jump.ts';      // What: Use Item Jump Function. Why: The notices sheet can open the section at one item waiting on the member. How: This waits for its row and jumps there.
+import { useRef       } from 'react';                   // What: Use Reference. Why: Focus moves between a control and the form it opens, and to a heading after an answer. How: This holds the elements.
+import { useScrOpeFun } from '../ui/screen.ts';         // What: Use Screen Open Function. Why: A jump done, the entry drops the item it named. How: This returns the function that opens a screen.
+import { useState     } from 'react';                   // What: Use State. Why: The members, the open form, and the messages change while the section is open. How: This holds each.
 
 
 import type { GroRecTyp } from '../state/groups.ts';    // What: Group Record Type. Why: The section shows one group's members and link. How: This types the group.
@@ -1017,7 +1018,21 @@ function GroPeoCom ( { curGroObj, waiStr } : GpcProTyp ) : React.JSX.Element {
 										style={{ backgroundColor : sloColFun( memRecObj.colSloNum ) }} // What: Avatar Color Note. Why: Each member wears their own color. How: This reads their slot's token.
 
 										aria-hidden='true'
-									>{ iniTexFun( memRecObj.namTexStr ) }</span>{ /* What: Member Avatar Span Element. Why: An avatar in the member's color ties them to their messages and claims, while their name is read beside it. How: This shows their initials, hidden from screen readers. */ }
+									>{ /* What: Member Avatar Span Element. Why: An avatar in the member's color ties them to their messages and claims, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers. */ }
+
+
+										<AvaConCom
+											className={ cssModObj.memAvaIma }
+
+											avaIdeStr={ memRecObj.avaIdeStr }
+											avaIvaArr={ memRecObj.avaIvaArr }
+											groIdeStr={ curGroObj.ideStr }
+											iniTexStr={ iniTexFun( memRecObj.namTexStr ) }
+											uidValStr={ memRecObj.uidValStr }
+										/>{ /* What: Avatar Contents Component. Why: A member with a profile photo is shown by it, and anyone else by their initials (Section 21). How: This fills the circle with the photo once it loads, or the initials. */ }
+
+
+									</span>
 
 
 

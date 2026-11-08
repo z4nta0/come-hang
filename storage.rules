@@ -15,8 +15,9 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules r
  * @summary
  * Decides who may read and write the app's Cloud Storage files. Storage
  * refuses any request no rule allows, and the only files the app keeps are
- * chat history transfers and event photos, so these rules open nothing else,
- * and the tests in tests/rules prove them in the local emulator.
+ * chat history transfers, profile photos, and event photos, so these rules
+ * open nothing else, and the tests in tests/rules prove them in the local
+ * emulator.
  *
  * A history transfer is the encrypted bundle a member uploads for a history
  * request (ARCHITECTURE.md Section 11.9), stored under the group's ID and the
@@ -27,6 +28,12 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules r
  * custom metadata. Only the asker downloads it, while still a member, and
  * the asker or the claimant deletes it. A bundle nobody collects is deleted
  * by the bucket's own lifecycle setting 15 days after upload.
+ *
+ * A profile photo is stored under its group and its member's UID
+ * (ARCHITECTURE.md Section 21), one opaque file of at most 64 KB with no
+ * custom metadata, which only that member writes, while still in the group,
+ * and deletes. Members download it, and Cloud Functions delete it once the
+ * membership ends.
  *
  * An event photo's full image is stored under its group, event, and photo
  * IDs (ARCHITECTURE.md Section 20), uploaded once by the member who added
@@ -208,6 +215,36 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 
 
 
+		// #region Avatar Rules
+
+		// #region uplAvaFun
+
+		function uplAvaFun ( groIdeStr, uidValStr ) { // What: Upload Avatar Function. Why: A profile photo is one small opaque, encrypted file, which only its member writes, and only while in the group (ARCHITECTURE.md Section 21). How: This is true for a valid file from that member while they're a member.
+
+
+			let avaFilObj = request.resource; // What: Avatar File Object. Why: The file checks read the incoming file. How: This names it once.
+
+			let conTypBoo = avaFilObj.contentType == 'application/octet-stream';          // What: Content Type Boolean. Why: A profile photo is encrypted bytes, never an image a browser would render. How: This requires the generic binary type.
+			let isaMemBoo = firestore.exists( memPatFun( groIdeStr, uidValStr ) );         // What: Is-A Member Boolean. Why: Someone who has left keeps no photo in the group. How: This requires the member's document.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                        // What: Is-An Owner Boolean. Why: Only the member sets their own photo. How: This requires the path's UID to be the requester's.
+			let metNulBoo = avaFilObj.metadata == null || avaFilObj.metadata.size() == 0; // What: Metadata Null Boolean. Why: Custom metadata is stored in plain text beside the encrypted photo. How: This refuses any.
+			let sizValBoo = avaFilObj.size > 16 && avaFilObj.size <= 64 * 1024;           // What: Size Valid Boolean. Why: A photo shrunk to 256px fits well within 64 KB once encrypted, and the cap stops the path holding anything larger. How: This bounds its size in bytes.
+
+			let uplAllBoo = conTypBoo && isaMemBoo && isaOwnBoo && metNulBoo && sizValBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return uplAllBoo; // What: Upload Allowed Return. Why: The upload rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion uplAvaFun
+
+		// #endregion Avatar Rules
+
+
+
 		// #region Photo Rules
 
 		// #region uplPhoFun
@@ -235,6 +272,18 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 		// #endregion uplPhoFun
 
 		// #endregion Photo Rules
+
+
+
+		match /avatars/{groIdeStr}/{uidValStr} { // What: Avatar Match. Why: Each group keeps one profile photo for each member (Section 21). How: This matches one photo by the group ID and the member's UID.
+
+
+			allow get            : if firestore.exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Avatar Get Rule. Why: Members see each other's photos. How: This allows a member, while listing stays closed.
+			allow create, update : if uplAvaFun( groIdeStr, uidValStr );                           // What: Avatar Upload Rule. Why: A member sets or replaces their own photo. How: This allows it when uplAvaFun passes.
+			allow delete         : if isaOwnFun( uidValStr );                                      // What: Avatar Delete Rule. Why: A member removes their own photo, and Cloud Functions remove the rest. How: This allows the member.
+
+
+		}
 
 
 

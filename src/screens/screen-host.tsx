@@ -21,6 +21,7 @@ import { NotSheCom       } from './notices.tsx';              // What: Notice Sh
 import { offLisFun       } from '../state/waiting.ts';        // What: Offer List Function. Why: An offer of a group waits on the member it names. How: This lists the live ones.
 import { PasInvCom       } from './paste-invite.tsx';         // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
 import { plaPruFun       } from '../platform/place-store.ts'; // What: Place Prune Function. Why: A group's event places shouldn't stay on a device that's no longer in it. How: This removes the places of every group not listed.
+import { proSynFun       } from '../state/avatars.ts';        // What: Profile Sync Function. Why: A group joined after the photo was set should hold it too. How: This copies the photo where it's missing.
 import { safConFun       } from '../platform/install.ts';     // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
 import { scrReaFun       } from '../ui/scroll-top.ts';        // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
 import { shaEndFun       } from '../state/sharing.ts';        // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
@@ -226,6 +227,54 @@ const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use I
 
 
 
+// #region useProSynFun
+
+/**
+ * useProSynFun = Use Profile Sync Function
+ *
+ * @summary
+ * Copies this member's profile photo into any group missing it whenever
+ * their set of groups changes, such as after joining one, so one photo
+ * shows in every group (ARCHITECTURE.md Section 21). Does nothing while the
+ * groups are unknown or there are none, and logs a sync that fails, which
+ * the next change tries again.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groRecArr - Group Record Array: The member's groups, or null while
+ *                    they're unknown.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * useProSynFun(groRecArr) // => void
+ * ```
+ *
+*/
+
+const useProSynFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use Profile Sync Function. Why: A group joined after the photo was set should show it too. How: This syncs the photo as the groups change.
+
+
+	const groKeyStr = groRecArr?.map( ( groRecObj ) => groRecObj.ideStr ).sort().join( ',' ) ?? ''; // What: Group Key String. Why: The sync should run only when the groups change. How: This joins their IDs into one value to compare.
+
+
+
+	useEffect( () => { // What: Sync Effect. Why: A changed set of groups may hold one missing the photo. How: This syncs once there are groups, logging a failure.
+
+
+		if ( groKeyStr !== '' ) proSynFun().catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Sync Call. Why: Every group should hold the member's newest photo. How: This copies it where it's missing, logging a failure.
+
+
+	}, [ groKeyStr ] ); // What: Effect Dependency Array. Why: The sync follows the member's groups. How: groKeyStr changes when they do.
+
+
+};
+
+// #endregion useProSynFun
+
+
+
 // #region useWaiLisFun
 
 /**
@@ -363,6 +412,11 @@ function ScrHosCom () : React.JSX.Element {
 	const ideHasBoo = useIdeHasFun( watVerNum );                                                    // What: Identity Has Boolean. Why: A phone in no group sees the landing page or the welcome by whether it holds an identity. How: This checks it, null while checking.
 	const visGroArr = groRecArr?.filter( ( groRecObj ) => groRecObj.ideStr !== gonIdeStr ) ?? null; // What: Visible Group Array. Why: A group just left or deleted is gone to the member at once. How: This leaves it out of the groups, null while loading.
 	const waiRecArr = useWaiLisFun( visGroArr );                                                    // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
+
+
+	useProSynFun( visGroArr ); // What: Profile Sync Call. Why: One photo shows in every group, including ones joined later. How: This syncs it as the groups change.
+
+
 
 	const iosGatBoo = isaIosFun() && !isaInsFun() && !safConBoo; // What: iOS Gate Boolean. Why: On an iPhone or iPad in Safari, installing comes before anything else, since nothing done in Safari moves to the app (Section 16). How: This is true there until the app is installed or someone chooses to carry on in Safari.
 

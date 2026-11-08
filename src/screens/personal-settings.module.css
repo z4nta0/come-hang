@@ -5,12 +5,12 @@
  * personal-settings.module.css = Personal Settings Module
  *
  * @summary
- * Styles for PerSetCom: this device's part with its appearance choices,
- * note, and buttons, the account's part with its notes and buttons, the About
- * part with its note, linked details, and tip, and each part's row of
- * buttons. Each part sits below a line, unless it leads the column, so the
- * parts read apart. The parts sit in whichever Settings column holds them,
- * which spaces them and holds their status and alert.
+ * Styles for PerSetCom: this device's part with its appearance choices, note,
+ * and buttons, the account's part with its notes and buttons, the About part
+ * with its note, linked details, and tip, and each part's row of buttons. Each
+ * part sits below a line, so the parts read apart. The parts sit in whichever
+ * Settings column holds them, which spaces them and holds their status and
+ * alert.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -27,14 +27,6 @@
 	display     : grid;
 	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
 	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
-
-
-}
-.devSetSec:first-of-type { /* What: Leading Device Settings Section. Why: With no group, this part comes first, straight below the title, where a line would divide nothing. How: This drops the line and its space. */
-
-
-	border-top  : 0;
-	padding-top : 0;
 
 
 }
