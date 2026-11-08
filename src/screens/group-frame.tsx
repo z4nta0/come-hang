@@ -6,26 +6,28 @@
 import cssModObj from './group-frame.module.css'; // What: CSS Module Object. Why: The frame is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom    } from '../ui/button.tsx';     // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
-import { GroChaCom    } from './group-chat.tsx';     // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
-import { GroEveCom    } from './group-events.tsx';   // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
-import { GroMapCom    } from './group-map.tsx';      // What: Group Map Component. Why: The Map section shares locations and says who's on their way. How: The frame shows it when that section is open.
-import { GroPeoCom    } from './group-people.tsx';   // What: Group People Component. Why: The People section shows the group's link and members. How: The frame shows it when that section is open.
-import { GroSetCom    } from './group-settings.tsx'; // What: Group Settings Component. Why: The Settings section changes, leaves, or deletes the group. How: The frame shows it when that section is open.
-import { IcoSvgCom    } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
-import { iniTexFun    } from '../utils/text.ts';     // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
-import { MaiAreCom    } from '../ui/main-area.tsx';  // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
-import { SheDiaCom    } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
-import { SolSetCom    } from './solo-settings.tsx';  // What: Solo Settings Component. Why: Settings works with no group. How: The frame shows it as Settings then.
-import { useEffect    } from 'react';                // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This moves focus once it's drawn.
-import { useRef       } from 'react';                // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
-import { useScrOpeFun } from '../ui/screen.ts';      // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
-import { WelSecCom    } from './welcome.tsx';        // What: Welcome Section Component. Why: With no group, the content says how to start or join one. How: The frame shows it then.
+import { ButBasCom    } from '../ui/button.tsx';      // What: Button Base Component. Why: The group sheet leads with starting a group. How: This draws its button.
+import { GroChaCom    } from './group-chat.tsx';      // What: Group Chat Component. Why: The open group's chat fills the content. How: The frame shows it in the main area.
+import { GroEveCom    } from './group-events.tsx';    // What: Group Events Component. Why: The Events section lists and plans the group's events. How: The frame shows it when that section is open.
+import { GroMapCom    } from './group-map.tsx';       // What: Group Map Component. Why: The Map section shares locations and says who's on their way. How: The frame shows it when that section is open.
+import { GroPeoCom    } from './group-people.tsx';    // What: Group People Component. Why: The People section shows the group's link and members. How: The frame shows it when that section is open.
+import { GroSetCom    } from './group-settings.tsx';  // What: Group Settings Component. Why: The Settings section changes, leaves, or deletes the group. How: The frame shows it when that section is open.
+import { IcoSvgCom    } from '../ui/icon.tsx';        // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
+import { iniTexFun    } from '../utils/text.ts';      // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
+import { MaiAreCom    } from '../ui/main-area.tsx';   // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
+import { SheDiaCom    } from '../ui/sheet.tsx';       // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
+import { SolSetCom    } from './solo-settings.tsx';   // What: Solo Settings Component. Why: Settings works with no group. How: The frame shows it as Settings then.
+import { useEffect    } from 'react';                 // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This moves focus once it's drawn.
+import { useRef       } from 'react';                 // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
+import { useScrOpeFun } from '../ui/screen.ts';       // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
+import { WaiDotCom    } from '../ui/waiting-dot.tsx'; // What: Waiting Dot Component. Why: A tab, a group, or the switcher leading to something waiting on the member is marked. How: This draws the dot and its words.
+import { WelSecCom    } from './welcome.tsx';         // What: Welcome Section Component. Why: With no group, the content says how to start or join one. How: The frame shows it then.
 
 
-import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
-import type { SecNamTyp } from '../ui/screen.ts';    // What: Section Name Type. Why: The frame shows one of the group's sections. How: This types its name.
-import type { SheHanTyp } from '../ui/sheet.tsx';    // What: Sheet Handle Type. Why: The frame opens and closes the group sheet. How: This types its handle.
+import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The frame lists the groups and shows one. How: This types each group.
+import type { SecNamTyp } from '../ui/screen.ts';     // What: Section Name Type. Why: The frame shows one of the group's sections. How: This types its name.
+import type { SheHanTyp } from '../ui/sheet.tsx';     // What: Sheet Handle Type. Why: The frame opens and closes the group sheet. How: This types its handle.
+import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Type. Why: The frame marks what's waiting on the member. How: This types each item.
 
 // #endregion Imports
 
@@ -82,7 +84,7 @@ const SEC_TAB_ARR : SecTabTyp[] = [ // What: Section Tab Array. Why: Every group
 
 // #region Components
 
-type GfcProTyp = { curGroObj : GroRecTyp | null, eveIdeStr? : string, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, onRecFun : () => void, secNamStr : SecNamTyp }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, or the welcome with none, can open one event in its Events section, focuses it when asked, and hands on a group left or deleted and an identity brought back. How: This types GroFraCom's props.
+type GfcProTyp = { curGroObj : GroRecTyp | null, eveIdeStr? : string, focBoo : boolean, groRecArr : GroRecTyp[], onGonFun : ( gonIdeStr : string, mesStr : string ) => void, onRecFun : () => void, secNamStr : SecNamTyp, waiRecArr : WaiRecTyp[], waiStr? : string }; // What: Group Frame Component Props Type. Why: The frame shows one section of one group among every group, or the welcome with none, can open one event in its Events section, focuses it when asked, and hands on a group left or deleted and an identity brought back. How: This types GroFraCom's props.
 
 // #region GroFraCom
 
@@ -119,6 +121,11 @@ type GfcProTyp = { curGroObj : GroRecTyp | null, eveIdeStr? : string, focBoo : b
  * @param props.onRecFun  - On Recover Function: Called once the welcome
  *                          brings an identity back onto this phone.
  * @param props.secNamStr - Section Name String: The section to show.
+ * @param props.waiRecArr - Waiting Record Array: What's waiting on the
+ *                          member, which marks the tabs, the rail, the
+ *                          switcher, and the sheet.
+ * @param props.waiStr    - Waiting String: An item People or Settings opens
+ *                          at, as the notices sheet asks, or undefined.
  *
  * @returns The frame.
  *
@@ -129,13 +136,19 @@ type GfcProTyp = { curGroObj : GroRecTyp | null, eveIdeStr? : string, focBoo : b
  *
 */
 
-function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecFun, secNamStr } : GfcProTyp ) : React.JSX.Element {
+function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecFun, secNamStr, waiRecArr, waiStr } : GfcProTyp ) : React.JSX.Element {
 
 
 	const curIdeStr = curGroObj?.ideStr;                    // What: Current Identifier String. Why: The rail, sheet, tabs, and focus all compare against the open group. How: This holds its ID, undefined with no group.
 	const heaEleRef = useRef< HTMLHeadingElement >( null ); // What: Heading Element Reference. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This holds the heading.
 	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: Choosing a group, starting one, or joining one with a link opens a screen. How: This reads the function that opens one.
 	const sheHanRef = useRef< SheHanTyp >( null );          // What: Sheet Handle Reference. Why: The switcher opens the group sheet and a choice closes it. How: This holds the sheet's handle.
+
+	const othCouNum = waiRecArr.filter( ( waiRecObj ) => waiRecObj.groIdeStr !== curIdeStr ).length; // What: Other Count Number. Why: On a phone the switcher is the way to the other groups, so it marks what waits in them. How: This counts the items outside the open group.
+
+
+
+	const groCouFun = ( groIdeStr : string ) : number => waiRecArr.filter( ( waiRecObj ) => waiRecObj.groIdeStr === groIdeStr ).length; // What: Group Count Function. Why: A group's tile and row are marked while anything waits in it. How: This counts its items.
 
 
 
@@ -200,6 +213,14 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 						<span aria-hidden='true'>{ iniTexFun( groRecObj.namStr ) }</span>{ /* What: Rail Initials Span Element. Why: The initials are what fits the tile, and announcing them would only repeat the name badly. How: This shows them, hidden from screen readers. */ }
 
 						<span className={ cssModObj.raiNamSpa }>{ groRecObj.namStr }</span>{ /* What: Rail Name Span Element. Why: A screen reader should announce the group by its full name. How: This holds the name, hidden from sight. */ }
+
+
+
+						<WaiDotCom
+							couNum={ groCouFun( groRecObj.ideStr ) }
+							labStr={ `, ${ groCouFun( groRecObj.ideStr ) } waiting` }
+							varStr='corner'
+						/>{ /* What: Waiting Dot Component. Why: A group with something waiting on the member should stand out in the rail. How: This marks the tile's corner and adds the count to its name. */ }
 
 
 					</button>
@@ -287,6 +308,14 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 						/>{ /* What: Down Icon SVG Component. Why: A chevron says the name opens a list. How: This draws it at the base step. */ }{ /* Vertical Rhythm Base ~= 14.572px */ }
 
 
+
+						<WaiDotCom
+							couNum={ othCouNum }
+							labStr={ `, ${ othCouNum } waiting in your other groups` }
+							varStr='inline'
+						/>{ /* What: Waiting Dot Component. Why: Something waiting in another group is reached through the switcher on a phone. How: This marks the switcher after its chevron and adds the count to its name. */ }
+
+
 					</button>
 
 					<span className={ cssModObj.fraNamSpa }>{ curGroObj?.namStr ?? 'Come Hang' }</span>{ /* What: Frame Name Span Element. Why: On a wide screen the name, or the wordmark with no group, is plain text, since the rail switches groups. How: This shows it from 720px wide and up. */ }
@@ -317,6 +346,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 				{ SEC_TAB_ARR.map( ( secTabObj ) => { // What: Section Tab Map. Why: Each section gets its own button. How: This renders one per section, turning off a group's sections while there's none.
 
 
+					const secCouNum = waiRecArr.filter( ( waiRecObj ) => waiRecObj.groIdeStr === curIdeStr && ( waiRecObj.kinValStr === 'offer' ? 'settings' : 'people' ) === secTabObj.icoNamStr ).length; // What: Section Count Number. Why: A tab leading to something waiting on the member is marked, an offer in Settings and the requests in People. How: This counts the open group's items in the tab's section.
 					const locTabBoo = curIdeStr === undefined && secTabObj.icoNamStr !== 'settings'; // What: Locked Tab Boolean. Why: A section showing a group's own things has nothing to show without one, while Settings has the phone's and account's. How: This is true for those sections with no group.
 
 
@@ -346,6 +376,14 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 						/>{ /* What: Section Icon SVG Component. Why: An icon makes each tab quick to find. How: This draws the section's icon at step p01. */ }{ /* Vertical Rhythm Base Plus 1 ~= 19.304px */ }
 
 							{ secTabObj.labStr }
+
+
+
+							<WaiDotCom
+								couNum={ secCouNum }
+								labStr={ `, ${ secCouNum } waiting` }
+								varStr='corner'
+							/>{ /* What: Waiting Dot Component. Why: A section holding something waiting on the member should stand out. How: This marks the icon's corner and adds the count to the tab's name. */ }
 
 
 						</button>
@@ -407,6 +445,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 						key={ curGroObj.ideStr } // What: People Key. Why: Another group's people have to start afresh. How: This remounts the section for each group.
 
 						curGroObj={ curGroObj }
+						waiStr={ waiStr }
 					/> // What: Group People Component. Why: The group's link and members live here. How: This shows the open group's People section.
 
 
@@ -417,6 +456,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 						key={ curGroObj.ideStr } // What: Settings Key. Why: Another group's settings have to start afresh rather than keep this one's draft. How: This remounts the section for each group.
 
 						curGroObj={ curGroObj }
+						waiStr={ waiStr }
 
 						onGonFun={ onGonFun }
 					/> // What: Group Settings Component. Why: The group is changed, left, or deleted here. How: This shows the open group's Settings section.
@@ -464,7 +504,21 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 								aria-current={ groRecObj.ideStr === curIdeStr ? 'true' : undefined } // What: Sheet Current State. Why: The open group should be marked, to sight and to a screen reader. How: This sets aria-current on the open group's row.
 
 								onClick={ () => groOpeFun( groRecObj.ideStr ) }
-							>{ groRecObj.namStr }</button>{ /* What: Sheet Group Button Element. Why: A group is chosen by its name. How: This opens the group and closes the sheet. */ }
+							>{ /* What: Sheet Group Button Element. Why: A group is chosen by its name. How: This opens the group and closes the sheet. */ }
+
+
+								{ groRecObj.namStr }
+
+
+
+								<WaiDotCom
+									couNum={ groCouFun( groRecObj.ideStr ) }
+									labStr={ `, ${ groCouFun( groRecObj.ideStr ) } waiting` }
+									varStr='inline'
+								/>{ /* What: Waiting Dot Component. Why: A group with something waiting on the member should stand out in the list. How: This marks the row after its name and adds the count to it. */ }
+
+
+							</button>
 
 
 						</li>

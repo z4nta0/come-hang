@@ -6,27 +6,29 @@
 import cssModObj from './group-people.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Copying the link and saving a name are the section's leading actions. How: This draws their buttons.
-import { HisReqCom } from './history-requests.tsx'; // What: History Requests Component. Why: Members see who is asking for chat history and can send it. How: This shows the list in People.
-import { ideEnsFun } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member's own row offers a name change. How: This reads their UID.
-import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Function. Why: Each member's avatar shows their initials. How: This takes them from the name.
-import { invRotFun } from '../state/groups.ts';     // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
-import { keyLisFun } from '../state/key-share.ts';  // What: Key List Function. Why: Members see who's waiting on a new phone for the group's key (Section 6). How: This reads the standing requests.
-import { keyShaFun } from '../state/key-share.ts';  // What: Key Share Function. Why: Any member shares the key with someone on a new phone. How: This wraps it for their new key.
-import { memLisFun } from '../state/members.ts';    // What: Member List Function. Why: The section lists the group's members. How: This reads them.
-import { memRemFun } from '../state/members.ts';    // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
-import { mesTimFun } from '../utils/date.ts';       // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
-import { namSetFun } from '../state/members.ts';    // What: Name Set Function. Why: A member changes their own name in the group. How: This saves it.
-import { perNamFun } from '../core/text-limits.ts'; // What: Person Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
-import { reqAppFun } from '../state/joins.ts';      // What: Request Approve Function. Why: Any member lets a joiner in (Section 17). How: This approves their request.
-import { reqBloFun } from '../state/joins.ts';      // What: Request Block Function. Why: A request from someone unwelcome is ended for good. How: This blocks its sender.
-import { reqDecFun } from '../state/joins.ts';      // What: Request Decline Function. Why: Any member turns a request down. How: This declines it.
-import { reqWatFun } from '../state/joins.ts';      // What: Request Watch Function. Why: A new request, or one another member answered, shows at once. How: This watches them.
-import { sloColFun } from '../ui/member-color.ts';  // What: Slot Color Function. Why: Each member's avatar wears their color. How: This names it.
-import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: A name is checked as it'll be saved. How: This tidies it.
-import { useEffect } from 'react';                  // What: Use Effect. Why: The section reads its members and watches its requests, and an edit or an answer moves focus. How: This starts the reads and the watch and moves focus.
-import { useRef    } from 'react';                  // What: Use Reference. Why: Focus moves between a control and the form it opens, and to a heading after an answer. How: This holds the elements.
-import { useState  } from 'react';                  // What: Use State. Why: The members, the open form, and the messages change while the section is open. How: This holds each.
+import { ButBasCom    } from '../ui/button.tsx';       // What: Button Base Component. Why: Copying the link and saving a name are the section's leading actions. How: This draws their buttons.
+import { HisReqCom    } from './history-requests.tsx'; // What: History Requests Component. Why: Members see who is asking for chat history and can send it. How: This shows the list in People.
+import { ideEnsFun    } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member's own row offers a name change. How: This reads their UID.
+import { iniTexFun    } from '../utils/text.ts';       // What: Initials Text Function. Why: Each member's avatar shows their initials. How: This takes them from the name.
+import { invRotFun    } from '../state/groups.ts';     // What: Invite Rotate Function. Why: The owner can make a new invite link. How: This swaps the link.
+import { keyLisFun    } from '../state/key-share.ts';  // What: Key List Function. Why: Members see who's waiting on a new phone for the group's key (Section 6). How: This reads the standing requests.
+import { keyShaFun    } from '../state/key-share.ts';  // What: Key Share Function. Why: Any member shares the key with someone on a new phone. How: This wraps it for their new key.
+import { memLisFun    } from '../state/members.ts';    // What: Member List Function. Why: The section lists the group's members. How: This reads them.
+import { memRemFun    } from '../state/members.ts';    // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
+import { mesTimFun    } from '../utils/date.ts';       // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
+import { namSetFun    } from '../state/members.ts';    // What: Name Set Function. Why: A member changes their own name in the group. How: This saves it.
+import { perNamFun    } from '../core/text-limits.ts'; // What: Person Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
+import { reqAppFun    } from '../state/joins.ts';      // What: Request Approve Function. Why: Any member lets a joiner in (Section 17). How: This approves their request.
+import { reqBloFun    } from '../state/joins.ts';      // What: Request Block Function. Why: A request from someone unwelcome is ended for good. How: This blocks its sender.
+import { reqDecFun    } from '../state/joins.ts';      // What: Request Decline Function. Why: Any member turns a request down. How: This declines it.
+import { reqWatFun    } from '../state/joins.ts';      // What: Request Watch Function. Why: A new request, or one another member answered, shows at once. How: This watches them.
+import { sloColFun    } from '../ui/member-color.ts';  // What: Slot Color Function. Why: Each member's avatar wears their color. How: This names it.
+import { texNorFun    } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: A name is checked as it'll be saved. How: This tidies it.
+import { useEffect    } from 'react';                  // What: Use Effect. Why: The section reads its members and watches its requests, and an edit or an answer moves focus. How: This starts the reads and the watch and moves focus.
+import { useIteJumFun } from '../ui/item-jump.ts';     // What: Use Item Jump Function. Why: The notices sheet can open the section at one item waiting on the member. How: This waits for its row and jumps there.
+import { useRef       } from 'react';                  // What: Use Reference. Why: Focus moves between a control and the form it opens, and to a heading after an answer. How: This holds the elements.
+import { useScrOpeFun } from '../ui/screen.ts';        // What: Use Screen Open Function. Why: A jump done, the entry drops the item it named. How: This returns the function that opens a screen.
+import { useState     } from 'react';                  // What: Use State. Why: The members, the open form, and the messages change while the section is open. How: This holds each.
 
 
 import type { GroRecTyp } from '../state/groups.ts';    // What: Group Record Type. Why: The section shows one group's members and link. How: This types the group.
@@ -73,7 +75,7 @@ const PER_ERR_STR = 'Use letters, spaces, apostrophes, hyphens, and periods.'; /
 
 // #region Components
 
-type GpcProTyp = { curGroObj : GroRecTyp }; // What: Group People Component Props Type. Why: The section shows one group. How: This types GroPeoCom's one prop.
+type GpcProTyp = { curGroObj : GroRecTyp, waiStr? : string }; // What: Group People Component Props Type. Why: The section shows one group, and can open at one item waiting on the member. How: This types GroPeoCom's props.
 
 // #region GroPeoCom
 
@@ -96,22 +98,27 @@ type GpcProTyp = { curGroObj : GroRecTyp }; // What: Group People Component Prop
  * each other row offering the owner a removal after confirming, which also
  * makes a new link. Changes are announced through a status region and failures
  * through an alert, and the members are read again after each change and each
- * change to the requests. Key it by the group, so another group starts afresh.
+ * change to the requests. When waiStr names a join, key, or history request,
+ * the section jumps to its row once it renders and replaces the history
+ * entry with one that doesn't name it, announcing a request already answered.
+ * Key it by the group, so another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param props.curGroObj - Current Group Object: The open group.
+ * @param props.waiStr    - Waiting String: A request to jump to, as the
+ *                          notices sheet asks, such as `join:u1`.
  *
  * @returns The section.
  *
  * @example
  * ```tsx
- * GroPeoCom({ curGroObj }) // => <GroPeoCom />
+ * GroPeoCom({ curGroObj, waiStr }) // => <GroPeoCom />
  * ```
  *
 */
 
-function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
+function GroPeoCom ( { curGroObj, waiStr } : GpcProTyp ) : React.JSX.Element {
 
 
 	const ediButRef = useRef< HTMLButtonElement >( null );  // What: Edit Button Reference. Why: Leaving the name form returns focus to its button. How: This holds the button.
@@ -124,6 +131,7 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 	const memHeaRef = useRef< HTMLHeadingElement >( null ); // What: Member Heading Reference. Why: Focus lands on the members' heading once the last request is answered. How: This holds it.
 	const namInpRef = useRef< HTMLInputElement >( null );   // What: Name Input Reference. Why: The name form puts the member in its box. How: This holds the box.
 	const reqHeaRef = useRef< HTMLHeadingElement >( null ); // What: Request Heading Reference. Why: Focus lands on the waiting list's heading once a request is answered and others wait. How: This holds it.
+	const scrOpeFun = useScrOpeFun();                       // What: Screen Open Function. Why: A finished jump drops the item from the history entry. How: This opens a screen.
 
 	const [ actReqBoo, setActReqBoo ] = useState( false );                      // What: Action Request Boolean And Setter. Why: One change at a time keeps a double tap from acting twice. How: This is true while one is out.
 	const [ conAllBoo, setConAllBoo ] = useState( false );                      // What: Confirm All Boolean And Setter. Why: Declining every request asks to confirm first. How: This is true while the confirmation shows.
@@ -167,6 +175,19 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 
 
 	useEffect( () => reqWatFun( curGroObj.ideStr, ( watRecArr ) => { setReqRecArr( watRecArr ); setLisVerNum( ( preVerNum ) => preVerNum + 1 ); }, ( errCatObj ) => console.warn( errCatObj ) ), [ curGroObj.ideStr ] ); // What: Request Watch Effect. Why: A request shows as it arrives, and an approval by any member shows in the members. How: This watches the requests, reads the members again with each change, logs a failure, and stops the watch when the section closes. // What: Effect Dependency Note. Why: The requests belong to one group. How: curGroObj.ideStr names it.
+
+
+
+	useIteJumFun( waiStr, ( fouValBoo ) => { // What: Item Jump Call. Why: The notices sheet opens the section at a request waiting on the member. How: This jumps to its row once it renders, then drops it from the entry, saying when it was answered already.
+
+
+		if ( !fouValBoo ) setStaMesStr( "That's been answered already." ); // What: Answered Status Call. Why: A request someone else answered first has no row to jump to. How: This announces it.
+
+
+		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group', secStr : 'people' }, true ); // What: Entry Replace Call. Why: A reload or a return shouldn't jump again. How: This replaces the entry with one naming no item.
+
+
+	} );
 
 
 
@@ -666,6 +687,10 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 									key={ reqRecObj.uidValStr }
 
 									className={ cssModObj.reqRowIte }
+
+									data-waiting-item-key={ `join:${ reqRecObj.uidValStr }` } // What: Waiting Item Key. Why: The notices sheet can jump to this request. How: This names it by kind and joiner.
+
+									tabIndex={ -1 } // What: Row Tab Index. Why: A jump focuses the row so it's announced, but the row isn't a control. How: This lets a script focus it without joining the Tab order.
 								>{ /* What: Request Row Item Element. Why: A request shows who is asking, when, any warning, their note, and the answers. How: This stacks them down the row. */ }
 
 
@@ -883,6 +908,10 @@ function GroPeoCom ( { curGroObj } : GpcProTyp ) : React.JSX.Element {
 									key={ keyReqObj.uidValStr }
 
 									className={ cssModObj.keyRowIte }
+
+									data-waiting-item-key={ `key:${ keyReqObj.uidValStr }` } // What: Waiting Item Key. Why: The notices sheet can jump to this request. How: This names it by kind and member.
+
+									tabIndex={ -1 } // What: Row Tab Index. Why: A jump focuses the row so it's announced, but the row isn't a control. How: This lets a script focus it without joining the Tab order.
 								>{ /* What: Key Row Item Element. Why: A request shows who is waiting, since when, and the share. How: This stacks them down the row. */ }
 
 

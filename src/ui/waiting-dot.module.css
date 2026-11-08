@@ -1,0 +1,89 @@
+
+
+
+/**
+ * waiting-dot.module.css = Waiting Dot Module
+ *
+ * @summary
+ * Styles for WaiDotCom: a small coral dot with a ring of the surface color,
+ * so it stands clear of any control's fill, placed on a grid control's top
+ * right corner or after a control's text, and fading and growing in while
+ * something waits, then shrinking out on the accelerating curve. Its words
+ * are for screen readers alone.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+.waiDotSpa { /* What: Waiting Dot Span. Why: The dot should be small, clear on any fill, and fade out once nothing waits. How: This draws a coral circle ringed in the surface color, hidden and shrunk, and eases its fade and shrink as it leaves on the accelerating curve. */
+
+
+	background-color : var( --acc-sec-col );                                                                                   /* Accent Secondary Color = #DD6248 */
+	border-radius    : 50%;
+	box-shadow       : 0 0 0 var( --bor-wid-lar ) var( --bac-sur-col );                                                       /* Border Width Large ~= 2.035px, Background Surface Color = #FFFFFF */ /* What: Ring Note. Why: A ring of the surface keeps the dot apart from a filled tile or tab. How: This draws a solid ring around it. */
+	height           : calc( var( --ver-rhy-m02 ) * 1rem );                                                                    /* Vertical Rhythm Base Minus 2 ~= 8.304px */
+	opacity          : 0;
+	pointer-events   : none;
+	transform        : scale( 0.5 );                                                                                            /* What: Hidden Scale. Why: The dot grows in from half its size rather than popping. How: This holds it at half, a literal since an element opening from nothing may scale past the few percent. */
+	transition       : opacity var( --dur-tra-p02 ) var( --mot-acc-eas ), transform var( --dur-tra-p02 ) var( --mot-acc-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+	width            : calc( var( --ver-rhy-m02 ) * 1rem );                                                                    /* Vertical Rhythm Base Minus 2 ~= 8.304px */
+
+
+}
+.waiDotSpa[data-waiting-dot-shown] { /* What: Shown Waiting Dot Span. Why: The dot arrives while something waits. How: This shows it at full size, easing in on the decelerating curve. */
+
+
+	opacity    : 1;
+	transform  : scale( 1 );
+	transition : opacity var( --dur-tra-p02 ) var( --mot-dec-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Waiting Dot Span. Why: Someone who asked for less motion should see the dot appear and go at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.waiDotSpa,
+	.waiDotSpa[data-waiting-dot-shown] { /* What: Motionless Waiting Dot Span. Why: The dot should switch at once, both ways. How: This turns the transition off in both states. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+.waiDotSpa--corner { /* What: Waiting Dot Span Corner. Why: On a tile or a tab the dot belongs on the corner, over what the control shows. How: This places it in the control's first grid cell, at its top right, by line number since the controls' cells aren't named alike. */
+
+
+	grid-area  : 1 / 1;
+	place-self : start end;
+
+
+}
+.waiDotSpa--inline { /* What: Waiting Dot Span Inline. Why: Beside a name the dot follows the text. How: This sits it in the line, centered on the text a tier 5 space after it. */
+
+
+	display             : inline-block;
+	margin-inline-start : var( --tie-hor-005 ); /* Tier Horizontal 5, about 4.732px - 6.268px */
+	vertical-align      : middle;
+
+
+}
+
+.waiLabSpa { /* What: Waiting Label Span. Why: The words are for screen readers, while sight gets the dot. How: This hides them from view with the standard clip, keeping them in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+

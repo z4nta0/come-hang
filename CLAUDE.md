@@ -95,7 +95,11 @@ the join form link both. Settings, with or without a group, deletes someone's
 data, handing each group they own to its earliest member. A sheet titled
 "While you were away" opens over any screen when notices are waiting, or
 arrive, such as a removal or an answered offer, and "Got it" or any other
-way of closing it dismisses them all. The app's one
+way of closing it dismisses them all. Its "Waiting on you" part lists what
+a member can act on, such as a join request, a key or history request, or an
+offer of a group, each once per device, with a Review that opens the section
+at the item and flashes it, and a coral dot marks the tabs, the rail, the
+switcher, and the group sheet while anything waits. The app's one
 service worker opens it offline and shows pushes, a tap on one opening its
 group at the section its news is in. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per

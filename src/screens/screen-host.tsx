@@ -9,6 +9,7 @@ import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Wh
 import { CreGroCom       } from './create-group.tsx';         // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
 import { GroFraCom       } from './group-frame.tsx';          // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
 import { groWatFun       } from '../state/groups.ts';         // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
+import { ideEnsFun       } from '../state/identity.ts';       // What: Identity Ensure Function. Why: What's waiting on the member is judged by their UID. How: This reads it.
 import { ideHasFun       } from '../state/deletion.ts';       // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
 import { InsIosCom       } from './install-ios.tsx';          // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
 import { isaInsFun       } from '../platform/install.ts';     // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
@@ -17,6 +18,7 @@ import { JoiGroCom       } from './join-group.tsx';           // What: Join Grou
 import { LanPagCom       } from './landing/page.tsx';         // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
 import { LoaScrCom       } from './loading.tsx';              // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
 import { NotSheCom       } from './notices.tsx';              // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
+import { offLisFun       } from '../state/waiting.ts';        // What: Offer List Function. Why: An offer of a group waits on the member it names. How: This lists the live ones.
 import { PasInvCom       } from './paste-invite.tsx';         // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
 import { plaPruFun       } from '../platform/place-store.ts'; // What: Place Prune Function. Why: A group's event places shouldn't stay on a device that's no longer in it. How: This removes the places of every group not listed.
 import { safConFun       } from '../platform/install.ts';     // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
@@ -31,9 +33,11 @@ import { useRef          } from 'react';                      // What: Use Refer
 import { useScrOpeFun    } from '../ui/screen.ts';            // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
 import { useScrStaFun    } from '../ui/screen.ts';            // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
 import { useState        } from 'react';                      // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
+import { waiWatFun       } from '../state/waiting.ts';        // What: Waiting Watch Function. Why: Requests waiting on the member mark the frame and open the notices sheet. How: This watches them across the groups.
 
 
-import type { GroRecTyp } from '../state/groups.ts'; // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
+import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
+import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Type. Why: The host hands the waiting items on. How: This types them.
 
 // #endregion Imports
 
@@ -220,6 +224,89 @@ const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use I
 
 // #endregion useIdeHasFun
 
+
+
+// #region useWaiLisFun
+
+/**
+ * useWaiLisFun = Use Waiting List Function
+ *
+ * @summary
+ * Returns what's waiting on the member across their groups, oldest first:
+ * the live offers of a group to them, read from the groups, and the join,
+ * key, and history requests they can answer, watched in each group. The
+ * member's UID is read once there's a group, and the watch restarts only when
+ * the groups themselves change, not with every report of them. With no
+ * groups, or before the first report, nothing is waiting.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groRecArr - Group Record Array: The member's groups, or null while
+ *                    loading.
+ *
+ * @returns The waiting items.
+ *
+ * @example
+ * ```ts
+ * useWaiLisFun(groRecArr) // => [{ kinValStr : 'join', ... }]
+ * ```
+ *
+*/
+
+const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiRecTyp[] => { // What: Use Waiting List Function. Why: The frame and the notices sheet follow what's waiting on the member. How: This watches the requests and adds the offers.
+
+
+	const [ uidValStr, setUidValStr ] = useState( '' );                 // What: UID Value String And Setter. Why: The items are judged against the member. How: This holds their UID, empty until read.
+	const [ waiRecArr, setWaiRecArr ] = useState< WaiRecTyp[] >( [] ); // What: Waiting Record Array And Setter. Why: The watch reports the requests waiting. How: This holds the latest report.
+
+
+	const groIdeArr = groRecArr?.map( ( groRecObj ) => groRecObj.ideStr ).sort() ?? []; // What: Group Identifier Array. Why: The watches follow the member's groups. How: This lists their IDs in order.
+	const groKeyStr = groIdeArr.join( ',' );                                          // What: Group Key String. Why: The watch should restart only when the groups change. How: This joins the IDs into one value to compare.
+
+
+
+	useEffect( () => { // What: UID Read Effect. Why: Only an identity in a group has anything waiting, and reading it otherwise would make one. How: This reads the UID once there's a group.
+
+
+		if ( groKeyStr === '' ) return; // What: No Group Guard. Why: Nothing waits outside a group. How: This returns.
+
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: A read finishing after the groups changed mustn't land. How: This is true until the cleanup runs.
+
+
+		void ideEnsFun().then( ( ideRecObj ) => { if ( actValBoo ) setUidValStr( ideRecObj.uidValStr ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: UID Read Call. Why: The items are judged against the member. How: This reads the identity and keeps its UID, logging a failure.
+
+
+
+		return () => { actValBoo = false; }; // What: Cleanup Return. Why: A late read belongs to groups since changed. How: This marks it inactive.
+
+
+	}, [ groKeyStr ] ); // What: Effect Dependency Array. Why: The UID is read for each set of groups. How: groKeyStr changes when the groups do.
+
+
+
+	useEffect( () => { // What: Waiting Watch Effect. Why: Requests can arrive and be answered at any time. How: This watches them across the groups, stopping on cleanup.
+
+
+		if ( groKeyStr === '' || uidValStr === '' ) return; // What: Not Ready Guard. Why: The watch needs the groups and the member. How: This returns until both are known.
+
+
+
+		return waiWatFun( groKeyStr.split( ',' ), uidValStr, setWaiRecArr ); // What: Watch Return. Why: The watches stop with the groups they follow. How: This starts them and returns their stop.
+
+
+	}, [ groKeyStr, uidValStr ] ); // What: Effect Dependency Array. Why: The watch follows the member's groups. How: groKeyStr changes when the groups do, and uidValStr once it's read.
+
+
+
+	return [ ...offLisFun( groRecArr ?? [], uidValStr, Date.now() ), ...waiRecArr.filter( ( waiRecObj ) => groIdeArr.includes( waiRecObj.groIdeStr ) ) ].sort( ( recOneObj, recTwoObj ) => recOneObj.timNum - recTwoObj.timNum ); // What: Items Return. Why: The longest wait reads first, and a group just left has nothing waiting. How: This joins the offers and the watched requests still in the groups, oldest first.
+
+
+};
+
+// #endregion useWaiLisFun
+
 // #endregion Hooks
 
 
@@ -275,6 +362,7 @@ function ScrHosCom () : React.JSX.Element {
 	const groRecArr = useGroLisFun( watVerNum );                                                    // What: Group Record Array. Why: The groups decide between the first screens and a group. How: This watches them, null while loading.
 	const ideHasBoo = useIdeHasFun( watVerNum );                                                    // What: Identity Has Boolean. Why: A phone in no group sees the landing page or the welcome by whether it holds an identity. How: This checks it, null while checking.
 	const visGroArr = groRecArr?.filter( ( groRecObj ) => groRecObj.ideStr !== gonIdeStr ) ?? null; // What: Visible Group Array. Why: A group just left or deleted is gone to the member at once. How: This leaves it out of the groups, null while loading.
+	const waiRecArr = useWaiLisFun( visGroArr );                                                    // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
 
 	const iosGatBoo = isaIosFun() && !isaInsFun() && !safConBoo; // What: iOS Gate Boolean. Why: On an iPhone or iPad in Safari, installing comes before anything else, since nothing done in Safari moves to the app (Section 16). How: This is true there until the app is installed or someone chooses to carry on in Safari.
 
@@ -513,6 +601,8 @@ function ScrHosCom () : React.JSX.Element {
 				focBoo={ scrStaObj?.focBoo === true && ( scrStaObj.groStr === undefined || curGroObj?.ideStr === scrStaObj.groStr ) } // What: Focus Request. Why: Only a group opened by a creation, a leave, a deletion, or getting groups back takes focus, and only the one the entry names, or the first, or the frame with no group, when it names none. How: This is true for the entry that change opened.
 				groRecArr={ visGroArr }
 				secNamStr={ scrStaObj?.groStr === undefined || scrStaObj.groStr === curGroObj?.ideStr ? scrStaObj?.secStr ?? 'chat' : 'chat' } // What: Section Name Choice. Why: The entry names the open section, and a group opened without one, or one that's gone, starts at its chat, which with no group is the welcome, while an entry naming no group, such as Settings opened before a first group arrived, keeps its section. How: This reads the entry's section when it's for the group shown or for none, else the chat.
+				waiRecArr={ waiRecArr }
+				waiStr={ scrStaObj?.groStr === curGroObj?.ideStr ? scrStaObj?.waiStr : undefined } // What: Waiting Choice. Why: The notices sheet opens People or Settings at an item, only in the group it names. How: This reads the entry's item when it's for the group shown.
 
 				onGonFun={ gonGroFun }
 				onRecFun={ recGroFun }
@@ -536,7 +626,17 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-			{ !iosGatBoo && groRecArr !== null && <NotSheCom watVerNum={ watVerNum } /> }{ /* What: Notice Sheet Condition. Why: Notices open over a real screen, not the install steps or the wait, and the sheet's watch restarts with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the install screen. */ }
+			{ !iosGatBoo && groRecArr !== null && ( // What: Notice Sheet Condition. Why: The sheet opens over a real screen, not the install steps or the wait, its watch restarting with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the install screen.
+
+
+				<NotSheCom
+					groRecArr={ groRecArr }
+					waiRecArr={ waiRecArr }
+					watVerNum={ watVerNum }
+				/> // What: Notice Sheet Component. Why: What's waiting on the member, and what happened while they were away, opens over the screen. How: This shows the sheet, closed until something arrives.
+
+
+			) }
 
 
 

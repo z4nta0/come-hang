@@ -12,13 +12,16 @@
  * Elements region holds the reset and the bare element styles, such as the
  * focus ring every link and button shares. Its Body State region holds what
  * the root element's attributes switch, such as a light or dark choice that
- * overrides the phone's. Each component's own styles live in its CSS module
- * instead.
+ * overrides the phone's, and what role attributes mark across the screens,
+ * such as the flash on an item the notices sheet jumped to. Its Shared
+ * Keyframes region holds the animations those use. Each component's own
+ * styles live in its CSS module instead.
  *
  * Sections:
  *  - Tokens
  *  - Base Elements
  *  - Body State
+ *  - Shared Keyframes
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -629,6 +632,69 @@ html[data-color-mode-choice='light'] { /* What: Light Choice Page Root. Why: Som
 
 }
 
+[data-waiting-item-key]:focus { /* What: Focused Waiting Items. Why: A waiting item takes focus only when the notices sheet jumps to it, where its flash already shows it, and a lasting ring around a whole row would read as a control. How: This removes the outline a focused row would otherwise draw. */
+
+
+	outline : none;
+
+
+}
+
+[data-jump-flash-active] { /* What: Jump Flash Items. Why: An item the notices sheet jumped to should catch the eye once. How: This plays a ring that fades out, on the accelerating curve as it leaves. */
+
+
+	animation : itemJumpFadeOut var( --dur-ani-p07 ) var( --mot-acc-eas ); /* Duration Animation Base Plus 7 ~= 1,130.0ms, Motion Accelerate Easing = cubic-bezier( .4, 0, 1, 1 ) */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Jump Flash Items. Why: Someone who asked for less motion should see the ring without its fade, and the script waits on the flash's end to clear its mark. How: This applies only when the reduced-motion preference is set. */
+
+
+	[data-jump-flash-active] { /* What: Motionless Jump Flash Items. Why: The ring should show and then simply go, with nothing changing in between. How: This holds the ring whole until the flash ends, where it disappears at once. */
+
+
+		animation-timing-function : step-end;
+
+
+	}
+
+
+}
+
 /* #endregion Body State */
+
+
+
+/* #region Shared Keyframes */
+
+@keyframes itemJumpFadeOut { /* What: Item Jump Fade Out. Why: A jumped-to item is ringed, and the ring fades so nothing lingers. How: This runs an accent ring from full to clear, its color the one thing that changes, since a ring has no compositor version and plays once. */
+
+
+	from {
+
+
+		outline-color  : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+		outline-offset : var( --bor-wid-lar ); /* Border Width Large ~= 2.035px */
+		outline-style  : solid;
+		outline-width  : var( --bor-wid-lar ); /* Border Width Large ~= 2.035px */
+
+
+	}
+
+	to {
+
+
+		outline-color  : transparent;
+		outline-offset : var( --bor-wid-lar ); /* Border Width Large ~= 2.035px */
+		outline-style  : solid;
+		outline-width  : var( --bor-wid-lar ); /* Border Width Large ~= 2.035px */
+
+
+	}
+
+
+}
+
+/* #endregion Shared Keyframes */
 
 

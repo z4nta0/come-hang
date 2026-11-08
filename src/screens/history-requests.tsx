@@ -292,6 +292,10 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 							key={ hisRecObj.uidReqStr }
 
 							className={ cssModObj.hisRowIte }
+
+							data-waiting-item-key={ `history:${ hisRecObj.uidReqStr }` } // What: Waiting Item Key. Why: The notices sheet can jump to this request. How: This names it by kind and asker.
+
+							tabIndex={ -1 } // What: Row Tab Index. Why: A jump focuses the row so it's announced, but the row isn't a control. How: This lets a script focus it without joining the Tab order.
 						>{ /* What: History Row Item Element. Why: A request shows who is asking, what for, and what can be done. How: This stacks them down the row. */ }
 
 

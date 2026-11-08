@@ -22,7 +22,9 @@ import { offWitFun    } from '../state/ownership.ts';   // What: Offer Withdraw 
 import { PerSetCom    } from './personal-settings.tsx'; // What: Personal Settings Component. Why: The phone's and account's parts sit in the group's Settings too. How: This draws them.
 import { texNorFun    } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: Names are checked and compared as they'll be saved. How: This tidies them.
 import { useEffect    } from 'react';                   // What: Use Effect. Why: The section reads the members, and a confirmation or an offer moves focus. How: This starts the read and moves focus once drawn.
+import { useIteJumFun } from '../ui/item-jump.ts';      // What: Use Item Jump Function. Why: The notices sheet can open the section at an offer of the group to the member. How: This waits for the offer and jumps there.
 import { useRef       } from 'react';                   // What: Use Reference. Why: Focus moves between a button, what replaces it, and a field with a problem. How: This holds the elements.
+import { useScrOpeFun } from '../ui/screen.ts';         // What: Use Screen Open Function. Why: A jump done, the entry drops the item it named. How: This returns the function that opens a screen.
 import { useSetActFun } from './settings-actions.ts';   // What: Use Settings Actions Function. Why: The group's changes run one at a time and are announced. How: This returns the runners and the messages.
 import { useState     } from 'react';                   // What: Use State. Why: The drafts, the members, the confirmations, and the messages change while the section is open. How: This holds each.
 
@@ -73,7 +75,7 @@ const TTL_DAY_ARR = [ 7, 14, 30, 60, 90, 180 ]; // What: TTL Day Array. Why: The
 
 // #region Components
 
-type GscProTyp = { curGroObj : GroRecTyp, onGonFun : ( gonIdeStr : string, mesStr : string ) => void }; // What: Group Settings Component Props Type. Why: The section shows one group and hands it on once it's left or deleted. How: This types GroSetCom's props.
+type GscProTyp = { curGroObj : GroRecTyp, onGonFun : ( gonIdeStr : string, mesStr : string ) => void, waiStr? : string }; // What: Group Settings Component Props Type. Why: The section shows one group and hands it on once it's left or deleted. How: This types GroSetCom's props.
 
 // #region GroSetCom
 
@@ -98,24 +100,29 @@ type GscProTyp = { curGroObj : GroRecTyp, onGonFun : ( gonIdeStr : string, mesSt
  * button reading what it's doing; a change is announced through the status and
  * a failure through the alert, a refused offer or acceptance saying why, while
  * a leave or deletion that lands calls onGonFun with the group's ID and what
- * to announce. Key it by the group, so another group starts afresh.
+ * to announce. When waiStr names an offer to the member, the section jumps
+ * to the offer once it renders and replaces the history entry with one that
+ * doesn't name it, announcing an offer already ended. Key it by the group,
+ * so another group starts afresh.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param props.curGroObj - Current Group Object: The open group.
  * @param props.onGonFun  - On Gone Function: Called with the group's ID and
  *                          what to announce once it's left or deleted.
+ * @param props.waiStr    - Waiting String: An offer to jump to, as the
+ *                          notices sheet asks, such as `offer:u1`.
  *
  * @returns The section.
  *
  * @example
  * ```tsx
- * GroSetCom({ curGroObj, onGonFun }) // => <GroSetCom />
+ * GroSetCom({ curGroObj, onGonFun, waiStr }) // => <GroSetCom />
  * ```
  *
 */
 
-function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
+function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.Element {
 
 
 	const delButRef = useRef< HTMLButtonElement >( null );  // What: Delete Button Reference. Why: Leaving the deletion's confirmation returns focus to its button. How: This holds the button.
@@ -129,6 +136,7 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 	const offButRef = useRef< HTMLButtonElement >( null );  // What: Offer Button Reference. Why: A withdrawn offer brings the offer back, which takes focus. How: This holds its button.
 	const witButRef = useRef< HTMLButtonElement >( null );  // What: Withdraw Button Reference. Why: An offer made replaces its form with the withdrawal, which takes focus. How: This holds its button.
 
+	const scrOpeFun = useScrOpeFun(); // What: Screen Open Function. Why: A finished jump drops the offer from the history entry. How: This opens a screen.
 	const setActObj = useSetActFun(); // What: Settings Actions Object. Why: The group's changes and the phone's and account's run one at a time and share one status and alert. How: This holds the runners and the messages, passed on to PerSetCom.
 
 	const { actKinStr, actRunFun, chaRunFun, errMesStr, focChaRef, setStaMesStr, staMesStr } = setActObj; // What: Action Kind String. Why: A button says when its change is out. How: This reads it. // What: Action Run Function. Why: The group's changes run through it. How: This reads it. // What: Change Run Function. Why: An offer's or an answer's buttons give way to what replaces them. How: This reads it. // What: Error Message String. Why: A failed change is announced. How: This reads the alert's text. // What: Focus Change Reference. Why: Focus owed after a change is moved here. How: This reads it. // What: Status Message Setter. Why: A save is announced. How: This reads it. // What: Status Message String. Why: A change that lands is announced. How: This reads the status's text.
@@ -194,6 +202,19 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 
 
 	}, [ curGroObj.offUidStr, curGroObj.ownBoo, focChaRef, memRecArr ] ); // What: Effect Dependency Array. Why: The element owed focus appears once the offer, the owner, or the members change. How: curGroObj.offUidStr changes with an offer, curGroObj.ownBoo with an acceptance, gooLinBoo with a link, and memRecArr when the members are read again.
+
+
+
+	useIteJumFun( waiStr, ( fouValBoo ) => { // What: Item Jump Call. Why: The notices sheet opens the section at an offer of the group to the member. How: This jumps to the offer once it renders, then drops it from the entry, saying when it had ended already.
+
+
+		if ( !fouValBoo ) setStaMesStr( 'That offer has ended already.' ); // What: Ended Status Call. Why: An offer withdrawn or lapsed since has nothing to jump to. How: This announces it.
+
+
+		scrOpeFun( { groStr : curGroObj.ideStr, scrStr : 'group', secStr : 'settings' }, true ); // What: Entry Replace Call. Why: A reload or a return shouldn't jump again. How: This replaces the entry with one naming no item.
+
+
+	} );
 
 
 
@@ -503,7 +524,10 @@ function GroSetCom ( { curGroObj, onGonFun } : GscProTyp ) : React.JSX.Element {
 				<section
 					className={ cssModObj.hanSetSec }
 
+					data-waiting-item-key={ offYouBoo ? `offer:${ curGroObj.ownUidStr }` : undefined } // What: Waiting Item Key. Why: The notices sheet can jump to an offer to the member. How: This names it by kind and owner, only while the offer is theirs.
+
 					aria-labelledby='hanSetHea'
+					tabIndex={ -1 } // What: Section Tab Index. Why: A jump focuses the part so it's announced, but the part isn't a control. How: This lets a script focus it without joining the Tab order.
 				>{ /* What: Handover Settings Section Element. Why: Handing the group to another member reads as one part. How: This holds its heading, note, and controls. */ }
 
 
