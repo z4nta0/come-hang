@@ -14,12 +14,14 @@ import { GroPeoCom    } from './group-people.tsx';    // What: Group People Comp
 import { GroSetCom    } from './group-settings.tsx';  // What: Group Settings Component. Why: The Settings section changes, leaves, or deletes the group. How: The frame shows it when that section is open.
 import { IcoSvgCom    } from '../ui/icon.tsx';        // What: Icon SVG Component. Why: The switcher and the rail's new group button show icons. How: This draws them.
 import { iniTexFun    } from '../utils/text.ts';      // What: Initials Text Function. Why: The rail shows each group by its initials. How: This takes them from the name.
+import { keyArrFun    } from '../state/key-share.ts'; // What: Key Arrival Function. Why: A device waiting for the group's key opens the group once it's shared. How: This watches for it.
 import { MaiAreCom    } from '../ui/main-area.tsx';   // What: Main Area Component. Why: The open group's content is the screen's main content. How: This holds it in the main landmark.
 import { SheDiaCom    } from '../ui/sheet.tsx';       // What: Sheet Dialog Component. Why: A phone reaches every group through a sheet. How: This draws it.
 import { SolSetCom    } from './solo-settings.tsx';   // What: Solo Settings Component. Why: Settings works with no group. How: The frame shows it as Settings then.
-import { useEffect    } from 'react';                 // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading. How: This moves focus once it's drawn.
+import { useEffect    } from 'react';                 // What: Use Effect. Why: A group opened by a creation, a leave, or a deletion takes focus on its heading, and the key's arrival is watched. How: This runs each after rendering.
 import { useRef       } from 'react';                 // What: Use Reference. Why: The heading takes focus and the sheet opens and closes through its handle. How: This holds the heading and the handle.
 import { useScrOpeFun } from '../ui/screen.ts';       // What: Use Screen Open Function. Why: Choosing a group, a section, or starting a group opens a screen. How: This returns the function that opens one.
+import { useState     } from 'react';                 // What: Use State. Why: A shared key reloads the open section. How: This counts the keys arrived.
 import { WaiDotCom    } from '../ui/waiting-dot.tsx'; // What: Waiting Dot Component. Why: A tab, a group, or the switcher leading to something waiting on the member is marked. How: This draws the dot and its words.
 import { WelSecCom    } from './welcome.tsx';         // What: Welcome Section Component. Why: With no group, the content says how to start or join one. How: The frame shows it then.
 
@@ -49,7 +51,8 @@ import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Ty
  * every section but Settings is turned off, saying a group comes first, and
  * the main area shows the welcome. Choosing a group, a section, starting a
  * group, or joining one opens it as a new history entry, and a group just
- * created takes focus on its heading.
+ * created takes focus on its heading. A section that waited for the group's
+ * key loads again once a member shares it.
  *
  * Sections:
  *  - Constants
@@ -102,7 +105,9 @@ type GfcProTyp = { curGroObj : GroRecTyp | null, eveIdeStr? : string, focBoo : b
  * close button, on Escape, on a tap of the dimmed page, or once a group is
  * chosen, sliding back down first. When focBoo is true, the heading takes
  * focus once drawn, and the history entry is replaced with one that no longer
- * asks, so a reload doesn't take focus again.
+ * asks, so a reload doesn't take focus again. The open group's membership
+ * is watched, and the open section starts afresh once a key request on it
+ * is answered.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -146,6 +151,8 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 	const othCouNum = waiRecArr.filter( ( waiRecObj ) => waiRecObj.groIdeStr !== curIdeStr ).length; // What: Other Count Number. Why: On a phone the switcher is the way to the other groups, so it marks what waits in them. How: This counts the items outside the open group.
 
+	const [ keyVerNum, setKeyVerNum ] = useState( 0 ); // What: Key Version Number And Setter. Why: A section that couldn't load while the key waited should load once it's shared. How: This counts the keys arrived, which the sections are keyed by.
+
 
 
 	const groCouFun = ( groIdeStr : string ) : number => waiRecArr.filter( ( waiRecObj ) => waiRecObj.groIdeStr === groIdeStr ).length; // What: Group Count Function. Why: A group's tile and row are marked while anything waits in it. How: This counts its items.
@@ -165,6 +172,20 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 
 	}, [ curIdeStr, focBoo, scrOpeFun ] ); // What: Effect Dependency Array. Why: The focus belongs to the group it was asked for. How: curIdeStr changes when another group opens, focBoo when the request to focus does, and scrOpeFun only if the router's navigate does.
+
+
+
+	useEffect( () => { // What: Key Arrival Effect. Why: A section waiting for the group's key stops trying, and shouldn't need a reload once a member shares it. How: This watches the open group's membership and counts each key arrived.
+
+
+		if ( curIdeStr === undefined ) return; // What: No Group Guard. Why: With no group there's no key to wait for. How: This returns.
+
+
+
+		return keyArrFun( curIdeStr, () => setKeyVerNum( ( preVerNum ) => preVerNum + 1 ) ); // What: Watch Return. Why: The watch stops with the group. How: This counts each arrival and returns the stop.
+
+
+	}, [ curIdeStr ] ); // What: Effect Dependency Array. Why: Each open group has its own membership. How: curIdeStr changes when another group opens.
 
 
 
@@ -418,7 +439,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 
 					<GroChaCom
-						key={ curGroObj.ideStr } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages. How: This remounts the chat for each group.
+						key={ `${ curGroObj.ideStr }:${ keyVerNum }` } // What: Chat Key. Why: Another group's chat has to start afresh rather than show this one's messages, and one that waited for the key has to load once it arrives. How: This remounts the chat for each group, and again when the key arrives.
 
 						groIdeStr={ curGroObj.ideStr }
 						groNamStr={ curGroObj.namStr }
@@ -430,7 +451,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 
 					<GroEveCom
-						key={ curGroObj.ideStr } // What: Events Key. Why: Another group's events have to start afresh. How: This remounts the section for each group.
+						key={ `${ curGroObj.ideStr }:${ keyVerNum }` } // What: Events Key. Why: Another group's events have to start afresh, and one that waited for the key has to load once it arrives. How: This remounts the section for each group, and again when the key arrives.
 
 						groIdeStr={ curGroObj.ideStr }
 						opeIdeStr={ eveIdeStr }
@@ -442,7 +463,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 
 					<GroPeoCom
-						key={ curGroObj.ideStr } // What: People Key. Why: Another group's people have to start afresh. How: This remounts the section for each group.
+						key={ `${ curGroObj.ideStr }:${ keyVerNum }` } // What: People Key. Why: Another group's people have to start afresh, and one that waited for the key has to load once it arrives. How: This remounts the section for each group, and again when the key arrives.
 
 						curGroObj={ curGroObj }
 						waiStr={ waiStr }
@@ -453,7 +474,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 
 					<GroSetCom
-						key={ curGroObj.ideStr } // What: Settings Key. Why: Another group's settings have to start afresh rather than keep this one's draft. How: This remounts the section for each group.
+						key={ `${ curGroObj.ideStr }:${ keyVerNum }` } // What: Settings Key. Why: Another group's settings have to start afresh rather than keep this one's draft, and one that waited for the key has to load once it arrives. How: This remounts the section for each group, and again when the key arrives.
 
 						curGroObj={ curGroObj }
 						waiStr={ waiStr }
@@ -466,7 +487,7 @@ function GroFraCom ( { curGroObj, eveIdeStr, focBoo, groRecArr, onGonFun, onRecF
 
 
 					<GroMapCom
-						key={ curGroObj.ideStr } // What: Map Key. Why: Another group's map has to start afresh. How: This remounts the section for each group.
+						key={ `${ curGroObj.ideStr }:${ keyVerNum }` } // What: Map Key. Why: Another group's map has to start afresh, and one that waited for the key has to load once it arrives. How: This remounts the section for each group, and again when the key arrives.
 
 						curGroObj={ curGroObj }
 					/> // What: Group Map Component. Why: Members find each other on the day of an event here. How: This shows the open group's Map section.

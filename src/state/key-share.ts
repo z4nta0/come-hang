@@ -10,7 +10,9 @@ import { doc         } from 'firebase/firestore';      // What: Doc. Why: The me
 import { firGetFun   } from '../platform/firebase.ts'; // What: Firebase Get Function. Why: The memberships and keys live in Firestore. How: This returns the services.
 import { getDoc      } from 'firebase/firestore';      // What: Get Doc. Why: The member's public key is read before wrapping. How: This reads it.
 import { getDocs     } from 'firebase/firestore';      // What: Get Docs. Why: The standing requests are found among the memberships. How: This reads them.
+import { ideEnsFun   } from './identity.ts';           // What: Identity Ensure Function. Why: A member's own membership is watched for an answered request. How: This reads their UID.
 import { keyLoaFun   } from './groups.ts';             // What: Key Load Function. Why: Only a member holding the key can share it. How: This reads this device's key.
+import { onSnapshot  } from 'firebase/firestore';      // What: On Snapshot. Why: A member waiting for the key learns the moment it's shared. How: This watches their membership.
 import { updateDoc   } from 'firebase/firestore';      // What: Update Doc. Why: Sharing replaces the wrap and ends the request. How: This writes both.
 import { wraKeyFun   } from '../platform/crypto.ts';   // What: Wrap Key Function. Why: The key is wrapped for the member's new public key. How: This wraps it.
 
@@ -31,7 +33,8 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
  * group's key files a request on their membership instead. Any other member
  * lists the standing requests and answers one by wrapping the group key for
  * the member's newly published public key, which replaces the old wrap and
- * ends the request in one write, as the rules require.
+ * ends the request in one write, as the rules require, and the member's own
+ * device, watching its membership, learns the request was answered.
  *
  * Sections:
  *  - Types
@@ -53,6 +56,86 @@ type KeyReqTyp = { reqTimNum : number, uidValStr : string }; // What: Key Reques
 
 
 // #region Helpers
+
+// #region keyArrFun
+
+/**
+ * keyArrFun = Key Arrival Function
+ *
+ * @summary
+ * Watches this member's membership of a group and calls onArrFun each time a
+ * key request the watch saw standing ends while the membership remains, which
+ * is how a shared key arrives. A request ended by the membership going, as
+ * when the member leaves, calls nothing. Returns the function that stops the
+ * watch, which works before the watch has started too.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param onArrFun  - On Arrival Function: Called once the key is shared.
+ *
+ * @returns The function that stops the watch.
+ *
+ * @example
+ * ```ts
+ * keyArrFun('Xk3...', () => ...) // => () => void
+ * ```
+ *
+*/
+
+const keyArrFun = ( groIdeStr : string, onArrFun : () => void ) : () => void => { // What: Key Arrival Function. Why: A device waiting for the key should open the group once it's shared, without a reload. How: This watches the member's own membership for its request ending.
+
+
+	let actValBoo = true;     // What: Active Value Boolean. Why: A watch starting after the stop mustn't run. How: This is true until the stop.
+	let reqSeeBoo = false;    // What: Request Seen Boolean. Why: Only a request that stood and then ended means a shared key. How: This is true while the last report held one.
+	let stoWatFun = () => {}; // What: Stop Watch Function. Why: The watch's stop arrives once the UID is read. How: This holds it, doing nothing until then.
+
+
+
+	void ideEnsFun().then( ( { uidValStr } ) => { // What: Watch Start Call. Why: The membership is named by the member's UID. How: This reads it, then watches the membership unless stopped already.
+
+
+		if ( !actValBoo ) return; // What: Stopped Guard. Why: The watch was stopped before it started. How: This returns.
+
+
+
+		stoWatFun = onSnapshot( doc( firGetFun().fstDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), ( memSnaObj ) => { // What: Membership Watch Call. Why: A request is filed and answered on the membership. How: This reports each change, keeping the stop.
+
+
+			const reqNowBoo = memSnaObj.get( 'keyRequestedAt' ) !== undefined; // What: Request Now Boolean. Why: A request just filed reads as null until the server stamps it, which still counts. How: This is true while one stands.
+
+
+
+			if ( reqSeeBoo && !reqNowBoo && memSnaObj.exists() ) onArrFun(); // What: Arrival Call. Why: A request that ended with the membership still there was answered with the key. How: This reports it.
+
+
+
+			reqSeeBoo = reqNowBoo; // What: Seen Assignment. Why: The next report compares against this one. How: This keeps whether a request stands.
+
+
+		}, ( errCatObj ) => console.warn( errCatObj ) ); // What: Watch Failure Handler. Why: A refused watch, such as for a member just removed, leaves the group as it is, but the failure stays visible to someone debugging. How: This logs it.
+
+
+	}, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Identity Failure Handler. Why: Without an identity there's nothing to watch, but the failure stays visible. How: This logs it.
+
+
+
+	return () => { // What: Stop Return. Why: A watch shouldn't outlive the group's screen. How: This marks the watch stopped and stops it.
+
+
+		actValBoo = false; // What: Inactive Set. Why: A watch starting late mustn't run. How: This marks it stopped.
+
+		stoWatFun(); // What: Watch Stop Call. Why: The listener closes. How: This stops the watch.
+
+
+	};
+
+
+};
+
+// #endregion keyArrFun
+
+
 
 // #region keyLisFun
 
@@ -151,7 +234,7 @@ const keyShaFun = async ( groIdeStr : string, uidValStr : string ) : Promise< vo
 
 // #region Exports
 
-export { keyLisFun, keyShaFun, type KeyReqTyp }; // What: Named Exports. Why: The group screens show and answer key requests. How: This exports both functions and the request's type.
+export { keyArrFun, keyLisFun, keyShaFun, type KeyReqTyp }; // What: Named Exports. Why: The group screens show and answer key requests, and open a group once its key arrives. How: This exports the functions and the request's type.
 
 // #endregion Exports
 
