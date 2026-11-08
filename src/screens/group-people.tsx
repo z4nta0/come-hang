@@ -18,6 +18,7 @@ import { memLisFun    } from '../state/members.ts';     // What: Member List Fun
 import { memRemFun    } from '../state/members.ts';     // What: Member Remove Function. Why: The owner can remove a member. How: This removes them and swaps the link.
 import { mesTimFun    } from '../utils/date.ts';        // What: Message Time Function. Why: A request says when it was made. How: This labels the time.
 import { namSetFun    } from '../state/members.ts';     // What: Name Set Function. Why: A member changes their own name in the group. How: This saves it.
+import { offGuaFun    } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { perNamFun    } from '../core/text-limits.ts';  // What: Person Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
 import { reqAppFun    } from '../state/joins.ts';       // What: Request Approve Function. Why: Any member lets a joiner in (Section 17). How: This approves their request.
 import { reqBloFun    } from '../state/joins.ts';       // What: Request Block Function. Why: A request from someone unwelcome is ended for good. How: This blocks its sender.
@@ -268,6 +269,10 @@ function GroPeoCom ( { curGroObj, waiStr } : GpcProTyp ) : React.JSX.Element {
 
 
 		if ( actReqBoo ) return false; // What: Busy Guard. Why: A change while another is out could act twice. How: This ignores it.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return false; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

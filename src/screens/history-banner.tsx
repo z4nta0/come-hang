@@ -12,6 +12,7 @@ import { hisGetFun } from '../state/history.ts';        // What: History Get Fun
 import { hisProFun } from '../state/history.ts';        // What: History Prompt Function. Why: The banner offers history only when this phone is missing it. How: This decides what to offer.
 import { hisWatFun } from '../state/history.ts';        // What: History Watch Function. Why: The member's own request is followed as it's claimed. How: This watches the requests.
 import { hisWitFun } from '../state/history.ts';        // What: History Withdraw Function. Why: The member may stop asking. How: This withdraws the request.
+import { offGuaFun } from '../ui/online.ts';            // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { proKeyFun } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps their own dismissal. How: This names the storage key.
 import { useEffect } from 'react';                      // What: Use Effect. Why: The offer, the request, and its collection run while the chat is open. How: This runs each.
 import { useRef    } from 'react';                      // What: Use Reference. Why: The banner takes focus as a pressed button goes. How: This holds it.
@@ -268,6 +269,10 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 
 
 
+		if ( offGuaFun( setStaMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		const dayNum = RAN_CHO_ARR.find( ( ranRecObj ) => ranRecObj.ranStr === ranChoStr )?.dayNum ?? null;                // What: Day Number. Why: The choice sets how far back to ask. How: This reads its days, null for everything.
 		const ranTimNum = dayNum === null ? hisProObj.creTimNum : hisProObj.joiTimNum - dayNum * DAY_MIL_NUM;              // What: Range Time Number. Why: A backlog starts at the chosen point. How: This counts back from the join, or starts at the group's start.
 
@@ -338,6 +343,10 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 
 
 		if ( actReqBoo ) return; // What: Busy Guard. Why: One action at a time. How: This ignores the press.
+
+
+
+		if ( offGuaFun( setStaMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

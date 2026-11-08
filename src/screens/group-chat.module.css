@@ -331,6 +331,13 @@
 
 
 }
+.chaMesIte--pending { /* What: Chat Message Item Pending. Why: A message written offline shows a note below its bubble until it's sent. How: This adds a row for the note below the member's own layout. */
+
+
+	grid-template-areas : 'mesMetPar' 'mesTexPar' 'mesPenPar';
+
+
+}
 
 
 /* #region mesAvaSpa */
@@ -434,6 +441,23 @@
 	background-color : var( --acc-mai-col );                                                                /* Accent Main Color = #4A4FC9 */
 	border-radius    : var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xsm ) var( --rad-bor-xla ); /* Radius Border Extra Large ~= 19.304px, Radius Border Extra Small ~= 3.572px */
 	color            : var( --tex-acc-col );                                                                /* Text Accent Color = #FFFFFF */
+
+
+}
+.chaMesIte--pending .mesTexPar { /* What: Pending Message Text Paragraph. Why: A message that hasn't gone should look less settled than a sent one. How: This fades the bubble a step. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+
+.mesPenPar { /* What: Message Pending Paragraph. Why: The note says the message is waiting, quieter than the message itself. How: This sets it small in the muted text color in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area : mesPenPar;
 
 
 }

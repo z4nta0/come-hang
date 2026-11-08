@@ -16,6 +16,7 @@ import { eveLisFun } from '../state/events.ts';      // What: Event List Functio
 import { eveRanFun } from '../utils/date.ts';        // What: Event Range Function. Why: Each card says the hours its event runs. How: This formats its range.
 import { ideEnsFun } from '../state/identity.ts';    // What: Identity Ensure Function. Why: An event's creator can change it. How: This reads the member's UID.
 import { memLisFun } from '../state/members.ts';     // What: Member List Function. Why: The bring-list names who's bringing each item. How: This lists the members.
+import { offGuaFun } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { phoFluFun } from '../state/photos.ts';      // What: Photos Flush Function. Why: Closing an event's sheet ends the member's burst of photos. How: This posts its chat line.
 import { SheDiaCom } from '../ui/sheet.tsx';         // What: Sheet Dialog Component. Why: An event's details and the form open over the list. How: This draws each sheet.
 import { useEffect } from 'react';                   // What: Use Effect. Why: The section loads its parts when it opens. How: This starts the work.
@@ -345,6 +346,10 @@ function GroEveCom ( { groIdeStr, opeIdeStr, opeParStr, ownBoo } : GecProTyp ) :
 
 
 		if ( !selEveObj ) return; // What: No Event Guard. Why: Only an open event is cancelled. How: This returns otherwise.
+
+
+
+		if ( offGuaFun( setCanErrStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

@@ -6,43 +6,48 @@
 import cssModObj from './group-chat.module.css'; // What: CSS Module Object. Why: The chat is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { AvaConCom       } from '../ui/member-avatar.tsx';   // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
-import { briDetFun       } from '../core/chat-status.ts';    // What: Bring Details Function. Why: A bring-list line names its event and items. How: This reads the post's details.
-import { briFluFun       } from '../state/bring-lines.ts';   // What: Bring Flush Function. Why: Closing the event's sheet ends the member's bursts of list changes. How: This posts their chat lines.
-import { chaMesFun       } from '../core/text-limits.ts';    // What: Chat Message Function. Why: A message with characters the chat refuses is caught before it's sent. How: This checks it.
-import { chaSenFun       } from '../state/chat.ts';          // What: Chat Send Function. Why: The composer sends messages. How: This encrypts and sends one.
-import { chaWatFun       } from '../state/chat.ts';          // What: Chat Watch Function. Why: Messages show as they're sent. How: This watches the group's chat.
-import { eveBloFun       } from '../utils/date.ts';          // What: Event Block Function. Why: The pinned event leads with when it is. How: This gives its date block's lines.
-import { EveDetCom       } from './event-details.tsx';       // What: Event Details Component. Why: The next event's sheet and panel show its details and bring-list. How: This draws them.
-import { eveLisFun       } from '../state/events.ts';        // What: Event List Function. Why: The group's next event is pinned above the chat. How: This lists the events, soonest first.
-import { eveRanFun       } from '../utils/date.ts';          // What: Event Range Function. Why: The pinned event says the hours it runs. How: This formats its range.
-import { HisBanCom       } from './history-banner.tsx';      // What: History Banner Component. Why: A phone missing the chat is offered the group's history. How: This shows the banner above the log.
-import { IcoSvgCom       } from '../ui/icon.tsx';            // What: Icon SVG Component. Why: The send button shows a paper plane. How: This draws it.
-import { ideEnsFun       } from '../state/identity.ts';      // What: Identity Ensure Function. Why: A member's own messages show on their side. How: This reads their UID.
-import { iniTexFun       } from '../utils/text.ts';          // What: Initials Text Function. Why: Each sender's avatar shows their initials. How: This takes them from the name.
-import { KEY_WAI_STR     } from '../state/groups.ts';        // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its chat. How: The chat shows this message then.
-import { linNorFun       } from '../core/text-limits.ts';    // What: Lines Normalize Function. Why: A message keeps its line breaks while each line is tidied. How: This tidies it as it'll be sent.
-import { lisPhrFun       } from '../utils/text.ts';          // What: List Phrase Function. Why: A bring-list line names its items as a phrase. How: This joins them the way English does.
-import { memLisFun       } from '../state/members.ts';       // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
-import { mesLisFun       } from '../platform/chat-store.ts'; // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
-import { mesTimFun       } from '../utils/date.ts';          // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
-import { phoFluFun       } from '../state/photos.ts';        // What: Photos Flush Function. Why: Closing the event's sheet ends the member's burst of photos. How: This posts its chat line.
-import { PusNudCom       } from './push-nudge.tsx';          // What: Push Nudge Component. Why: The chat offers notifications once on a device. How: This draws the card.
-import { SheDiaCom       } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
-import { sloColFun       } from '../ui/member-color.ts';     // What: Slot Color Function. Why: Each sender's avatar and status dot wear their color. How: This names it.
-import { staDetFun       } from '../core/chat-status.ts';    // What: Status Details Function. Why: A photos line names its event. How: This reads the post's details.
-import { staKinFun       } from '../core/chat-status.ts';    // What: Status Kind Function. Why: A status post shows as a line rather than a message. How: This reads its kind.
-import { useEffect       } from 'react';                     // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
-import { useLayoutEffect } from 'react';                     // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
-import { useRef          } from 'react';                     // What: Use Reference. Why: The log's element and whether it sits at its bottom are read outside rendering. How: This holds both.
-import { useScrOpeFun    } from '../ui/screen.ts';           // What: Use Screen Open Function. Why: A photos or bring-list line opens its event's photos or list in the Events section. How: This returns the function that opens a screen.
-import { useState        } from 'react';                     // What: Use State. Why: The messages, members, event, and composer change while the chat is open. How: This holds each.
+import { AvaConCom       } from '../ui/member-avatar.tsx';     // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
+import { briDetFun       } from '../core/chat-status.ts';      // What: Bring Details Function. Why: A bring-list line names its event and items. How: This reads the post's details.
+import { briFluFun       } from '../state/bring-lines.ts';     // What: Bring Flush Function. Why: Closing the event's sheet ends the member's bursts of list changes. How: This posts their chat lines.
+import { chaMesFun       } from '../core/text-limits.ts';      // What: Chat Message Function. Why: A message with characters the chat refuses is caught before it's sent. How: This checks it.
+import { chaQueFun       } from '../state/chat.ts';            // What: Chat Queue Function. Why: A message written offline waits on the device. How: This keeps it to send later.
+import { chaSenFun       } from '../state/chat.ts';            // What: Chat Send Function. Why: The composer sends messages. How: This encrypts and sends one.
+import { chaWatFun       } from '../state/chat.ts';            // What: Chat Watch Function. Why: Messages show as they're sent. How: This watches the group's chat.
+import { eveBloFun       } from '../utils/date.ts';            // What: Event Block Function. Why: The pinned event leads with when it is. How: This gives its date block's lines.
+import { EveDetCom       } from './event-details.tsx';         // What: Event Details Component. Why: The next event's sheet and panel show its details and bring-list. How: This draws them.
+import { eveLisFun       } from '../state/events.ts';          // What: Event List Function. Why: The group's next event is pinned above the chat. How: This lists the events, soonest first.
+import { eveRanFun       } from '../utils/date.ts';            // What: Event Range Function. Why: The pinned event says the hours it runs. How: This formats its range.
+import { HisBanCom       } from './history-banner.tsx';        // What: History Banner Component. Why: A phone missing the chat is offered the group's history. How: This shows the banner above the log.
+import { IcoSvgCom       } from '../ui/icon.tsx';              // What: Icon SVG Component. Why: The send button shows a paper plane. How: This draws it.
+import { ideEnsFun       } from '../state/identity.ts';        // What: Identity Ensure Function. Why: A member's own messages show on their side. How: This reads their UID.
+import { iniTexFun       } from '../utils/text.ts';            // What: Initials Text Function. Why: Each sender's avatar shows their initials. How: This takes them from the name.
+import { KEY_WAI_STR     } from '../state/groups.ts';          // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its chat. How: The chat shows this message then.
+import { linNorFun       } from '../core/text-limits.ts';      // What: Lines Normalize Function. Why: A message keeps its line breaks while each line is tidied. How: This tidies it as it'll be sent.
+import { lisPhrFun       } from '../utils/text.ts';            // What: List Phrase Function. Why: A bring-list line names its items as a phrase. How: This joins them the way English does.
+import { memLisFun       } from '../state/members.ts';         // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
+import { mesLisFun       } from '../platform/chat-store.ts';   // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
+import { mesTimFun       } from '../utils/date.ts';            // What: Message Time Function. Why: Each message shows when it was sent. How: This labels the time.
+import { onlNowFun       } from '../platform/online.ts';       // What: Online Now Function. Why: A message written offline waits rather than hanging. How: This reads the connection.
+import { outLisFun       } from '../platform/outbox-store.ts'; // What: Outbox List Function. Why: The log shows the messages still waiting to send. How: This reads them.
+import { outSubFun       } from '../state/chat.ts';            // What: Outbox Subscribe Function. Why: The waiting messages change as they're kept and sent. How: This follows them.
+import { phoFluFun       } from '../state/photos.ts';          // What: Photos Flush Function. Why: Closing the event's sheet ends the member's burst of photos. How: This posts its chat line.
+import { PusNudCom       } from './push-nudge.tsx';            // What: Push Nudge Component. Why: The chat offers notifications once on a device. How: This draws the card.
+import { SheDiaCom       } from '../ui/sheet.tsx';             // What: Sheet Dialog Component. Why: The pinned event opens its details in a sheet. How: This draws it.
+import { sloColFun       } from '../ui/member-color.ts';       // What: Slot Color Function. Why: Each sender's avatar and status dot wear their color. How: This names it.
+import { staDetFun       } from '../core/chat-status.ts';      // What: Status Details Function. Why: A photos line names its event. How: This reads the post's details.
+import { staKinFun       } from '../core/chat-status.ts';      // What: Status Kind Function. Why: A status post shows as a line rather than a message. How: This reads its kind.
+import { useEffect       } from 'react';                       // What: Use Effect. Why: The chat loads and watches while it's open. How: This starts and stops the work.
+import { useLayoutEffect } from 'react';                       // What: Use Layout Effect. Why: The log should land on the newest message before it's drawn. How: This scrolls right after a change commits.
+import { useRef          } from 'react';                       // What: Use Reference. Why: The log's element and whether it sits at its bottom are read outside rendering. How: This holds both.
+import { useScrOpeFun    } from '../ui/screen.ts';             // What: Use Screen Open Function. Why: A photos or bring-list line opens its event's photos or list in the Events section. How: This returns the function that opens a screen.
+import { useState        } from 'react';                       // What: Use State. Why: The messages, members, event, and composer change while the chat is open. How: This holds each.
 
 
-import type { EveRecTyp } from '../state/events.ts';        // What: Event Record Type. Why: The pinned event is one of the group's events. How: This types it.
-import type { MemRecTyp } from '../state/members.ts';       // What: Member Record Type. Why: Senders are looked up among the members. How: This types each.
-import type { MesRecTyp } from '../platform/chat-store.ts'; // What: Message Record Type. Why: The log shows stored messages. How: This types each.
-import type { SheHanTyp } from '../ui/sheet.tsx';           // What: Sheet Handle Type. Why: The pinned event opens its sheet. How: This types the sheet's handle.
+import type { EveRecTyp } from '../state/events.ts';          // What: Event Record Type. Why: The pinned event is one of the group's events. How: This types it.
+import type { MemRecTyp } from '../state/members.ts';         // What: Member Record Type. Why: Senders are looked up among the members. How: This types each.
+import type { MesRecTyp } from '../platform/chat-store.ts';   // What: Message Record Type. Why: The log shows stored messages. How: This types each.
+import type { OutRecTyp } from '../platform/outbox-store.ts'; // What: Outbox Record Type. Why: The log shows waiting messages. How: This types each.
+import type { SheHanTyp } from '../ui/sheet.tsx';             // What: Sheet Handle Type. Why: The pinned event opens its sheet. How: This types the sheet's handle.
 
 // #endregion Imports
 
@@ -408,6 +413,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 	const logEleRef = useRef< HTMLDivElement >( null ); // What: Log Element Reference. Why: The log scrolls itself. How: This holds its element.
 	const sheHanRef = useRef< SheHanTyp >( null );      // What: Sheet Handle Reference. Why: The pinned event opens its sheet. How: This holds the sheet's handle.
 
+	const [ penRecArr, setPenRecArr ] = useState< OutRecTyp[] >( [] ); // What: Pending Record Array And Setter. Why: Messages written offline show in the log until they're sent. How: This holds the group's waiting messages, oldest first.
 	const [ senErrStr, setSenErrStr ] = useState( '' );    // What: Send Error String And Setter. Why: A refused or failed send is announced. How: This holds the message, empty when there's none.
 	const [ senReqBoo, setSenReqBoo ] = useState( false ); // What: Send Request Boolean And Setter. Why: A second send while the first is out would send twice. How: This is true while one is out.
 	const [ texValStr, setTexValStr ] = useState( '' );    // What: Text Value String And Setter. Why: The composer shows what's typed. How: This holds it.
@@ -425,7 +431,39 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 		if ( logBotRef.current && logEleRef.current ) logEleRef.current.scrollTop = logEleRef.current.scrollHeight; // What: Bottom Scroll Call. Why: The newest message is at the bottom. How: This scrolls the log there.
 
 
-	}, [ mesRecArr ] ); // What: Effect Dependency Array. Why: The log moves when its messages change. How: mesRecArr changes as each one arrives.
+	}, [ mesRecArr, penRecArr ] ); // What: Effect Dependency Array. Why: The log moves when its messages change. How: mesRecArr changes as each one arrives, and penRecArr as one waits or sends.
+
+
+
+	useEffect( () => { // What: Outbox Watch Effect. Why: The log shows the group's waiting messages until they're sent. How: This reads them now and again after each change to the outbox, stopping with the chat.
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: A read finishing after the chat closed mustn't change it. How: This is true until the cleanup runs.
+
+
+
+		const outLoaFun = () : void => void outLisFun( groIdeStr ).then( ( outRecArr ) => { if ( actValBoo ) setPenRecArr( outRecArr ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Outbox Load Function. Why: The waiting messages change as they're kept and sent. How: This reads them while the chat is open, logging a failure.
+
+
+		outLoaFun(); // What: Load Call. Why: Messages may be waiting from before. How: This reads them now.
+
+
+		const stoSubFun = outSubFun( outLoaFun ); // What: Stop Subscribe Function. Why: The log follows each change. How: This reads them again on each, keeping the stop.
+
+
+
+		return () => { // What: Cleanup Return. Why: A closed chat shouldn't keep reading. How: This marks it closed and stops following.
+
+
+			actValBoo = false; // What: Inactive Set. Why: Late reads mustn't land. How: This marks the chat closed.
+
+			stoSubFun(); // What: Stop Call. Why: The listener goes. How: This stops following.
+
+
+		};
+
+
+	}, [ groIdeStr ] ); // What: Effect Dependency Array. Why: Each group has its own waiting messages. How: groIdeStr changes when another group's chat opens.
 
 
 
@@ -438,7 +476,9 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 	 * Sends what's typed: ignores an empty message or one while another is
 	 * out, announces a message the chat refuses, and otherwise sends it, adds
 	 * it to the log at once, clears the composer, and keeps the log at its
-	 * end. A failed send is announced and leaves the text to try again.
+	 * end. While the device is offline, it keeps the message on the device to
+	 * send later instead, where the log shows it waiting. A failed send is
+	 * announced and leaves the text to try again.
 	 *
 	 * @author z4nta0 <https://github.com/z4nta0>
 	 *
@@ -474,7 +514,27 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 
 
-		try { // What: Send Try. Why: The message is sent and shown at once. How: This sends it, adds the sender's copy to the log, and clears the composer.
+		try { // What: Send Try. Why: The message is sent and shown at once. How: This sends it, adds the sender's copy to the log, and clears the composer, or keeps it to send later while offline.
+
+
+			if ( !onlNowFun() ) { // What: Offline Check. Why: A send would hang until the device is back, and be lost if the app closed first. How: This keeps the message on the device instead, where the log shows it waiting.
+
+
+				await chaQueFun( groIdeStr, norTexStr ); // What: Queue Call. Why: The message sends once the device is back online. How: This keeps it on the device, which the outbox watch shows.
+
+				logBotRef.current = true; // What: Bottom Set. Why: Someone who writes wants to see their message. How: This keeps the log at its end.
+
+				setTexValStr( '' ); // What: Composer Clear Call. Why: The message is kept. How: This empties the box.
+
+				setSenReqBoo( false ); // What: Sending Clear Call. Why: The composer can take the next message. How: This marks the send as done.
+
+
+
+				return;
+
+
+			}
+
 
 
 			const mesIdeStr = await chaSenFun( groIdeStr, norTexStr ); // What: Message Identifier String. Why: The watch's copy replaces this one by ID. How: This sends the message.
@@ -568,7 +628,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 					<p className={ cssModObj.chaEmpPar }>{ chaErrStr }</p> // What: Chat Empty Paragraph Element. Why: The member should know why the chat is empty. How: This shows the reason.
 
 
-				) : mesRecArr.length === 0 ? ( // What: No Messages Check. Why: An empty chat says so. How: This shows a prompt in place of the messages.
+				) : mesRecArr.length === 0 && penRecArr.length === 0 ? ( // What: No Messages Check. Why: An empty chat says so. How: This shows a prompt in place of the messages.
 
 
 					<p className={ cssModObj.chaEmpPar }>No messages yet. Say hi!</p> // What: Chat Empty Paragraph Element. Why: An empty chat should invite the first message. How: This says nothing's been said.
@@ -684,6 +744,36 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 
 						} ) }
+
+
+
+						{ penRecArr.map( ( penRecObj ) => ( // What: Waiting Map. Why: Messages written offline show after the sent ones until they go. How: This renders each as the member's own message, marked as waiting.
+
+
+							<li
+								key={ penRecObj.locIdeStr }
+
+								className={` ${ cssModObj.chaMesIte }   ${ cssModObj.chaMesIteOwn }   ${ cssModObj.chaMesItePending } `}
+							>{ /* What: Chat Message Item Pending Element. Why: A waiting message reads as the member's own, with a note that it hasn't gone. How: This holds the meta line, the bubble, and the note. */ }
+
+
+								<p className={ cssModObj.mesMetPar }>{ /* What: Message Meta Paragraph Element. Why: A screen reader hears who wrote it, as with a sent message. How: This names the member, hidden from sight like their other messages'. */ }
+
+
+									<span className={ cssModObj.mesNamSpa }>You</span>{ /* What: Message Name Span Element. Why: The writer is named. How: This says "You". */ }
+
+
+								</p>
+
+								<p className={ cssModObj.mesTexPar }>{ penRecObj.texValStr }</p>{ /* What: Message Text Paragraph Element. Why: The waiting message's words show as written. How: This shows them as text. */ }
+
+								<p className={ cssModObj.mesPenPar }>Waiting to send</p>{ /* What: Message Pending Paragraph Element. Why: The member should know the message hasn't gone yet. How: This says it's waiting. */ }
+
+
+							</li>
+
+
+						) ) }
 
 
 					</ol>

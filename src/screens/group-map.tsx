@@ -20,6 +20,7 @@ import { iniTexFun            } from '../utils/text.ts';        // What: Initial
 import { KEY_WAI_STR          } from '../state/groups.ts';      // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its locations. How: The section shows this message then.
 import { locWatFun            } from '../state/location.ts';    // What: Location Watch Function. Why: Members see each other move as updates arrive. How: This watches the shares.
 import { memLisFun            } from '../state/members.ts';     // What: Member List Function. Why: Each share shows its member's name and color. How: This lists the members.
+import { offGuaFun            } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { shaGetFun            } from '../state/sharing.ts';     // What: Sharing Get Function. Why: The section shows where the member's sharing stands. How: This reads the record.
 import { shaPosFun            } from '../state/sharing.ts';     // What: Sharing Post Function. Why: The member says they're on their way or have arrived. How: This posts it and marks the record.
 import { shaStaFun            } from '../state/sharing.ts';     // What: Sharing Start Function. Why: The member opts in to sharing. How: This starts it.
@@ -530,6 +531,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 
 
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		if ( !( 'geolocation' in navigator ) ) { setErrMesStr( LOC_UNS_STR ); return; } // What: Unsupported Guard. Why: A browser without location can't share. How: This says so and stops.
 
 
@@ -603,6 +608,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 
 		if ( !eveOpeObj || posKinStr !== '' ) return; // What: Busy Guard. Why: A post needs an open event, and one post at a time. How: This ignores the press.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

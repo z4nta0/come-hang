@@ -103,7 +103,9 @@ switcher, and the group sheet while anything waits. Adding to or claiming
 from a bring-list posts a quiet line to the chat, which opens the event at
 its list, and a card above the chat offers notifications on a device until it's answered.
 A member's one profile photo, set in Settings' "Your profile", shows in every
-group's avatars, each group keeping its own encrypted copy.
+group's avatars, each group keeping its own encrypted copy. Offline, a banner
+says so, chat messages wait on the device and send once back online, and
+other changes are paused with a note saying they have to wait.
 The app's one service worker opens it offline and shows pushes, a tap on one opening its
 group at the section its news is in. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per

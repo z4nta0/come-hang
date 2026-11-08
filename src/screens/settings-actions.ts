@@ -3,8 +3,9 @@
 
 // #region Imports
 
-import { useRef   } from 'react'; // What: Use Reference. Why: A change that takes away its button owes focus to what replaces it. How: This holds the element owed it.
-import { useState } from 'react'; // What: Use State. Why: Which change is out and the messages change while a part is open. How: This holds each.
+import { offGuaFun } from '../ui/online.ts'; // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
+import { useRef    } from 'react';           // What: Use Reference. Why: A change that takes away its button owes focus to what replaces it. How: This holds the element owed it.
+import { useState  } from 'react';           // What: Use State. Why: Which change is out and the messages change while a part is open. How: This holds each.
 
 // #endregion Imports
 
@@ -121,6 +122,10 @@ const useSetActFun = () : SarRetTyp => { // What: Use Settings Actions Function.
 
 
 		if ( actKinStr !== '' ) return false; // What: Busy Guard. Why: A change while another is out could act twice. How: This ignores it.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return false; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

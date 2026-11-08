@@ -11,6 +11,7 @@ import { hisCovFun } from '../state/history.ts'; // What: History Coverage Funct
 import { hisRelFun } from '../state/history.ts'; // What: History Release Function. Why: A claim stalled for 30 minutes can be freed for someone else. How: This releases it.
 import { hisSenFun } from '../state/history.ts'; // What: History Send Function. Why: The helper sends the range. How: This uploads it encrypted.
 import { hisWatFun } from '../state/history.ts'; // What: History Watch Function. Why: The list follows each request as it's asked, claimed, and answered. How: This watches them.
+import { offGuaFun } from '../ui/online.ts';     // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { useEffect } from 'react';               // What: Use Effect. Why: The requests are watched, and the device's coverage checked, while the list shows. How: This runs both.
 import { useRef    } from 'react';               // What: Use Reference. Why: The heading takes focus when a pressed button goes. How: This holds it.
 import { useState  } from 'react';               // What: Use State. Why: The requests, the coverage, the send in progress, and the clock change what shows. How: This holds each.
@@ -183,6 +184,10 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 
 
 		if ( senUidStr !== '' ) return; // What: Busy Guard. Why: One send at a time. How: This ignores a second press.
+
+
+
+		if ( offGuaFun( onAnnFun ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

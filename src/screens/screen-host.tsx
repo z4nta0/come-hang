@@ -6,6 +6,7 @@
 import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Why: The host's status is styled in its own module, whose class names Vite hashes. How: Its element reads its class from this object.
 
 
+import { chaOutFun       } from '../state/chat.ts';           // What: Chat Outbox Function. Why: Messages written offline go once the device is back. How: This sends a group's outbox.
 import { CreGroCom       } from './create-group.tsx';         // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
 import { GroFraCom       } from './group-frame.tsx';          // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
 import { groWatFun       } from '../state/groups.ts';         // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
@@ -30,6 +31,7 @@ import { shaResFun       } from '../state/sharing.ts';        // What: Sharing R
 import { useCallback     } from 'react';                      // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
 import { useEffect       } from 'react';                      // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing and the kept places are checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing and the places.
 import { useLayoutEffect } from 'react';                      // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
+import { useOnlBooFun    } from '../ui/online.ts';            // What: Use Online Boolean Function. Why: The outbox sends once the device is online. How: This follows the connection.
 import { useRef          } from 'react';                      // What: Use Reference. Why: Carrying on in Safari owes focus to the screen that follows. How: This holds whether it's owed.
 import { useScrOpeFun    } from '../ui/screen.ts';            // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
 import { useScrStaFun    } from '../ui/screen.ts';            // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
@@ -227,6 +229,58 @@ const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use I
 
 
 
+// #region useOutFluFun
+
+/**
+ * useOutFluFun = Use Outbox Flush Function
+ *
+ * @summary
+ * Sends every group's chat messages written offline whenever the device is
+ * online and the groups are known, so they go as soon as the connection
+ * returns, whichever screen is open (ARCHITECTURE.md Section 14). A send
+ * that fails is logged, and the messages wait for the next change.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groRecArr - Group Record Array: The member's groups, or null while
+ *                    they're unknown.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * useOutFluFun(groRecArr) // => void
+ * ```
+ *
+*/
+
+const useOutFluFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use Outbox Flush Function. Why: Messages written offline should go once the device is back. How: This sends each group's outbox when the device is online.
+
+
+	const groKeyStr = groRecArr?.map( ( groRecObj ) => groRecObj.ideStr ).sort().join( ',' ) ?? ''; // What: Group Key String. Why: The sends should run only when the groups or the connection change. How: This joins the group IDs into one value to compare.
+	const onlValBoo = useOnlBooFun();                                                                // What: Online Value Boolean. Why: Messages can go only while online. How: This follows the connection.
+
+
+
+	useEffect( () => { // What: Flush Effect. Why: Coming back online, or a group appearing, may leave messages to send. How: This sends each group's outbox while online, logging a failure.
+
+
+		if ( !onlValBoo || groKeyStr === '' ) return; // What: Not Ready Guard. Why: Nothing goes offline or without groups. How: This returns.
+
+
+
+		for ( const groIdeStr of groKeyStr.split( ',' ) ) chaOutFun( groIdeStr ).catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Group Loop. Why: Each group's messages go to its chat. How: This sends each group's outbox, logging a failure.
+
+
+	}, [ groKeyStr, onlValBoo ] ); // What: Effect Dependency Array. Why: The sends follow the groups and the connection. How: groKeyStr changes with the groups, and onlValBoo when the device goes online or offline.
+
+
+};
+
+// #endregion useOutFluFun
+
+
+
 // #region useProSynFun
 
 /**
@@ -413,6 +467,8 @@ function ScrHosCom () : React.JSX.Element {
 	const visGroArr = groRecArr?.filter( ( groRecObj ) => groRecObj.ideStr !== gonIdeStr ) ?? null; // What: Visible Group Array. Why: A group just left or deleted is gone to the member at once. How: This leaves it out of the groups, null while loading.
 	const waiRecArr = useWaiLisFun( visGroArr );                                                    // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
 
+
+	useOutFluFun( visGroArr ); // What: Outbox Flush Call. Why: Messages written offline go once the device is back online. How: This sends them whichever screen is open.
 
 	useProSynFun( visGroArr ); // What: Profile Sync Call. Why: One photo shows in every group, including ones joined later. How: This syncs it as the groups change.
 

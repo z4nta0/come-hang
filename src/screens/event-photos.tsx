@@ -6,23 +6,24 @@
 import cssModObj from './event-photos.module.css'; // What: CSS Module Object. Why: The photos part is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom    } from '../ui/button.tsx';        // What: Button Base Component. Why: Adding photos is the part's main action. How: This draws its button.
-import { filNamFun    } from '../utils/text.ts';        // What: File Name Function. Why: The archive of an event's photos is named after the event. How: This turns its title into a plain piece of a file name.
-import { IcoSvgCom    } from '../ui/icon.tsx';          // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
-import { imaTypFun    } from '../platform/image.ts';    // What: Image Type Function. Why: A shared photo's bytes carry no type. How: This reads it from their first bytes.
-import { mesTimFun    } from '../utils/date.ts';        // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
-import { phoAddFun    } from '../state/photos.ts';      // What: Photo Add Function. Why: A member shares photos from the event. How: This shrinks, encrypts, and shares one.
-import { phoDelFun    } from '../state/photos.ts';      // What: Photo Delete Function. Why: The uploader or owner takes a photo down. How: This deletes it.
-import { phoFluFun    } from '../state/photos.ts';      // What: Photos Flush Function. Why: Leaving the photos means the member is done adding them. How: This ends the burst, posting its chat line.
-import { phoGetFun    } from '../state/photos.ts';      // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
-import { phoWatFun    } from '../state/photos.ts';      // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
-import { redMotFun    } from '../utils/motion.ts';      // What: Reduced Motion Function. Why: A jump to the photos scrolls smoothly unless the member asked for less motion. How: This reads the preference.
-import { SheDiaCom    } from '../ui/sheet.tsx';         // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
-import { useCallback  } from 'react';                   // What: Use Callback. Why: The arrow keys step the viewer through a listener that shouldn't change on every render. How: This keeps the step function the same between renders.
-import { useEffect    } from 'react';                   // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
-import { useRef       } from 'react';                   // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
-import { useState     } from 'react';                   // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
-import { zipBuiFun    } from '../utils/zip.ts';         // What: ZIP Build Function. Why: Several photos download to a computer as one file. How: This packs them into one archive.
+import { ButBasCom   } from '../ui/button.tsx';     // What: Button Base Component. Why: Adding photos is the part's main action. How: This draws its button.
+import { filNamFun   } from '../utils/text.ts';     // What: File Name Function. Why: The archive of an event's photos is named after the event. How: This turns its title into a plain piece of a file name.
+import { IcoSvgCom   } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
+import { imaTypFun   } from '../platform/image.ts'; // What: Image Type Function. Why: A shared photo's bytes carry no type. How: This reads it from their first bytes.
+import { mesTimFun   } from '../utils/date.ts';     // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
+import { offGuaFun   } from '../ui/online.ts';      // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
+import { phoAddFun   } from '../state/photos.ts';   // What: Photo Add Function. Why: A member shares photos from the event. How: This shrinks, encrypts, and shares one.
+import { phoDelFun   } from '../state/photos.ts';   // What: Photo Delete Function. Why: The uploader or owner takes a photo down. How: This deletes it.
+import { phoFluFun   } from '../state/photos.ts';   // What: Photos Flush Function. Why: Leaving the photos means the member is done adding them. How: This ends the burst, posting its chat line.
+import { phoGetFun   } from '../state/photos.ts';   // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
+import { phoWatFun   } from '../state/photos.ts';   // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
+import { redMotFun   } from '../utils/motion.ts';   // What: Reduced Motion Function. Why: A jump to the photos scrolls smoothly unless the member asked for less motion. How: This reads the preference.
+import { SheDiaCom   } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
+import { useCallback } from 'react';                // What: Use Callback. Why: The arrow keys step the viewer through a listener that shouldn't change on every render. How: This keeps the step function the same between renders.
+import { useEffect   } from 'react';                // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
+import { useRef      } from 'react';                // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
+import { useState    } from 'react';                // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
+import { zipBuiFun   } from '../utils/zip.ts';      // What: ZIP Build Function. Why: Several photos download to a computer as one file. How: This packs them into one archive.
 
 
 import type { EveRecTyp } from '../state/events.ts';  // What: Event Record Type. Why: The part belongs to one event. How: This types it.
@@ -582,6 +583,10 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const addFilFun = async ( filValArr : File[] ) : Promise< void > => { // What: Add Files Function. Why: A member shares several photos at once. How: This shares each in turn and announces how it went.
 
 
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		let errValStr = ''; // What: Error Value String. Why: The first failure is announced. How: This holds its words, empty while none failed.
 		let sucCouNum = 0;  // What: Success Count Number. Why: The status says how many landed. How: This counts them.
 
@@ -667,6 +672,10 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 		if ( vieRecObj === null ) return; // What: Closed Guard. Why: Only an open photo is deleted. How: This returns.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

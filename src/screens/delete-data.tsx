@@ -7,6 +7,7 @@ import cssModObj from './delete-data.module.css'; // What: CSS Module Object. Wh
 
 
 import { ideDelFun } from '../state/deletion.ts'; // What: Identity Delete Function. Why: Confirming deletes the data. How: This deletes it and starts the app over.
+import { offGuaFun } from '../ui/online.ts';      // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { useEffect } from 'react';                // What: Use Effect. Why: Focus moves as the confirmation opens and closes. How: This moves it once drawn.
 import { useRef    } from 'react';                // What: Use Reference. Why: Focus moves between the button and the box. How: This holds both, and whether focus is owed.
 import { useState  } from 'react';                // What: Use State. Why: The confirmation, the typed word, and the progress change while the part shows. How: This holds each.
@@ -148,6 +149,10 @@ function DelDatCom ( { className = '' } : DdcProTyp ) : React.JSX.Element {
 
 
 		if ( delBusBoo ) return; // What: Busy Guard. Why: A deletion already running shouldn't start again. How: This returns.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

@@ -15,6 +15,7 @@ import { joiNotFun    } from '../core/text-limits.ts';     // What: Join Note Fu
 import { joiWatFun    } from '../state/joins.ts';          // What: Join Watch Function. Why: The group opens as soon as a member lets the joiner in. How: This watches the request.
 import { LegLinCom    } from '../legal/links.tsx';         // What: Legal Links Component. Why: Asking to join means agreeing to the terms and the policy. How: This draws the line linking both.
 import { MaiAreCom    } from '../ui/main-area.tsx';        // What: Main Area Component. Why: The invite is the screen's main content. How: This holds it in the main landmark.
+import { offGuaFun    } from '../ui/online.ts';            // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { perNamFun    } from '../core/text-limits.ts';     // What: Person Name Function. Why: A name outside its limits is caught before anything is sent. How: This checks it.
 import { proKeyFun    } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps its own storage. How: This names the draft's key for the current one.
 import { reqCreFun    } from '../state/joins.ts';          // What: Request Create Function. Why: Sending the form asks to join. How: This files the request.
@@ -452,6 +453,10 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 
 
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		const notNorStr = texNorFun( notValStr ); // What: Note Normalized String. Why: The note is checked as it'll be saved. How: This tidies it.
 		const perNorStr = texNorFun( perNamStr ); // What: Person Normalized String. Why: The name is checked as it'll be saved. How: This tidies it.
 
@@ -557,6 +562,10 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 
 		if ( witBusBoo ) return; // What: Busy Guard. Why: One withdrawal at a time. How: This ignores a press while one is out.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

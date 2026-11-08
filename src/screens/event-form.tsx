@@ -15,6 +15,7 @@ import { eveTitFun } from '../core/text-limits.ts';     // What: Event Title Fun
 import { eveUpdFun } from '../state/events.ts';         // What: Event Update Function. Why: The form changes an event. How: This saves the change.
 import { inpDatFun } from '../utils/date.ts';           // What: Input Date Function. Why: A field's date and time is checked and saved as a time. How: This reads it.
 import { linNorFun } from '../core/text-limits.ts';     // What: Lines Normalize Function. Why: The notes are checked as they'll be saved. How: This tidies each line.
+import { offGuaFun } from '../ui/online.ts';            // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { plaLisFun } from '../platform/place-store.ts'; // What: Place List Function. Why: The place field suggests where the group has met. How: This reads the group's places kept on the device.
 import { texNorFun } from '../core/text-limits.ts';     // What: Text Normalize Function. Why: The title and place are checked as they'll be saved. How: This tidies them.
 import { useEffect } from 'react';                      // What: Use Effect. Why: The group's places load once the form opens. How: This reads them and drops an answer that arrives after it closes.
@@ -235,6 +236,10 @@ function EveForCom ( { eveRecObj, groIdeStr, onSavFun } : EvfProTyp ) : React.JS
 
 
 		if ( senReqBoo ) return; // What: Sending Guard. Why: One save at a time. How: This ignores a save while one is out.
+
+
+
+		if ( offGuaFun( setForErrStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

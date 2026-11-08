@@ -1,0 +1,37 @@
+
+
+
+/**
+ * offline-banner.module.css = Offline Banner Module
+ *
+ * @summary
+ * Styles for OffBanCom: a full-width band in the warning colors above every
+ * screen while the device is offline, its text bold and centered, taking no
+ * room while it's empty.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+.offBanPar { /* What: Offline Banner Paragraph. Why: Being offline changes what the app can do, so it should be plain at a glance without hiding the screen. How: This draws a band in the warning tint with dark warning text, bold and centered, a tier 4 space above and below and the gutter at its sides. */
+
+
+	background-color : var( --war-tin-col );                     /* Warning Tint Color = #FBF1DC */
+	color            : var( --war-dar-col );                     /* Warning Dark Color = #7F5200 */
+	font-weight      : 700;
+	padding          : var( --tie-ver-004 ) var( --gut-sid-pad ); /* Tier Vertical 4 ~= 8.304px, Gutter Side Padding, about 19.304px - 44.876px */
+	text-align       : center;
+
+
+}
+.offBanPar:empty { /* What: Empty Offline Banner Paragraph. Why: The region stays in the page while online, so it's heard when it speaks, but shouldn't show. How: This drops its padding. */
+
+
+	padding : 0;
+
+
+}
+
+

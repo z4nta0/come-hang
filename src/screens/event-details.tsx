@@ -21,6 +21,7 @@ import { iteClaFun } from '../state/items.ts';       // What: Item Claim Functio
 import { iteDelFun } from '../state/items.ts';       // What: Item Delete Function. Why: Any member removes an item. How: This deletes it.
 import { iteRenFun } from '../state/items.ts';       // What: Item Rename Function. Why: Any member relabels an item. How: This saves the new label.
 import { iteWatFun } from '../state/items.ts';       // What: Item Watch Function. Why: Claims and new items show at once. How: This watches the list.
+import { offGuaFun } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { redMotFun } from '../utils/motion.ts';      // What: Reduced Motion Function. Why: A jump to the list scrolls smoothly unless the member asked for less motion. How: This reads the preference.
 import { sloColFun } from '../ui/member-color.ts';   // What: Slot Color Function. Why: A claim wears its member's color. How: This names the color.
 import { texNorFun } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: An added item is announced as it's stored. How: This tidies its label.
@@ -344,6 +345,10 @@ function EveDetCom ( { eveRecObj, groIdeStr, lisJumBoo = false, memRecMap, ownBo
 
 
 		if ( actReqBoo ) return false; // What: Busy Guard. Why: A change while another is out could act twice. How: This ignores it.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return false; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 
