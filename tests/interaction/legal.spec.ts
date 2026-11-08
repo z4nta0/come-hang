@@ -57,7 +57,7 @@ test( 'the join form links the terms and the policy above its button', async ( {
 	await opeStaFun( page, STA_REC_ARR.find( ( staRecObj ) => staRecObj.ideStr === 'join-phone' )! ); // What: Join Open Call. Why: The form opens from another's invite link. How: This opens the shared join state. // What: Non-Null Note. Why: The shared states list join-phone. How: The ! says it's there.
 
 
-	const forCurObj = page.locator( 'form' ); // What: Form Current Object. Why: The links belong to the request form. How: This finds the form.
+	const forCurObj = page.locator( 'form' ).filter( { visible : true } ); // What: Form Current Object. Why: The links belong to the request form. How: This finds the form.
 
 
 	await expect( forCurObj.getByRole( 'link', { name : 'Privacy Policy' } ) ).toHaveAttribute( 'href', '/privacy' ); // What: Privacy Address Assertion. Why: The form links the policy's page. How: This checks the link's address.

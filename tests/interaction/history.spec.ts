@@ -267,7 +267,7 @@ pagTesObj( 'Not now keeps the history banner away through a reload', async ( { p
 
 	await secPagObj.goto( '/' ); // What: Joiner Reopen Call. Why: The watch started before the joiner was in. How: This opens the app again on the group's chat.
 
-	await secPagObj.getByRole( 'button', { name : 'Not now' } ).click(); // What: Dismiss Click Call. Why: The joiner doesn't want the history. How: This presses Not now.
+	await secPagObj.getByRole( 'region', { name : 'Chat history' } ).getByRole( 'button', { name : 'Not now' } ).click(); // What: Dismiss Click Call. Why: The joiner doesn't want the history. How: This presses the banner's Not now, waiting for the banner, since the notifications card has a Not now of its own.
 
 	await expect( secPagObj.getByRole( 'region', { name : 'Chat history' } ) ).toHaveCount( 0 ); // What: Gone Assertion. Why: A dismissed offer goes at once. How: This expects no banner.
 	await expect( secPagObj.getByRole( 'main' ) ).toBeFocused();                               // What: Focus Assertion. Why: The pressed button went with the banner, so focus lands on the main area. How: This expects it focused.

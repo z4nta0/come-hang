@@ -161,7 +161,7 @@ test( 'the composer sends on Enter, keeps a Shift+Enter line break, and clears i
 	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The test starts in a chat. How: This creates a group and opens it.
 
 
-	const texBoxObj = curPagObj.getByLabel( 'Message', { exact : true } ); // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ); // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
 
 
 	await texBoxObj.fill( 'Line one' );              // What: First Line Fill Call. Why: The message starts with a line. How: This types it.
@@ -199,15 +199,15 @@ test( 'a message with characters the chat refuses is announced and kept', async 
 	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The test starts in a chat. How: This creates a group and opens it.
 
 
-	const texBoxObj = curPagObj.getByLabel( 'Message', { exact : true } ); // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ); // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
 
 
 	await texBoxObj.fill( 'Hi ‮ there' ); // What: Refused Fill Call. Why: A direction override can disguise a message. How: This types text holding one.
 
 	await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: The message is sent. How: This presses Enter.
 
-	await expect( curPagObj.getByRole( 'alert' ) ).toHaveText( "This message has characters that can't be sent." ); // What: Refusal Announced Assertion. Why: The sender learns why it didn't go. How: This reads the alert.
-	await expect( texBoxObj ).toHaveValue( 'Hi ‮ there' );                                                          // What: Text Kept Assertion. Why: A refused message isn't lost. How: This reads the box.
+	await expect( curPagObj.getByRole( 'alert' ).filter( { hasText : 'characters' } ) ).toHaveText( "This message has characters that can't be sent." ); // What: Refusal Announced Assertion. Why: The sender learns why it didn't go. How: This reads the alert.
+	await expect( texBoxObj ).toHaveValue( 'Hi ‮ there' );                                                                                               // What: Text Kept Assertion. Why: A refused message isn't lost. How: This reads the box.
 
 
 } );

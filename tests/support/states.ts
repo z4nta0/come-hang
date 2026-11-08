@@ -340,12 +340,12 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
 
 	} );
 
-	await curPagObj.getByLabel( 'Message', { exact : true } ).fill( 'Leaving in 10, the pie is safe.' ); // What: Message Fill Call. Why: The log should hold a message. How: This types one into the composer.
+	await curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ).fill( 'Leaving in 10, the pie is safe.' ); // What: Message Fill Call. Why: The log should hold a message. How: This types one into the composer.
 
 	await expect( async () => { // What: Send Retry Call. Why: A send before the membership mirror catches up is refused and leaves its text. How: This presses Enter until the message shows.
 
 
-		await curPagObj.getByLabel( 'Message', { exact : true } ).press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it in the composer.
+		await curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ).press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it in the composer.
 
 		await expect( curPagObj.getByRole( 'log' ) ).toContainText( 'Leaving in 10, the pie is safe.', { timeout : 2000 } ); // What: Message Shown Assertion. Why: The send landed once the log holds it. How: This waits up to 2 seconds for it.
 
@@ -881,6 +881,8 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 		await memSteFun( curPagObj, steStr ); // What: Member Steps Call. Why: The page has to be a member who isn't the owner, offered the group in the offered state. How: This joins it to another's group.
 
 		await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: The watch started before the identity existed, so the app opens afresh to show the group. How: This opens the app again.
+
+		if ( steStr === 'offered' ) await curPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByRole( 'button', { name : 'Got it' } ).click(); // What: Sheet Close Call. Why: The offer waits on the page, so the notices sheet opens over the frame, once per device. How: This waits for the sheet and closes it.
 
 		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Settings' } ).click(); // What: Settings Click Call. Why: The section opens from its tab. How: This presses it.
 

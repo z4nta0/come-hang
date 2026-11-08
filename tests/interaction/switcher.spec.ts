@@ -144,6 +144,8 @@ test( 'the seed builds the demo group as Alex, and switching reloads the tab as 
 	await expect( curPagObj.getByText( "Count me in. I'll bring drinks." ) ).toBeVisible( { timeout : 30000 } );                    // What: Chat Assertion. Why: The seed starts the chat with each member. How: This expects Sam's reply in Alex's chat.
 	await expect( curPagObj.getByRole( 'heading', { name : 'Picnic at the lake' } ) ).toBeVisible();                              // What: Picnic Assertion. Why: The picnic is the next event, shown beside the chat at this width. How: This expects its heading.
 
+	await curPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByRole( 'button', { name : 'Got it' } ).click(); // What: Sheet Close Call. Why: Jordan's request waits on Alex, so the notices sheet opens over the frame. How: This waits for the sheet and closes it.
+
 	await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: Jordan's request waits in the People section. How: This opens it.
 
 	await expect( curPagObj.getByRole( 'button', { name : 'Approve Jordan Lee' } ) ).toBeVisible(); // What: Waiting Request Assertion. Why: The seed leaves Jordan's request for review. How: This expects its approve button.
@@ -151,6 +153,8 @@ test( 'the seed builds the demo group as Alex, and switching reloads the tab as 
 	await memPicFun( curPagObj, 'Sam Ortiz' ); // What: Sam Switch Call. Why: Each member sees the group as themselves. How: This switches to Sam.
 
 	await expect( curPagObj.getByText( 'Could someone grab a blanket?' ) ).toBeVisible( { timeout : 30000 } ); // What: Sam Chat Assertion. Why: Sam is a member who reads the chat. How: This expects Alex's last message.
+
+	await curPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByRole( 'button', { name : 'Got it' } ).click(); // What: Sam Sheet Close Call. Why: Jordan's request waits on every member, so Sam's notices sheet opens too. How: This waits for the sheet and closes it.
 
 	await memPicFun( curPagObj, 'You' ); // What: Own Switch Call. Why: The device's own identity belongs to no group. How: This switches back to it.
 
