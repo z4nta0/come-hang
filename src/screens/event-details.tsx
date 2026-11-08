@@ -579,7 +579,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, lisJumBoo = false, memRecMap, ownBo
 													style={{ backgroundColor : asgMemObj ? sloColFun( asgMemObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
 
 													aria-hidden='true'
-												> // What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers.
+												>{ /* What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers. */ }
 
 
 													<AvaConCom

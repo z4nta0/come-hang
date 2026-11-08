@@ -645,7 +645,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 											style={{ backgroundColor : memRecObj ? sloColFun( memRecObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
 
 											aria-hidden='true'
-										> // What: Message Avatar Span Element. Why: An avatar in the sender's color tells members apart at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers.
+										>{ /* What: Message Avatar Span Element. Why: An avatar in the sender's color tells members apart at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers. */ }
 
 
 											<AvaConCom
