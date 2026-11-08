@@ -45,7 +45,9 @@ import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Ty
  * person where the group's members can still be read. "Got it", or closing
  * the sheet any other way, dismisses every notice shown and keeps every item
  * shown as seen on the device, and focus moves to the screen's main area. A
- * notice of a kind the app doesn't know is left alone.
+ * sheet whose entries all go while it's open, such as a request another
+ * member answered, closes by itself. A notice of a kind the app doesn't know
+ * is left alone.
  *
  * Sections:
  *  - Constants
@@ -177,8 +179,9 @@ type NscProTyp = { groRecArr : GroRecTyp[], waiRecArr : WaiRecTyp[], watVerNum :
  * a sentence with a Review button, oldest first, and its "What happened"
  * part each notice's message and time, newest first, with headings only
  * when both show, and a "Got it" button that closes it. The sheet shows both
- * lists live while it's open. An item already on screen, in the People or
- * Settings section that holds it, counts as shown without opening the sheet.
+ * lists live while it's open, closing by itself once both are empty. An
+ * item already on screen, in the People or Settings section that holds it,
+ * counts as shown without opening the sheet.
  * Names are read from each group's members, again whenever an entry names
  * someone not read yet, best effort, so a group the identity can no longer
  * read names no one. However the sheet closes, every notice it showed is
@@ -330,6 +333,16 @@ function NotSheCom ( { groRecArr, waiRecArr, watVerNum } : NscProTyp ) : React.J
 
 
 	}, [ newWaiArr.length, opeSheBoo, visRecArr.length ] ); // What: Effect Dependency Array. Why: The sheet opens when entries show while it's closed. How: newWaiArr.length and visRecArr.length change as entries arrive, and opeSheBoo when the sheet closes.
+
+
+
+	useEffect( () => { // What: Sheet Empty Effect. Why: An item can be answered by another member while the sheet shows it, and a sheet left with nothing in it has nothing to say. How: This closes the sheet once every entry it showed has gone.
+
+
+		if ( opeSheBoo && visRecArr.length + newWaiArr.length === 0 ) sheHanRef.current?.cloFun(); // What: Empty Close Call. Why: Only an open sheet that emptied needs closing. How: This starts its closing slide, which runs the usual close.
+
+
+	}, [ newWaiArr.length, opeSheBoo, visRecArr.length ] ); // What: Effect Dependency Array. Why: The sheet empties as entries go while it's open. How: newWaiArr.length and visRecArr.length change as entries go, and opeSheBoo as it opens.
 
 
 
