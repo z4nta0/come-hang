@@ -150,7 +150,7 @@ function PriPolCom () : React.JSX.Element {
 
 			<h3>What stays on your device</h3>{ /* What: Subsection Heading Element. Why: A section's topics read under titles of their own. How: This names one. */ }
 
-			<p>Your encryption keys, your chat history, the places of your groups' events, which requests and offers the app has already pointed out to you, whether it has offered you notifications, and settings such as light or dark mode are stored on your device, in your browser's storage. Photos you open are kept only while the app is open, unless you save them to your device. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Your encryption keys, your chat history, the places of your groups' events, which requests and offers the app has already pointed out to you, whether you've answered its offer of notifications, and settings such as light or dark mode are stored on your device, in your browser's storage. Photos you open are kept only while the app is open, unless you save them to your device. Come Hang uses no tracking cookies, no analytics, and no ads.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>How we use information</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 

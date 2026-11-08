@@ -12,7 +12,7 @@ import { perStaFun } from '../platform/messaging.ts';   // What: Permission Stat
 import { proKeyFun } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps their own record of the card. How: This names its storage key.
 import { pusActFun } from '../state/push.ts';           // What: Push Active Function. Why: A device with notifications on needs no card. How: This reads whether they're on.
 import { pusEnaFun } from '../state/push.ts';           // What: Push Enable Function. Why: The card turns notifications on, which asks the browser. How: This asks and stores the token.
-import { useEffect } from 'react';                      // What: Use Effect. Why: Whether the card shows is checked as the chat opens, and its showing is kept. How: This runs each after rendering.
+import { useEffect } from 'react';                      // What: Use Effect. Why: Whether the card shows is checked as the chat opens. How: This runs the check after rendering.
 import { useState  } from 'react';                      // What: Use State. Why: Whether the card shows, its work, and its messages change what shows. How: This holds each.
 
 // #endregion Imports
@@ -26,14 +26,15 @@ import { useState  } from 'react';                      // What: Use State. Why:
  * A card above the chat that offers, once on each device, to turn
  * notifications on (ARCHITECTURE.md Section 11.1). It shows only where the
  * browser can show notifications, hasn't answered yet, and the device
- * hasn't turned them on, and only the first time it would, since showing it
- * is kept on the device straight away, so it never comes back however the
- * member leaves it. "Turn on notifications" asks the browser, and "Not now"
- * puts the card away, a line below it saying Settings can always turn them
- * on. The answer is announced as the card goes.
+ * hasn't turned them on, and it stays, visit after visit, until one of its
+ * buttons is pressed, which the device keeps, so it never comes back after.
+ * "Turn on notifications" asks the browser, and "Not now" puts the card
+ * away, a line below it saying Settings can always turn them on. The answer
+ * is announced as the card goes.
  *
  * Sections:
  *  - Constants
+ *  - Helpers
  *  - Components
  *  - Exports
  *
@@ -45,9 +46,25 @@ import { useState  } from 'react';                      // What: Use State. Why:
 
 // #region Constants
 
-const NUD_KEY_STR = proKeyFun( 'come-hang-push-nudge-shown' ); // What: Nudge Key String. Why: The card shows once on a device, and the record has to outlive the visit. How: This names its storage key.
+const NUD_KEY_STR = proKeyFun( 'come-hang-push-nudge-answered' ); // What: Nudge Key String. Why: The card stays until it's answered on a device, and the record has to outlive the visit. How: This names its storage key.
 
 // #endregion Constants
+
+
+
+// #region Helpers
+
+const nudKeeFun = () : void => { // What: Nudge Keep Function. Why: A card answered with either button shouldn't come back. How: This keeps the record, keeping nothing where storage is blocked.
+
+
+	try { localStorage.setItem( NUD_KEY_STR, 'true' ); } // What: Record Write Attempt. Why: A later visit shouldn't show the card again. How: This keeps the record.
+
+	catch { /* What: Blocked Storage. Why: The check already counts blocked storage as answered. How: Nothing is kept. */ }
+
+
+};
+
+// #endregion Helpers
 
 
 
@@ -65,9 +82,9 @@ type PncProTyp = { className : string }; // What: Push Nudge Component Props Typ
  * an alert that are always in the page. As the chat opens it checks that
  * the card hasn't shown on this device, that the browser can show
  * notifications and hasn't answered, and that they aren't on; then it shows
- * the card and keeps that it has. Turning them on asks the browser and puts
- * the card away with the answer announced, and a failure keeps the card
- * with an alert. "Not now" puts it away. Either way focus moves to the main
+ * the card. Turning them on asks the browser and puts the card away for
+ * good with the answer announced, and a failure keeps the card with an
+ * alert. "Not now" puts it away for good. Either way focus moves to the main
  * area as the card goes.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -94,20 +111,20 @@ function PusNudCom ( { className } : PncProTyp ) : React.JSX.Element {
 
 
 
-	useEffect( () => { // What: Show Check Effect. Why: The card shows once, only where notifications could be turned on and aren't. How: This checks the record, the browser, and the device, then shows the card.
+	useEffect( () => { // What: Show Check Effect. Why: The card shows until it's answered, only where notifications could be turned on and aren't. How: This checks the record, the browser, and the device, then shows the card.
 
 
-		let shoKeyBoo = false; // What: Shown Key Boolean. Why: A device that showed the card once never shows it again, and storage can be blocked. How: This is true once the record is found.
+		let shoKeyBoo = false; // What: Shown Key Boolean. Why: A device that answered the card never shows it again, and storage can be blocked. How: This is true once the record is found.
 
 
 
 		try { shoKeyBoo = localStorage.getItem( NUD_KEY_STR ) !== null; } // What: Record Read Attempt. Why: The record is kept under its key. How: This reads whether it's there.
 
-		catch { shoKeyBoo = true; } // What: Blocked Storage. Why: A device that can't keep the record would show the card on every visit. How: This counts it as shown.
+		catch { shoKeyBoo = true; } // What: Blocked Storage. Why: A device that can't keep the record would show the card on every visit. How: This counts it as answered.
 
 
 
-		if ( shoKeyBoo || pusActFun() ) return; // What: Not Needed Guard. Why: A card shown before, or notifications already on, has nothing to offer. How: This returns.
+		if ( shoKeyBoo || pusActFun() ) return; // What: Not Needed Guard. Why: A card answered before, or notifications already on, has nothing to offer. How: This returns.
 
 
 
@@ -125,22 +142,6 @@ function PusNudCom ( { className } : PncProTyp ) : React.JSX.Element {
 
 
 
-	useEffect( () => { // What: Shown Keep Effect. Why: The card shows once, however the member leaves it. How: This keeps the record as soon as it shows.
-
-
-		if ( !shoNudBoo ) return; // What: Hidden Guard. Why: Only a card that showed is recorded. How: This returns otherwise.
-
-
-
-		try { localStorage.setItem( NUD_KEY_STR, 'true' ); } // What: Record Write Attempt. Why: A later visit shouldn't show it again. How: This keeps the record.
-
-		catch { /* What: Blocked Storage. Why: The check already counts blocked storage as shown. How: Nothing is kept. */ }
-
-
-	}, [ shoNudBoo ] ); // What: Effect Dependency Array. Why: The record is kept when the card shows. How: shoNudBoo changes as it does.
-
-
-
 	// #region nudOnnFun
 
 	/**
@@ -148,9 +149,10 @@ function PusNudCom ( { className } : PncProTyp ) : React.JSX.Element {
 	 *
 	 * @summary
 	 * Turns notifications on from the card, unless it's already asking: asks
-	 * the browser, then puts the card away, moving focus to the main area,
-	 * and announces the answer, granted, dismissed, blocked, or unsupported.
-	 * A failure keeps the card and announces it through the alert.
+	 * the browser, then keeps the card answered and puts it away, moving
+	 * focus to the main area, and announces the answer, granted, dismissed,
+	 * blocked, or unsupported. A failure keeps the card and announces it
+	 * through the alert.
 	 *
 	 * @author z4nta0 <https://github.com/z4nta0>
 	 *
@@ -202,6 +204,8 @@ function PusNudCom ( { className } : PncProTyp ) : React.JSX.Element {
 
 
 
+		nudKeeFun(); // What: Keep Call. Why: The browser has answered, so the card shouldn't come back. How: This keeps the record.
+
 		document.getElementById( 'main' )?.focus(); // What: Focus Call. Why: The card goes with the button that had focus. How: This focuses the main area, the skip link's target.
 
 		setShoNudBoo( false ); // What: Hide Call. Why: The browser has answered. How: This puts the card away.
@@ -215,7 +219,17 @@ function PusNudCom ( { className } : PncProTyp ) : React.JSX.Element {
 
 
 
-	const nudHidFun = () : void => { document.getElementById( 'main' )?.focus(); setShoNudBoo( false ); }; // What: Nudge Hide Function. Why: Notifications are never required, and focus shouldn't fall to the page as the card goes. How: This focuses the main area and puts the card away.
+	const nudHidFun = () : void => { // What: Nudge Hide Function. Why: Notifications are never required, the card shouldn't come back once put away, and focus shouldn't fall to the page as it goes. How: This keeps the card answered, focuses the main area, and puts the card away.
+
+
+		nudKeeFun(); // What: Keep Call. Why: Not now is an answer, so the card shouldn't come back. How: This keeps the record.
+
+		document.getElementById( 'main' )?.focus(); // What: Focus Call. Why: The card goes with the button that had focus. How: This focuses the main area, the skip link's target.
+
+		setShoNudBoo( false ); // What: Hide Call. Why: The member put it away. How: This hides the card.
+
+
+	};
 
 
 
