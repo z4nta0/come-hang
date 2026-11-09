@@ -22,7 +22,7 @@ import { iteDelFun } from '../state/items.ts';       // What: Item Delete Functi
 import { iteRenFun } from '../state/items.ts';       // What: Item Rename Function. Why: Any member relabels an item. How: This saves the new label.
 import { iteWatFun } from '../state/items.ts';       // What: Item Watch Function. Why: Claims and new items show at once. How: This watches the list.
 import { offGuaFun } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
-import { redMotFun } from '../utils/motion.ts';      // What: Reduced Motion Function. Why: A jump to the list scrolls smoothly unless the member asked for less motion. How: This reads the preference.
+import { sheJumFun } from '../ui/sheet.tsx';         // What: Sheet Jump Function. Why: A chat line about the list opens its event at it. How: This scrolls the list's heading into view once the sheet has risen.
 import { sloColFun } from '../ui/member-color.ts';   // What: Slot Color Function. Why: A claim wears its member's color. How: This names the color.
 import { texNorFun } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: An added item is announced as it's stored. How: This tidies its label.
 import { useEffect } from 'react';                   // What: Use Effect. Why: The list is watched while the details are shown, and an item's edit takes and returns focus. How: This starts and stops the watch and moves focus.
@@ -293,18 +293,14 @@ function EveDetCom ( { eveRecObj, groIdeStr, lisJumBoo = false, memRecMap, ownBo
 
 
 
-	useEffect( () => { // What: List Jump Effect. Why: A chat line about the list opens its event at it. How: This scrolls the list's heading to the top of its sheet a frame after it opens, smoothly unless the member asked for less motion.
+	useEffect( () => { // What: List Jump Effect. Why: A chat line about the list opens its event at it. How: This scrolls the list's heading to the top of its sheet once the sheet has risen, smoothly unless the member asked for less motion.
 
 
-		if ( !lisJumBoo ) return; // What: Stay Guard. Why: An event opened from its card starts at its top. How: This returns.
-
-
-
-		const fraIdeNum = requestAnimationFrame( () => lisHeaRef.current?.scrollIntoView( { behavior : redMotFun() ? 'instant' : 'smooth', block : 'start' } ) ); // What: Frame Identifier Number. Why: The sheet has to have laid out before it can scroll. How: This scrolls on the next frame, keeping the request to cancel.
+		if ( !lisJumBoo || lisHeaRef.current === null ) return; // What: Stay Guard. Why: An event opened from its card starts at its top, and an undrawn list has nowhere to jump. How: This returns.
 
 
 
-		return () => cancelAnimationFrame( fraIdeNum ); // What: Cleanup Return. Why: Details gone before the frame mustn't scroll. How: This cancels the request.
+		return sheJumFun( lisHeaRef.current ); // What: Jump Return. Why: Details gone before the jump mustn't scroll. How: This starts the jump, which waits for the sheet to rise, and returns the function that cancels it.
 
 
 	}, [ lisJumBoo ] ); // What: Effect Dependency Array. Why: The jump happens as the details open asked to. How: lisJumBoo changes with the ask.
