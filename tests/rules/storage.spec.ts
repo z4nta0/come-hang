@@ -14,13 +14,13 @@ import { listAll                   } from 'firebase/storage';             // Wha
 import { readFileSync              } from 'node:fs';                      // What: Read File Sync. Why: The emulator is given the real rules file. How: This reads it.
 import { ref                       } from 'firebase/storage';             // What: Ref. Why: Every request names a file. How: This builds a reference.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed the documents the rules read. How: This writes a document.
+import { stoCleFun                 } from '../support/storage.ts';        // What: Storage Clear Function. Why: Each test starts from an empty bucket. How: This clears it folder by folder.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each rule is its own test. How: This declares them.
 import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: Upload rules are checked. How: This uploads a file's contents.
 
 
 import type { FirebaseStorage      } from 'firebase/storage';             // What: Firebase Storage. Why: The upload helper takes the identity's storage. How: This types it.
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every test reads and writes through one. How: This types it.
-import type { StorageReference     } from 'firebase/storage';             // What: Storage Reference. Why: The reset walks the bucket folder by folder. How: This types each folder.
 import type { UploadMetadata       } from 'firebase/storage';             // What: Upload Metadata. Why: The tests vary a file's type and metadata. How: This types them.
 
 // #endregion Imports
@@ -87,55 +87,6 @@ let stoEnvObj : RulesTestEnvironment; // What: Storage Environment Object. Why: 
 // #region Helpers
 
 const accStoFun = ( uidValStr : string ) => stoEnvObj.authenticatedContext( uidValStr ).storage(); // What: Account Storage Function. Why: Each test acts as a chosen identity. How: This returns Storage as that identity sees it.
-
-
-
-// #region cleStoFun
-
-/**
- * cleStoFun = Clear Storage Function
- *
- * @summary
- * Deletes every file in the bucket, inside folders too, with the rules
- * turned off. The test environment's own clearStorage lists only the
- * bucket's top level, without its folders, so a file in a folder lasted into
- * the next test (measured 2026-11-09), where a rule refusing to replace a
- * file then refused that test's first upload.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param void - This function takes no parameters.
- *
- * @returns A promise that settles once the bucket is empty, with no value.
- *
- * @example
- * ```ts
- * cleStoFun() // => Promise<void>
- * ```
- *
-*/
-
-const cleStoFun = () => stoEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { // What: Clear Storage Function. Why: Each test starts from an empty bucket. How: This deletes every file from the root down, with the rules off.
-
-
-	const delFolFun = async ( folRefObj : StorageReference ) : Promise< void > => { // What: Delete Folder Function. Why: Files sit in nested folders. How: This lists a folder, deleting its files and walking each folder inside it.
-
-
-		const { items : filRefArr, prefixes : folRefArr } = await listAll( folRefObj ); // What: File Reference Array. Why: The folder's own files are deleted. How: This reads them from the listing. // What: Folder Reference Array. Why: Each folder inside is walked in turn. How: This reads them from the listing.
-
-
-		await Promise.all( [ ...filRefArr.map( ( filRefObj ) => deleteObject( filRefObj ) ), ...folRefArr.map( delFolFun ) ] ); // What: Delete Call. Why: The folder empties at once. How: This deletes its files and walks its folders together, settling once all finish.
-
-
-	};
-
-
-	await delFolFun( ref( cotAdmObj.storage() ) ); // What: Root Delete Call. Why: The walk starts from the bucket's root. How: This deletes everything under it.
-
-
-} );
-
-// #endregion cleStoFun
 
 
 
@@ -308,7 +259,7 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from e
 
 
 	await stoEnvObj.clearFirestore(); // What: Firestore Clear Call. Why: No test sees another's documents. How: This clears the project's Firestore.
-	await cleStoFun();                // What: Storage Clear Call. Why: No test sees another's files. How: This clears the bucket, folders included.
+	await stoCleFun( stoEnvObj );     // What: Storage Clear Call. Why: No test sees another's files. How: This clears the bucket, folders included.
 
 
 } );

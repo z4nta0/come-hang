@@ -183,17 +183,19 @@ test( 'a join request pushes every member a count that replaces the last, and an
 
 
 
-test( 'a chat message pushes each waiting member away from the group, and nobody once the group is gone', async () => { // What: Chat Push Test. Why: Members away from the app learn the chat moved on, while one with the group open is left alone (Section 11.7). How: This seeds presence and messages, then checks the pushes.
+test( 'a chat message pushes each waiting member away from the group, and nobody when it is quiet or once the group is gone', async () => { // What: Chat Push Test. Why: Members away from the app learn the chat moved on, while one with the group open is left alone, and a bring-list line is news for the chat alone (Sections 11.5 and 11.7). How: This seeds presence and messages, then checks the pushes.
 
 
-	await seeGroFun( [ 'alice', 'bob', 'carol' ] ); // What: Group Seed Call. Why: The test needs three members. How: This seeds them.
+	await seeGroFun( [ 'alice', 'bob', 'carol', 'dave' ] ); // What: Group Seed Call. Why: The test needs four members. How: This seeds them.
 
 
 
-	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { // What: Chat Seed Call. Why: Carol has the group open, and Alice sends a message both others wait on. How: This writes Carol's presence, then the message.
+	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { // What: Chat Seed Call. Why: Carol has the group open, Alice posts a quiet line only Dave waits on, and then a message Bob and Carol wait on. How: This writes Carol's presence, then the quiet line, then the message.
 
 
 		await set( ref( cotAdmObj.database( DBS_URL_STR ), 'presence/gro1/carol' ), { online : true } ); // What: Presence Seed Call. Why: Carol has the group open. How: This marks her online.
+
+		await set( ref( cotAdmObj.database( DBS_URL_STR ), 'chats/gro1/messages/m0' ), { ciphertext : 'x', iv : 'y', quiet : true, senderUid : 'alice', sentAt : Date.now(), waitingOn : { dave : true } } ); // What: Quiet Seed Call. Why: A bring-list line Dave hasn't received, away from the group, pushes nobody. How: This writes it first, so it's handled before the message whose push the test waits for.
 
 		await set( ref( cotAdmObj.database( DBS_URL_STR ), 'chats/gro1/messages/m1' ), { ciphertext : 'x', iv : 'y', senderUid : 'alice', sentAt : Date.now(), waitingOn : { bob : true, carol : true } } ); // What: Message Seed Call. Why: A message Bob and Carol haven't received. How: This writes it.
 
@@ -210,6 +212,7 @@ test( 'a chat message pushes each waiting member away from the group, and nobody
 
 	expect( await pusLisFun( funEnvObj, 'tok-carol' ) ).toEqual( [] ); // What: Carol Not Pushed. Why: Carol has the group open. How: This expects none for her.
 	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [] ); // What: Sender Not Pushed. Why: Alice isn't waiting on her own message. How: This expects none for her.
+	expect( await pusLisFun( funEnvObj, 'tok-dave' ) ).toEqual( [] );  // What: Quiet Not Pushed. Why: A quiet line sends no push, though Dave is away and waiting. How: This expects none for him.
 
 
 } );
