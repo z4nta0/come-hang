@@ -255,7 +255,7 @@ test( 'a member sends a message, members read chat starting at their own join, a
 
 
 
-test( 'a message is sent only by a member in their own name, at the server time, waiting only on members, with sized base64 content and nothing else', async () => { // What: Message Shape Test. Why: Encrypted content can only be checked by size and form, and its time and waiting list decide when it's deleted (Section 11.7). How: This sends a message with one fault at a time, then one at the size limit, checking each fault fails and the limit passes.
+test( 'a message is sent only by a member in their own name, at the server time, waiting only on members, with sized base64 content, an optional quiet flag, and nothing else', async () => { // What: Message Shape Test. Why: Encrypted content can only be checked by size and form, and its time and waiting list decide when it's deleted (Section 11.7). How: This sends a message with one fault at a time, then one at the size limit, checking each fault fails and the limit passes.
 
 
 	const bobDbsObj = accDbsFun( 'bob' ); // What: Bob Database Object. Why: Bob sends the messages. How: This acts as him.
@@ -277,7 +277,10 @@ test( 'a message is sent only by a member in their own name, at the server time,
 	await assertFails( set( ref( bobDbsObj, MSG_ONE_STR ), msgDatFun( 'bob', { alice : true }, { ciphertext : 123456789012345678901234 } ) ) );  // What: Number Message. Why: Ciphertext is text, never a number. How: This expects a number refused.
 	await assertFails( set( ref( bobDbsObj, MSG_ONE_STR ), msgDatFun( 'bob', { alice : true }, { extra : true } ) ) );                           // What: Extra Field. Why: A message holds only its own fields. How: This expects another one refused.
 	await assertFails( set( ref( bobDbsObj, MSG_ONE_STR ), msgDatFun( 'bob', { alice : true }, { iv : null } ) ) );                              // What: Missing IV. Why: Every message carries its IV. How: This expects one without it refused.
+	await assertFails( set( ref( bobDbsObj, MSG_ONE_STR ), msgDatFun( 'bob', { alice : true }, { quiet : false } ) ) );                          // What: False Quiet Flag. Why: A message is quiet or carries no flag at all. How: This expects false refused.
+	await assertFails( set( ref( bobDbsObj, MSG_ONE_STR ), msgDatFun( 'bob', { alice : true }, { quiet : 'yes' } ) ) );                          // What: Text Quiet Flag. Why: The flag holds true alone. How: This expects text refused.
 	await assertSucceeds( set( ref( bobDbsObj, MSG_ONE_STR ), msgDatFun( 'bob', { alice : true }, { ciphertext : 'A'.repeat( 8024 ) } ) ) );     // What: Longest Message. Why: A message may fill 8,024 characters. How: This expects one at the limit allowed.
+	await assertSucceeds( set( ref( bobDbsObj, 'chats/gro1/messages/msg2' ), msgDatFun( 'bob', { alice : true }, { quiet : true } ) ) );         // What: Quiet Message. Why: A bring-list line is posted quietly, so it sends no push. How: This expects one flagged true allowed.
 
 
 } );

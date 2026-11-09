@@ -980,6 +980,116 @@ const iteDatFun = ( iteChaObj : Record< string, unknown > = {} ) => ({ // What: 
 
 
 
+// #region phoDatFun
+
+/**
+ * phoDatFun = Photo Data Function
+ *
+ * @summary
+ * Builds a valid photo for an event whose times eveTimFun builds from
+ * EVE_END_NUM: an encrypted thumbnail, the two 12-byte IVs, the server's
+ * time, the event's TTL time, and its uploader. Fields can be changed or
+ * added by an option.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param uplUidStr - Uploader UID String: Who the photo names as its
+ *                    uploader.
+ * @param phoChaObj - Photo Change Object: Fields to change or add, empty by
+ *                    default.
+ *
+ * @returns The photo's fields.
+ *
+ * @example
+ * ```ts
+ * phoDatFun('bob', { fullIv }) // => { uploaderUid : 'bob', ... }
+ * ```
+ *
+*/
+
+const phoDatFun = ( uplUidStr : string, phoChaObj : Record< string, unknown > = {} ) => ({ // What: Photo Data Function. Why: Every photo test starts from a valid photo. How: This returns its fields with the test's changes.
+
+
+	createdAt   : serverTimestamp(),
+	expireAt    : Timestamp.fromMillis( EVE_END_NUM + 2 * DAY_MIL_NUM ),
+	fullIv      : bytFilFun( 12 ),
+	thumbEnc    : bytFilFun( 4000 ),
+	thumbIv     : bytFilFun( 12 ),
+	uploaderUid : uplUidStr,
+
+	...phoChaObj // What: Photo Change Spread. Why: A test changes the fields it checks. How: This merges them over the defaults.
+
+
+});
+
+// #endregion phoDatFun
+
+
+
+type PbfOptTyp = { allNum? : number | null, memNum? : number | null, memStr? : string, phoObj? : Record< string, unknown > }; // What: PBF Options Type. Why: Each photo test changes or leaves out one part of the batch. How: This lists the overrides, where a null count leaves that tally out and memStr names whose tally rises.
+
+// #region phoBatFun
+
+/**
+ * phoBatFun = Photo Batch Function
+ *
+ * @summary
+ * Commits the three writes that add a photo to gro1's event eve1, as the app
+ * does: the photo, the event's tally, and the uploader's tally, each tally
+ * raised to the count given and naming the photo. A first photo's tallies
+ * read 1. An option changes the photo's fields, sets either count, leaves a
+ * tally out (null), or raises another member's tally in place of the
+ * writer's own.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The signed-in connection that
+ *                    writes the batch.
+ * @param uidValStr - UID Value String: The writer, named as the uploader.
+ * @param phoIdeStr - Photo Identifier String: The new photo's ID.
+ * @param optValObj - Option Value Object: {@link PbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * phoBatFun(bobStoObj, 'bob', 'pho2', { allNum : 2 }) // => Promise<void>
+ * ```
+ *
+*/
+
+const phoBatFun = ( stoConObj : StoConTyp, uidValStr : string, phoIdeStr : string, optValObj : PbfOptTyp = {} ) => { // What: Photo Batch Function. Why: Most photo tests commit the same three writes with one part changed. How: This builds and commits the batch.
+
+
+	const allCouNum = optValObj.allNum === undefined ? 1 : optValObj.allNum; // What: All Count Number. Why: The event's tally rises to the test's count, 1 for a first photo. How: This takes the given count, or 1, keeping a null.
+	const batWriObj = writeBatch( stoConObj );                               // What: Batch Write Object. Why: The three writes have to land together. How: This starts the batch.
+	const memCouNum = optValObj.memNum === undefined ? 1 : optValObj.memNum; // What: Member Count Number. Why: The uploader's tally rises the same way. How: This takes the given count, or 1, keeping a null.
+	const talPatStr = 'groups/gro1/events/eve1/photoTally';                  // What: Tally Path String. Why: Both tallies sit under the event. How: This names their collection.
+
+
+	batWriObj.set( doc( stoConObj, `groups/gro1/events/eve1/photos/${ phoIdeStr }` ), phoDatFun( uidValStr, optValObj.phoObj ) ); // What: Photo Write. Why: The photo is the batch's center. How: This adds it in the writer's name, with the test's changes.
+
+
+
+	if ( allCouNum !== null ) batWriObj.set( doc( stoConObj, `${ talPatStr }/all` ), { count : allCouNum, lastPhotoId : phoIdeStr } ); // What: Event Tally Write. Why: The event's count rises with each photo. How: This sets it to the count, naming the photo, unless the test leaves it out.
+
+
+
+	if ( memCouNum !== null ) batWriObj.set( doc( stoConObj, `${ talPatStr }/${ optValObj.memStr ?? uidValStr }` ), { count : memCouNum, lastPhotoId : phoIdeStr } ); // What: Member Tally Write. Why: The uploader's own count rises too. How: This sets the named member's tally, the writer's by default, unless the test leaves it out.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion phoBatFun
+
+
+
 // #region locDatFun
 
 /**
@@ -1849,6 +1959,55 @@ test( "a member asks once for the group's key, and only another member answers i
 
 
 
+test( "a member sets and clears only their own profile photo's ID, IV, and server time, all three together", async () => { // What: Profile Photo Test. Why: A member's photo is named on their membership, and only they choose it (Section 21). How: This approves Bob, then sets, replaces, and clears his photo's fields as him and as Alice, checking which changes pass.
+
+
+	const aliStoObj = accStoFun( 'alice' );      // What: Alice Store Object. Why: Alice is another member. How: This acts as her.
+	const bobRefStr = 'groups/gro1/members/bob'; // What: Bob Reference String. Why: Every write changes Bob's membership. How: This is its path.
+	const bobStoObj = accStoFun( 'bob' );        // What: Bob Store Object. Why: Bob sets his own photo. How: This acts as him.
+
+	const avaSetObj = { // What: Avatar Set Object. Why: Most writes set the same valid photo with one field changed. How: This holds the three fields, stamped with the server's time.
+
+
+		avatarAt : serverTimestamp(),
+		avatarId : 'A'.repeat( 22 ),
+		avatarIv : bytFilFun( 12 )
+
+
+	};
+
+	const avaClrObj = { // What: Avatar Clear Object. Why: Removing the photo clears every field. How: This deletes all three.
+
+
+		avatarAt : deleteField(),
+		avatarId : deleteField(),
+		avatarIv : deleteField()
+
+
+	};
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob needs a membership to change. How: This approves Bob into the group.
+
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), avaSetObj ) );                                                 // What: Photo For Another. Why: Only Bob chooses his photo. How: This expects Alice refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { avatarId : 'A'.repeat( 22 ) } ) );                           // What: Lone Photo ID. Why: A photo can't be read without its IV and time. How: This expects the ID alone refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { ...avaSetObj, avatarAt : Timestamp.fromMillis( 9e12 ) } ) ); // What: Forged Photo Time. Why: The newest photo wins across groups. How: This expects a chosen time refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { ...avaSetObj, avatarId : 'A'.repeat( 21 ) } ) );             // What: Short Photo ID. Why: Every copy shares a 22-character ID. How: This expects 21 refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { ...avaSetObj, avatarId : `${ 'A'.repeat( 21 ) }.` } ) );     // What: Odd Photo ID. Why: The ID is base64url, which names the photo's file. How: This expects a dot refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { ...avaSetObj, avatarIv : bytFilFun( 11 ) } ) );              // What: Short Photo IV. Why: An AES-GCM IV is 12 bytes. How: This expects 11 refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { ...avaSetObj, displayNameEnc : bytFilFun( 40 ) } ) );        // What: Photo With Name. Why: A photo changes nothing else on the membership. How: This expects a name beside it refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), avaSetObj ) );                                              // What: Own Photo Set. Why: A member sets their own photo. How: This expects Bob allowed.
+	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), { ...avaSetObj, avatarId : 'B'.repeat( 22 ) } ) );          // What: Own Photo Replaced. Why: A member changes their photo. How: This expects a new ID at a new time allowed.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { avatarId : 'C'.repeat( 22 ) } ) );                           // What: Stale Photo Time. Why: A changed photo has to carry its own time. How: This expects a new ID beside the old time refused.
+	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { avatarId : deleteField() } ) );                              // What: Partial Photo Clear. Why: A photo is all three fields or none. How: This expects clearing the ID alone refused.
+	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), avaClrObj ) );                                                 // What: Clear For Another. Why: Only Bob removes his photo. How: This expects Alice refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), avaClrObj ) );                                              // What: Own Photo Cleared. Why: A member removes their photo. How: This expects Bob clearing all three allowed.
+
+
+} );
+
+
+
 test( 'the member count moves only with a membership the same batch creates', async () => { // What: Count Test. Why: An inflated count could block every join, so it can't move on its own. How: This raises the count as Alice for an existing member and for nobody, checking both fail.
 
 
@@ -2386,6 +2545,122 @@ test( "a removed member's claim stays until someone changes it, and an event tha
 	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveTimFun( EVE_END_NUM, EVE_END_NUM + DAY_MIL_NUM ) ) );                                   // What: Event Moved. Why: The creator reschedules the event a day later. How: This expects the move allowed, its expiry following its end.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 80 ) } ) );                                          // What: Stale Item Expiry. Why: An item still carrying the old expiry is out of step with its event. How: This expects an edit keeping it refused.
 	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { expireAt : Timestamp.fromMillis( EVE_END_NUM + 3 * DAY_MIL_NUM ) } ) ); // What: Item Expiry Synced. Why: Any member brings an item back in step with its event. How: This expects the item moved to the event's new expiry allowed.
+
+
+} );
+
+
+
+test( 'a member adds a photo in their own name as both tallies rise for it, which only members read, and only its uploader or the owner deletes it', async () => { // What: Photo Test. Why: Photos are the group's, the caps count every one, and taking one down is its uploader's or the owner's (Section 20). How: This adds photos as Bob and Alice, then tries reads, forged batches, and deletes, checking who the rules let through.
+
+
+	const aliStoObj = accStoFun( 'alice' );                 // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );                   // What: Bob Store Object. Why: Bob adds most of the photos. How: This acts as him.
+	const phoColStr = 'groups/gro1/events/eve1/photos';     // What: Photo Collection String. Why: Every read and delete names a photo in the event. How: This is their collection.
+	const talColStr = 'groups/gro1/events/eve1/photoTally'; // What: Tally Collection String. Why: The tally writes name the event's tallies. How: This is their collection.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob adds photos as a member who isn't the owner. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( EVE_END_NUM - 3 * DAY_MIL_NUM, EVE_END_NUM ) ) ); // What: Event Seed. Why: Photos open once an event starts. How: This writes one that started a day ago and ends at EVE_END_NUM.
+
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { allNum : null, memNum : null } ) );                // What: Untallied Photo. Why: A photo has to raise the counts the caps read. How: This expects a photo alone refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { memNum : null } ) );                               // What: Half Tallied Photo. Why: The member's own cap counts too. How: This expects the event's tally alone refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { allNum : 2, memNum : 2 } ) );                      // What: Skipped Count. Why: Each photo raises a tally by exactly one. How: This expects counts of 2 from nothing refused.
+	await assertFails( phoBatFun( aliStoObj, 'alice', 'pho1', { phoObj : { uploaderUid : 'bob' } } ) );          // What: Photo In Another's Name. Why: A photo names who really added it. How: This expects Alice naming Bob refused.
+	await assertFails( phoBatFun( aliStoObj, 'alice', 'pho1', { memStr : 'bob' } ) );                            // What: Another's Tally. Why: A member's photos count against their own cap. How: This expects Alice raising Bob's tally refused.
+	await assertFails( phoBatFun( accStoFun( 'dave' ), 'dave', 'pho1' ) );                                       // What: Outsider Photo. Why: Only members add photos. How: This expects Dave refused.
+	await assertSucceeds( phoBatFun( bobStoObj, 'bob', 'pho1' ) );                                               // What: First Photo. Why: A member adds a photo once the event starts. How: This expects Bob's allowed, with both tallies at 1.
+	await assertSucceeds( phoBatFun( bobStoObj, 'bob', 'pho2', { allNum : 2, memNum : 2 } ) );                   // What: Second Photo. Why: Each photo raises both tallies again. How: This expects Bob's next allowed at 2.
+	await assertSucceeds( phoBatFun( aliStoObj, 'alice', 'pho3', { allNum : 3 } ) );                             // What: Owner Photo. Why: The owner adds photos too, starting a tally of her own. How: This expects Alice's allowed, the event at 3 and hers at 1.
+	await assertFails( setDoc( doc( bobStoObj, `${ talColStr }/bob` ), { count : 3, lastPhotoId : 'pho2' } ) );  // What: Tally Alone. Why: A tally rises only for a photo the same batch adds. How: This expects Bob raising his tally for an old photo refused.
+	await assertFails( deleteDoc( doc( bobStoObj, `${ talColStr }/bob` ) ) );                                    // What: Tally Delete. Why: A lowered count would reopen the caps, so only Cloud Functions delete one. How: This expects Bob refused.
+	await assertSucceeds( getDoc( doc( aliStoObj, `${ phoColStr }/pho1` ) ) );                                   // What: Member Photo Read. Why: Members see the event's photos. How: This expects Alice's fetch allowed.
+	await assertSucceeds( getDocs( collection( aliStoObj, phoColStr ) ) );                                       // What: Member Photo List. Why: The event's grid lists its photos. How: This expects Alice's listing allowed.
+	await assertSucceeds( getDoc( doc( bobStoObj, `${ talColStr }/all` ) ) );                                    // What: Member Tally Read. Why: A member sees how many photos are left to add. How: This expects Bob's fetch allowed.
+	await assertFails( getDoc( doc( accStoFun( 'dave' ), `${ phoColStr }/pho1` ) ) );                            // What: Outsider Photo Read. Why: Photos are for members only. How: This expects Dave refused.
+	await assertFails( updateDoc( doc( bobStoObj, `${ phoColStr }/pho1` ), { thumbEnc : bytFilFun( 5000 ) } ) ); // What: Photo Edit. Why: A photo never changes once added. How: This expects Bob's own edit refused.
+	await assertFails( deleteDoc( doc( bobStoObj, `${ phoColStr }/pho3` ) ) );                                   // What: Member Deletes Another's. Why: Only the uploader or owner takes a photo down. How: This expects Bob deleting Alice's refused.
+	await assertSucceeds( deleteDoc( doc( bobStoObj, `${ phoColStr }/pho1` ) ) );                                // What: Uploader Delete. Why: A member takes down their own photo. How: This expects Bob allowed.
+	await assertSucceeds( deleteDoc( doc( aliStoObj, `${ phoColStr }/pho2` ) ) );                                // What: Owner Delete. Why: The owner takes down any photo. How: This expects Alice deleting Bob's allowed.
+
+
+} );
+
+
+
+test( "a photo keeps its six fields, sizes, real time, and its event's expiry, and opens only from its event's start until its deletion time", async () => { // What: Photo Shape Test. Why: An encrypted thumbnail can only be checked by size, and its times decide when it shows and when it goes (Section 20). How: This adds photos with one fault at a time, then at the size limit, and to events not yet started or past their deletion time, checking each fault fails and the limit passes.
+
+
+	const bobStoObj = accStoFun( 'bob' );           // What: Bob Store Object. Why: Bob adds the photos. How: This acts as him.
+	const lapEndNum = Date.now() - 3 * DAY_MIL_NUM; // What: Lapsed End Number. Why: The late check needs an event whose deletion time, 2 days after its end, has passed, and its photo has to carry that same time. How: This is an end 3 days ago, read once.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob adds photos as a member. How: This approves Bob into the group.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( EVE_END_NUM - 3 * DAY_MIL_NUM, EVE_END_NUM ) ) ); // What: Event Seed. Why: The shape checks need an event that has started. How: This writes one that started a day ago.
+
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { createdAt : Timestamp.fromMillis( 9e12 ) } } ) );                         // What: Forged Photo Time. Why: The grid orders photos by when they were added. How: This expects a chosen time refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { expireAt : Timestamp.fromMillis( EVE_END_NUM + 9 * DAY_MIL_NUM ) } } ) ); // What: Outliving Photo. Why: A photo goes with its event. How: This expects a later deletion time refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { caption : 'Beach' } } ) );                                                // What: Extra Photo Field. Why: Anything beside the encrypted fields would be stored in plain text. How: This expects a caption refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { fullIv : bytFilFun( 11 ) } } ) );                                         // What: Short Full IV. Why: An AES-GCM IV is 12 bytes. How: This expects 11 refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { thumbIv : bytFilFun( 13 ) } } ) );                                        // What: Long Thumbnail IV. Why: An AES-GCM IV is 12 bytes. How: This expects 13 refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { thumbEnc : bytFilFun( 16 ) } } ) );                                       // What: Empty Thumbnail. Why: A thumbnail holds an image beyond its 16-byte tag. How: This expects 16 bytes refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { thumbEnc : bytFilFun( 40001 ) } } ) );                                    // What: Large Thumbnail. Why: The cap stops the field holding a full photo. How: This expects 40,001 bytes refused.
+	await assertSucceeds( phoBatFun( bobStoObj, 'bob', 'pho1', { phoObj : { thumbEnc : bytFilFun( 40000 ) } } ) );                                 // What: Largest Thumbnail. Why: A thumbnail may fill all 40,000 bytes. How: This expects one at the limit allowed.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice' ) ); // What: Future Event Seed. Why: Photos wait for the event to start. How: This replaces the event with one starting a day from now.
+
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho2', { allNum : 2, memNum : 2 } ) ); // What: Early Photo. Why: Nothing has happened yet to take photos of. How: This expects a photo before the start refused.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( lapEndNum - 2 * DAY_MIL_NUM, lapEndNum ) ) ); // What: Lapsed Event Seed. Why: An event's TTL can delete it a day late. How: This replaces the event with one whose deletion time passed a day ago.
+
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho2', { allNum : 2, memNum : 2, phoObj : { expireAt : Timestamp.fromMillis( lapEndNum + 2 * DAY_MIL_NUM ) } } ) ); // What: Late Photo. Why: Photos close when the event is due to go. How: This expects a photo carrying the event's own deletion time, now past, refused.
+
+
+} );
+
+
+
+test( 'an event takes up to 300 photos and a member 60 while the paywall is open, and 100 and 30 under a free owner once it locks', async () => { // What: Photo Cap Test. Why: Photos cost storage, so the caps follow the owner's status (Section 20). How: This seeds tallies just under and at each cap in both projects, checking the photo that would pass a cap fails and the one reaching it passes.
+
+
+	const aliLocObj = locStoFun( 'alice' ); // What: Alice Locked Object. Why: Alice owns the locked project's group. How: This acts as her there.
+	const bobLocObj = locStoFun( 'bob' );   // What: Bob Locked Object. Why: Bob adds photos under the locked caps. How: This acts as him there.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob adds photos under the open caps. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob adds photos as a member. How: This approves Bob into the main project's group.
+
+	await seeAppFun( locEnvObj ); // What: Locked Approval Seed Call. Why: The locked caps need the same group in the second project. How: This seeds it with Bob's request, Alice unpaid.
+
+	await appBatFun( aliLocObj, 'bob' ); // What: Locked Approval Call. Why: Bob becomes a member there too. How: This approves him as Alice.
+
+	for ( const envTesObj of [ tesEnvObj, locEnvObj ] ) await seeDocFun( envTesObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( EVE_END_NUM - 3 * DAY_MIL_NUM, EVE_END_NUM ) ) ); // What: Event Seed Loop. Why: Both projects need an event that has started. How: This writes it in each.
+
+
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1/photoTally/all', { count : 290, lastPhotoId : 'old' } ); // What: Open Event Tally Seed. Why: The member cap is checked first, well under the event's. How: This starts the event at 290.
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1/photoTally/bob', { count : 59, lastPhotoId : 'old' } );  // What: Open Member Tally Seed. Why: Bob is one photo from the open member cap. How: This starts him at 59.
+
+	await assertSucceeds( phoBatFun( bobStoObj, 'bob', 'pho1', { allNum : 291, memNum : 60 } ) ); // What: Open Member Cap Reached. Why: A member may add 60 photos while the paywall is open. How: This expects Bob's 60th allowed.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho2', { allNum : 292, memNum : 61 } ) );    // What: Open Member Cap Passed. Why: A 61st photo is over the cap. How: This expects it refused.
+
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1/photoTally/all', { count : 299, lastPhotoId : 'old' } ); // What: Open Event Tally Seed. Why: The event is one photo from its open cap. How: This moves it to 299.
+	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1/photoTally/bob', { count : 0, lastPhotoId : 'old' } );   // What: Open Member Tally Reset. Why: Bob's own cap mustn't be what refuses him. How: This moves him to 0.
+
+	await assertSucceeds( phoBatFun( bobStoObj, 'bob', 'pho3', { allNum : 300 } ) );          // What: Open Event Cap Reached. Why: An event may hold 300 photos while the paywall is open. How: This expects the 300th allowed.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho4', { allNum : 301, memNum : 2 } ) ); // What: Open Event Cap Passed. Why: A 301st photo is over the cap. How: This expects it refused.
+
+	await seeDocFun( locEnvObj, 'groups/gro1/events/eve1/photoTally/all', { count : 99, lastPhotoId : 'old' } ); // What: Locked Event Tally Seed. Why: The event is one photo from the free cap. How: This starts it at 99.
+	await seeDocFun( locEnvObj, 'groups/gro1/events/eve1/photoTally/bob', { count : 29, lastPhotoId : 'old' } ); // What: Locked Member Tally Seed. Why: Bob is one photo from the free member cap. How: This starts him at 29.
+
+	await assertSucceeds( phoBatFun( bobLocObj, 'bob', 'pho1', { allNum : 100, memNum : 30 } ) ); // What: Free Caps Reached. Why: A free owner's event holds 100 photos and a member adds 30. How: This expects the photo reaching both allowed.
+	await assertFails( phoBatFun( bobLocObj, 'bob', 'pho2', { allNum : 101, memNum : 31 } ) );    // What: Free Caps Passed. Why: One more is over both caps. How: This expects it refused.
+
+	await seeDocFun( locEnvObj, 'accounts/alice', { paid : true }, true ); // What: Paid Owner Seed. Why: Paying lifts the caps for the owner's groups. How: This marks Alice paid.
+
+	await assertSucceeds( phoBatFun( bobLocObj, 'bob', 'pho2', { allNum : 101, memNum : 31 } ) ); // What: Paid Caps Open. Why: A paid owner's event takes 300 photos and a member 60. How: This expects the same photo allowed now.
 
 
 } );
