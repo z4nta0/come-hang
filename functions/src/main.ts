@@ -4,6 +4,7 @@
 // #region Imports
 
 import { avaFilFun } from './avatars.ts';          // What: Avatar File Function. Why: A member's profile photo goes with their membership. How: This is the membership deletion trigger.
+import { bilCutFun } from './billing-cutoff.ts';   // What: Billing Cutoff Function. Why: Spending past the budget unlinks billing. How: This is the budget topic's trigger.
 import { chaPusFun } from './activity-pushes.ts';  // What: Chat Push Function. Why: Members away from a group learn its chat moved on. How: This is the message trigger.
 import { cheCreFun } from './purchase.ts';         // What: Checkout Create Function. Why: Buying the upgrade starts from the app. How: This is the callable that opens a Polar checkout.
 import { dayRunFun } from './daily-run.ts';        // What: Day Run Function. Why: Offers lapse and inactive owners' groups are offered on through it. How: This is the schedule.
@@ -41,6 +42,6 @@ import { polWebFun } from './purchase.ts';         // What: Polar Webhook Functi
 
 
 
-export { avaFilFun, chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, hisPusFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, hisPusFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 
