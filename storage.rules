@@ -258,9 +258,10 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 			let isaMemBoo = firestore.exists( memPatFun( groIdeStr, request.auth.uid ) );                                       // What: Is-A Member Boolean. Why: Someone who has left adds nothing more. How: This requires the uploader's member document.
 			let isaUplBoo = firestore.get( phoPatFun( groIdeStr, eveIdeStr, phoIdeStr ) ).data.uploaderUid == request.auth.uid; // What: Is-An Uploader Boolean. Why: A full photo belongs to the photo document its uploader added first. How: This requires that document to name the requester, and a missing document refuses the upload.
 			let metNulBoo = phoFilObj.metadata == null || phoFilObj.metadata.size() == 0;                                       // What: Metadata Null Boolean. Why: Custom metadata is stored in plain text beside the encrypted photo. How: This refuses any.
+			let newFilBoo = resource == null;                                                                                   // What: New File Boolean. Why: A full photo is added once and never replaced, and an upload over one reached the create rule in the emulator (measured 2026-11-09). How: This requires no file at the path yet.
 			let sizValBoo = phoFilObj.size > 16 && phoFilObj.size <= 1024 * 1024;                                               // What: Size Valid Boolean. Why: A photo shrunk to 1,600px fits well within 1 MB once encrypted, and the cap stops the path holding anything larger. How: This bounds its size in bytes.
 
-			let uplAllBoo = conTypBoo && isaMemBoo && isaUplBoo && metNulBoo && sizValBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
+			let uplAllBoo = conTypBoo && isaMemBoo && isaUplBoo && metNulBoo && newFilBoo && sizValBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
 
 
 
