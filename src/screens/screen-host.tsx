@@ -75,6 +75,7 @@ import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Ty
  * while someone was away sits over whichever screen shows.
  *
  * Sections:
+ *  - Constants
  *  - Hooks
  *  - Components
  *  - Exports
@@ -82,6 +83,15 @@ import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Ty
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
+
+
+
+// #region Constants
+
+const RET_MAX_NUM = 5;    // What: Retry Maximum Number. Why: A send that keeps failing shouldn't be tried forever. How: This is how many times in all a group's outbox is sent before it waits for the next change.
+const RET_MIL_NUM = 2000; // What: Retry Milliseconds Number. Why: A send refused just after reconnecting goes through once the sign-in catches up. How: This is how long a failed send waits before it's tried again.
+
+// #endregion Constants
 
 
 
@@ -238,7 +248,10 @@ const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use I
  * Sends every group's chat messages written offline whenever the device is
  * online and the groups are known, so they go as soon as the connection
  * returns, whichever screen is open (ARCHITECTURE.md Section 14). A send
- * that fails is logged, and the messages wait for the next change.
+ * that fails is logged and tried again after RET_MIL_NUM, up to RET_MAX_NUM
+ * tries in all while the device stays online, since the first send after
+ * reconnecting can be refused while the sign-in catches up (measured
+ * 2026-11-09), and after that the messages wait for the next change.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -262,14 +275,66 @@ const useOutFluFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
 
 
 
-	useEffect( () => { // What: Flush Effect. Why: Coming back online, or a group appearing, may leave messages to send. How: This sends each group's outbox while online, logging a failure.
+	useEffect( () => { // What: Flush Effect. Why: Coming back online, or a group appearing, may leave messages to send. How: This sends each group's outbox while online, trying a failed one again after a wait.
 
 
 		if ( !onlValBoo || groKeyStr === '' ) return; // What: Not Ready Guard. Why: Nothing goes offline or without groups. How: This returns.
 
 
 
-		for ( const groIdeStr of groKeyStr.split( ',' ) ) chaOutFun( groIdeStr ).catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Group Loop. Why: Each group's messages go to its chat. How: This sends each group's outbox, logging a failure.
+		const retTimSet = new Set< number >(); // What: Retry Timer Set. Why: Retries still waiting have to stop with the effect. How: This holds their timers.
+
+		let actValBoo = true; // What: Active Value Boolean. Why: A failure arriving after the effect stopped mustn't start a retry. How: This is true until the cleanup.
+
+
+		const fluGroFun = ( groIdeStr : string, triNum : number ) : void => { // What: Flush Group Function. Why: Each group's messages go to its chat, and a refused send goes through moments later. How: This sends the group's outbox, and on a failure logs it and tries again after RET_MIL_NUM, up to RET_MAX_NUM tries.
+
+
+			chaOutFun( groIdeStr ).catch( ( errCatObj : unknown ) => { // What: Flush Failure Handler. Why: A failed send stays visible to someone debugging and is tried again. How: This logs it and schedules the next try.
+
+
+				console.warn( errCatObj ); // What: Failure Log Call. Why: The failure stays visible to someone debugging. How: This logs it.
+
+
+
+				if ( !actValBoo || triNum >= RET_MAX_NUM ) return; // What: Stop Guard. Why: A stopped effect tries nothing more, and nor does a send out of tries. How: This returns.
+
+
+
+				const retTimNum = window.setTimeout( () => { // What: Retry Timer Number. Why: The next try waits a moment. How: This tries again after RET_MIL_NUM, keeping the timer to cancel.
+
+
+					retTimSet.delete( retTimNum ); // What: Timer Forget Call. Why: A timer that has run needs no cancelling. How: This drops it from the set.
+
+					fluGroFun( groIdeStr, triNum + 1 ); // What: Retry Call. Why: The send is tried again. How: This flushes the group once more, counting the try.
+
+
+				}, RET_MIL_NUM ); // What: Retry Wait Argument. Why: The sign-in needs a moment to catch up. How: This waits RET_MIL_NUM.
+
+
+				retTimSet.add( retTimNum ); // What: Timer Keep Call. Why: The cleanup cancels a retry still waiting. How: This keeps its timer.
+
+
+			} );
+
+
+		};
+
+
+		for ( const groIdeStr of groKeyStr.split( ',' ) ) fluGroFun( groIdeStr, 1 ); // What: Group Loop. Why: Each group's messages go to its chat. How: This flushes each group, as its first try.
+
+
+
+		return () => { // What: Cleanup Return. Why: Retries belong to the connection and groups they started under. How: This returns the function that stops them.
+
+
+			actValBoo = false; // What: Inactive Set. Why: A failure still out mustn't start a retry. How: This marks the effect stopped.
+
+
+			for ( const retTimNum of retTimSet ) window.clearTimeout( retTimNum ); // What: Timer Loop. Why: A retry still waiting shouldn't run. How: This cancels each.
+
+
+		};
 
 
 	}, [ groKeyStr, onlValBoo ] ); // What: Effect Dependency Array. Why: The sends follow the groups and the connection. How: groKeyStr changes with the groups, and onlValBoo when the device goes online or offline.
