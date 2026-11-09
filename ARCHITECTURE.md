@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-09 (the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-09 (the setup checklist ordered into stages, with the domain and email first, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -2316,57 +2316,117 @@ the Blaze change.
   an address with no file of its own. The web app manifest stays
   hand-written, so the plugin writes none.
 
-**Setup checklist (don't skip)**:
-- [ ] **Turn Firebase/Google Analytics OFF** when creating each Firebase
-      project. The setup flow suggests turning it on, and quietly enabling
-      it would cut against this app's privacy stance.
-- [ ] Budget alerts and the automatic billing cutoff (Section 15), set up
-      the same day Blaze is enabled, on every project.
-- [x] Cloud Functions capped with `maxInstances`: 10 each, set in
-      `functions/src/setup.ts`.
-- [ ] A lifecycle rule on the Storage bucket deleting every object 15 days
-      after upload (Section 11.9).
-- [ ] App Check: a reCAPTCHA Enterprise site key for each project's
-      domain, set as `VITE_APPCHECK_SITE_KEY` in Netlify for that
-      environment, the app registered with App Check, then enforcement
-      turned on for Firestore, RTDB, Storage, and Functions once tokens are
-      seen arriving in the console's metrics.
-- [ ] Firestore TTL policies on the `expireAt` field of every collection
-      group that has one (`liveLocations`, `events`, `assignments`,
-      `photos`, `historyRequests`, `notices`, `pushToken`, `polarEvents`),
-      since a
-      TTL policy is set per collection group in the console, not by the
-      rules.
-- [ ] `VITE_FIREBASE_CONFIG` set in Netlify for each environment, the
-      project's web config as JSON, which the build reads its policy and
-      sign-in passthrough from.
-- [ ] Sign-in on the app's own domain: the site's domains in Firebase
-      Auth's authorized domains, and each domain's
-      `https://<domain>/__/auth/handler` added as an authorized redirect
-      URI on the project's Google OAuth client. Deploy previews change
-      their address each time, so Google sign-in is tried on a fixed
-      staging address.
-- [ ] The API key restricted to the site's domains.
-- [ ] Once staging is up, a real check that Google sign-in, App Check,
-      chat, and pushes all work under the built policy, which the test
-      suites can't cover without a project.
-- [ ] Polar: the upgrade's product made in the sandbox (staging) and live
-      (live), each project's `POLAR_ACCESS_TOKEN` and
-      `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,
-      its `functions/.env.<projectId>` giving `POLAR_PRODUCT_ID`,
-      `POLAR_API_URL` (`https://api.polar.sh` for live), and
-      `POLAR_SUCCESS_URL`, and Polar's webhook pointed at the project's
-      `polWebFun` address for `order.paid` and `order.refunded`.
-- [ ] Netlify Forms: after the first deploy with Settings' support form,
-      email notifications turned on for the `support` form in Netlify's
-      dashboard under Forms, or its messages never reach the maker.
-- [ ] The web push (VAPID) key pair generated in each project's Cloud
-      Messaging settings, its public key set as `VITE_FIREBASE_VAPID_KEY`
-      in Netlify for that environment.
-- [x] The privacy policy and terms written (2026-11-03), published at
-      `/privacy` and `/terms` with the first deploy, before Google sign-in
-      is set up (its verification asks for both URLs). Worth a lawyer's
-      look before launch.
+**Setup checklist (don't skip)**, in the order the steps depend on each
+other. It records choices and steps only: secret values, account details,
+and the budget's figures stay out of this public repository, kept in
+Firebase's secret manager, Netlify's environment settings, a git-ignored
+`.env.local`, or the maker's own notes.
+
+1. **Domain and email** (added 2026-11-09), set up as the maker's other
+   domains are (tech-geek-dev's CLAUDE.md, "Putting a new TechGeek domain
+   behind Cloudflare"), minus the old zone to copy and delete, since
+   comehang.app is new:
+   - [ ] comehang.app added to Cloudflare on the Free plan, which holds the
+         whole zone, mail included.
+   - [ ] SSL/TLS set to Full (strict), Automatic HTTPS Rewrites on, Always
+         Use HTTPS and HSTS off, minimum TLS 1.2. Netlify sends the `http`
+         to `https` and `www` redirects and `_headers` sends HSTS, so
+         Cloudflare has no rules of its own.
+   - [ ] The nameservers at name.com switched to Cloudflare's two, then
+         Cloudflare's email saying the domain is active.
+   - [ ] The Titan mailbox for support@comehang.app, its records in the
+         Cloudflare zone, DNS only, since mail can't be proxied: the two MX
+         records (priorities 10 and 20), SPF, the `titan1._domainkey` DKIM
+         key, and a `_dmarc` record (`p=none`, reports to
+         support@comehang.app). The privacy policy, the terms, the refund
+         promise, and the support form's fallback all give this address,
+         so it works before anything goes live.
+2. **Firebase projects**, staging first, then live:
+   - [ ] **Turn Firebase/Google Analytics OFF** when creating each Firebase
+         project. The setup flow suggests turning it on, and quietly
+         enabling it would cut against this app's privacy stance.
+   - [ ] Every service in us-central1 (Section 14's location decision).
+   - [ ] Budget alerts and the automatic billing cutoff (Section 15), set up
+         the same day Blaze is enabled, on every project.
+   - [x] Cloud Functions capped with `maxInstances`: 10 each, set in
+         `functions/src/setup.ts`.
+   - [ ] A lifecycle rule on the Storage bucket deleting every object 15
+         days after upload (Section 11.9).
+   - [ ] Firestore TTL policies on the `expireAt` field of every collection
+         group that has one (`liveLocations`, `events`, `assignments`,
+         `photos`, `historyRequests`, `notices`, `pushToken`,
+         `polarEvents`), since a TTL policy is set per collection group in
+         the console, not by the rules.
+   - [ ] The web push (VAPID) key pair generated in each project's Cloud
+         Messaging settings, its public key set as `VITE_FIREBASE_VAPID_KEY`
+         in Netlify for that environment.
+   - [ ] Polar: the upgrade's product made in the sandbox (staging) and
+         live (live), each project's `POLAR_ACCESS_TOKEN` and
+         `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,
+         its `functions/.env.<projectId>` giving `POLAR_PRODUCT_ID`,
+         `POLAR_API_URL` (`https://api.polar.sh` for live), and
+         `POLAR_SUCCESS_URL`, and Polar's webhook pointed at the project's
+         `polWebFun` address for `order.paid` and `order.refunded`.
+3. **Netlify**:
+   - [ ] The site created, and comehang.app and a fixed staging address
+         (to be chosen then, such as a `staging` subdomain) added to it,
+         with `@`, `www`, and the staging name as CNAMEs to the site's
+         `.netlify.app` name in Cloudflare, never fixed A addresses, which
+         go stale. They stay DNS only until Cloudflare's Edge Certificate
+         shows Active, then are proxied.
+   - [ ] `VITE_FIREBASE_CONFIG` set in Netlify for each environment, the
+         project's web config as JSON, which the build reads its policy
+         and sign-in passthrough from.
+   - [ ] Sign-in on the app's own domain: the site's domains in Firebase
+         Auth's authorized domains, and each domain's
+         `https://<domain>/__/auth/handler` added as an authorized redirect
+         URI on the project's Google OAuth client. Deploy previews change
+         their address each time, so Google sign-in is tried on the fixed
+         staging address.
+   - [ ] The API key restricted to the site's domains.
+   - [ ] App Check: a reCAPTCHA Enterprise site key for each project's
+         domain, set as `VITE_APPCHECK_SITE_KEY` in Netlify for that
+         environment, and the app registered with App Check. Deploy
+         previews aren't on the key, so they fail App Check, as
+         ease-my-life's do.
+   - [ ] DNSSEC turned on once the domain is active: Cloudflare signs the
+         zone, and its DS record goes in at name.com with Max Sig Life
+         left blank.
+4. **First deploy**:
+   - [ ] The paywall switched on for launch (Section 18): `payLocFun` in
+         `firestore.rules` and `PAY_LOC_BOO` in
+         `functions/src/daily-run.ts` changed together.
+   - [ ] The rules (Firestore, Realtime Database, Storage) and the Cloud
+         Functions, both schedules included, deployed to staging.
+   - [x] The privacy policy and terms written (2026-11-03), published at
+         `/privacy` and `/terms` with the first deploy, before Google
+         sign-in is set up (its verification asks for both URLs). Worth a
+         lawyer's look before launch.
+   - [ ] Netlify Forms: after the first deploy with Settings' support form,
+         email notifications turned on for the `support` form in Netlify's
+         dashboard under Forms, or its messages never reach the maker.
+   - [ ] Checked through Cloudflare, as the maker's other sites were: the
+         pages, the redirects, every security header, the head tags, the
+         crawler files and icons, the mail records, and that TLS 1.0 and
+         1.1 are refused.
+5. **Real-device checks against staging**, which the test suites can't
+   cover without a real project:
+   - [ ] Google sign-in, App Check, chat, and pushes all working under the
+         built policy, Google sign-in in the installed iPhone app included.
+   - [ ] Installing, on iPhone, iPad, and Android.
+   - [ ] Pushes, which never arrive under the emulators: the notifications
+         card turns them on, a message from another member pushes, a
+         bring-list line doesn't, and a tap opens the right group and
+         section.
+   - [ ] A sandbox purchase, and its refund.
+   - [ ] Photos: a photo taken sideways comes out upright; an iPhone's HEIC
+         photo shares from Safari, and a computer's browser that can't read
+         it says so; two members adding photos at once; a photo opened on
+         a second device while the first is still uploading; and group and
+         data deletion clearing photos and their files.
+   - [ ] App Check enforcement turned on for Firestore, RTDB, Storage, and
+         Functions once the console's metrics show tokens arriving and
+         nearly every request verified.
 
 **Lower priority, not needed before launch**:
 - Testing follows the global rules (Playwright in Chromium, Firefox, and
