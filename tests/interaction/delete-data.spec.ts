@@ -198,7 +198,7 @@ pagTesObj( 'an owner deletes their data from Settings only once delete is typed,
 
 	await delButObj.click(); // What: Confirm Click Call. Why: The owner deletes their data. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says the data is gone. How: This reads the status, allowing for the server call, the clear-out, and the reload, which WebKit takes longest over.
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this device.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says the data is gone. How: This reads the status, allowing for the server call, the clear-out, and the reload, which WebKit takes longest over.
 
 	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Plans made. Fun had. Memories created.' } ) ).toBeVisible(); // What: Landing Assertion. Why: The app starts over at the landing page, with no identity left. How: This expects its heading.
 	await expect( delButObj ).toHaveCount( 0 );                                                        // What: No Button Assertion. Why: A phone with nothing left has nothing to delete. How: This expects the button gone.
@@ -243,7 +243,7 @@ test( 'Settings offers a phone with an identity in no group a way to delete its 
 
 	await curPagObj.getByRole( 'button', { name : 'Delete my data' } ).click(); // What: Confirm Click Call. Why: The person deletes their data. How: This presses the answer.
 
-	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this phone.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says so. How: This reads the status, allowing for the server call, the clear-out, and the reload.
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'deleted' } ) ).toHaveText( 'Your data has been deleted from Come Hang and this device.', { timeout : 20000 } ); // What: Deleted Status Assertion. Why: The app starts over and says so. How: This reads the status, allowing for the server call, the clear-out, and the reload.
 
 	await expect( curPagObj.getByRole( 'button', { name : 'Delete my data' } ) ).toHaveCount( 0 ); // What: No Button Assertion. Why: Nothing is left to delete. How: This expects the button gone.
 

@@ -7,6 +7,7 @@ import cssModObj from './app.module.css'; // What: CSS Module Object. Why: The s
 
 
 import { Navigate     } from 'react-router';              // What: Navigate. Why: An address the app doesn't use should give way to the root. How: The catch-all route renders it to replace the address.
+import { OffBanCom    } from './ui/offline-banner.tsx';   // What: Offline Banner Component. Why: Every screen shows when the device is offline. How: This draws the banner.
 import { Route        } from 'react-router';              // What: Route. Why: Each path the app answers is matched to what it renders. How: This declares one route per path.
 import { Routes       } from 'react-router';              // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
 import { ScrHosCom    } from './screens/screen-host.tsx'; // What: Screen Host Component. Why: The app's root address shows whichever screen the visit is on. How: The root route renders it.
@@ -200,6 +201,10 @@ function AppRooCom () : React.JSX.Element {
 
 
 			<SkiLinCom />{ /* What: Skip Link Component. Why: A keyboard user should be able to jump straight to the content. How: This renders the skip link, which focuses the main element below. */ }
+
+
+
+			<OffBanCom />{ /* What: Offline Banner Component. Why: Someone offline should know what still works before anything else on the screen. How: This shows the banner above every screen while the device is offline. */ }
 
 
 

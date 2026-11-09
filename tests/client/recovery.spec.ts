@@ -176,7 +176,7 @@ pagTesObj( "recovery refuses on a phone whose identity has groups, and an accoun
 
 	await gooRunFun( secPagObj, 'gooLinFun', emaValStr ); // What: Link Call. Why: The account is taken by the member. How: This links it.
 
-	expect( await mesGetFun( secPagObj, IDE_MOD_STR, 'gooRecFun' ) ).toBe( "This phone already belongs to a group, so it can't take another identity." ); // What: Groups Here Check. Why: The member's groups would be stranded. How: This expects recovery refused before any popup.
+	expect( await mesGetFun( secPagObj, IDE_MOD_STR, 'gooRecFun' ) ).toBe( "This device already belongs to a group, so it can't take another identity." ); // What: Groups Here Check. Why: The member's groups would be stranded. How: This expects recovery refused before any popup.
 	expect( await gooRunFun( page, 'gooLinFun', emaValStr ) ).toBe( 'error:auth/credential-already-in-use' );                                             // What: Taken Account Check. Why: The account recovers the member's identity. How: This expects the owner's link refused.
 	expect( await runPagFun( page, IDE_MOD_STR, 'gooStaFun' ) ).toBe( false );                                                                            // What: Owner Unlinked Check. Why: The refused link changed nothing. How: This expects the owner still unlinked.
 

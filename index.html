@@ -85,10 +85,82 @@
 
 
 
-	<body> <!-- What: Document Body Element. Why: This holds the app's mount point and the entry script. How: The mount point stays empty until React renders the app into it. -->
+	<body> <!-- What: Document Body Element. Why: This holds the app's mount point, the hidden form Netlify reads, and the entry script. How: The mount point stays empty until React renders the app into it. -->
 
 
 		<div id='appMouDiv'></div> <!-- What: App Mount Div Element. Why: React needs one element to render the app into. How: main.tsx renders the app into this id. -->
+
+
+		<form
+			name='support'
+			netlify
+			netlify-honeypot='bot-field'
+
+			hidden
+		> <!-- What: Netlify Support Form Element. Why: Netlify registers a site's forms by reading the built HTML, and the app's support form exists only once React runs. How: This hidden copy carries the form's name and its fields' names, under IDs of its own, since the app's form uses the others. -->
+
+
+			<label for='netSubInp'>Subject</label> <!-- What: Netlify Subject Label Element. Why: The subject field needs a label in Netlify's record of the form. How: This labels netSubInp. -->
+
+			<input
+				id='netSubInp'
+
+				name='subject'
+
+				type='text'
+			/> <!-- What: Netlify Subject Input Element. Why: Netlify registers the subject field by its name. How: This declares it. -->
+
+			<label for='netMesTex'>Message</label> <!-- What: Netlify Message Label Element. Why: The message field needs a label in Netlify's record of the form. How: This labels netMesTex. -->
+
+			<textarea
+				id='netMesTex'
+
+				name='message'
+			></textarea> <!-- What: Netlify Message Textarea Element. Why: Netlify registers the message field by its name. How: This declares it. -->
+
+			<label for='netEmaInp'>Email</label> <!-- What: Netlify Email Label Element. Why: The email field needs a label in Netlify's record of the form. How: This labels netEmaInp. -->
+
+			<input
+				id='netEmaInp'
+
+				name='email'
+
+				type='text'
+			/> <!-- What: Netlify Email Input Element. Why: Netlify registers the optional reply address by its name. How: This declares it. -->
+
+			<label for='netVerInp'>Version</label> <!-- What: Netlify Version Label Element. Why: The version field needs a label in Netlify's record of the form. How: This labels netVerInp. -->
+
+			<input
+				id='netVerInp'
+
+				name='version'
+
+				type='text'
+			/> <!-- What: Netlify Version Input Element. Why: Netlify registers the version field by its name. How: This declares it. -->
+
+			<label for='netBroInp'>Browser</label> <!-- What: Netlify Browser Label Element. Why: The browser field needs a label in Netlify's record of the form. How: This labels netBroInp. -->
+
+			<input
+				id='netBroInp'
+
+				name='browser'
+
+				type='text'
+			/> <!-- What: Netlify Browser Input Element. Why: Netlify registers the browser field by its name. How: This declares it. -->
+
+			<label for='netBotInp'>Leave this empty</label> <!-- What: Netlify Bot Label Element. Why: The honeypot field needs a label in Netlify's record of the form. How: This labels netBotInp. -->
+
+			<input
+				id='netBotInp'
+
+				name='bot-field'
+
+				type='text'
+			/> <!-- What: Netlify Bot Input Element. Why: Netlify marks as spam a message that fills its honeypot field. How: This declares the field the form's netlify-honeypot attribute names. -->
+
+
+		</form>
+
 
 		<script
 			src='/src/main.tsx'

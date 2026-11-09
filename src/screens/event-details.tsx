@@ -6,21 +6,28 @@
 import cssModObj from './event-details.module.css'; // What: CSS Module Object. Why: The details are styled in their own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Adding to the list and saving an item's edit are the details' leading actions. How: This draws their buttons.
-import { eveDatFun } from '../utils/date.ts';       // What: Event Date Function. Why: The details give the event's full date and hours. How: This formats them.
-import { IcoSvgCom } from '../ui/icon.tsx';         // What: Icon SVG Component. Why: Each item's remove button shows a cross. How: This draws it.
-import { iniTexFun } from '../utils/text.ts';       // What: Initials Text Function. Why: A claim shows its member's avatar. How: This takes their initials.
-import { iteAddFun } from '../state/items.ts';      // What: Item Add Function. Why: Any member adds to the list. How: This adds an open item.
-import { iteAsgFun } from '../state/items.ts';      // What: Item Assign Function. Why: A member lets go of what they claimed. How: This opens the item again.
-import { iteClaFun } from '../state/items.ts';      // What: Item Claim Function. Why: A member takes an open item. How: This claims it.
-import { iteDelFun } from '../state/items.ts';      // What: Item Delete Function. Why: Any member removes an item. How: This deletes it.
-import { iteRenFun } from '../state/items.ts';      // What: Item Rename Function. Why: Any member relabels an item. How: This saves the new label.
-import { iteWatFun } from '../state/items.ts';      // What: Item Watch Function. Why: Claims and new items show at once. How: This watches the list.
-import { sloColFun } from '../ui/member-color.ts';  // What: Slot Color Function. Why: A claim wears its member's color. How: This names the color.
-import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: An added item is announced as it's stored. How: This tidies its label.
-import { useEffect } from 'react';                  // What: Use Effect. Why: The list is watched while the details are shown, and an item's edit takes and returns focus. How: This starts and stops the watch and moves focus.
-import { useRef    } from 'react';                  // What: Use Reference. Why: Focus moves between an item's label and its edit form. How: This holds the elements.
-import { useState  } from 'react';                  // What: Use State. Why: The list, the box, and the messages change while the details are shown. How: This holds each.
+import { AvaConCom } from '../ui/member-avatar.tsx'; // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
+import { briAddFun } from '../state/bring-lines.ts'; // What: Bring Add Function. Why: An item added or claimed joins the chat line about the list. How: This counts it into its burst.
+import { briDroFun } from '../state/bring-lines.ts'; // What: Bring Drop Function. Why: An item removed or let go leaves the chat line about the list. How: This takes it out of its burst.
+import { briFluFun } from '../state/bring-lines.ts'; // What: Bring Flush Function. Why: Leaving the list means the member is done for now. How: This posts the lines waiting.
+import { ButBasCom } from '../ui/button.tsx';        // What: Button Base Component. Why: Adding to the list and saving an item's edit are the details' leading actions. How: This draws their buttons.
+import { eveDatFun } from '../utils/date.ts';        // What: Event Date Function. Why: The details give the event's full date and hours. How: This formats them.
+import { EvePhoCom } from './event-photos.tsx';      // What: Event Photos Component. Why: An event's photos sit with its details. How: This draws the Photos part.
+import { IcoSvgCom } from '../ui/icon.tsx';          // What: Icon SVG Component. Why: Each item's remove button shows a cross. How: This draws it.
+import { iniTexFun } from '../utils/text.ts';        // What: Initials Text Function. Why: A claim shows its member's avatar. How: This takes their initials.
+import { iteAddFun } from '../state/items.ts';       // What: Item Add Function. Why: Any member adds to the list. How: This adds an open item.
+import { iteAsgFun } from '../state/items.ts';       // What: Item Assign Function. Why: A member lets go of what they claimed. How: This opens the item again.
+import { iteClaFun } from '../state/items.ts';       // What: Item Claim Function. Why: A member takes an open item. How: This claims it.
+import { iteDelFun } from '../state/items.ts';       // What: Item Delete Function. Why: Any member removes an item. How: This deletes it.
+import { iteRenFun } from '../state/items.ts';       // What: Item Rename Function. Why: Any member relabels an item. How: This saves the new label.
+import { iteWatFun } from '../state/items.ts';       // What: Item Watch Function. Why: Claims and new items show at once. How: This watches the list.
+import { offGuaFun } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
+import { redMotFun } from '../utils/motion.ts';      // What: Reduced Motion Function. Why: A jump to the list scrolls smoothly unless the member asked for less motion. How: This reads the preference.
+import { sloColFun } from '../ui/member-color.ts';   // What: Slot Color Function. Why: A claim wears its member's color. How: This names the color.
+import { texNorFun } from '../core/text-limits.ts';  // What: Text Normalize Function. Why: An added item is announced as it's stored. How: This tidies its label.
+import { useEffect } from 'react';                   // What: Use Effect. Why: The list is watched while the details are shown, and an item's edit takes and returns focus. How: This starts and stops the watch and moves focus.
+import { useRef    } from 'react';                   // What: Use Reference. Why: Focus moves between an item's label and its edit form. How: This holds the elements.
+import { useState  } from 'react';                   // What: Use State. Why: The list, the box, and the messages change while the details are shown. How: This holds each.
 
 
 import type { EveRecTyp } from '../state/events.ts';  // What: Event Record Type. Why: The details show one event. How: This types it.
@@ -220,7 +227,7 @@ function IteEdiCom ( { asgMemObj, ideStr, iteRecObj, memRecMap, onCanFun, onSavF
 
 
 
-type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< string, MemRecTyp >, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members and marking the member's own claims, in the sheet or the panel. How: This types EveDetCom's props.
+type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, lisJumBoo? : boolean, memRecMap : Map< string, MemRecTyp >, ownBoo : boolean, phoJumBoo? : boolean, uidValStr : string, varStr : 'pan' | 'she' }; // What: Event Details Component Props Type. Why: The details show one event of one group, naming members, marking the member's own claims, and letting the owner delete any photo, in the sheet or the panel. How: This types EveDetCom's props.
 
 // #region EveDetCom
 
@@ -228,14 +235,14 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  * EveDetCom = Event Details Component
  *
  * @summary
- * Renders an event's details and its bring-list, watching the list while
- * shown. Claiming, letting go, and removing act on one item, adding takes
- * what's typed, and one change runs at a time. Choosing an item's label turns
- * its row into a form for its label and who's bringing it, and once the form
- * saves or cancels, focus returns to the label. A change that lands is
- * announced through a status region, and one that fails through an alert,
- * saying when someone already claimed the item or a label is outside its
- * limits. A list that can't load says so. The variant keeps the box's ID
+ * Renders an event's details, its bring-list, and its Photos part, watching
+ * the list while shown. Claiming, letting go, and removing act on one item,
+ * adding takes what's typed, and one change runs at a time. Choosing an item's
+ * label turns its row into a form for its label and who's bringing it, and
+ * once the form saves or cancels, focus returns to the label. A change that
+ * lands is announced through a status region, and one that fails through an
+ * alert, saying when someone already claimed the item or a label is outside
+ * its limits. A list that can't load says so. The variant keeps the box's ID
  * unique when the sheet and the panel both hold the details. Key it by the
  * event, so another event starts afresh.
  *
@@ -243,7 +250,13 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  *
  * @param props.eveRecObj - Event Record Object: The event to show.
  * @param props.groIdeStr - Group Identifier String: The event's group.
+ * @param props.lisJumBoo - List Jump Boolean: Whether the details open
+ *                          scrolled to their bring-list, false by default.
  * @param props.memRecMap - Member Record Map: The group's members, by UID.
+ * @param props.ownBoo    - Owner Boolean: Whether the member owns the
+ *                          group.
+ * @param props.phoJumBoo - Photos Jump Boolean: Whether the details open
+ *                          scrolled to their photos, false by default.
  * @param props.uidValStr - UID Value String: This member's UID.
  * @param props.varStr    - Variant String: Where the details sit, pan for
  *                          the panel or she for the sheet.
@@ -257,13 +270,14 @@ type EdcProTyp = { eveRecObj : EveRecTyp, groIdeStr : string, memRecMap : Map< s
  *
 */
 
-function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : EdcProTyp ) : React.JSX.Element {
+function EveDetCom ( { eveRecObj, groIdeStr, lisJumBoo = false, memRecMap, ownBoo, phoJumBoo = false, uidValStr, varStr } : EdcProTyp ) : React.JSX.Element {
 
 
 	const addIdeStr = `briAddInp--${ varStr }`; // What: Add Identifier String. Why: The sheet and the panel both hold a box, and IDs have to be unique. How: This names the box with its variant.
 
 	const focIdeRef = useRef( '' );                                     // What: Focus Identifier Reference. Why: Leaving an item's edit returns focus to its label. How: This holds the item's ID until its label shows again.
 	const labButRef = useRef( new Map< string, HTMLButtonElement >() ); // What: Label Button Reference. Why: Focus returns to an item's label by its ID. How: This holds each label button by item.
+	const lisHeaRef = useRef< HTMLHeadingElement >( null );             // What: List Heading Reference. Why: A chat line about the list opens the details at it. How: This holds the list's heading.
 
 	const [ actReqBoo, setActReqBoo ] = useState( false );                      // What: Action Request Boolean And Setter. Why: One change at a time keeps a double tap from acting twice. How: This is true while one is out.
 	const [ addTexStr, setAddTexStr ] = useState( '' );                         // What: Add Text String And Setter. Why: The box shows what's typed. How: This holds it.
@@ -276,6 +290,28 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 
 	useEffect( () => iteWatFun( groIdeStr, eveRecObj.eveIdeStr, setIteRecArr, ( errCatObj ) => { console.warn( errCatObj ); setLisErrBoo( true ); } ), [ eveRecObj.eveIdeStr, groIdeStr ] ); // What: Item Watch Effect. Why: Every member's change shows while the details are open. How: This watches the list, logs and shows a failure, and stops the watch when the details go. // What: Effect Dependency Note. Why: The watch belongs to one event of one group. How: eveRecObj.eveIdeStr and groIdeStr name it.
+
+
+
+	useEffect( () => { // What: List Jump Effect. Why: A chat line about the list opens its event at it. How: This scrolls the list's heading to the top of its sheet a frame after it opens, smoothly unless the member asked for less motion.
+
+
+		if ( !lisJumBoo ) return; // What: Stay Guard. Why: An event opened from its card starts at its top. How: This returns.
+
+
+
+		const fraIdeNum = requestAnimationFrame( () => lisHeaRef.current?.scrollIntoView( { behavior : redMotFun() ? 'instant' : 'smooth', block : 'start' } ) ); // What: Frame Identifier Number. Why: The sheet has to have laid out before it can scroll. How: This scrolls on the next frame, keeping the request to cancel.
+
+
+
+		return () => cancelAnimationFrame( fraIdeNum ); // What: Cleanup Return. Why: Details gone before the frame mustn't scroll. How: This cancels the request.
+
+
+	}, [ lisJumBoo ] ); // What: Effect Dependency Array. Why: The jump happens as the details open asked to. How: lisJumBoo changes with the ask.
+
+
+
+	useEffect( () => () => briFluFun(), [] ); // What: Leave Flush Effect. Why: Leaving the list means the member is done changing it, so the chat hears now. How: This ends the bursts when the details go. // What: Effect Dependency Note. Why: It runs only as the details leave. How: The empty array keeps it to the cleanup.
 
 
 
@@ -309,6 +345,10 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 
 		if ( actReqBoo ) return false; // What: Busy Guard. Why: A change while another is out could act twice. How: This ignores it.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return false; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 
@@ -418,6 +458,12 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 			if ( asgUidStr !== iteRecObj.asgUidStr ) await iteAsgFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, asgUidStr ); // What: Assign Call. Why: A changed claimer is saved. How: This reassigns the item, or opens it.
 
 
+
+			if ( asgUidStr === uidValStr && iteRecObj.asgUidStr !== uidValStr ) briAddFun( 'cla', groIdeStr, eveRecObj.eveIdeStr, eveRecObj.titTexStr, iteRecObj.iteIdeStr, labNorStr ); // What: Own Claim Call. Why: A member who takes the item in its form is bringing it, which the chat hears. How: This counts it into the chat line about claims.
+
+			else if ( asgUidStr !== uidValStr && iteRecObj.asgUidStr === uidValStr ) briDroFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, 'cla' ); // What: Own Release Call. Why: A member who hands their item on isn't bringing it any more. How: This takes it out of the chat line about claims.
+
+
 		}, `Saved ${ labNorStr === '' ? 'the item' : labNorStr }.` );
 
 
@@ -440,7 +486,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 	return (
 
 
-		<div className={ cssModObj.eveDetDiv }>{ /* What: Event Details Div Element. Why: The details and the list read top to bottom. How: This stacks the facts, the list, and the add form. */ }
+		<div className={ cssModObj.eveDetDiv }>{ /* What: Event Details Div Element. Why: The details, the list, and the photos read top to bottom. How: This stacks the facts, the list, the add form, and the Photos part. */ }
 
 
 			<p className={ cssModObj.detDatPar }>{ eveDatFun( eveRecObj.staTimNum, eveRecObj.endTimNum ) }</p>{ /* What: Details Date Paragraph Element. Why: When the event is comes first. How: This shows its full date and hours. */ }
@@ -449,7 +495,11 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 			{ eveRecObj.desTexStr !== '' && <p className={ cssModObj.detDesPar }>{ eveRecObj.desTexStr }</p> }{ /* What: Details Description Check. Why: An event may have no notes. How: This shows the notes, keeping their line breaks, when there are any. */ }
 
-			<h3 className={ cssModObj.briLisHea }>Who's bringing what</h3>{ /* What: Bring List Heading Element. Why: The list needs a heading a screen reader can find. How: This names it. */ }
+			<h3
+				ref={ lisHeaRef }
+
+				className={ cssModObj.briLisHea }
+			>Who's bringing what</h3>{ /* What: Bring List Heading Element. Why: The list needs a heading a screen reader can find, and a chat line about the list opens the details at it. How: This names it. */ }
 
 
 
@@ -534,7 +584,21 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 													style={{ backgroundColor : asgMemObj ? sloColFun( asgMemObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, and someone who left keeps the plain look. How: This reads their slot's token.
 
 													aria-hidden='true'
-												>{ iniTexFun( asgMemObj ? asgMemObj.namTexStr : '?' ) }</span> // What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their initials, hidden from screen readers.
+												>{ /* What: Item Avatar Span Element. Why: An avatar in the member's color ties the claim to them at a glance, while their name is read beside it. How: This shows their photo or initials, hidden from screen readers. */ }
+
+
+													<AvaConCom
+														className={ cssModObj.iteAvaIma }
+
+														avaIdeStr={ asgMemObj?.avaIdeStr ?? '' }
+														avaIvaArr={ asgMemObj?.avaIvaArr ?? null }
+														groIdeStr={ groIdeStr }
+														iniTexStr={ iniTexFun( asgMemObj ? asgMemObj.namTexStr : '?' ) }
+														uidValStr={ asgMemObj?.uidValStr ?? '' }
+													/>{ /* What: Avatar Contents Component. Why: A member with a profile photo is shown by it, and anyone else by their initials (Section 21). How: This fills the circle with the photo once it loads, or the initials. */ }
+
+
+												</span>
 
 
 											) }
@@ -557,7 +621,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 													type='button'
 
-													onClick={ () => void actRunFun( () => iteClaFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ), `You're bringing ${ labShoStr }.` ) }
+													onClick={ () => void actRunFun( () => iteClaFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ).then( () => briAddFun( 'cla', groIdeStr, eveRecObj.eveIdeStr, eveRecObj.titTexStr, iteRecObj.iteIdeStr, iteRecObj.labTexStr ) ), `You're bringing ${ labShoStr }.` ) } // What: Claim Click Handler. Why: The chat hears who's bringing what. How: This claims the item, then counts it into the chat line.
 												>I'll bring it<span className={ cssModObj.iteHidSpa }>{ ` (${ labShoStr })` }</span></button> // What: Item Claim Button Element. Why: Taking an item is one tap, and a screen reader hears which item. How: This claims it and announces it.
 
 
@@ -571,7 +635,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 													type='button'
 
-													onClick={ () => void actRunFun( () => iteAsgFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, null ), `${ labShoStr } is open again.` ) }
+													onClick={ () => void actRunFun( () => iteAsgFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, null ).then( () => briDroFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, 'cla' ) ), `${ labShoStr } is open again.` ) } // What: Release Click Handler. Why: A claim let go before its line posts shouldn't be announced. How: This opens the item, then takes it out of the chat line about claims.
 												>Let go<span className={ cssModObj.iteHidSpa }>{ ` (${ labShoStr })` }</span></button> // What: Item Release Button Element. Why: Plans change, and an item someone can't bring should open up for others. How: This opens it again and announces it.
 
 
@@ -587,7 +651,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 												aria-label={ `Remove ${ labShoStr }` }
 												title='Remove'
 
-												onClick={ () => void actRunFun( () => iteDelFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ), `Removed ${ labShoStr }.` ) }
+												onClick={ () => void actRunFun( () => iteDelFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr ).then( () => briDroFun( groIdeStr, eveRecObj.eveIdeStr, iteRecObj.iteIdeStr, null ) ), `Removed ${ labShoStr }.` ) } // What: Remove Click Handler. Why: An item removed before its line posts shouldn't be announced. How: This deletes the item, then takes it out of both chat lines.
 											>{ /* What: Item Delete Button Element. Why: An item nobody needs comes off the list. How: This removes it and announces it. */ }
 
 
@@ -644,7 +708,7 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 					const addLabStr = texNorFun( addTexStr ); // What: Add Label String. Why: The announcement names the item as it's stored. How: This tidies it as the store does.
 
 
-					void actRunFun( () => iteAddFun( groIdeStr, eveRecObj.eveIdeStr, addTexStr, null ), `Added ${ addLabStr }.` ).then( ( lanValBoo ) => { if ( lanValBoo ) setAddTexStr( '' ); } ); // What: Add Call. Why: The item joins the list open, for anyone to claim. How: This adds it and empties the box once it lands.
+					void actRunFun( () => iteAddFun( groIdeStr, eveRecObj.eveIdeStr, addTexStr, null ).then( ( iteIdeStr ) => briAddFun( 'add', groIdeStr, eveRecObj.eveIdeStr, eveRecObj.titTexStr, iteIdeStr, addLabStr ) ), `Added ${ addLabStr }.` ).then( ( lanValBoo ) => { if ( lanValBoo ) setAddTexStr( '' ); } ); // What: Add Call. Why: The item joins the list open, for anyone to claim, and the chat hears of it. How: This adds it, counts it into the chat line, and empties the box once it lands.
 
 
 				} }
@@ -692,6 +756,18 @@ function EveDetCom ( { eveRecObj, groIdeStr, memRecMap, uidValStr, varStr } : Ed
 
 				role='alert'
 			>{ errMesStr }</p>{ /* What: Bring Error Paragraph Element. Why: A change that fails has to be told at once. How: This holds the alert, empty from the first render. */ }
+
+
+
+			<EvePhoCom
+				eveRecObj={ eveRecObj }
+				groIdeStr={ groIdeStr }
+				memRecMap={ memRecMap }
+				jumBoo={ phoJumBoo }
+				ownBoo={ ownBoo }
+				uidValStr={ uidValStr }
+				varStr={ varStr }
+			/>{ /* What: Event Photos Component. Why: An event's photos sit with its details, below the bring-list. How: This draws the Photos part. */ }
 
 
 		</div>

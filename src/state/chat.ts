@@ -3,37 +3,43 @@
 
 // #region Imports
 
-import { chaMesFun       } from '../core/text-limits.ts';    // What: Chat Message Function. Why: A message is checked by the app alone. How: This applies the limits.
-import { child           } from 'firebase/database';         // What: Child. Why: A message's waiting-on entries sit under it. How: This names one.
-import { collection      } from 'firebase/firestore';        // What: Collection. Why: The waiting-on list names every other member. How: This names the members collection.
-import { decTexFun       } from '../platform/crypto.ts';     // What: Decrypt Text Function. Why: Messages are stored encrypted. How: This decrypts one.
-import { doc             } from 'firebase/firestore';        // What: Doc. Why: The group and this member's membership are read by path. How: This builds a reference.
-import { encTexFun       } from '../platform/crypto.ts';     // What: Encrypt Text Function. Why: Messages are sent encrypted. How: This encrypts one under the group key.
-import { firGetFun       } from '../platform/firebase.ts';   // What: Firebase Get Function. Why: Chat lives in the Realtime Database, membership in Firestore. How: This returns the services.
-import { get             } from 'firebase/database';         // What: Get. Why: A sync reads every message waiting since this member joined. How: This runs the query once.
-import { getDoc          } from 'firebase/firestore';        // What: Get Doc. Why: The join time and retention are read from Firestore. How: This reads one document.
-import { getDocs         } from 'firebase/firestore';        // What: Get Docs. Why: The members are read together. How: This reads the collection.
-import { ideEnsFun       } from './identity.ts';             // What: Identity Ensure Function. Why: Chat acts as this identity. How: This reads it.
-import { keyLoaFun       } from './groups.ts';               // What: Key Load Function. Why: Messages are encrypted with the group key. How: This loads it.
-import { linNorFun       } from '../core/text-limits.ts';    // What: Lines Normalize Function. Why: A message keeps its line breaks while it's tidied. How: This normalizes it.
-import { mesPutFun       } from '../platform/chat-store.ts'; // What: Message Put Function. Why: The device keeps its chat history. How: This stores a message.
-import { onChildAdded    } from 'firebase/database';         // What: On Child Added. Why: A watched chat hears each message as it arrives. How: This listens to the query.
-import { onValue         } from 'firebase/database';         // What: On Value. Why: The device's offset from the server's clock is read once. How: This listens to it a single time.
-import { orderByChild    } from 'firebase/database';         // What: Order By Child. Why: The rules let a member read only messages ordered by when they were sent. How: This orders the query.
-import { push            } from 'firebase/database';         // What: Push. Why: Each message takes the database's own time-ordered ID. How: This writes it under a new one.
-import { query           } from 'firebase/database';         // What: Query. Why: Reads are a query the rules check. How: This builds it.
-import { ref             } from 'firebase/database';         // What: Ref. Why: Messages and their entries are named by path. How: This builds a reference.
-import { remove          } from 'firebase/database';         // What: Remove. Why: Waiting-on entries and delivered messages are deleted. How: This deletes one.
-import { serverTimestamp } from 'firebase/database';         // What: Server Timestamp. Why: The rules require a message's time to be the server's. How: This asks the server to fill it in.
-import { set             } from 'firebase/database';         // What: Set. Why: A message is written under an ID drawn first. How: This writes it there.
-import { startAt         } from 'firebase/database';         // What: Start At. Why: The rules let a member read from their own join time exactly. How: This starts the query there.
-import { staTexFun       } from '../core/chat-status.ts';    // What: Status Text Function. Why: A status post is sent as a message's text. How: This builds it.
+import { briTexFun       } from '../core/chat-status.ts';      // What: Bring Text Function. Why: A bring-list post is sent as a message's text. How: This builds it.
+import { chaMesFun       } from '../core/text-limits.ts';      // What: Chat Message Function. Why: A message is checked by the app alone. How: This applies the limits.
+import { child           } from 'firebase/database';           // What: Child. Why: A message's waiting-on entries sit under it. How: This names one.
+import { collection      } from 'firebase/firestore';          // What: Collection. Why: The waiting-on list names every other member. How: This names the members collection.
+import { decTexFun       } from '../platform/crypto.ts';       // What: Decrypt Text Function. Why: Messages are stored encrypted. How: This decrypts one.
+import { doc             } from 'firebase/firestore';          // What: Doc. Why: The group and this member's membership are read by path. How: This builds a reference.
+import { encTexFun       } from '../platform/crypto.ts';       // What: Encrypt Text Function. Why: Messages are sent encrypted. How: This encrypts one under the group key.
+import { firGetFun       } from '../platform/firebase.ts';     // What: Firebase Get Function. Why: Chat lives in the Realtime Database, membership in Firestore. How: This returns the services.
+import { get             } from 'firebase/database';           // What: Get. Why: A sync reads every message waiting since this member joined. How: This runs the query once.
+import { getDoc          } from 'firebase/firestore';          // What: Get Doc. Why: The join time and retention are read from Firestore. How: This reads one document.
+import { getDocs         } from 'firebase/firestore';          // What: Get Docs. Why: The members are read together. How: This reads the collection.
+import { ideEnsFun       } from './identity.ts';               // What: Identity Ensure Function. Why: Chat acts as this identity. How: This reads it.
+import { keyLoaFun       } from './groups.ts';                 // What: Key Load Function. Why: Messages are encrypted with the group key. How: This loads it.
+import { linNorFun       } from '../core/text-limits.ts';      // What: Lines Normalize Function. Why: A message keeps its line breaks while it's tidied. How: This normalizes it.
+import { mesPutFun       } from '../platform/chat-store.ts';   // What: Message Put Function. Why: The device keeps its chat history. How: This stores a message.
+import { onChildAdded    } from 'firebase/database';           // What: On Child Added. Why: A watched chat hears each message as it arrives. How: This listens to the query.
+import { onValue         } from 'firebase/database';           // What: On Value. Why: The device's offset from the server's clock is read once. How: This listens to it a single time.
+import { orderByChild    } from 'firebase/database';           // What: Order By Child. Why: The rules let a member read only messages ordered by when they were sent. How: This orders the query.
+import { outLisFun       } from '../platform/outbox-store.ts'; // What: Outbox List Function. Why: Messages written offline send in order. How: This reads them.
+import { outSetFun       } from '../platform/outbox-store.ts'; // What: Outbox Set Function. Why: A message written offline waits on the device, and leaves once sent. How: This keeps or forgets it.
+import { push            } from 'firebase/database';           // What: Push. Why: Each message takes the database's own time-ordered ID. How: This writes it under a new one.
+import { query           } from 'firebase/database';           // What: Query. Why: Reads are a query the rules check. How: This builds it.
+import { ref             } from 'firebase/database';           // What: Ref. Why: Messages and their entries are named by path. How: This builds a reference.
+import { remove          } from 'firebase/database';           // What: Remove. Why: Waiting-on entries and delivered messages are deleted. How: This deletes one.
+import { serverTimestamp } from 'firebase/database';           // What: Server Timestamp. Why: The rules require a message's time to be the server's. How: This asks the server to fill it in.
+import { set             } from 'firebase/database';           // What: Set. Why: A message is written under an ID drawn first. How: This writes it there.
+import { staPhoFun       } from '../core/chat-status.ts';      // What: Status Photos Function. Why: A photos post is sent as a message's text. How: This builds it.
+import { startAt         } from 'firebase/database';           // What: Start At. Why: The rules let a member read from their own join time exactly. How: This starts the query there.
+import { staTexFun       } from '../core/chat-status.ts';      // What: Status Text Function. Why: A status post is sent as a message's text. How: This builds it.
 
 
-import type { DataSnapshot } from 'firebase/database';         // What: Data Snapshot. Why: Each message arrives as one. How: This types it.
-import type { MesRecTyp    } from '../platform/chat-store.ts'; // What: Message Record Type. Why: A handled message is stored and handed on as a record. How: This types it.
-import type { StaKinTyp    } from '../core/chat-status.ts';    // What: Status Kind Type. Why: A status post names its kind. How: This types it.
-import type { Timestamp    } from 'firebase/firestore';        // What: Timestamp. Why: The join time comes back as a timestamp. How: This types it.
+import type { BriKinTyp    } from '../core/chat-status.ts';      // What: Bring Kind Type. Why: A bring-list post names its kind. How: This types it.
+import type { DataSnapshot } from 'firebase/database';           // What: Data Snapshot. Why: Each message arrives as one. How: This types it.
+import type { MesRecTyp    } from '../platform/chat-store.ts';   // What: Message Record Type. Why: A handled message is stored and handed on as a record. How: This types it.
+import type { OutRecTyp    } from '../platform/outbox-store.ts'; // What: Outbox Record Type. Why: A waiting message is returned to the chat. How: This types it.
+import type { StaKinTyp    } from '../core/chat-status.ts';      // What: Status Kind Type. Why: A status post names its kind. How: This types it.
+import type { Timestamp    } from 'firebase/firestore';          // What: Timestamp. Why: The join time comes back as a timestamp. How: This types it.
 
 // #endregion Imports
 
@@ -85,6 +91,9 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: Chat retent
 
 // #region Module State
 
+const outLisSet = new Set< () => void >(); // What: Outbox Listener Set. Why: The chat shows what's waiting, which changes as messages are kept and sent. How: This holds the listeners told of each change.
+const outRunSet = new Set< string >(); // What: Outbox Run Set. Why: Two sends of the same group's waiting messages at once could send one twice. How: This holds the groups whose outbox is sending.
+const ownLisMap = new Map< string, Set< ( mesRecObj : MesRecTyp ) => void > >(); // What: Own Listener Map. Why: A watch skips this device's own message while it's being sent, so a post made away from the chat, such as a bring-list line, would wait for a reload. How: This holds each group's open watches, which a send hands its message to once it's kept.
 const senPenSet = new Set< string >(); // What: Send Pending Set. Why: The database tells this device's listeners of its own write at once, before the server accepts or refuses it, and a refused message mustn't be shown or kept. How: This holds the IDs of messages this device is sending until the server answers.
 
 // #endregion Module State
@@ -252,16 +261,19 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  * @summary
  * Sends a message's text to a group's chat as given, encrypted under the
  * group key, stamped with the server's time, and waiting on every other
- * member. While the server decides on it, this
- * device's own watch skips it, so a refused message is never shown or kept.
- * Once it's accepted, the sender's device keeps its own copy, and a message
- * nobody waits on, in a group of one, is deleted from the server.
- * Resolves with the message's ID.
+ * member, marked quiet when asked, so it pushes nobody. While the server
+ * decides on it, this device's own watch skips it, so a refused message is
+ * never shown or kept. Once it's accepted, the sender's device keeps its own
+ * copy, which the group's open watches are handed too, and a message nobody
+ * waits on, in a group of one, is deleted from the server. Resolves with
+ * the message's ID.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param groIdeStr - Group Identifier String: The group's ID.
  * @param mesTexStr - Message Text String: The message's text, as sent.
+ * @param quiValBoo - Quiet Value Boolean: Whether the message pushes
+ *                    nobody, false by default.
  *
  * @returns A promise that resolves with the message's ID.
  *
@@ -272,7 +284,7 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  *
 */
 
-const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
+const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = false ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
 
 
 	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The message names its sender. How: This reads the identity.
@@ -298,7 +310,9 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 			iv         : b64EncFun( mesEncObj.iniVecArr ),                                           // What: IV. Why: The message decrypts with it. How: This encodes it.
 			senderUid  : uidValStr,                                                                  // What: Sender UID. Why: The rules require the sender's own UID. How: This names them.
 			sentAt     : serverTimestamp(),                                                          // What: Sent At. Why: The rules require the server's time. How: This asks the server to fill it in.
-			waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ) // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
+			waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ), // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
+
+			...( quiValBoo ? { quiet : true } : {} ) // What: Quiet Spread. Why: A bring-list line shouldn't push anyone, and the push function can't read the encrypted text. How: This marks the message quiet in the clear when asked, and adds nothing otherwise.
 
 
 		} );
@@ -314,7 +328,7 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 
 
-	await mesPutFun({ // What: Store Call. Why: The sender keeps their own message. How: This stores it, timed by the server's clock as the device estimates it.
+	const ownRecObj : MesRecTyp = { // What: Own Record Object. Why: The sender keeps their own message, and their open chat shows it. How: This builds the record, timed by the server's clock as the device estimates it.
 
 
 		groIdeStr,                     // What: Group Identifier String. Why: The message is kept under its group. How: This names it.
@@ -324,7 +338,12 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 		texValStr : mesTexStr          // What: Text Value String. Why: The history shows the text. How: This keeps the text as sent.
 
 
-	});
+	};
+
+
+	await mesPutFun( ownRecObj ); // What: Store Call. Why: The sender keeps their own message. How: This stores it.
+
+	ownLisMap.get( groIdeStr )?.forEach( ( onMesFun ) => onMesFun( ownRecObj ) ); // What: Own Hand Call. Why: An open chat shows the message even when it was sent from elsewhere, such as a bring-list line. How: This hands it to each of the group's watches, which merge it without repeats.
 
 
 
@@ -381,7 +400,182 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 
 
 
-const chaStaFun = async ( groIdeStr : string, staKinStr : StaKinTyp ) : Promise< string > => mesSenFun( groIdeStr, staTexFun( staKinStr ) ); // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat (Section 10). How: This sends the status post's text and returns its ID.
+// #region chaQueFun
+
+/**
+ * chaQueFun = Chat Queue Function
+ *
+ * @summary
+ * Keeps a message written while offline on the device to send later, tidied
+ * and checked as a sent message is, tells the outbox's listeners, and
+ * resolves with its record. Rejects with a RangeError for a message outside
+ * its limits, before anything is kept.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param mesTexStr - Message Text String: The message, as typed.
+ *
+ * @returns A promise that resolves with the waiting message.
+ *
+ * @example
+ * ```ts
+ * chaQueFun('Xk3...', 'On my way') // => { locIdeStr : 'c1...', ... }
+ * ```
+ *
+*/
+
+const chaQueFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< OutRecTyp > => { // What: Chat Queue Function. Why: A message written offline shouldn't be lost (Section 14). How: This tidies, checks, and keeps it on the device.
+
+
+	const mesNorStr = linNorFun( mesTexStr ); // What: Message Normalized String. Why: The message waits tidied, as it'll be sent. How: This normalizes it, keeping its line breaks.
+
+
+	if ( !chaMesFun( mesNorStr ) ) throw new RangeError( 'The message is outside its limits.' ); // What: Message Guard. Why: A message that can't be sent shouldn't wait. How: This rejects it here.
+
+
+
+	const outRecObj = { // What: Outbox Record Object. Why: The message waits in the order it was written. How: This dates it and gives it a local ID.
+
+
+		creTimNum : Date.now(),          // What: Created Time Number. Why: Waiting messages send in the order they were written. How: This dates it on the device.
+		groIdeStr,                       // What: Group Identifier String. Why: The message belongs to its group. How: This names it.
+		locIdeStr : crypto.randomUUID(), // What: Local Identifier String. Why: The message has no server ID until it's sent. How: This gives it one of its own.
+		texValStr : mesNorStr            // What: Text Value String. Why: The message sends as tidied. How: This holds its text.
+
+
+	};
+
+
+	await outSetFun( `${ groIdeStr }/${ outRecObj.locIdeStr }`, outRecObj ); // What: Keep Call. Why: The message survives the app closing. How: This keeps it on the device.
+
+	outLisSet.forEach( ( onChaFun ) => onChaFun() ); // What: Change Tell Call. Why: The chat shows the waiting message. How: This tells each listener.
+
+
+
+	return outRecObj; // What: Record Return. Why: The chat shows the waiting message. How: This returns it.
+
+
+};
+
+// #endregion chaQueFun
+
+
+
+// #region chaOutFun
+
+/**
+ * chaOutFun = Chat Outbox Function
+ *
+ * @summary
+ * Sends a group's waiting messages in the order they were written, each
+ * leaving the device's outbox once it's sent, the outbox's listeners told of
+ * each, and resolves with how many went. Stops at the first that fails,
+ * which waits for the next try, and does nothing while the group's outbox
+ * is already sending.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ *
+ * @returns A promise that resolves with the number sent.
+ *
+ * @example
+ * ```ts
+ * chaOutFun('Xk3...') // => 2
+ * ```
+ *
+*/
+
+const chaOutFun = async ( groIdeStr : string ) : Promise< number > => { // What: Chat Outbox Function. Why: Messages written offline send once the device is back online. How: This sends each in turn and forgets it.
+
+
+	if ( outRunSet.has( groIdeStr ) ) return 0; // What: Running Guard. Why: A second run could send a message twice. How: This returns while one runs.
+
+
+
+	outRunSet.add( groIdeStr ); // What: Running Add Call. Why: Another run waits for this one. How: This marks the group as sending.
+
+
+	let senCouNum = 0; // What: Sent Count Number. Why: The caller learns how many went. How: This counts them.
+
+
+
+	try { // What: Send Attempt. Why: The mark has to go however the run ends. How: This sends each message and clears the mark either way.
+
+
+		for ( const outRecObj of await outLisFun( groIdeStr ) ) { // What: Message Loop. Why: The messages send in the order they were written. How: This sends and forgets each in turn.
+
+
+			await mesSenFun( groIdeStr, outRecObj.texValStr ); // What: Send Call. Why: The message reaches the group. How: This sends it as any message, rejecting when it can't.
+
+			await outSetFun( `${ groIdeStr }/${ outRecObj.locIdeStr }`, null ); // What: Forget Call. Why: A sent message shouldn't send again. How: This deletes it from the outbox.
+
+			outLisSet.forEach( ( onChaFun ) => onChaFun() ); // What: Change Tell Call. Why: The chat stops showing the message as waiting. How: This tells each listener.
+
+
+			senCouNum += 1; // What: Count Assignment. Why: One more went. How: This adds it.
+
+
+		}
+
+
+	}
+
+	finally { outRunSet.delete( groIdeStr ); } // What: Running Clear. Why: A later run should go ahead. How: This removes the mark.
+
+
+
+	return senCouNum; // What: Count Return. Why: The chat reads the outbox again after sends. How: This returns how many went.
+
+
+};
+
+// #endregion chaOutFun
+
+
+
+// #region outSubFun
+
+/**
+ * outSubFun = Outbox Subscribe Function
+ *
+ * @summary
+ * Calls the listener each time a message joins or leaves the device's
+ * outbox, in any group, until the returned function is called.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param onChaFun - On Change Function: Called on each change.
+ *
+ * @returns The function that stops listening.
+ *
+ * @example
+ * ```ts
+ * outSubFun(() => ...) // => () => void
+ * ```
+ *
+*/
+
+const outSubFun = ( onChaFun : () => void ) : () => void => { // What: Outbox Subscribe Function. Why: The chat keeps its waiting messages current, however they're sent. How: This adds the listener and returns its removal.
+
+
+	outLisSet.add( onChaFun ); // What: Listener Add Call. Why: The listener hears each change. How: This adds it.
+
+
+
+	return () => { outLisSet.delete( onChaFun ); }; // What: Stop Return. Why: A closed chat shouldn't be told. How: This returns the removal.
+
+
+};
+
+// #endregion outSubFun
+
+
+
+const chaBriFun = ( groIdeStr : string, kinValStr : BriKinTyp, eveIdeStr : string, titTexStr : string, labArr : string[], couNum : number ) : Promise< string > => mesSenFun( groIdeStr, briTexFun( kinValStr, eveIdeStr, titTexStr, labArr, couNum ), true ); // What: Chat Bring Function. Why: A burst of bring-list changes posts one quiet status line to the chat (Section 11.5). How: This sends the bring-list post, marked quiet.
+const chaPhoFun = ( groIdeStr : string, eveIdeStr : string, titTexStr : string ) : Promise< string > => mesSenFun( groIdeStr, staPhoFun( eveIdeStr, titTexStr ) ); // What: Chat Photos Function. Why: A burst of shared photos posts one status line to the chat (Section 20). How: This sends the photos post's text, naming the event, and returns its ID.
+const chaStaFun = ( groIdeStr : string, staKinStr : StaKinTyp ) : Promise< string > => mesSenFun( groIdeStr, staTexFun( staKinStr ) );                                   // What: Chat Status Function. Why: Leaving and arriving post a status line to the chat (Section 10). How: This sends the status post's text and returns its ID.
 
 
 
@@ -446,7 +640,9 @@ const chaSynFun = async ( groIdeStr : string ) : Promise< number > => { // What:
  * @summary
  * Watches a group's chat from this member's join time, handling each
  * message as it arrives, those already waiting first, and handing each
- * readable one to the callback. A read the rules refuse, such as one made
+ * readable one to the callback, along with each message this device sends
+ * to the group while the watch is open, once it's kept. A read the rules
+ * refuse, such as one made
  * before the membership mirror holds this member, ends the watch and calls
  * onErrFun, when given, so the caller can start it again. Resolves with the
  * function that stops watching.
@@ -476,7 +672,16 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 
 
-	return onChildAdded( query( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ), orderByChild( 'sentAt' ), startAt( chaCtxObj.joiTimNum ) ), ( chiSnaObj ) => { // What: Watch Return. Why: The caller stops watching when the chat closes. How: This listens from the join time and returns the listener's unsubscribe.
+	const ownLisSet = ownLisMap.get( groIdeStr ) ?? new Set< ( mesRecObj : MesRecTyp ) => void >(); // What: Own Listener Set. Why: The watch is handed this device's own messages too. How: This reads the group's set, or makes one.
+
+
+	ownLisSet.add( onMesFun ); // What: Own Add Call. Why: A send hands its message to every open watch. How: This adds the callback.
+
+	ownLisMap.set( groIdeStr, ownLisSet ); // What: Own Keep Call. Why: A new set has to be found by the next send. How: This keeps it under the group.
+
+
+
+	const stoWatFun = onChildAdded( query( ref( firGetFun().reaDatObj, `chats/${ groIdeStr }/messages` ), orderByChild( 'sentAt' ), startAt( chaCtxObj.joiTimNum ) ), ( chiSnaObj ) => { // What: Stop Watch Function. Why: The listener has to stop when the chat closes. How: This listens from the join time and keeps the listener's unsubscribe.
 
 
 		queProObj = queProObj.then( async () => { // What: Queue Assignment. Why: A message's handling has to finish before the next one's starts. How: This chains it after the last.
@@ -491,7 +696,19 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 		} );
 
 
-	}, onErrFun ); // What: Cancel Callback. Why: A refused read ends the listener, which the caller should hear about. How: This hands the error to onErrFun.
+	}, ( errCatObj ) => { ownLisSet.delete( onMesFun ); onErrFun( errCatObj ); } ); // What: Cancel Callback. Why: A refused read ends the listener, which the caller should hear about, and an ended watch shouldn't be handed messages. How: This drops the callback, then hands the error to onErrFun.
+
+
+
+	return () => { // What: Stop Return. Why: The caller stops watching when the chat closes. How: This returns the function that stops both.
+
+
+		stoWatFun(); // What: Watch Stop Call. Why: The listener closes. How: This stops it.
+
+		ownLisSet.delete( onMesFun ); // What: Own Drop Call. Why: A closed chat shouldn't be handed messages. How: This drops the callback.
+
+
+	};
 
 
 };
@@ -504,7 +721,7 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 // #region Exports
 
-export { chaSenFun, chaStaFun, chaSynFun, chaWatFun }; // What: Named Exports. Why: The screens send messages and status posts, catch up, and watch through these. How: This exports the functions.
+export { chaBriFun, chaOutFun, chaPhoFun, chaQueFun, chaSenFun, chaStaFun, chaSynFun, chaWatFun, outSubFun }; // What: Named Exports. Why: The screens send, queue, and flush messages, follow the outbox, send status posts, catch up, and watch through these. How: This exports the functions.
 
 // #endregion Exports
 

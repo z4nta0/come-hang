@@ -6,18 +6,21 @@
 import cssModObj from './event-form.module.css'; // What: CSS Module Object. Why: The form is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom } from '../ui/button.tsx';       // What: Button Base Component. Why: Saving the event is the form's one action. How: This draws its button.
-import { datInpFun } from '../utils/date.ts';       // What: Date Input Function. Why: Changing an event shows its times in the fields. How: This writes a time as a field's value.
-import { eveCreFun } from '../state/events.ts';     // What: Event Create Function. Why: The form plans a new event. How: This saves it.
-import { eveDesFun } from '../core/text-limits.ts'; // What: Event Description Function. Why: The notes are checked beside their field. How: This applies their limits.
-import { eveLocFun } from '../core/text-limits.ts'; // What: Event Location Function. Why: The place is checked beside its field. How: This applies its limits.
-import { eveTitFun } from '../core/text-limits.ts'; // What: Event Title Function. Why: The title is checked beside its field. How: This applies its limits.
-import { eveUpdFun } from '../state/events.ts';     // What: Event Update Function. Why: The form changes an event. How: This saves the change.
-import { inpDatFun } from '../utils/date.ts';       // What: Input Date Function. Why: A field's date and time is checked and saved as a time. How: This reads it.
-import { linNorFun } from '../core/text-limits.ts'; // What: Lines Normalize Function. Why: The notes are checked as they'll be saved. How: This tidies each line.
-import { texNorFun } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: The title and place are checked as they'll be saved. How: This tidies them.
-import { useRef    } from 'react';                  // What: Use Reference. Why: The first field with a problem takes focus. How: This holds each field.
-import { useState  } from 'react';                  // What: Use State. Why: The fields, their problems, and the saving state change as someone types and saves. How: This holds each.
+import { ButBasCom } from '../ui/button.tsx';           // What: Button Base Component. Why: Saving the event is the form's one action. How: This draws its button.
+import { datInpFun } from '../utils/date.ts';           // What: Date Input Function. Why: Changing an event shows its times in the fields. How: This writes a time as a field's value.
+import { eveCreFun } from '../state/events.ts';         // What: Event Create Function. Why: The form plans a new event. How: This saves it.
+import { eveDesFun } from '../core/text-limits.ts';     // What: Event Description Function. Why: The notes are checked beside their field. How: This applies their limits.
+import { eveLocFun } from '../core/text-limits.ts';     // What: Event Location Function. Why: The place is checked beside its field. How: This applies its limits.
+import { eveTitFun } from '../core/text-limits.ts';     // What: Event Title Function. Why: The title is checked beside its field. How: This applies its limits.
+import { eveUpdFun } from '../state/events.ts';         // What: Event Update Function. Why: The form changes an event. How: This saves the change.
+import { inpDatFun } from '../utils/date.ts';           // What: Input Date Function. Why: A field's date and time is checked and saved as a time. How: This reads it.
+import { linNorFun } from '../core/text-limits.ts';     // What: Lines Normalize Function. Why: The notes are checked as they'll be saved. How: This tidies each line.
+import { offGuaFun } from '../ui/online.ts';            // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
+import { plaLisFun } from '../platform/place-store.ts'; // What: Place List Function. Why: The place field suggests where the group has met. How: This reads the group's places kept on the device.
+import { texNorFun } from '../core/text-limits.ts';     // What: Text Normalize Function. Why: The title and place are checked as they'll be saved. How: This tidies them.
+import { useEffect } from 'react';                      // What: Use Effect. Why: The group's places load once the form opens. How: This reads them and drops an answer that arrives after it closes.
+import { useRef    } from 'react';                      // What: Use Reference. Why: The first field with a problem takes focus. How: This holds each field.
+import { useState  } from 'react';                      // What: Use State. Why: The fields, their problems, and the saving state change as someone types and saves. How: This holds each.
 
 
 import type { EveRecTyp } from '../state/events.ts'; // What: Event Record Type. Why: The form can change an existing event. How: This types it.
@@ -137,7 +140,8 @@ type EvfProTyp = { eveRecObj : EveRecTyp | null, groIdeStr : string, onSavFun : 
  *
  * @summary
  * Renders the form for planning an event, or for changing one when given
- * an event, its fields filled with that event's details. Saving tidies and
+ * an event, its fields filled with that event's details. The place field
+ * suggests the group's places kept on the device. Saving tidies and
  * checks each field: a title is required, both times too, the end after the
  * start, at most 7 days after it, and not yet passed, the start at most a
  * year ahead, and the place and notes within their limits. A field with a
@@ -177,11 +181,29 @@ function EveForCom ( { eveRecObj, groIdeStr, onSavFun } : EvfProTyp ) : React.JS
 	const [ forErrStr, setForErrStr ] = useState( '' );                                                // What: Form Error String And Setter. Why: A failed save is announced above the button. How: This holds the message, empty until one fails.
 	const [ locErrStr, setLocErrStr ] = useState( '' );                                                // What: Location Error String And Setter. Why: The place says what's wrong with it. How: This holds the problem, empty when there's none.
 	const [ locTexStr, setLocTexStr ] = useState( eveRecObj?.locTexStr ?? '' );                        // What: Location Text String And Setter. Why: The field shows what's typed. How: This holds the place, starting from the event's.
+	const [ plaValArr, setPlaValArr ] = useState< string[] >( [] );                                    // What: Places Value Array And Setter. Why: The place field suggests where the group has met. How: This holds the group's kept places, empty until they're read.
 	const [ senReqBoo, setSenReqBoo ] = useState( false );                                             // What: Send Request Boolean And Setter. Why: A second save while the first is out would save twice. How: This is true while one is out.
 	const [ staErrStr, setStaErrStr ] = useState( '' );                                                // What: Start Error String And Setter. Why: The start says what's wrong with it. How: This holds the problem, empty when there's none.
 	const [ staValStr, setStaValStr ] = useState( eveRecObj ? datInpFun( eveRecObj.staTimNum ) : '' ); // What: Start Value String And Setter. Why: The field shows the chosen start. How: This holds its value, starting from the event's.
 	const [ titErrStr, setTitErrStr ] = useState( '' );                                                // What: Title Error String And Setter. Why: The title says what's wrong with it. How: This holds the problem, empty when there's none.
 	const [ titTexStr, setTitTexStr ] = useState( eveRecObj?.titTexStr ?? '' );                        // What: Title Text String And Setter. Why: The field shows what's typed. How: This holds the title, starting from the event's.
+
+
+
+	useEffect( () => { // What: Places Load Effect. Why: The place field suggests where this group has met, and only this group, so one group's places never show in another's form. How: This reads the group's places kept on the device, dropping an answer that arrives after the form closes.
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: An answer arriving after the form closed mustn't change it. How: This is true until the cleanup runs.
+
+
+		plaLisFun( groIdeStr ).then( ( plaLisArr ) => { if ( actValBoo ) setPlaValArr( plaLisArr ); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Places Read Call. Why: The suggestions are the group's kept places, and a failed read only means none. How: This reads them into the state, logging a failure.
+
+
+
+		return () => { actValBoo = false; }; // What: Cleanup Return. Why: A late answer belongs to a form that's gone. How: This marks the effect inactive.
+
+
+	}, [ groIdeStr ] ); // What: Effect Dependency Array. Why: Another group has places of its own. How: groIdeStr changes with the form's group.
 
 
 
@@ -214,6 +236,10 @@ function EveForCom ( { eveRecObj, groIdeStr, onSavFun } : EvfProTyp ) : React.JS
 
 
 		if ( senReqBoo ) return; // What: Sending Guard. Why: One save at a time. How: This ignores a save while one is out.
+
+
+
+		if ( offGuaFun( setForErrStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 
@@ -397,7 +423,8 @@ function EveForCom ( { eveRecObj, groIdeStr, onSavFun } : EvfProTyp ) : React.JS
 
 						className={ cssModObj.fieValInp }
 
-						autoComplete='off'
+						autoComplete='street-address' // What: Address Autofill Note. Why: A browser can offer the addresses its person has saved, which stay in the browser. How: This marks the field as an address.
+						list={ plaValArr.length > 0 ? 'eveLocDat' : undefined } // What: Suggestions List Note. Why: The group's earlier places are offered as the person types, and a field with nothing to offer shouldn't look as if it had. How: This links the suggestions only once there are some.
 						maxLength={ 150 }
 						type='text'
 						value={ locTexStr }
@@ -414,6 +441,26 @@ function EveForCom ( { eveRecObj, groIdeStr, onSavFun } : EvfProTyp ) : React.JS
 				ideStr='eveLocInp'
 				labStr='Place'
 			/>{ /* What: Event Field Component. Why: An event may say where it is. How: This shows the place field. */ }
+
+
+
+			<datalist id='eveLocDat'>{ /* What: Event Location Datalist Element. Why: The place field suggests where the group has met before, from the device alone, with no map service. How: This lists the group's kept places, which the field shows as matches for what's typed. */ }
+
+
+				{ plaValArr.map( ( plaValStr ) => ( // What: Place Option Map. Why: Each kept place is one suggestion. How: This renders an option per place.
+
+
+					<option
+						key={ plaValStr }
+
+						value={ plaValStr }
+					/> // What: Place Option Element. Why: A suggestion fills the field with its place. How: This offers one place by its value.
+
+
+				) ) }
+
+
+			</datalist>
 
 
 

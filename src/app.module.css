@@ -21,7 +21,7 @@
 
 	container  : app / inline-size;
 	display    : grid;
-	min-height : 100vh;
+	min-height : calc( 100vh - var( --off-ban-hei, 0px ) ); /* What: Banner Room Note. Why: The offline banner sits above the app, which shouldn't be pushed past the screen's height by it. How: This takes the banner's height, which the banner sets on the body, from the screen's height, nothing while there's no banner. */
 
 
 }

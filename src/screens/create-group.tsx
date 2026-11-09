@@ -11,6 +11,7 @@ import { groCreFun         } from '../state/groups.ts';     // What: Group Creat
 import { groNamFun         } from '../core/text-limits.ts'; // What: Group Name Function. Why: A name outside its limits is caught before anything is sent. How: This checks it.
 import { IcoSvgCom         } from '../ui/icon.tsx';         // What: Icon SVG Component. Why: The back button shows an arrow. How: This draws it.
 import { MaiAreCom         } from '../ui/main-area.tsx';    // What: Main Area Component. Why: The form is the screen's main content. How: This holds it in the main landmark.
+import { offGuaFun         } from '../ui/online.ts';        // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { perNamFun         } from '../core/text-limits.ts'; // What: Person Name Function. Why: A display name outside its limits is caught before anything is sent. How: This checks it.
 import { texNorFun         } from '../core/text-limits.ts'; // What: Text Normalize Function. Why: Names are checked as they'll be saved. How: This tidies them first.
 import { useEffect         } from 'react';                  // What: Use Effect. Why: The heading takes focus as the screen opens. How: This moves focus once it's drawn.
@@ -145,6 +146,10 @@ function CreGroCom ( { onCreFun } : CgcProTyp ) : React.JSX.Element {
 
 
 		if ( senReqBoo ) return; // What: Sending Guard. Why: One creation at a time. How: This ignores a submit while one is out.
+
+
+
+		if ( offGuaFun( setForErrStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 

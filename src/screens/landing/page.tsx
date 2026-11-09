@@ -76,7 +76,7 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 	{ // What: Free Question Row. Why: Price is the first question. How: This answers it.
 
 
-		ansStr : 'Yes. Chat, events, bring-lists, and location sharing are free for everyone. The one-time upgrade only raises how many groups you can start, and how many people they hold.',
+		ansStr : 'Yes. Chat, events, bring-lists, photos, and location sharing are free for everyone. The one-time upgrade only raises how many groups you can start, and how many people and photos they hold.',
 		queStr : 'Is it really free?'
 
 
@@ -85,8 +85,8 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 	{ // What: Lost Phone Question Row. Why: With no account, people wonder what a lost phone costs them. How: This answers it.
 
 
-		ansStr : "Link a Google account in Settings, and your groups come back on a new phone. Earlier chat comes back if a friend's phone still has it and sends it.",
-		queStr : 'What if I lose my phone?'
+		ansStr : "Link a Google account in Settings, and your groups come back on a new device. Earlier chat comes back if a friend's device still has it and sends it.",
+		queStr : 'What if I lose my device?'
 
 
 	},
@@ -111,6 +111,10 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 
 
 ];
+
+
+
+const FAQ_COL_ARR = [ FAQ_REC_ARR.slice( 0, Math.ceil( FAQ_REC_ARR.length / 2 ) ), FAQ_REC_ARR.slice( Math.ceil( FAQ_REC_ARR.length / 2 ) ) ]; // What: Frequently Asked Question Column Array. Why: The questions sit in two columns on a wide screen, each its own list, so opening an answer lengthens only its column. How: This splits the questions in half, the first column taking the extra one when their number is odd.
 
 // #endregion Constants
 
@@ -266,7 +270,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 		sessionStorage.removeItem( DEL_STO_STR ); // What: Note Clear Call. Why: The note is said once. How: This removes it.
 
-		setStaMesStr( 'Your data has been deleted from Come Hang and this phone.' ); // What: Status Set Call. Why: The person should know the deletion finished. How: This announces it.
+		setStaMesStr( 'Your data has been deleted from Come Hang and this device.' ); // What: Status Set Call. Why: The person should know the deletion finished. How: This announces it.
 
 
 	}, [] ); // What: Effect Dependency Array. Why: The note is read once, when the page opens. How: The empty array runs the effect once.
@@ -310,7 +314,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-						<p className={ cssModObj.herPitPar }>Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day.</p>{ /* What: Hero Pitch Paragraph Element. Why: A first visitor should know what the app does. How: This says it in one sentence. */ }
+						<p className={ cssModObj.herPitPar }>Plan get-togethers with your group in one place: chat, set the date, see who's bringing what, and find each other on the day of the event.</p>{ /* What: Hero Pitch Paragraph Element. Why: A first visitor should know what the app does. How: This says it in one sentence. */ }
 
 						<p
 							className={ cssModObj.herStaPar }
@@ -320,7 +324,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-						<div className={ cssModObj.herActDiv }>{ /* What: Hero Actions Div Element. Why: Starting and joining sit together. How: This sets them in a row that wraps onto two lines where it runs out of room. */ }
+						<div className={ cssModObj.herActDiv }>{ /* What: Hero Actions Div Element. Why: Starting and joining sit together. How: This sets them in a row that wraps onto two lines at about 360px wide and below, where each fills its line so both match. */ }
 
 
 							{ invNamStr === undefined ? ( // What: Invite Mode Check. Why: Opened from an invite, the page's one action leads back to joining. How: This shows starting and joining normally, and the way back otherwise.
@@ -329,7 +333,13 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 								<>{ /* What: Normal Actions Fragment. Why: Starting and joining sit side by side. How: This groups them without a wrapper. */ }
 
 
-									<ButBasCom onClick={ () => scrOpeFun( { scrStr : 'create' } ) }>Start a group</ButBasCom>{ /* What: Hero Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
+									<ButBasCom
+										className={ cssModObj.herStaBut }
+
+										onClick={ () => scrOpeFun( { scrStr : 'create' } ) }
+									>Start a group</ButBasCom>{ /* What: Hero Start Button Component. Why: Starting a group is how someone begins. How: This opens the screen for starting one. */ }
+
+
 
 									<button
 										className={ cssModObj.herJoiBut }
@@ -349,7 +359,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-						{ invNamStr === undefined && <p className={ cssModObj.herRecPar }>New phone? <button className={ cssModObj.herRecBut } type='button' onClick={ () => void recGroFun() }>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button></p> }{ /* What: Hero Recover Paragraph Element. Why: Someone who used the app on another phone brings their groups here, a smaller action than starting or joining, and not while an invite waits. How: This asks the question and offers the button, which signs in with Google, reading "Signing in…" meanwhile. */ }
+						{ invNamStr === undefined && <p className={ cssModObj.herRecPar }>New device? <button className={ cssModObj.herRecBut } type='button' onClick={ () => void recGroFun() }>{ recReqBoo ? 'Signing in…' : 'Get my groups back' }</button></p> }{ /* What: Hero Recover Paragraph Element. Why: Someone who used the app on another phone brings their groups here, a smaller action than starting or joining, and not while an invite waits. How: This asks the question and offers the button, which signs in with Google, reading "Signing in…" meanwhile. */ }
 
 						<p
 							className={ cssModObj.herErrPar }
@@ -465,9 +475,9 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 								<span className={ cssModObj.truIcoSpa }><IcoSvgCom icoNamStr='lock' sizSteStr='bas' /></span>{ /* What: Trust Icon Span Element. Why: An icon marks each promise at a glance. How: This sets a lock in a tinted square. */ }
 
-								<h3 className={ cssModObj.truIteHea }>Encrypted on your phone</h3>{ /* What: Trust Item Heading Element. Why: Each promise has a short name. How: This sets it. */ }
+								<h3 className={ cssModObj.truIteHea }>Encrypted on your device</h3>{ /* What: Trust Item Heading Element. Why: Each promise has a short name. How: This sets it. */ }
 
-								<p className={ cssModObj.truItePar }>Messages, events, bring-lists, names, and locations are locked on your phone before they're sent. We can't read them.</p>{ /* What: Trust Item Paragraph Element. Why: The promise is said plainly and exactly. How: This says it. */ }
+								<p className={ cssModObj.truItePar }>Messages, events, bring-lists, names, and locations are locked on your device before they're sent. We can't read them.</p>{ /* What: Trust Item Paragraph Element. Why: The promise is said plainly and exactly. How: This says it. */ }
 
 
 							</li>
@@ -593,7 +603,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 						<h2 className={ cssModObj.secTitHea }>Free for your whole group</h2>{ /* What: Section Title Heading Element. Why: The section's point is said first. How: This sets it as the heading. */ }
 
-						<p className={ cssModObj.freLeaPar }>Chat, events, bring-lists, and location sharing are all free. The upgrade is for people who start more than one group.</p>{ /* What: Free Lead Paragraph Element. Why: Everything that matters is free. How: This says so before the numbers. */ }
+						<p className={ cssModObj.freLeaPar }>Chat, events, bring-lists, photos, and location sharing are all free. The upgrade is for people who start more than one group, and gives their groups more room.</p>{ /* What: Free Lead Paragraph Element. Why: Everything that matters is free. How: This says so before the numbers. */ }
 
 
 
@@ -623,6 +633,14 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 									<dt className={ cssModObj.plaLimTer }>People in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
 
 									<dd className={ cssModObj.plaLimDet }>20</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos per event in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>100</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos each person adds to one</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>30</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
 
 
 								</dl>
@@ -656,6 +674,14 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 									<dd className={ cssModObj.plaLimDet }>50</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
 
+									<dt className={ cssModObj.plaLimTer }>Photos per event in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>300</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Photos each person adds to one</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>60</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
 
 								</dl>
 
@@ -676,7 +702,7 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 							<li className={ cssModObj.freNotIte }>Full refund within 14 days.</li>{ /* What: Free Note Item Element. Why: The terms promise a refund on request. How: This says so. */ }
 
-							<li className={ cssModObj.freNotIte }>Needs a linked Google account, so your purchase can't be lost with your phone.</li>{ /* What: Free Note Item Element. Why: Buying needs Google linked, which is better said before checkout. How: This says so and why. */ }
+							<li className={ cssModObj.freNotIte }>Needs a linked Google account, so your purchase can't be lost with your device.</li>{ /* What: Free Note Item Element. Why: Buying needs Google linked, which is better said before checkout. How: This says so and why. */ }
 
 							<li className={ cssModObj.freNotIte }>Buy it any time in Settings.</li>{ /* What: Free Note Item Element. Why: The upgrade is bought inside the app. How: This says where. */ }
 
@@ -714,13 +740,29 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 
 
-					<ul className={ cssModObj.faqLisUno }>{ /* What: FAQ List Unordered Element. Why: The questions read as one list. How: This stacks them. */ }
+					<div className={ cssModObj.faqColDiv }>{ /* What: FAQ Columns Div Element. Why: The questions fill the page's width on a wide screen, each answer opening without moving the other column. How: This sets the two halves side by side from 720px wide and up, one above the other below that, where they read as one list. */ }
 
 
-						{ FAQ_REC_ARR.map( ( faqRecObj ) => <FaqIteCom key={ faqRecObj.queStr } ansStr={ faqRecObj.ansStr } queStr={ faqRecObj.queStr } /> ) }{ /* What: Question Map. Why: Each question is drawn the same way. How: This renders one item per row, keyed by its question. */ }
+						{ FAQ_COL_ARR.map( ( colRecArr, colIndNum ) => ( // What: Column Map. Why: Each half of the questions is its own list. How: This renders one list per column, keyed by its place, since the columns never reorder.
 
 
-					</ul>
+							<ul
+								key={ colIndNum }
+
+								className={ cssModObj.faqLisUno }
+							>{ /* What: FAQ List Unordered Element. Why: A column's questions read as one list. How: This stacks them. */ }
+
+
+								{ colRecArr.map( ( faqRecObj ) => <FaqIteCom key={ faqRecObj.queStr } ansStr={ faqRecObj.ansStr } queStr={ faqRecObj.queStr } /> ) }{ /* What: Question Map. Why: Each question is drawn the same way. How: This renders one item per row, keyed by its question. */ }
+
+
+							</ul>
+
+
+						) ) }
+
+
+					</div>
 
 
 				</section>

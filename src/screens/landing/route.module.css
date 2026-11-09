@@ -160,12 +160,13 @@
 
 /* #region rouPinSpa */
 
-.rouPinSpa { /* What: Route Pin Span. Why: Each stop is a coral map pin with its number upright inside it, above the line. How: This turns a square with three round corners onto its point, in the coral spark, a rhythm step across, above the line, and eases its drop with the gentle overshoot. */
+.rouPinSpa { /* What: Route Pin Span. Why: Each stop is a coral map pin with its number upright inside it, above the line. How: This turns a square with three round corners onto its point, in the coral spark, with its number in the text color for the coral, a rhythm step across, above the line, and eases its drop with the gentle overshoot. */
 
 
 	align-self       : start;
 	background-color : var( --acc-sec-col );                                                                              /* Accent Secondary Color = #DD6248 */
 	border-radius    : 50% 50% 50% 0;
+	color            : var( --tex-acs-col );                                                                              /* Text Accent-Secondary Color = #15163A */
 	display          : grid;
 	grid-area        : rouPinSpa;
 	height           : calc( var( --ver-rhy-p03 ) * 1rem );                                                               /* Vertical Rhythm Base Plus 3 ~= 33.876px */
@@ -214,19 +215,19 @@
 
 
 }
-.rouPinSpa--arrive { /* What: Route Pin Span Arrive. Why: The route ends at a pin in the main accent. How: This colors it periwinkle. */
+.rouPinSpa--arrive { /* What: Route Pin Span Arrive. Why: The route ends at a pin in the main accent. How: This colors it periwinkle, its check in the text color for the accent. */
 
 
 	background-color : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	color            : var( --tex-acc-col ); /* Text Accent Color = #FFFFFF */
 
 
 }
 
-.rouNumSpa { /* What: Route Number Span. Why: The pin's number stands upright inside it. How: This turns it back the pin's angle, bold in the brand font, in the text color on the accent. */
+.rouNumSpa { /* What: Route Number Span. Why: The pin's number stands upright inside it. How: This turns it back the pin's angle, bold in the brand font, in its pin's text color. */
 
 
-	color       : var( --tex-acc-col );  /* Text Accent Color = #FFFFFF */
-	font-family : var( --fon-fam-bra );  /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
+	font-family : var( --fon-fam-bra ); /* Font Family Brand = 'Bricolage Grotesque', var( --fon-fam-mai ) */
 	font-weight : 800;
 	transform   : rotate( 45deg );
 

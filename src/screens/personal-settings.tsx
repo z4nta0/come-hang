@@ -18,11 +18,13 @@ import { insSubFun            } from '../platform/install.ts';    // What: Insta
 import { isaInsFun            } from '../platform/install.ts';    // What: Is-An Installed Function. Why: An installed app needs no install part. How: This checks whether it runs installed.
 import { isaIosFun            } from '../platform/install.ts';    // What: Is-An iOS Function. Why: An iPhone installs through Safari's own menu. How: This checks for an iPhone or iPad.
 import { LegDocCom            } from '../legal/docs.tsx';         // What: Legal Documents Component. Why: Settings holds the privacy policy and the terms. How: This draws their part and its sheet.
+import { ProSetCom            } from './profile-settings.tsx';    // What: Profile Settings Component. Why: Settings holds the member's profile photo. How: This draws its part.
 import { purBuyFun            } from '../state/purchase.ts';      // What: Purchase Buy Function. Why: The upgrade is bought once (Section 18). How: This asks for the checkout's address.
 import { purPaiFun            } from '../state/purchase.ts';      // What: Purchase Paid Function. Why: The account part says whether the upgrade is bought. How: This reads it.
 import { pusActFun            } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
 import { pusDisFun            } from '../state/push.ts';          // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
 import { pusEnaFun            } from '../state/push.ts';          // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
+import { SupForCom            } from './support-form.tsx';        // What: Support Form Component. Why: About offers a way to write to the maker. How: This draws the form.
 import { useEffect            } from 'react';                     // What: Use Effect. Why: The account is read as the parts open, and a link moves focus. How: This starts the read and moves the focus.
 import { useRef               } from 'react';                     // What: Use Reference. Why: A link replaces its button, so focus lands on the part's heading. How: This holds the heading.
 import { useState             } from 'react';                     // What: Use State. Why: The appearance, notifications, link, and upgrade change while the parts are open. How: This holds each.
@@ -40,13 +42,15 @@ import type { SarRetTyp } from './settings-actions.ts';     // What: Settings Ac
  * personal-settings.tsx = Personal Settings
  *
  * @summary
- * The parts of Settings that belong to this phone and the member's account
- * rather than a group, so they show whether or not the member is in one:
- * this phone's appearance, notifications, and how to install the app until
- * it's installed; the account's Google link, upgrade, and the deletion of
- * the member's data; and the privacy policy and the terms, each opening in
- * a sheet. Each change is announced, and a change that fails says why,
- * through a status and an alert of the parts' own.
+ * The parts of Settings that belong to this device and the member's account
+ * rather than a group, so they show whether or not the member is in one: this
+ * device's appearance, notifications, and how to install the app until it's
+ * installed; the account's Google link, upgrade, and the deletion of the
+ * member's data; About, with a note from the app's maker, its version, links
+ * to the maker's website, the source code, and support, and a tip on Ko-fi;
+ * and the privacy policy and the terms, each opening in a sheet. Each change
+ * is announced, and a change that fails says why, through the status and alert
+ * of the Settings section holding them.
  *
  * Sections:
  *  - Constants
@@ -74,9 +78,9 @@ const BUY_ERR_OBJ : Record< string, string > = { // What: Buy Error Object. Why:
 const COL_MOD_ARR : { labStr : string, modStr : ColModTyp }[] = [ // What: Color Mode Array. Why: The appearance follows the phone or is set light or dark (Section 14). How: Each row names a choice and its mode.
 
 
-	{ labStr : 'Match this phone', modStr : 'system' }, // What: System Choice. Why: Most people want the phone's own setting. How: This names it first.
-	{ labStr : 'Light',            modStr : 'light'  }, // What: Light Choice. Why: Someone can keep the app light. How: This names it.
-	{ labStr : 'Dark',             modStr : 'dark'   }  // What: Dark Choice. Why: Someone can keep the app dark. How: This names it.
+	{ labStr : 'Match this device', modStr : 'system' }, // What: System Choice. Why: Most people want the device's own setting. How: This names it first.
+	{ labStr : 'Light',             modStr : 'light'  }, // What: Light Choice. Why: Someone can keep the app light. How: This names it.
+	{ labStr : 'Dark',              modStr : 'dark'   }  // What: Dark Choice. Why: Someone can keep the app dark. How: This names it.
 
 
 ];
@@ -107,16 +111,17 @@ type PscProTyp = { setActObj : SarRetTyp }; // What: Personal Settings Component
  * PerSetCom = Personal Settings Component
  *
  * @summary
- * Renders the phone's part, the account's part, and the legal documents'
- * part as siblings in whatever Settings column holds them, running their
- * changes through the section's own runners, so the section's one status
- * and alert announce them. Picking an appearance applies and keeps it at once;
- * the notifications button turns them on or off for this phone; Install
- * shows the browser's prompt where it can; Link Google account links
- * through Google's popup, focus then landing on the account part's
- * heading; and Buy the upgrade opens Polar's checkout once Google is
- * linked. The account is read as the parts open, and the part says it's
- * checking until it's read.
+ * Renders the profile part, the device's part, the account's part, About, and
+ * the legal documents' part as siblings in whatever Settings column holds
+ * them, running their changes through the section's own runners, so the
+ * section's one status and alert announce them. Picking an appearance applies
+ * and keeps it at once; the notifications button turns them on or off for this
+ * device; Install shows the browser's prompt where it can; Link Google account
+ * links through Google's popup, focus then landing on the account part's
+ * heading; and Buy the upgrade opens Polar's checkout once Google is linked.
+ * About's links and its tip open in a new tab, except the support address,
+ * which opens an email. The account is read as the parts open, and the part
+ * says it's checking until it's read.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -219,7 +224,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 		if ( pusActBoo ) { // What: Turn Off Block. Why: Notifications on are turned off. How: This turns them off and says so once it lands.
 
 
-			if ( await actRunFun( 'push', pusDisFun ) ) { setPusActBoo( false ); setStaMesStr( 'Notifications are off for this phone.' ); } // What: Off Call. Why: The button and the member learn the change. How: This turns them off, then updates the state and announces it.
+			if ( await actRunFun( 'push', pusDisFun ) ) { setPusActBoo( false ); setStaMesStr( 'Notifications are off for this device.' ); } // What: Off Call. Why: The button and the member learn the change. How: This turns them off, then updates the state and announces it.
 
 
 
@@ -242,7 +247,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 		setPusActBoo( ansValStr === 'granted' ); // What: State Set Call. Why: Notifications are on only once the browser allows them. How: This keeps whether it did.
 
-		if ( ansValStr === 'granted' ) setStaMesStr( 'Notifications are on for this phone.' ); // What: On Status Call. Why: The member hears it worked. How: This announces it.
+		if ( ansValStr === 'granted' ) setStaMesStr( 'Notifications are on for this device.' ); // What: On Status Call. Why: The member hears it worked. How: This announces it.
 
 		else if ( ansValStr === 'default' ) setStaMesStr( 'Notifications are still off.' ); // What: Dismissed Status Call. Why: A dismissed prompt changes nothing. How: This says they're still off.
 
@@ -261,6 +266,10 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 		<>{ /* What: Personal Settings Fragment. Why: The parts sit in the Settings column beside whatever else it holds. How: This groups them without a wrapper. */ }
 
 
+			<ProSetCom setActObj={ setActObj } />{ /* What: Profile Settings Component. Why: The member's photo shows in every group they're in, so it sits with their own settings (Section 21). How: This draws the "Your profile" part first. */ }
+
+
+
 			<section
 				className={ cssModObj.devSetSec }
 
@@ -272,7 +281,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 					id='devSetHea'
 
 					className={ cssModObj.devTitHea }
-				>This phone</h3>{ /* What: Device Title Heading Element. Why: The part needs a heading saying these settings are the phone's own. How: This names it. */ }
+				>This device</h3>{ /* What: Device Title Heading Element. Why: The part needs a heading saying these settings are the phone's own. How: This names it. */ }
 
 
 
@@ -318,7 +327,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 
-				<p className={ cssModObj.devNotPar }>{ pusActBoo ? "This phone gets a notification when there's news in your groups, such as a new message." : "Get a notification on this phone when there's news in your groups, such as a new message." }</p>{ /* What: Device Note Paragraph Element. Why: The member should know what notifications bring before turning them on or off. How: This says it, by whether they're on. */ }
+				<p className={ cssModObj.devNotPar }>{ pusActBoo ? "This device gets a notification when there's news in your groups, such as a new message." : "Get a notification on this device when there's news in your groups, such as a new message." }</p>{ /* What: Device Note Paragraph Element. Why: The member should know what notifications bring before turning them on or off. How: This says it, by whether they're on. */ }
 
 
 
@@ -409,7 +418,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 					<>{ /* What: Account Fragment. Why: The notes and buttons sit in the part as its own children. How: This groups them without adding an element. */ }
 
 
-						<p className={ cssModObj.accNotPar }>{ gooLinBoo ? 'Your account is linked to Google. On a new phone, choose "Get my groups back" when you open Come Hang to bring your groups with you.' : "Link a Google account so you can get your groups back on a new phone. Google only confirms it's you, and your messages stay encrypted." }</p>{ /* What: Account Note Paragraph Element. Why: The member should know what linking is for, and once it's done, how to use it. How: This says either, by whether Google is linked. */ }
+						<p className={ cssModObj.accNotPar }>{ gooLinBoo ? 'Your account is linked to Google. On a new device, choose "Get my groups back" when you open Come Hang to bring your groups with you.' : "Link a Google account so you can get your groups back on a new device. Google only confirms it's you, and your messages stay encrypted." }</p>{ /* What: Account Note Paragraph Element. Why: The member should know what linking is for, and once it's done, how to use it. How: This says either, by whether Google is linked. */ }
 
 
 
@@ -438,7 +447,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 						{ upgPaiBoo !== null && ( // What: Upgrade Check. Why: The upgrade can be described once the account's flag is read. How: This shows its note, and its button when it can be bought.
 
 
-							<p className={ cssModObj.accNotPar }>{ upgPaiBoo ? 'You have the upgrade: you can own up to 10 groups, belong to up to 20, and have up to 50 members in each group you own.' : `The upgrade is a one-time $9.99 purchase. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20.${ gooLinBoo ? '' : ' Buying it needs a linked Google account, so it follows you to a new phone.' }` }</p> // What: Account Note Paragraph Element. Why: The member should know what the upgrade gives and what it needs (Section 18). How: This says whether it's bought, or what it costs and gives, and that it needs Google linked when it isn't.
+							<p className={ cssModObj.accNotPar }>{ upgPaiBoo ? 'You have the upgrade: you can own up to 10 groups, belong to up to 20, and have up to 50 members in each group you own.' : `The upgrade is a one-time $9.99 purchase. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20.${ gooLinBoo ? '' : ' Buying it needs a linked Google account, so it follows you to a new device.' }` }</p> // What: Account Note Paragraph Element. Why: The member should know what the upgrade gives and what it needs (Section 18). How: This says whether it's bought, or what it costs and gives, and that it needs Google linked when it isn't.
 
 
 						) }
@@ -468,6 +477,95 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 				) }
+
+
+			</section>
+
+
+
+			<section
+				className={ cssModObj.aboSetSec }
+
+				aria-labelledby='aboSetHea'
+			>{ /* What: About Settings Section Element. Why: Someone can learn who makes Come Hang, find its source code, support it, and reach its maker. How: This holds its heading, note, details, and tip. */ }
+
+
+				<h3
+					id='aboSetHea'
+
+					className={ cssModObj.aboTitHea }
+				>About</h3>{ /* What: About Title Heading Element. Why: The part needs a heading. How: This names it. */ }
+
+				<p className={ cssModObj.aboNotPar }>You can find out more information about myself by visiting the link below to my personal website, including links to some of my other projects. You will also find the link to this app's source code on GitHub. Its source is available under the PolyForm Noncommercial License 1.0.0, which allows anyone to freely fork and modify the project's source code for any noncommercial purpose (so no selling the software or making money off it in any way), as long as the license and its notice come along with it. Please be responsible with the source code, because I am just one person maintaining the project in their free time trying to make a living. This is not some big company with vast resources trying to extract every dollar that they can.</p>{ /* What: About Note Paragraph Element. Why: The maker introduces themself and the app's license in their own words. How: This points to the links below it. */ }
+
+
+
+				<dl className={ cssModObj.aboInfDes }>{ /* What: About Information Description List Element. Why: The app's version and where to find its maker, its source code, and its support read as names and values. How: This pairs them. */ }
+
+
+					<dt className={ cssModObj.aboKeyTer }>Version</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the version. */ }
+
+					<dd className={ cssModObj.aboValDet }>{ __APP_VERSION__ }</dd>{ /* What: About Value Details Element. Why: Someone reporting a problem can say which release they have. How: This shows the version the build was made from. */ }
+
+					<dt className={ cssModObj.aboKeyTer }>Creator</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the maker's website. */ }
+
+
+					<dd className={ cssModObj.aboValDet }>{ /* What: About Value Details Element. Why: The note points to the maker's website. How: This links it, opening in a new tab. */ }
+
+
+						<a
+							className={ cssModObj.aboLinAnc }
+
+							href='https://techgeek.dev/'
+							rel='noopener noreferrer'
+							target='_blank'
+						>techgeek.dev</a>{ /* What: About Link Anchor Element. Why: The value is a place to go. How: This links it, opening in a new tab. */ }
+
+
+					</dd>
+
+
+					<dt className={ cssModObj.aboKeyTer }>Source code</dt>{ /* What: About Key Term Element. Why: The value needs its name. How: This names the source code. */ }
+
+
+					<dd className={ cssModObj.aboValDet }>{ /* What: About Value Details Element. Why: The note points to the app's source code. How: This links its repository, opening in a new tab. */ }
+
+
+						<a
+							className={ cssModObj.aboLinAnc }
+
+							href='https://github.com/z4nta0/come-hang'
+							rel='noopener noreferrer'
+							target='_blank'
+						>github.com/z4nta0/come-hang</a>{ /* What: About Link Anchor Element. Why: The value is a place to go. How: This links it, opening in a new tab. */ }
+
+
+					</dd>
+
+
+				</dl>
+
+
+
+				<p className={ cssModObj.aboNotPar }>Enjoying Come Hang? You can support it with a tip on Ko-fi. It's never required, and always appreciated.</p>{ /* What: About Note Paragraph Element. Why: The app is free, and a tip helps keep it going. How: This invites one, saying it's never required. */ }
+
+				<div className={ cssModObj.endActDiv }>{ /* What: End Actions Div Element. Why: The tip's link sits below its note, like the other parts' buttons. How: This holds it in a row that wraps. */ }
+
+
+					<a
+						className={ cssModObj.aboTipAnc }
+
+						href='https://ko-fi.com/techgeekdev'
+						rel='noopener noreferrer'
+						target='_blank'
+					>Buy me a coffee</a>{ /* What: About Tip Anchor Element. Why: A tip is given on Ko-fi, outside the app. How: This opens the maker's Ko-fi page in a new tab, drawn as an outlined pill. */ }
+
+
+				</div>
+
+
+
+				<SupForCom />{ /* What: Support Form Component. Why: Someone can write to the maker without leaving the app. How: This draws the note, the button, and the form it opens, below the tip. */ }
 
 
 			</section>

@@ -286,7 +286,7 @@ const gooRecFun = async () : Promise< IdeRecTyp > => { // What: Google Recover F
 	const groCouNum = Object.keys( accDatObj?.memberGroups ?? {} ).length + Object.keys( accDatObj?.ownedGroups ?? {} ).length; // What: Group Count Number. Why: Signing in would leave this identity's groups behind. How: This counts both maps.
 
 
-	if ( groCouNum > 0 ) throw new Error( "This phone already belongs to a group, so it can't take another identity." ); // What: Groups Here Guard. Why: An identity with groups would be stranded. How: This refuses before signing in.
+	if ( groCouNum > 0 ) throw new Error( "This device already belongs to a group, so it can't take another identity." ); // What: Groups Here Guard. Why: An identity with groups would be stranded. How: This refuses before signing in.
 
 
 

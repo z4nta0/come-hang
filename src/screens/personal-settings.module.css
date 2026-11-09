@@ -5,10 +5,12 @@
  * personal-settings.module.css = Personal Settings Module
  *
  * @summary
- * Styles for PerSetCom: this phone's part with its appearance choices, note,
- * and buttons, the account's part with its notes and buttons, and each
- * part's row of buttons. The parts sit in whichever Settings column holds
- * them, which spaces them and holds their status and alert.
+ * Styles for PerSetCom: this device's part with its appearance choices, note,
+ * and buttons, the account's part with its notes and buttons, the About part
+ * with its note, linked details, and tip, and each part's row of buttons. Each
+ * part sits below a line, so the parts read apart. The parts sit in whichever
+ * Settings column holds them, which spaces them and holds their status and
+ * alert.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -18,11 +20,13 @@
 
 /* #region devSetSec */
 
-.devSetSec { /* What: Device Settings Section. Why: The heading, the appearance choice, the note, and the button read as one part. How: This stacks them a tier 3 space apart, in order, since the button's row shares its class with the other parts. */
+.devSetSec { /* What: Device Settings Section. Why: The heading, the appearance choice, the note, and the button read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order, since the button's row shares its class with the other parts. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -193,11 +197,13 @@
 
 /* #region accSetSec */
 
-.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
+.accSetSec { /* What: Account Settings Section. Why: The heading, notes, and buttons read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order since the buttons show only when they apply. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -237,5 +243,168 @@
 /* #endregion endActDiv */
 
 /* #endregion accSetSec */
+
+
+
+/* #region aboSetSec */
+
+.aboSetSec { /* What: About Settings Section. Why: The heading, note, details, and tip read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart. */
+
+
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.aboTitHea { /* What: About Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.aboNotPar { /* What: About Note Paragraph. Why: The notes are quieter than the heading. How: This sets them in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region aboInfDes */
+
+.aboInfDes { /* What: About Information Description List. Why: Each value reads beside its name, and a long address shouldn't run off the screen. How: This lays the pairs out in two columns a tier 4 space apart, the values' column allowed to shrink. */
+
+
+	column-gap            : var( --tie-hor-004 );                  /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-template-columns : auto minmax( 0, 1fr );
+	row-gap               : var( --tie-ver-004 );                  /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.aboKeyTer { /* What: About Key Term. Why: A value's name reads lighter than the value. How: This sets it in the muted text color. */
+
+
+	color : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+
+
+}
+
+
+
+/* #region aboValDet */
+
+.aboValDet { /* What: About Value Details. Why: The value is what someone came to read, and a long address shouldn't run off the screen. How: This sets it bold, breaking a long word where it has to. */
+
+
+	font-weight   : 700;
+	overflow-wrap : anywhere;
+
+
+}
+
+.aboLinAnc { /* What: About Link Anchor. Why: A value that goes somewhere reads as a link and presses like one. How: This sets it in the main accent, underlined, and eases its hover color, press dim, and focus ring. */
+
+
+	color           : var( --acc-mai-col ); /* Accent Main Color = #4A4FC9 */
+	text-decoration : underline;
+	transition      : color var( --dur-tra-p02 ) var( --mot-sta-eas ), opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.aboLinAnc:hover { /* What: Hovered About Link Anchor. Why: A text link shows it's live by color alone. How: This darkens it a step. */
+
+
+	color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
+
+
+}
+.aboLinAnc:active { /* What: Pressed About Link Anchor. Why: A text link presses by dimming. How: This dims it. */
+
+
+	opacity : var( --cdn-pow-001-rec ); /* Core-Design-Number to the Power of 1 Reciprocal ~= 0.755 */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion About Link Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.aboLinAnc { /* What: Motionless About Link Anchor. Why: The hover, press, and focus looks should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion aboValDet */
+
+/* #endregion aboInfDes */
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The tip's link sits in the same wrapping row as the other parts' buttons. How: Its rule sits in the devSetSec region. */
+
+.aboTipAnc { /* What: About Tip Anchor. Why: The tip is a lighter action than the app's own, drawn like the other parts' outlined buttons though it's a link. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, its text centered, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	display          : inline-grid;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+
+
+}
+.aboTipAnc:hover { /* What: Hovered About Tip Anchor. Why: A link in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.aboTipAnc:active { /* What: Pressed About Tip Anchor. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion About Tip Anchor. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.aboTipAnc { /* What: Motionless About Tip Anchor. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion endActDiv */
+
+/* #endregion aboSetSec */
 
 

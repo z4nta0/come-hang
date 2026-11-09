@@ -57,15 +57,22 @@ parts, the form for starting a group, the group frame with its rail, its switche
 the group chat with its next event, pinned as a card that opens a sheet below
 1,100px and shown in a panel beside the chat from 1,100px, each with the live
 bring-list, the section tabs, the Events section with its form for planning,
-changing, and cancelling events, the People section with the invite link, the
+changing, and cancelling events, whose place field suggests the group's
+earlier places kept on the device, and which keeps ended events under
+"Recently ended" until they're deleted, each event's photos in its details,
+shared from its start, shown as a grid that opens a viewer to save or
+delete them, and announced in the chat once a burst of uploads ends, the
+People section with the invite link, the
 people waiting to join, whom any member approves, declines, or blocks, the
 members waiting on a new phone for the group's key, which any other member
 shares, and the members, and the Settings section. There the owner renames the
 group, sets its chat retention, offers the group to a member, who accepts or
 declines, and deletes it by name, a member leaves, and anyone picks light or
-dark and turns notifications on or off for their phone, links Google, and buys
-the upgrade. The landing page and the welcome get a linked member's groups
-back on a new phone.
+dark and turns notifications on or off for their device, links Google, buys
+the upgrade, and reads About, with the maker's note, the version, links to the
+maker's website and the source code, a tip on Ko-fi, and a support form
+posting to Netlify Forms. The landing page and the welcome get a linked
+member's groups back on a new device.
 The Map section, drawn without a street map, shares a member's location for an
 event from 3 hours before it starts, lists everyone sharing with their
 distance, direction, and freshness around a plot, and posts "I'm on my way"
@@ -88,8 +95,18 @@ the join form link both. Settings, with or without a group, deletes someone's
 data, handing each group they own to its earliest member. A sheet titled
 "While you were away" opens over any screen when notices are waiting, or
 arrive, such as a removal or an answered offer, and "Got it" or any other
-way of closing it dismisses them all. The app's one
-service worker opens it offline and shows pushes, a tap on one opening its
+way of closing it dismisses them all. Its "Waiting on you" part lists what
+a member can act on, such as a join request, a key or history request, or an
+offer of a group, each once per device, with a Review that opens the section
+at the item and flashes it, and a coral dot marks the tabs, the rail, the
+switcher, and the group sheet while anything waits. Adding to or claiming
+from a bring-list posts a quiet line to the chat, which opens the event at
+its list, and a card above the chat offers notifications on a device until it's answered.
+A member's one profile photo, set in Settings' "Your profile", shows in every
+group's avatars, each group keeping its own encrypted copy. Offline, a banner
+says so, chat messages wait on the device and send once back online, and
+other changes are paused with a note saying they have to wait.
+The app's one service worker opens it offline and shows pushes, a tap on one opening its
 group at the section its news is in. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per
 member. Next steps are in ARCHITECTURE.md's Section 14.
@@ -183,6 +200,10 @@ emulators need Java, 21 installed.
   The social preview card is `public/og-image.png`, rendered from
   `design/og-image/card.html` by `npm run og-image`.
 - **Support email**: support@comehang.app.
+- **Device, not phone** (decided 2026-11-07): the app's copy, its documents,
+  and its pushes say device wherever they mean the device someone uses, since
+  phone reads wrongly, even like a bug, on a tablet or a computer. "Phone"
+  stays only where it means a phone-sized layout, or names the iPhone.
 - **Stack**: Vite, React, React Router, TypeScript (`strict` on from the
   first file), and `vite-plugin-pwa`, building the app's one service
   worker, `src/service-worker.ts`, which caches the app for offline use and

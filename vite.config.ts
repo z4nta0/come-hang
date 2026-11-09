@@ -33,20 +33,23 @@ import type { Plugin            } from 'vite';              // What: Plugin. Why
  *
  * @summary
  * The build and dev server config. It compiles React, reads CSS module class
- * names as camelCase keys, builds the static privacy and terms pages beside
- * the app with their documents rendered in, builds the app's one service
- * worker from src/service-worker.ts, writing the build's file list into it
- * and adding the script that registers it, and, for production builds only,
- * compacts the pages, which Vite processes but never minifies, so their
- * comments and indentation stay out of what visitors download. The web app
- * manifest stays hand-written, so the plugin writes none. Every other setting
- * stays at Vite's default, including copying the files in public/ into the
- * build, after which Netlify's _headers and _redirects are filled in for the
- * build's own Firebase project (deploy-files.ts).
+ * names as camelCase keys, writes package.json's version into the app as
+ * __APP_VERSION__, builds the static privacy and terms pages beside the app
+ * with their documents rendered in, builds the app's one service worker from
+ * src/service-worker.ts, writing the build's file list into it and adding the
+ * script that registers it, and, for production builds only, compacts the
+ * pages, which Vite processes but never minifies, so their comments and
+ * indentation stay out of what visitors download. The web app manifest stays
+ * hand-written, so the plugin writes none. The dev server's file watcher
+ * leaves out logs, the build, the compiled functions, and the test output.
+ * Every other setting stays at Vite's default, including copying the files in
+ * public/ into the build, after which Netlify's _headers and _redirects are
+ * filled in for the build's own Firebase project (deploy-files.ts).
  *
  * Sections:
  *  - Types
  *  - Constants
+ *  - Module State
  *  - Helpers
  *  - Exports
  *
@@ -70,6 +73,14 @@ const LEG_DOC_REG = /data-legal-document-body='(privacy|terms)'\s*>(?=<\/article
 const LEG_TEX_PAT = fileURLToPath( new URL( './src/legal/text.tsx', import.meta.url ) ); // What: Legal Text Path. Why: The documents live in one module that Settings shares. How: This is that module's absolute path, built from this config's own address.
 
 // #endregion Constants
+
+
+
+// #region Module State
+
+const APP_VER_STR : string = JSON.parse( readFileSync( new URL( './package.json', import.meta.url ), 'utf-8' ) ).version; // What: App Version String. Why: Settings' About part shows the release the app is, without a hardcoded copy to keep in step. How: This reads the version from package.json as the config loads.
+
+// #endregion Module State
 
 
 
@@ -263,6 +274,7 @@ const VIT_CON_OBJ = defineConfig({ // What: Vite Config Object. Why: Vite reads 
 
 	build   : { rolldownOptions : { input : [ 'index.html', 'privacy.html', 'terms.html' ] } }, // What: Build. Why: The legal pages are built as pages of their own, beside the app. How: This lists every HTML page the build starts from.
 	css     : { modules : { localsConvention : 'camelCaseOnly' } },                            // What: CSS. Why: CSS modules expose each class name as a camelCase key only, so a modifier class such as .butBasAnc--primary is read as cssModObj.butBasAncPrimary, per the CSS modules rules. How: This sets the locals convention.
+	define  : { __APP_VERSION__ : JSON.stringify( APP_VER_STR ) },                             // What: Define. Why: The app shows its own version. How: This replaces __APP_VERSION__ in the app's code with the version as a string.
 
 	plugins : [ // What: Plugins. Why: Vite builds the app through these plugins, in this order. How: This lists React, the legal pages step, the service worker, the page minifier, and the deploy files' writer.
 

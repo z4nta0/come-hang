@@ -137,10 +137,10 @@ test( "the owner saves the group's name and chat retention, a bad name refused b
 
 	await curPagObj.getByRole( 'button', { name : 'Save' } ).click(); // What: Save Click Call. Why: The settings are sent. How: This presses Save.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( "Saved the group's settings." ); // What: Saved Status Assertion. Why: The save is announced. How: This reads the status.
-	await expect( namInpObj ).toHaveValue( 'Beach Week' );                                                       // What: Tidied Name Assertion. Why: The box shows the name as it was saved. How: This reads its value.
-	await expect( namInpObj ).toHaveAttribute( 'aria-invalid', 'false' );                                         // What: Valid Assertion. Why: The fixed name has no problem. How: This reads its state.
-	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Week' } ) ).toBeVisible();          // What: Bar Name Assertion. Why: The group's new name shows at once. How: This reads the bar's heading.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Saved' } ) ).toHaveText( "Saved the group's settings." ); // What: Saved Status Assertion. Why: The save is announced. How: This reads the status.
+	await expect( namInpObj ).toHaveValue( 'Beach Week' );                                                                                           // What: Tidied Name Assertion. Why: The box shows the name as it was saved. How: This reads its value.
+	await expect( namInpObj ).toHaveAttribute( 'aria-invalid', 'false' );                                                                            // What: Valid Assertion. Why: The fixed name has no problem. How: This reads its state.
+	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Week' } ) ).toBeVisible();                                              // What: Bar Name Assertion. Why: The group's new name shows at once. How: This reads the bar's heading.
 
 	expect( await docReaFun( setEnvObj, `groups/${ groIdeStr }` ) ).toMatchObject( { chatTtlDays : 60, name : 'Beach Week' } ); // What: Saved Group Assertion. Why: The group holds its new settings. How: This expects both.
 
@@ -233,10 +233,10 @@ pagTesObj( 'a member sees the settings without the form and leaves after confirm
 	const staButObj = secPagObj.getByRole( 'button', { name : 'Stay' } );        // What: Stay Button Object. Why: The confirmation's safe answer takes focus. How: This finds it.
 
 
-	await expect( secPagObj.getByRole( 'button', { name : 'Save' } ) ).toHaveCount( 0 );                     // What: No Form Assertion. Why: Only the owner changes the settings. How: This expects no Save.
-	await expect( secPagObj.getByText( "Only the group's owner changes these." ) ).toBeVisible();          // What: Owner Note Assertion. Why: The member is told who changes them. How: This waits for the note.
-	await expect( secPagObj.getByRole( 'definition' ) ).toHaveText( [ 'Beach Day', '30 days' ] );           // What: Values Assertion. Why: The member still sees the settings. How: This reads both values.
-	await expect( secPagObj.getByRole( 'button', { name : 'Delete group' } ) ).toHaveCount( 0 );             // What: No Delete Assertion. Why: Only the owner deletes the group. How: This expects no button.
+	await expect( secPagObj.getByRole( 'button', { name : 'Save' } ) ).toHaveCount( 0 );                                                         // What: No Form Assertion. Why: Only the owner changes the settings. How: This expects no Save.
+	await expect( secPagObj.getByText( "Only the group's owner changes these." ) ).toBeVisible();                                                // What: Owner Note Assertion. Why: The member is told who changes them. How: This waits for the note.
+	await expect( secPagObj.getByRole( 'region', { name : 'This group' } ).getByRole( 'definition' ) ).toHaveText( [ 'Beach Day', '30 days' ] ); // What: Values Assertion. Why: The member still sees the settings. How: This reads both values.
+	await expect( secPagObj.getByRole( 'button', { name : 'Delete group' } ) ).toHaveCount( 0 );                                                 // What: No Delete Assertion. Why: Only the owner deletes the group. How: This expects no button.
 
 	await leaButObj.click(); // What: Leave Click Call. Why: The member starts to leave. How: This opens the confirmation.
 
@@ -304,14 +304,14 @@ pagTesObj( 'the owner offers the group and withdraws it, then the member decline
 
 	await offButObj.click(); // What: Offer Click Call. Why: The owner offers the group. How: This presses the button.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Offered Beach Day to Dana Lee.' ); // What: Offered Status Assertion. Why: The offer is announced. How: This reads the status.
-	await expect( curPagObj.getByText( 'Offered to Dana Lee.', { exact : false } ) ).toBeVisible();                    // What: Standing Assertion. Why: The owner sees whom it's to. How: This waits for the note.
-	await expect( witButObj ).toBeFocused();                                                                          // What: Withdraw Focus Assertion. Why: The offer's button went with its form. How: This expects the withdrawal focused.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Offered' } ) ).toHaveText( 'Offered Beach Day to Dana Lee.' ); // What: Offered Status Assertion. Why: The offer is announced. How: This reads the status.
+	await expect( curPagObj.getByText( 'Offered to Dana Lee.', { exact : false } ) ).toBeVisible();                                                       // What: Standing Assertion. Why: The owner sees whom it's to. How: This waits for the note.
+	await expect( witButObj ).toBeFocused(); // What: Withdraw Focus Assertion. Why: The offer's button went with its form. How: This expects the withdrawal focused.
 
 	await witButObj.click(); // What: Withdraw Click Call. Why: The owner calls the offer off. How: This presses the button.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Withdrew the offer.' ); // What: Withdrew Status Assertion. Why: The withdrawal is announced. How: This reads the status.
-	await expect( offButObj ).toBeFocused();                                                               // What: Offer Focus Assertion. Why: The withdrawal went with the offer. How: This expects the offer's button focused.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Withdrew' } ) ).toHaveText( 'Withdrew the offer.' ); // What: Withdrew Status Assertion. Why: The withdrawal is announced. How: This reads the status.
+	await expect( offButObj ).toBeFocused();                                                                                                    // What: Offer Focus Assertion. Why: The withdrawal went with the offer. How: This expects the offer's button focused.
 
 	await offButObj.click(); // What: Second Offer Click Call. Why: The member is offered the group to decline. How: This offers it again.
 
@@ -319,15 +319,17 @@ pagTesObj( 'the owner offers the group and withdraws it, then the member decline
 
 	await secPagObj.goto( '/' ); // What: Member Open Call. Why: The member answers from their own device. How: This opens the app on it.
 
+	await secPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByRole( 'button', { name : 'Got it' } ).click(); // What: Sheet Close Call. Why: The offer waits on the member, so the notices sheet opens over the frame. How: This waits for the sheet and closes it.
+
 	await secOpeFun( secPagObj ); // What: Member Section Call. Why: The offer shows in the Settings section. How: This opens it.
 
 	await expect( secPagObj.getByRole( 'heading', { level : 3, name : "You're offered this group" } ) ).toBeVisible(); // What: Offered Assertion. Why: The member sees the offer. How: This waits for its heading.
 
 	await secPagObj.getByRole( 'button', { name : 'Decline' } ).click(); // What: Decline Click Call. Why: The member turns the group down. How: This presses Decline.
 
-	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Declined the offer.' );              // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
-	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Leave the group' } ) ).toBeFocused();              // What: Next Heading Focus Assertion. Why: The offer's part went with it. How: This expects the next part's heading focused.
-	await expect( secPagObj.getByRole( 'heading', { level : 3, name : "You're offered this group" } ) ).toHaveCount( 0 ); // What: Offer Gone Assertion. Why: A declined offer stops showing. How: This expects no heading.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Declined' } ) ).toHaveText( 'Declined the offer.' ); // What: Declined Status Assertion. Why: The decline is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Leave the group' } ) ).toBeFocused();                                    // What: Next Heading Focus Assertion. Why: The offer's part went with it. How: This expects the next part's heading focused.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : "You're offered this group" } ) ).toHaveCount( 0 );                       // What: Offer Gone Assertion. Why: A declined offer stops showing. How: This expects no heading.
 
 
 	const ownDiaObj = curPagObj.getByRole( 'dialog', { name : 'While you were away' } ); // What: Owner Dialog Object. Why: The owner hears of each answer in the sheet of notices, live. How: This finds it by its title.
@@ -343,10 +345,10 @@ pagTesObj( 'the owner offers the group and withdraws it, then the member decline
 
 	await secPagObj.getByRole( 'button', { name : 'Accept' } ).click(); // What: Accept Click Call. Why: The member takes the group. How: This presses Accept.
 
-	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'You now own Beach Day.' );  // What: Accepted Status Assertion. Why: The acceptance is announced. How: This reads the status.
-	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Hand over the group' } ) ).toBeFocused(); // What: Heading Focus Assertion. Why: The answers went with the offer. How: This expects the part's heading focused.
-	await expect( curPagObj.getByRole( 'button', { name : 'Leave group' } ) ).toBeVisible();                     // What: Old Owner Assertion. Why: The old owner stays in the group as a member who can leave. How: This waits for their leave.
-	await expect( ownDiaObj ).toContainText( 'Dana Lee accepted your offer and now owns Beach Day.' );           // What: Accepted Notice Assertion. Why: The old owner learns of the handover while the app is open. How: This reads the sheet that opens over Settings.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'You now own' } ) ).toHaveText( 'You now own Beach Day.' ); // What: Accepted Status Assertion. Why: The acceptance is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'heading', { level : 3, name : 'Hand over the group' } ) ).toBeFocused();                                      // What: Heading Focus Assertion. Why: The answers went with the offer. How: This expects the part's heading focused.
+	await expect( curPagObj.getByRole( 'button', { name : 'Leave group' } ) ).toBeVisible();                                                          // What: Old Owner Assertion. Why: The old owner stays in the group as a member who can leave. How: This waits for their leave.
+	await expect( ownDiaObj ).toContainText( 'Dana Lee accepted your offer and now owns Beach Day.' );                                                // What: Accepted Notice Assertion. Why: The old owner learns of the handover while the app is open. How: This reads the sheet that opens over Settings.
 
 	expect( ( await docReaFun( setEnvObj, `groups/${ groIdeStr }` ) )?.ownerUid ).toBe( uidMemStr ); // What: New Owner Assertion. Why: The handover reached the server. How: This reads the group's owner.
 
@@ -420,7 +422,7 @@ test( "this phone's appearance applies at once and stays, and one button turns n
 	await expect( curPagObj.getByRole( 'radio', { name : 'Dark' } ) ).toBeChecked();  // What: Dark Kept Assertion. Why: The kept choice shows as chosen. How: This expects Dark checked.
 	await expect( htmEleObj ).toHaveAttribute( 'data-color-mode-choice', 'dark' ); // What: Dark Kept Root Assertion. Why: The kept choice applies as the app starts. How: This reads the root's attribute.
 
-	await curPagObj.getByRole( 'radio', { name : 'Match this phone' } ).check(); // What: System Check Call. Why: The member goes back to the phone's setting. How: This picks it.
+	await curPagObj.getByRole( 'radio', { name : 'Match this device' } ).check(); // What: System Check Call. Why: The member goes back to the phone's setting. How: This picks it.
 
 	await expect( htmEleObj ).not.toHaveAttribute( 'data-color-mode-choice' ); // What: System Applied Assertion. Why: The page follows the phone again. How: This expects no attribute.
 
@@ -433,14 +435,14 @@ test( "this phone's appearance applies at once and stays, and one button turns n
 
 	await notButObj.click(); // What: On Click Call. Why: The member turns notifications on. How: This presses the button again.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are on for this phone.' ); // What: On Status Assertion. Why: The change is announced. How: This reads the status.
-	await expect( notButObj ).toHaveText( 'Turn off notifications' );                                                     // What: On Button Assertion. Why: The button says what it will do next. How: This reads it.
-	await expect( notButObj ).toBeFocused();                                                                             // What: Kept Focus Assertion. Why: The button stays as its label changes. How: This expects it focused.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'are on' } ) ).toHaveText( 'Notifications are on for this device.' ); // What: On Status Assertion. Why: The change is announced. How: This reads the status.
+	await expect( notButObj ).toHaveText( 'Turn off notifications' );                                                                                           // What: On Button Assertion. Why: The button says what it will do next. How: This reads it.
+	await expect( notButObj ).toBeFocused(); // What: Kept Focus Assertion. Why: The button stays as its label changes. How: This expects it focused.
 
 	await notButObj.click(); // What: Off Click Call. Why: The member turns notifications off. How: This presses the button.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Notifications are off for this phone.' ); // What: Off Status Assertion. Why: The change is announced. How: This reads the status.
-	await expect( notButObj ).toHaveText( 'Turn on notifications' );                                                       // What: Off Button Assertion. Why: The button says what it will do next. How: This reads it.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'are off' } ) ).toHaveText( 'Notifications are off for this device.' ); // What: Off Status Assertion. Why: The change is announced. How: This reads the status.
+	await expect( notButObj ).toHaveText( 'Turn on notifications' );                                                                                              // What: Off Button Assertion. Why: The button says what it will do next. How: This reads it.
 
 
 } );
@@ -458,7 +460,7 @@ test( 'the account links Google through its popup, focus landing on its heading,
 
 	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The account is in the Settings section. How: This opens it.
 
-	await expect( curPagObj.getByText( 'Link a Google account so you can get your groups back on a new phone.', { exact : false } ) ).toBeVisible(); // What: Unlinked Note Assertion. Why: The member learns what linking is for. How: This waits for the note.
+	await expect( curPagObj.getByText( 'Link a Google account so you can get your groups back on a new device.', { exact : false } ) ).toBeVisible(); // What: Unlinked Note Assertion. Why: The member learns what linking is for. How: This waits for the note.
 	await expect( curPagObj.getByText( 'Buying it needs a linked Google account', { exact : false } ) ).toBeVisible();                             // What: Upgrade Needs Assertion. Why: The upgrade needs Google linked first. How: This waits for the note.
 	await expect( curPagObj.getByRole( 'button', { name : 'Buy the upgrade' } ) ).toHaveCount( 0 );                                                 // What: No Buy Assertion. Why: An unlinked account can't buy. How: This expects no button.
 
@@ -472,9 +474,9 @@ test( 'the account links Google through its popup, focus landing on its heading,
 
 	await curPagObj.bringToFront(); // What: Front Call. Why: A browser hands focus back to the app's window once the sign-in closes, which headless Firefox sometimes skips under load, holding the page's focus until it does (measured 2026-11-01). How: This brings the app's page to the front, as closing the popup would.
 
-	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Linked your Google account.' ); // What: Linked Status Assertion. Why: The link is announced. How: This reads the status.
-	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Your account' } ) ).toBeFocused();           // What: Heading Focus Assertion. Why: The button went with the link. How: This expects the part's heading focused.
-	await expect( curPagObj.getByText( 'Your account is linked to Google.', { exact : false } ) ).toBeVisible();      // What: Linked Note Assertion. Why: The member learns how to use the link. How: This waits for the note.
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Linked' } ) ).toHaveText( 'Linked your Google account.' ); // What: Linked Status Assertion. Why: The link is announced. How: This reads the status.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Your account' } ) ).toBeFocused();                                             // What: Heading Focus Assertion. Why: The button went with the link. How: This expects the part's heading focused.
+	await expect( curPagObj.getByText( 'Your account is linked to Google.', { exact : false } ) ).toBeVisible();                                      // What: Linked Note Assertion. Why: The member learns how to use the link. How: This waits for the note.
 
 	await curPagObj.getByRole( 'button', { name : 'Buy the upgrade' } ).click(); // What: Buy Click Call. Why: A linked account can buy. How: This presses the button.
 

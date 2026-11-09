@@ -15,8 +15,9 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules r
  * @summary
  * Decides who may read and write the app's Cloud Storage files. Storage
  * refuses any request no rule allows, and the only files the app keeps are
- * chat history transfers, so these rules open nothing else, and the tests in
- * tests/rules prove them in the local emulator.
+ * chat history transfers, profile photos, and event photos, so these rules
+ * open nothing else, and the tests in tests/rules prove them in the local
+ * emulator.
  *
  * A history transfer is the encrypted bundle a member uploads for a history
  * request (ARCHITECTURE.md Section 11.9), stored under the group's ID and the
@@ -27,6 +28,19 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules r
  * custom metadata. Only the asker downloads it, while still a member, and
  * the asker or the claimant deletes it. A bundle nobody collects is deleted
  * by the bucket's own lifecycle setting 15 days after upload.
+ *
+ * A profile photo is stored under its group and its member's UID
+ * (ARCHITECTURE.md Section 21), one opaque file of at most 64 KB with no
+ * custom metadata, which only that member writes, while still in the group,
+ * and deletes. Members download it, and Cloud Functions delete it once the
+ * membership ends.
+ *
+ * An event photo's full image is stored under its group, event, and photo
+ * IDs (ARCHITECTURE.md Section 20), uploaded once by the member who added
+ * its photo document, while still in the group, as one opaque file of at
+ * most 1 MB with no custom metadata. Members download it, and Cloud
+ * Functions delete it with its document, the lifecycle setting the
+ * backstop.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -87,6 +101,20 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 		}
 
 		// #endregion memPatFun
+
+
+
+		// #region phoPatFun
+
+		function phoPatFun ( groIdeStr, eveIdeStr, phoIdeStr ) { // What: Photo Path Function. Why: A full photo's rules look up the photo document it belongs to. How: This returns that document's path.
+
+
+			return /databases/(default)/documents/groups/$(groIdeStr)/events/$(eveIdeStr)/photos/$(phoIdeStr); // What: Photo Path Return. Why: A Firestore lookup needs the full path. How: This builds it from the group, event, and photo IDs.
+
+
+		}
+
+		// #endregion phoPatFun
 
 		// #endregion Document Paths
 
@@ -187,12 +215,95 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 
 
 
+		// #region Avatar Rules
+
+		// #region uplAvaFun
+
+		function uplAvaFun ( groIdeStr, uidValStr ) { // What: Upload Avatar Function. Why: A profile photo is one small opaque, encrypted file, which only its member writes, and only while in the group (ARCHITECTURE.md Section 21). How: This is true for a valid file from that member while they're a member.
+
+
+			let avaFilObj = request.resource; // What: Avatar File Object. Why: The file checks read the incoming file. How: This names it once.
+
+			let conTypBoo = avaFilObj.contentType == 'application/octet-stream';          // What: Content Type Boolean. Why: A profile photo is encrypted bytes, never an image a browser would render. How: This requires the generic binary type.
+			let isaMemBoo = firestore.exists( memPatFun( groIdeStr, uidValStr ) );         // What: Is-A Member Boolean. Why: Someone who has left keeps no photo in the group. How: This requires the member's document.
+			let isaOwnBoo = isaOwnFun( uidValStr );                                        // What: Is-An Owner Boolean. Why: Only the member sets their own photo. How: This requires the path's UID to be the requester's.
+			let metNulBoo = avaFilObj.metadata == null || avaFilObj.metadata.size() == 0; // What: Metadata Null Boolean. Why: Custom metadata is stored in plain text beside the encrypted photo. How: This refuses any.
+			let sizValBoo = avaFilObj.size > 16 && avaFilObj.size <= 64 * 1024;           // What: Size Valid Boolean. Why: A photo shrunk to 256px fits well within 64 KB once encrypted, and the cap stops the path holding anything larger. How: This bounds its size in bytes.
+
+			let uplAllBoo = conTypBoo && isaMemBoo && isaOwnBoo && metNulBoo && sizValBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return uplAllBoo; // What: Upload Allowed Return. Why: The upload rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion uplAvaFun
+
+		// #endregion Avatar Rules
+
+
+
+		// #region Photo Rules
+
+		// #region uplPhoFun
+
+		function uplPhoFun ( groIdeStr, eveIdeStr, phoIdeStr ) { // What: Upload Photo Function. Why: A full photo is one opaque, encrypted file of bounded size, uploaded by the member who added its photo document (ARCHITECTURE.md Section 20). How: This is true for a valid file from that member while they're in the group.
+
+
+			let phoFilObj = request.resource; // What: Photo File Object. Why: The file checks read the incoming file. How: This names it once.
+
+			let conTypBoo = phoFilObj.contentType == 'application/octet-stream';                                                // What: Content Type Boolean. Why: A full photo is encrypted bytes, never an image a browser would render. How: This requires the generic binary type.
+			let isaMemBoo = firestore.exists( memPatFun( groIdeStr, request.auth.uid ) );                                       // What: Is-A Member Boolean. Why: Someone who has left adds nothing more. How: This requires the uploader's member document.
+			let isaUplBoo = firestore.get( phoPatFun( groIdeStr, eveIdeStr, phoIdeStr ) ).data.uploaderUid == request.auth.uid; // What: Is-An Uploader Boolean. Why: A full photo belongs to the photo document its uploader added first. How: This requires that document to name the requester, and a missing document refuses the upload.
+			let metNulBoo = phoFilObj.metadata == null || phoFilObj.metadata.size() == 0;                                       // What: Metadata Null Boolean. Why: Custom metadata is stored in plain text beside the encrypted photo. How: This refuses any.
+			let sizValBoo = phoFilObj.size > 16 && phoFilObj.size <= 1024 * 1024;                                               // What: Size Valid Boolean. Why: A photo shrunk to 1,600px fits well within 1 MB once encrypted, and the cap stops the path holding anything larger. How: This bounds its size in bytes.
+
+			let uplAllBoo = conTypBoo && isaMemBoo && isaUplBoo && metNulBoo && sizValBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return uplAllBoo; // What: Upload Allowed Return. Why: The upload rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion uplPhoFun
+
+		// #endregion Photo Rules
+
+
+
+		match /avatars/{groIdeStr}/{uidValStr} { // What: Avatar Match. Why: Each group keeps one profile photo for each member (Section 21). How: This matches one photo by the group ID and the member's UID.
+
+
+			allow get            : if firestore.exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Avatar Get Rule. Why: Members see each other's photos. How: This allows a member, while listing stays closed.
+			allow create, update : if uplAvaFun( groIdeStr, uidValStr );                           // What: Avatar Upload Rule. Why: A member sets or replaces their own photo. How: This allows it when uplAvaFun passes.
+			allow delete         : if isaOwnFun( uidValStr );                                      // What: Avatar Delete Rule. Why: A member removes their own photo, and Cloud Functions remove the rest. How: This allows the member.
+
+
+		}
+
+
+
 		match /groupHistoryTransfers/{groIdeStr}/{uidValStr} { // What: History Transfer Match. Why: Each history request's bundle sits under its group and asker (Section 11.9). How: This matches one transfer by the group ID and the asker's UID.
 
 
 			allow get            : if getTraFun( groIdeStr, uidValStr );                           // What: Transfer Get Rule. Why: The asker downloads their bundle. How: This allows it when getTraFun passes, while listing stays closed.
 			allow create, update : if uplTraFun( groIdeStr, uidValStr );                           // What: Transfer Upload Rule. Why: The claimant uploads the bundle, or replaces a failed attempt. How: This allows it when uplTraFun passes.
 			allow delete         : if isaOwnFun( uidValStr ) || claTraFun( groIdeStr, uidValStr ); // What: Transfer Delete Rule. Why: The asker deletes the bundle once it's merged, and the claimant may withdraw theirs. How: This allows the asker always and the claimant while the claim stands.
+
+
+		}
+
+
+
+		match /photos/{groIdeStr}/{eveIdeStr}/{phoIdeStr} { // What: Photo Match. Why: Each event photo's full image sits under its group, event, and photo IDs (Section 20). How: This matches one full photo.
+
+
+			allow get    : if firestore.exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Photo Get Rule. Why: Members open the event's full photos. How: This allows a member, while listing stays closed.
+			allow create : if uplPhoFun( groIdeStr, eveIdeStr, phoIdeStr );                // What: Photo Create Rule. Why: The uploader adds the full photo once, after its document. How: This allows it when uplPhoFun passes, while only Cloud Functions delete one.
 
 
 		}

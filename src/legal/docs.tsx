@@ -50,7 +50,7 @@ import type { SheHanTyp } from '../ui/sheet.tsx'; // What: Sheet Handle Type. Wh
  * LegDocCom = Legal Documents Component
  *
  * @summary
- * Renders the Settings part titled "Privacy and terms" as an h3, with a note
+ * Renders the Settings part titled "Legal notices" as an h3, with a note
  * and two buttons in a row that wraps. Each button picks its document and
  * opens the one sheet, titled with the document's name, which shows the
  * document's body in an article. Closing the sheet returns focus to the
@@ -174,7 +174,7 @@ function LegDocCom () : React.JSX.Element {
 				id='legSetHea'
 
 				className={ cssModObj.legTitHea }
-			>Privacy and terms</h3>{ /* What: Legal Title Heading Element. Why: The part needs a heading. How: This names it. */ }
+			>Legal notices</h3>{ /* What: Legal Title Heading Element. Why: The part needs a heading. How: This names it. */ }
 
 			<p className={ cssModObj.legNotPar }>How Come Hang handles your information, and the terms for using it.</p>{ /* What: Legal Note Paragraph Element. Why: A member should know what the two buttons open. How: This says it. */ }
 

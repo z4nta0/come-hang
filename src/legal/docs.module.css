@@ -6,9 +6,10 @@
  *
  * @summary
  * Styles for LegDocCom: the part's heading, note, and row of outlined
- * buttons, matching the other parts of Settings, and the document in its
- * sheet, its prose styled through tag selectors on the article, since the
- * text module renders plain headings, paragraphs, and lists.
+ * buttons below a line, matching the other parts of Settings, and the
+ * document in its sheet, its prose styled through tag selectors on the
+ * article, since the text module renders plain headings, paragraphs, and
+ * lists.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -18,12 +19,14 @@
 
 /* #region legSetSec */
 
-.legSetSec { /* What: Legal Settings Section. Why: The heading, note, and buttons read as one part. How: This stacks them in named areas a tier 3 space apart, its sheet's dialog left unplaced, since it shows in the top layer rather than in the part. */
+.legSetSec { /* What: Legal Settings Section. Why: The heading, note, and buttons read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them in named areas a tier 3 space apart, its sheet's dialog left unplaced, since it shows in the top layer rather than in the part. */
 
 
+	border-top          : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
 	display             : grid;
 	grid-template-areas : 'legTitHea' 'legNotPar' 'legActDiv';
-	row-gap             : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	padding-top         : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap             : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }

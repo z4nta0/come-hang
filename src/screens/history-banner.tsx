@@ -12,6 +12,7 @@ import { hisGetFun } from '../state/history.ts';        // What: History Get Fun
 import { hisProFun } from '../state/history.ts';        // What: History Prompt Function. Why: The banner offers history only when this phone is missing it. How: This decides what to offer.
 import { hisWatFun } from '../state/history.ts';        // What: History Watch Function. Why: The member's own request is followed as it's claimed. How: This watches the requests.
 import { hisWitFun } from '../state/history.ts';        // What: History Withdraw Function. Why: The member may stop asking. How: This withdraws the request.
+import { offGuaFun } from '../ui/online.ts';            // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { proKeyFun } from '../platform/dev-profile.ts'; // What: Profile Key Function. Why: Each development member keeps their own dismissal. How: This names the storage key.
 import { useEffect } from 'react';                      // What: Use Effect. Why: The offer, the request, and its collection run while the chat is open. How: This runs each.
 import { useRef    } from 'react';                      // What: Use Reference. Why: The banner takes focus as a pressed button goes. How: This holds it.
@@ -268,6 +269,10 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 
 
 
+		if ( offGuaFun( setStaMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		const dayNum = RAN_CHO_ARR.find( ( ranRecObj ) => ranRecObj.ranStr === ranChoStr )?.dayNum ?? null;                // What: Day Number. Why: The choice sets how far back to ask. How: This reads its days, null for everything.
 		const ranTimNum = dayNum === null ? hisProObj.creTimNum : hisProObj.joiTimNum - dayNum * DAY_MIL_NUM;              // What: Range Time Number. Why: A backlog starts at the chosen point. How: This counts back from the join, or starts at the group's start.
 
@@ -338,6 +343,10 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 
 
 		if ( actReqBoo ) return; // What: Busy Guard. Why: One action at a time. How: This ignores the press.
+
+
+
+		if ( offGuaFun( setStaMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 
@@ -422,7 +431,7 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 				>{ /* What: History Banner Section Element. Why: The request reads as one part above the chat. How: This holds its line and its button. */ }
 
 
-					<p className={ cssModObj.hisTexPar }>{ ownRecObj.staValStr === 'claimed' ? "A member is sending your chat history. It's added here as soon as it arrives." : 'You asked the group for chat history. A member whose phone holds it can send a copy.' }</p>{ /* What: History Text Paragraph Element. Why: The member should know where the request stands. How: This says whether it waits or is being sent. */ }
+					<p className={ cssModObj.hisTexPar }>{ ownRecObj.staValStr === 'claimed' ? "A member is sending your chat history. It's added here as soon as it arrives." : 'You asked the group for chat history. A member whose device holds it can send a copy.' }</p>{ /* What: History Text Paragraph Element. Why: The member should know where the request stands. How: This says whether it waits or is being sent. */ }
 
 					<button
 						className={ cssModObj.hisSecBut }
@@ -454,7 +463,7 @@ function HisBanCom ( { className, groIdeStr, onHisFun, uidValStr } : HbcProTyp )
 				>{ /* What: History Banner Section Element. Why: The offer reads as one part above the chat. How: This holds its line, its choices, and its buttons. */ }
 
 
-					<p className={ cssModObj.hisTexPar }>{ hisProObj.kinValStr === 'backlog' ? 'Want to see the chat from before you joined? Ask the group to send it.' : "This phone has none of this group's chat. Ask the group to send the chat since you joined?" }</p>{ /* What: History Text Paragraph Element. Why: The member should know what they'd be asking for. How: This words the offer for its kind. */ }
+					<p className={ cssModObj.hisTexPar }>{ hisProObj.kinValStr === 'backlog' ? 'Want to see the chat from before you joined? Ask the group to send it.' : "This device has none of this group's chat. Ask the group to send the chat since you joined?" }</p>{ /* What: History Text Paragraph Element. Why: The member should know what they'd be asking for. How: This words the offer for its kind. */ }
 
 
 

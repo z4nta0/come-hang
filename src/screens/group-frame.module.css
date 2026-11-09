@@ -26,7 +26,7 @@
 	display             : grid;
 	grid-template-areas : 'fraBarHed' 'fraConMai' 'fraSecNav';
 	grid-template-rows  : auto minmax( 0, 1fr ) auto;
-	height              : 100dvh;
+	height              : calc( 100dvh - var( --off-ban-hei, 0px ) ); /* What: Banner Room Note. Why: The offline banner sits above the frame, which would otherwise run off the bottom of the screen. How: This takes the banner's height, which the banner sets on the body, from the screen's height, nothing while there's no banner. */
 
 
 }

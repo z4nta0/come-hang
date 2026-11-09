@@ -6,29 +6,31 @@
 import cssModObj from './group-map.module.css'; // What: CSS Module Object. Why: The section is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ageTexFun            } from '../utils/date.ts';       // What: Age Text Function. Why: Each shared location says how old it is. How: This labels the age.
-import { beaDegFun            } from '../core/geo.ts';         // What: Bearing Degrees Function. Why: The plot and each row place a member in their direction from the viewer. How: This computes the bearing.
-import { dayTimFun            } from '../utils/date.ts';       // What: Day Time Function. Why: The section says when sharing opens. How: This writes the weekday and time.
-import { dirTexFun            } from '../core/geo.ts';         // What: Direction Text Function. Why: Each row says which way a member is. How: This names the compass direction.
-import { disMetFun            } from '../core/geo.ts';         // What: Distance Meters Function. Why: The plot and each row place a member by how far away they are. How: This measures the distance.
-import { disTexFun            } from '../core/geo.ts';         // What: Distance Text Function. Why: Each row and the plot's ring say a distance. How: This labels it.
-import { eveLisFun            } from '../state/events.ts';     // What: Event List Function. Why: Sharing belongs to the event whose window is open. How: This lists the events, soonest first.
-import { eveRanFun            } from '../utils/date.ts';       // What: Event Range Function. Why: The event's part says the hours it runs. How: This formats its range.
-import { ideEnsFun            } from '../state/identity.ts';   // What: Identity Ensure Function. Why: The member's own share is the plot's center. How: This reads their UID.
-import { iniTexFun            } from '../utils/text.ts';       // What: Initials Text Function. Why: Each avatar and dot shows its member's initials. How: This takes them from the name.
-import { KEY_WAI_STR          } from '../state/groups.ts';     // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its locations. How: The section shows this message then.
-import { locWatFun            } from '../state/location.ts';   // What: Location Watch Function. Why: Members see each other move as updates arrive. How: This watches the shares.
-import { memLisFun            } from '../state/members.ts';    // What: Member List Function. Why: Each share shows its member's name and color. How: This lists the members.
-import { shaGetFun            } from '../state/sharing.ts';    // What: Sharing Get Function. Why: The section shows where the member's sharing stands. How: This reads the record.
-import { shaPosFun            } from '../state/sharing.ts';    // What: Sharing Post Function. Why: The member says they're on their way or have arrived. How: This posts it and marks the record.
-import { shaStaFun            } from '../state/sharing.ts';    // What: Sharing Start Function. Why: The member opts in to sharing. How: This starts it.
-import { shaStoFun            } from '../state/sharing.ts';    // What: Sharing Stop Function. Why: The member can stop sharing. How: This stops it and deletes their share.
-import { shaSubFun            } from '../state/sharing.ts';    // What: Sharing Subscribe Function. Why: The section redraws when the record changes, even from elsewhere. How: This listens to it.
-import { sloColFun            } from '../ui/member-color.ts';  // What: Slot Color Function. Why: Each avatar and dot wears its member's color. How: This names it.
-import { useEffect            } from 'react';                  // What: Use Effect. Why: The section loads and watches while it's open, and focus moves once a post lands. How: This starts and stops the work.
-import { useRef               } from 'react';                  // What: Use Reference. Why: Focus moves to the note that replaces a pressed button, and newcomers are spotted among the shares. How: This holds the note and the known UIDs.
-import { useState             } from 'react';                  // What: Use State. Why: The events, shares, members, and messages change while the section is open. How: This holds each.
-import { useSyncExternalStore } from 'react';                  // What: Use Sync External Store. Why: The sharing record lives outside React and changes from elsewhere. How: This reads it and redraws on each change.
+import { ageTexFun            } from '../utils/date.ts';        // What: Age Text Function. Why: Each shared location says how old it is. How: This labels the age.
+import { AvaConCom            } from '../ui/member-avatar.tsx'; // What: Avatar Contents Component. Why: A member's avatar shows their profile photo, or their initials. How: This fills the circle.
+import { beaDegFun            } from '../core/geo.ts';          // What: Bearing Degrees Function. Why: The plot and each row place a member in their direction from the viewer. How: This computes the bearing.
+import { dayTimFun            } from '../utils/date.ts';        // What: Day Time Function. Why: The section says when sharing opens. How: This writes the weekday and time.
+import { dirTexFun            } from '../core/geo.ts';          // What: Direction Text Function. Why: Each row says which way a member is. How: This names the compass direction.
+import { disMetFun            } from '../core/geo.ts';          // What: Distance Meters Function. Why: The plot and each row place a member by how far away they are. How: This measures the distance.
+import { disTexFun            } from '../core/geo.ts';          // What: Distance Text Function. Why: Each row and the plot's ring say a distance. How: This labels it.
+import { eveLisFun            } from '../state/events.ts';      // What: Event List Function. Why: Sharing belongs to the event whose window is open. How: This lists the events, soonest first.
+import { eveRanFun            } from '../utils/date.ts';        // What: Event Range Function. Why: The event's part says the hours it runs. How: This formats its range.
+import { ideEnsFun            } from '../state/identity.ts';    // What: Identity Ensure Function. Why: The member's own share is the plot's center. How: This reads their UID.
+import { iniTexFun            } from '../utils/text.ts';        // What: Initials Text Function. Why: Each avatar and dot shows its member's initials. How: This takes them from the name.
+import { KEY_WAI_STR          } from '../state/groups.ts';      // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its locations. How: The section shows this message then.
+import { locWatFun            } from '../state/location.ts';    // What: Location Watch Function. Why: Members see each other move as updates arrive. How: This watches the shares.
+import { memLisFun            } from '../state/members.ts';     // What: Member List Function. Why: Each share shows its member's name and color. How: This lists the members.
+import { offGuaFun            } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
+import { shaGetFun            } from '../state/sharing.ts';     // What: Sharing Get Function. Why: The section shows where the member's sharing stands. How: This reads the record.
+import { shaPosFun            } from '../state/sharing.ts';     // What: Sharing Post Function. Why: The member says they're on their way or have arrived. How: This posts it and marks the record.
+import { shaStaFun            } from '../state/sharing.ts';     // What: Sharing Start Function. Why: The member opts in to sharing. How: This starts it.
+import { shaStoFun            } from '../state/sharing.ts';     // What: Sharing Stop Function. Why: The member can stop sharing. How: This stops it and deletes their share.
+import { shaSubFun            } from '../state/sharing.ts';     // What: Sharing Subscribe Function. Why: The section redraws when the record changes, even from elsewhere. How: This listens to it.
+import { sloColFun            } from '../ui/member-color.ts';   // What: Slot Color Function. Why: Each avatar and dot wears its member's color. How: This names it.
+import { useEffect            } from 'react';                   // What: Use Effect. Why: The section loads and watches while it's open, and focus moves once a post lands. How: This starts and stops the work.
+import { useRef               } from 'react';                   // What: Use Reference. Why: Focus moves to the note that replaces a pressed button, and newcomers are spotted among the shares. How: This holds the note and the known UIDs.
+import { useState             } from 'react';                   // What: Use State. Why: The events, shares, members, and messages change while the section is open. How: This holds each.
+import { useSyncExternalStore } from 'react';                   // What: Use Sync External Store. Why: The sharing record lives outside React and changes from elsewhere. How: This reads it and redraws on each change.
 
 
 import type { EveRecTyp } from '../state/events.ts';     // What: Event Record Type. Why: Sharing belongs to one of the group's events. How: This types each.
@@ -529,6 +531,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 
 
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		if ( !( 'geolocation' in navigator ) ) { setErrMesStr( LOC_UNS_STR ); return; } // What: Unsupported Guard. Why: A browser without location can't share. How: This says so and stops.
 
 
@@ -602,6 +608,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 
 		if ( !eveOpeObj || posKinStr !== '' ) return; // What: Busy Guard. Why: A post needs an open event, and one post at a time. How: This ignores the press.
+
+
+
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
 
 
 
@@ -843,7 +853,21 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 													style={{ backgroundColor : memRecObj ? sloColFun( memRecObj.colSloNum ) : undefined }} // What: Avatar Color Note. Why: Each member wears their own color, matching their dot, and someone who left keeps the plain look. How: This reads their slot's token.
 
 													aria-hidden='true'
-												>{ iniTexFun( ownRowBoo ? 'You' : namValStr ) }</span>{ /* What: People Avatar Span Element. Why: An avatar in the member's color ties the row to their dot. How: This shows their initials, hidden from screen readers, which read the name. */ }
+												>{ /* What: People Avatar Span Element. Why: An avatar in the member's color ties the row to their dot. How: This shows their photo or initials, hidden from screen readers, which read the name. */ }
+
+
+													<AvaConCom
+														className={ cssModObj.peoAvaIma }
+
+														avaIdeStr={ memRecObj?.avaIdeStr ?? '' }
+														avaIvaArr={ memRecObj?.avaIvaArr ?? null }
+														groIdeStr={ curGroObj.ideStr }
+														iniTexStr={ iniTexFun( ownRowBoo ? 'You' : namValStr ) }
+														uidValStr={ locRecObj.uidValStr }
+													/>{ /* What: Avatar Contents Component. Why: A member with a profile photo is shown by it, and anyone else by their initials (Section 21). How: This fills the circle with the photo once it loads, or the initials. */ }
+
+
+												</span>
 
 												<p className={ cssModObj.peoNamPar }>{ ownRowBoo ? 'You' : namValStr }{ locRecObj.arrBoo && <span className={ cssModObj.peoArrSpa }>Arrived</span> }</p>{ /* What: People Name Paragraph Element. Why: The row names its member, and says when they've arrived. How: This shows the name, with an Arrived badge once they have. */ }
 

@@ -146,7 +146,7 @@
 
 }
 
-.hisSecBut { /* What: History Secondary Button. Why: Withdrawing and dismissing are quieter than asking, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+.hisSecBut { /* What: History Secondary Button. Why: Withdrawing and dismissing are quieter than asking, still full touch targets. How: This draws an accent outlined pill with bold accent text at its own width, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
 
 
 	background-color : transparent;
@@ -155,6 +155,7 @@
 	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
 	font             : inherit;
 	font-weight      : 700;
+	justify-self     : start;                                           /* What: Own Width Note. Why: Withdraw sits straight in the card's grid, which would stretch it across the card. How: This keeps it at its own width, at the line's start. */
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
 	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
 	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */

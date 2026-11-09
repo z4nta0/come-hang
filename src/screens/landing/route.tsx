@@ -118,7 +118,7 @@ const STO_REC_ARR = [ // What: Stop Record Array. Why: Every stop is drawn the s
 	{ // What: Bring Stop Row. Why: The bring-list sorts who brings what. How: This describes the third stop.
 
 
-		altStr : "Lake day's bring-list, with burgers, buns, watermelon, and a speaker claimed, and sunscreen and ice still open.",
+		altStr : "Lake day's bring-list: burgers, buns, watermelon, and a speaker claimed, sunscreen and ice open.",
 		darUrl : briDarUrl,
 		ligUrl : briLigUrl,
 		texStr : 'List what you need and let people claim it, so nobody shows up with the fifth bag of chips.',

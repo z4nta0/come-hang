@@ -7,12 +7,12 @@
  * @summary
  * Styles for LanPagCom: a main area of full-width sections, each holding its
  * content to the page's width with the gutter at the sides at least, then a
- * footer. The hero sets its text beside three leaning phones from 720px
- * wide and above them below; the trust and free sections sit on raised
- * bands; the steps and plans line up in columns from 720px wide; each
+ * footer. The hero sets its text beside three leaning phones from 720px wide
+ * and above them below; the trust and free sections sit on raised bands; the
+ * steps, plans, and questions line up in columns from 720px wide; each
  * question's answer grows into place; and the closing band sits on the main
- * accent. Its buttons and links ease their hover, press, and focus looks.
- * The route is styled in its own module.
+ * accent. Its buttons and links ease their hover, press, and focus looks. The
+ * route is styled in its own module.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -200,7 +200,7 @@
 
 /* #region herActDiv */
 
-.herActDiv { /* What: Hero Actions Div. Why: Starting and joining sit together, each its own width, and wrap where the row runs out of room, which grid can't do without fixed tracks. How: This sets them in a wrapping flex row a tier 4 space apart, with the tier 2 space above it less the tier 3 gap, wrapping onto two lines at about 400px wide and below. */
+.herActDiv { /* What: Hero Actions Div. Why: Starting and joining sit together, each its own width, and wrap where the row runs out of room, at about 360px wide and below, each then filling its line, which grid can't do without fixed tracks. How: This sets them in a wrapping flex row a tier 4 space apart, with the tier 2 space above it less the tier 3 gap, wrapping onto two lines at about 400px wide and below. */
 
 
 	display    : flex;
@@ -212,13 +212,22 @@
 
 }
 
-.herJoiBut { /* What: Hero Join Button. Why: Joining with a link is a lighter action than starting a group, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+.herStaBut { /* What: Hero Start Button. Why: Once the buttons wrap onto lines of their own, they should be the same width. How: This lets it grow to fill its line, which leaves it its own width while the two share a row, since the row is only as wide as both. */
+
+
+	flex-grow : 1;
+
+
+}
+
+.herJoiBut { /* What: Hero Join Button. Why: Joining with a link is a lighter action than starting a group, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, growing to fill its line once the buttons wrap, and eases its hover background, press scale, and focus ring. */
 
 
 	background-color : transparent;
 	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
 	border-radius    : 999px;
 	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	flex-grow        : 1;
 	font             : inherit;
 	font-weight      : 700;
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
@@ -654,9 +663,10 @@
 
 /* #region staIteIte */
 
-.staIteIte { /* What: Starts Item Item. Why: A step's number sits beside its title and sentence. How: This sets the number in its own column beside the two, a tier 3 space across and a tier 5 space down, counting the step. */
+.staIteIte { /* What: Starts Item Item. Why: A step's number sits beside its title and sentence. How: This sets the number in its own column beside the two, a tier 3 space across and a tier 5 space down, packed at the top so a step stretched to its row's height keeps its sentence under its title, counting the step. */
 
 
+	align-content         : start;
 	align-items           : start;
 	counter-increment     : staIteCou;
 	display               : grid;
@@ -967,11 +977,11 @@
 
 /* #region faqSecSec */
 
-.faqSecSec { /* What: FAQ Section Section. Why: The questions read as their own block. How: This stacks the heading above the list in named areas, a tier 2 space apart, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
+.faqSecSec { /* What: FAQ Section Section. Why: The questions read as their own block. How: This stacks the heading above the questions in named areas, a tier 2 space apart, the frame tier around them, holding the content to the page's width with the gutter at the sides at least. */
 
 
 	display             : grid;
-	grid-template-areas : 'secTitHea' 'faqLisUno';
+	grid-template-areas : 'secTitHea' 'faqColDiv';
 	padding             : 0 max( var( --gut-sid-pad ), calc( ( 100% - var( --ver-rhy-p15 ) * 1rem ) / 2 ) ) var( --tie-ver-001 ); /* Gutter Side Padding, about 19.304px - 44.876px, Vertical Rhythm Base Plus 15 ~= 989.390px, Tier Vertical 1 ~= 44.876px */ /* What: Top Padding Note. Why: The install section above already ends with the frame tier. How: The top takes none. */
 	row-gap             : var( --tie-ver-002 );                                                                                   /* Tier Vertical 2 ~= 25.572px */
 
@@ -982,13 +992,40 @@
 
 
 
+/* #region faqColDiv */
+
+.faqColDiv { /* What: FAQ Columns Div. Why: Below 720px the two halves of the questions read as one list. How: This stacks them with no space between, packed at the top, in its own area. */
+
+
+	align-items : start;
+	display     : grid;
+	grid-area   : faqColDiv;
+
+
+}
+@container app ( min-width : 720px ) { /* What: Wide FAQ Columns Div. Why: A wide screen has room for two columns of questions. How: This applies from 720px wide and up. */
+
+
+	.faqColDiv { /* What: Two Column FAQ Columns Div. Why: The questions fill the page's width, and each half takes its own column, so opening an answer lengthens only that column. How: This sets two equal columns a tier 2 space apart. */
+
+
+		column-gap            : var( --tie-hor-002 ); /* Tier Horizontal 2, about 25.572px - 33.876px */
+		grid-template-columns : 1fr 1fr;
+
+
+	}
+
+
+}
+
+
+
 /* #region faqLisUno */
 
-.faqLisUno { /* What: FAQ List Unordered. Why: The questions read as one list without the browser's bullets or indent. How: This stacks them by auto placement, since their number can change, capped at the base text width, in its own area. */
+.faqLisUno { /* What: FAQ List Unordered. Why: A column's questions read as one list without the browser's bullets or indent. How: This stacks them by auto placement, since their number can change, capped at the base text width. */
 
 
 	display    : grid;
-	grid-area  : faqLisUno;
 	list-style : none;
 	margin     : 0;
 	max-width  : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
@@ -1148,6 +1185,8 @@
 /* #endregion faqIteIte */
 
 /* #endregion faqLisUno */
+
+/* #endregion faqColDiv */
 
 /* #endregion faqSecSec */
 

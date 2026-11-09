@@ -1,7 +1,7 @@
 # Come Hang
 
 Plan get-togethers with your group in one place: chat, set the date, see who's
-bringing what, and find each other on the day. Coming soon at
+bringing what, and find each other on the day of the event. Coming soon at
 [comehang.app](https://comehang.app/).
 
 Come Hang is a progressive web app for a group of friends, family, or

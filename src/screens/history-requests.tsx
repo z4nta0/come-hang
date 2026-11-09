@@ -11,6 +11,7 @@ import { hisCovFun } from '../state/history.ts'; // What: History Coverage Funct
 import { hisRelFun } from '../state/history.ts'; // What: History Release Function. Why: A claim stalled for 30 minutes can be freed for someone else. How: This releases it.
 import { hisSenFun } from '../state/history.ts'; // What: History Send Function. Why: The helper sends the range. How: This uploads it encrypted.
 import { hisWatFun } from '../state/history.ts'; // What: History Watch Function. Why: The list follows each request as it's asked, claimed, and answered. How: This watches them.
+import { offGuaFun } from '../ui/online.ts';     // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { useEffect } from 'react';               // What: Use Effect. Why: The requests are watched, and the device's coverage checked, while the list shows. How: This runs both.
 import { useRef    } from 'react';               // What: Use Reference. Why: The heading takes focus when a pressed button goes. How: This holds it.
 import { useState  } from 'react';               // What: Use State. Why: The requests, the coverage, the send in progress, and the clock change what shows. How: This holds each.
@@ -186,6 +187,10 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 
 
 
+		if ( offGuaFun( onAnnFun ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		setSenUidStr( uidReqStr ); // What: Busy Set Call. Why: The row says it's sending. How: This marks the send as running.
 
 		heaEleRef.current?.focus(); // What: Focus Call. Why: The pressed button goes as the row changes. How: This focuses the heading.
@@ -269,7 +274,7 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 				tabIndex={ -1 } // What: Heading Tab Index. Why: Focus moves here as a pressed button goes, but the heading isn't a control. How: This lets it take focus from a script without joining the Tab order.
 			>Asking for chat history</h3>{ /* What: History Title Heading Element. Why: The part needs a heading. How: This names it. */ }
 
-			<p className={ cssModObj.hisIntPar }>These members are missing chat on their phone. A member whose phone holds it can send a copy, encrypted so only the group can read it.</p>{ /* What: History Intro Paragraph Element. Why: A member should know what's asked and that sending is safe (Section 11.9). How: This says both. */ }
+			<p className={ cssModObj.hisIntPar }>These members are missing chat on their device. A member whose device holds it can send a copy, encrypted so only the group can read it.</p>{ /* What: History Intro Paragraph Element. Why: A member should know what's asked and that sending is safe (Section 11.9). How: This says both. */ }
 
 
 
@@ -292,12 +297,16 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 							key={ hisRecObj.uidReqStr }
 
 							className={ cssModObj.hisRowIte }
+
+							data-waiting-item-key={ `history:${ hisRecObj.uidReqStr }` } // What: Waiting Item Key. Why: The notices sheet can jump to this request. How: This names it by kind and asker.
+
+							tabIndex={ -1 } // What: Row Tab Index. Why: A jump focuses the row so it's announced, but the row isn't a control. How: This lets a script focus it without joining the Tab order.
 						>{ /* What: History Row Item Element. Why: A request shows who is asking, what for, and what can be done. How: This stacks them down the row. */ }
 
 
 							<span className={ cssModObj.hisNamSpa }>{ askNamStr }</span>{ /* What: History Name Span Element. Why: The asker is known by their name. How: This shows it. */ }
 
-							<span className={ cssModObj.hisKinSpa }>{ hisRecObj.kinValStr === 'recovery' ? 'Asked for the chat since they joined, on a new phone.' : 'Asked for the chat from before they joined.' }</span>{ /* What: History Kind Span Element. Why: The two kinds ask for different chat. How: This says which. */ }
+							<span className={ cssModObj.hisKinSpa }>{ hisRecObj.kinValStr === 'recovery' ? 'Asked for the chat since they joined, on a new device.' : 'Asked for the chat from before they joined.' }</span>{ /* What: History Kind Span Element. Why: The two kinds ask for different chat. How: This says which. */ }
 
 
 
@@ -352,7 +361,7 @@ function HisReqCom ( { groIdeStr, memRecArr, onAnnFun, uidValStr } : HrcProTyp )
 							{ hisRecObj.staValStr === 'pending' && covMapObj[ hisRecObj.uidReqStr ] === false && ( // What: Uncovered Check. Why: A member who can't fill a request should know why there's no button. How: This says so once the check has answered.
 
 
-								<span className={ cssModObj.hisStaSpa }>{ "Your phone doesn't hold all of it, so another member will need to send it." }</span> // What: History Status Span Element. Why: A member who can't send should know why. How: This says another member will need to.
+								<span className={ cssModObj.hisStaSpa }>{ "Your device doesn't hold all of it, so another member will need to send it." }</span> // What: History Status Span Element. Why: A member who can't send should know why. How: This says another member will need to.
 
 
 							) }

@@ -15,6 +15,9 @@
 						"iv": {
 							".validate": "newData.val().length === 16 && newData.val().matches(/^[A-Za-z0-9+\\/]+$/)"
 						},
+						"quiet": {
+							".validate": "newData.val() === true"
+						},
 						"senderUid": {
 							".validate": true
 						},

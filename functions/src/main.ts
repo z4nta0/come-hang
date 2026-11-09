@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { avaFilFun } from './avatars.ts';          // What: Avatar File Function. Why: A member's profile photo goes with their membership. How: This is the membership deletion trigger.
 import { chaPusFun } from './activity-pushes.ts';  // What: Chat Push Function. Why: Members away from a group learn its chat moved on. How: This is the message trigger.
 import { cheCreFun } from './purchase.ts';         // What: Checkout Create Function. Why: Buying the upgrade starts from the app. How: This is the callable that opens a Polar checkout.
 import { dayRunFun } from './daily-run.ts';        // What: Day Run Function. Why: Offers lapse and inactive owners' groups are offered on through it. How: This is the schedule.
@@ -16,6 +17,9 @@ import { joiPusFun } from './activity-pushes.ts';  // What: Join Push Function. 
 import { keyPusFun } from './activity-pushes.ts';  // What: Key Push Function. Why: Members learn someone on a new phone needs the group's key. How: This is the key request trigger.
 import { mirGroFun } from './mirror.ts';           // What: Mirror Group Function. Why: The group's retention is mirrored for the chat rules. How: This is its trigger.
 import { mirMemFun } from './mirror.ts';           // What: Mirror Member Function. Why: Membership is mirrored for the chat and presence rules. How: This is its trigger.
+import { phoEndFun } from './photos.ts';           // What: Photos End Function. Why: An event's photos go with it. How: This is the event deletion trigger.
+import { phoFilFun } from './photos.ts';           // What: Photo File Function. Why: A full photo goes with its document. How: This is the photo deletion trigger.
+import { phoMovFun } from './photos.ts';           // What: Photos Move Function. Why: An event's photos follow its deletion time. How: This is the event change trigger.
 import { polWebFun } from './purchase.ts';         // What: Polar Webhook Function. Why: Paid status follows Polar's orders. How: This is the webhook Polar posts to.
 
 // #endregion Imports
@@ -37,6 +41,6 @@ import { polWebFun } from './purchase.ts';         // What: Polar Webhook Functi
 
 
 
-export { chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, hisPusFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { avaFilFun, chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, hisPusFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 

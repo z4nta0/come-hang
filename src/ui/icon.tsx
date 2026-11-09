@@ -45,6 +45,7 @@ const ICO_PAT_OBJ = { // What: Icon Path Object. Why: Every icon is drawn the sa
 	close    : 'M6 6l12 12M18 6L6 18',
 	down     : 'M6 9l6 6 6-6',
 	events   : 'M5 6h14v14H5zM5 10h14M9 3v4M15 3v4',
+	forward  : 'M9 5l7 7-7 7',
 	link     : 'M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1',
 	lock     : 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
 	map      : 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',

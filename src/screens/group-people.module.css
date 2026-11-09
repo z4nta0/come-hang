@@ -591,6 +591,9 @@
 
 }
 
+
+/* #region memAvaSpa */
+
 .memAvaSpa { /* What: Member Avatar Span. Why: An avatar in the member's color ties them to their messages and claims. How: This draws a circle in their color with their initials bold, in its own area. */
 
 
@@ -605,6 +608,19 @@
 
 
 }
+
+.memAvaIma { /* What: Member Avatar Image. Why: A profile photo fills the avatar, leaving the member's color showing as a ring. How: This draws it as a circle a large border's width in from each edge, cropped to fill. */
+
+
+	border-radius : 50%;
+	height        : calc( 100% - var( --bor-wid-lar ) * 2 ); /* Border Width Large ~= 2.035px */
+	object-fit    : cover;
+	width         : calc( 100% - var( --bor-wid-lar ) * 2 ); /* Border Width Large ~= 2.035px */
+
+
+}
+
+/* #endregion memAvaSpa */
 
 
 

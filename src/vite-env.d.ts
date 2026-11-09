@@ -5,13 +5,18 @@
  * vite-env.d.ts = Vite Environment
  *
  * @summary
- * Declares the app's own build variables beside the ones Vite types for
- * import.meta.env, so reading one is type-checked. Nothing imports this file;
- * TypeScript picks it up as an ambient declaration.
+ * Declares the app's own build variables, the version Vite writes in and the
+ * ones beside those Vite types for import.meta.env, so reading one is
+ * type-checked. Nothing imports this file; TypeScript picks it up as an
+ * ambient declaration.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
+
+
+
+declare const __APP_VERSION__ : string; // What: App Version. Why: Vite writes the release's version into the app. How: This tells TypeScript the name Vite replaces.
 
 
 

@@ -228,7 +228,7 @@ pagTesObj( 'a fresh joiner asks for the chat from before they joined, and the ow
 	await secPagObj.getByRole( 'button', { name : 'Ask the group' } ).click(); // What: Ask Click Call. Why: The joiner asks. How: This presses the button.
 
 	await expect( secPagObj.getByRole( 'region', { name : 'Chat history' } ) ).toBeFocused();                                                    // What: Banner Focus Assertion. Why: The pressed button went, so focus lands on the banner. How: This expects it focused.
-	await expect( secPagObj.getByText( 'You asked the group for chat history. A member whose phone holds it can send a copy.' ) ).toBeVisible(); // What: Waiting Assertion. Why: The request waits for a member. How: This expects the banner's waiting line.
+	await expect( secPagObj.getByText( 'You asked the group for chat history. A member whose device holds it can send a copy.' ) ).toBeVisible(); // What: Waiting Assertion. Why: The request waits for a member. How: This expects the banner's waiting line.
 
 	await ownPagObj.goto( '/' ); // What: Owner Reopen Call. Why: The owner opens the group afresh. How: This opens the app.
 
@@ -267,7 +267,7 @@ pagTesObj( 'Not now keeps the history banner away through a reload', async ( { p
 
 	await secPagObj.goto( '/' ); // What: Joiner Reopen Call. Why: The watch started before the joiner was in. How: This opens the app again on the group's chat.
 
-	await secPagObj.getByRole( 'button', { name : 'Not now' } ).click(); // What: Dismiss Click Call. Why: The joiner doesn't want the history. How: This presses Not now.
+	await secPagObj.getByRole( 'region', { name : 'Chat history' } ).getByRole( 'button', { name : 'Not now' } ).click(); // What: Dismiss Click Call. Why: The joiner doesn't want the history. How: This presses the banner's Not now, waiting for the banner, since the notifications card has a Not now of its own.
 
 	await expect( secPagObj.getByRole( 'region', { name : 'Chat history' } ) ).toHaveCount( 0 ); // What: Gone Assertion. Why: A dismissed offer goes at once. How: This expects no banner.
 	await expect( secPagObj.getByRole( 'main' ) ).toBeFocused();                               // What: Focus Assertion. Why: The pressed button went with the banner, so focus lands on the main area. How: This expects it focused.
@@ -292,7 +292,7 @@ pagTesObj( 'a member whose phone lacks the range is told so, with no Send button
 
 	await ownPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: Requests are listed in People. How: This opens it.
 
-	await expect( ownPagObj.getByText( "Your phone doesn't hold all of it, so another member will need to send it." ) ).toBeVisible(); // What: Note Assertion. Why: The owner's phone holds no chat, so it can't fill the request. How: This expects the note.
+	await expect( ownPagObj.getByText( "Your device doesn't hold all of it, so another member will need to send it." ) ).toBeVisible(); // What: Note Assertion. Why: The owner's phone holds no chat, so it can't fill the request. How: This expects the note.
 	await expect( ownPagObj.getByRole( 'button', { name : 'Send history to Dana Lee' } ) ).toHaveCount( 0 );                             // What: No Button Assertion. Why: A phone that can't fill the request isn't offered to. How: This expects no button.
 
 

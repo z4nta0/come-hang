@@ -60,7 +60,8 @@ const namGetFun = async ( groIdeStr : string ) : Promise< string | null > => ( a
  * Runs when a chat message is created and pushes each member on its
  * waiting-on list who has no presence entry in the group, meaning the group
  * isn't open on their phone, tagged by the chat so later pushes replace it.
- * A message nobody waits on, or in a group that's gone, pushes nobody.
+ * A message marked quiet, nobody waits on, or in a group that's gone, pushes
+ * nobody.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -77,6 +78,10 @@ const namGetFun = async ( groIdeStr : string ) : Promise< string | null > => ( a
 */
 
 const chaPusFun = onValueCreated( { ...FUN_OPT_OBJ, ref : '/chats/{conIdeStr}/messages/{mesIdeStr}' }, async ( eveValObj ) : Promise< void > => { // What: Chat Push Function. Why: Members away from the app learn the chat moved on (Section 11.7). How: This pushes the waiting members who don't have the group open.
+
+
+	if ( eveValObj.data.val()?.quiet === true ) return; // What: Quiet Guard. Why: A bring-list line is news for the chat alone, not a push (Section 11.5). How: This ends the run for a message marked quiet.
+
 
 
 	const conIdeStr = eveValObj.params.conIdeStr;                                                         // What: Conversation Identifier String. Why: A group's chat uses the group's ID. How: This reads it from the path.

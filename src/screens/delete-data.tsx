@@ -7,6 +7,7 @@ import cssModObj from './delete-data.module.css'; // What: CSS Module Object. Wh
 
 
 import { ideDelFun } from '../state/deletion.ts'; // What: Identity Delete Function. Why: Confirming deletes the data. How: This deletes it and starts the app over.
+import { offGuaFun } from '../ui/online.ts';      // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { useEffect } from 'react';                // What: Use Effect. Why: Focus moves as the confirmation opens and closes. How: This moves it once drawn.
 import { useRef    } from 'react';                // What: Use Reference. Why: Focus moves between the button and the box. How: This holds both, and whether focus is owed.
 import { useState  } from 'react';                // What: Use State. Why: The confirmation, the typed word, and the progress change while the part shows. How: This holds each.
@@ -43,11 +44,13 @@ const DEL_POI_ARR = [ // What: Delete Point Array. Why: Someone should know ever
 
 	"You leave every group you're in.",
 
+	"The photos you've shared are deleted.",
+
 	'Each group you own passes to the member who joined it earliest, or is deleted if no one else is in it.',
 
 	'Your Google link and the upgrade go too, if you have them.',
 
-	'Everything Come Hang keeps on this phone is cleared.'
+	'Everything Come Hang keeps on this device is cleared.'
 
 
 ];
@@ -149,6 +152,10 @@ function DelDatCom ( { className = '' } : DdcProTyp ) : React.JSX.Element {
 
 
 
+		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
 		if ( worValStr.trim().toLowerCase() !== 'delete' ) { setWorErrStr( 'Type delete to confirm.' ); worInpRef.current?.focus(); return; } // What: Match Guard. Why: Deleting everything should be on purpose. How: This tells the problem and focuses the box when the word doesn't match.
 
 
@@ -221,7 +228,7 @@ function DelDatCom ( { className = '' } : DdcProTyp ) : React.JSX.Element {
 
 					</ul>
 
-					<p className={ cssModObj.delNotPar }>{ "Messages you've sent stay on other members' phones. This can't be undone." }</p>{ /* What: Delete Note Paragraph Element. Why: Deleting can't reach other phones or be reversed. How: This says both. */ }
+					<p className={ cssModObj.delNotPar }>{ "Messages you've sent stay on other members' devices. This can't be undone." }</p>{ /* What: Delete Note Paragraph Element. Why: Deleting can't reach other phones or be reversed. How: This says both. */ }
 
 					<label
 						className={ cssModObj.fieNamLab }

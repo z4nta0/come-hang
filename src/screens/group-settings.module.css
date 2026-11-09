@@ -9,9 +9,10 @@
  * each field's label, box or choice, hint, and problem stacked, or the values
  * paired for everyone else, the handover's note, buttons, and offer form, and
  * the part for leaving or deleting, its note, its buttons, and the deletion's
- * confirmation with its own box. The forms place their children in order,
- * since their fields share classes. The status that announces a change is for
- * screen readers alone, while a failure shows in the dark error color.
+ * confirmation with its own box, every part after the group's below a line.
+ * The forms place their children in order, since their fields share classes.
+ * The status that announces a change is for screen readers alone, while a
+ * failure shows in the dark error color.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -267,11 +268,13 @@
 
 /* #region hanSetSec */
 
-.hanSetSec { /* What: Handover Settings Section. Why: The heading, note, and controls read as one part. How: This stacks them a tier 3 space apart, in order since the controls change with the offer. */
+.hanSetSec { /* What: Handover Settings Section. Why: The heading, note, and controls read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order since the controls change with the offer. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -395,11 +398,13 @@
 
 /* #region endSetSec */
 
-.endSetSec { /* What: End Settings Section. Why: The heading, note, and controls read as one part. How: This stacks them a tier 3 space apart, in order since the controls change with the confirmation. */
+.endSetSec { /* What: End Settings Section. Why: The heading, note, and controls read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order since the controls change with the confirmation. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }

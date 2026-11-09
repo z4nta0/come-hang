@@ -13,7 +13,8 @@
  * public key through HKDF-SHA-256, bound to both public keys, and wraps the
  * group key with AES-KW. The stored wrap is the throwaway public key's raw
  * 65 bytes followed by the 40-byte wrapped key, 105 bytes in all, and only
- * the member's own private key can undo it, whoever wrapped it.
+ * the member's own private key can undo it, whoever wrapped it. Text and
+ * bytes, such as a photo, are encrypted the same way.
  *
  * A group key stays extractable, since any member may wrap it for a joiner
  * (Section 17), while an identity's private key never is. Invite tokens are
@@ -185,6 +186,80 @@ const unwKeyFun = async ( wraBytArr : Uint8Array< ArrayBuffer >, keyParObj : Cry
 
 
 
+// #region decBytFun
+
+/**
+ * decBytFun = Decrypt Bytes Function
+ *
+ * @summary
+ * Decrypts bytes a group key encrypted under AES-GCM, such as a photo.
+ * Rejects when the key, IV, or ciphertext doesn't match, so bytes another
+ * member altered never come back.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param keyValObj - Key Value Object: The group key.
+ * @param cipTexArr - Cipher Text Array: The ciphertext, with its tag.
+ * @param iniVecArr - Initialization Vector Array: Its 12-byte IV.
+ *
+ * @returns A promise that resolves with the plain bytes.
+ *
+ * @example
+ * ```ts
+ * decBytFun(keyValObj, cipTexArr, iniVecArr) // => Uint8Array
+ * ```
+ *
+*/
+
+const decBytFun = async ( keyValObj : CryptoKey, cipTexArr : Uint8Array< ArrayBuffer >, iniVecArr : Uint8Array< ArrayBuffer > ) : Promise< Uint8Array< ArrayBuffer > > => new Uint8Array( await crypto.subtle.decrypt( { iv : iniVecArr, name : 'AES-GCM' }, keyValObj, cipTexArr ) ); // What: Decrypt Bytes Function. Why: Members open what the group key encrypted. How: This decrypts it, rejecting when anything doesn't match.
+
+// #endregion decBytFun
+
+
+
+// #region encBytFun
+
+/**
+ * encBytFun = Encrypt Bytes Function
+ *
+ * @summary
+ * Encrypts bytes, such as a photo, with a group key under AES-GCM and a
+ * fresh random 12-byte IV, returning both for storage. The ciphertext is 16
+ * bytes longer than the bytes, for its tag.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param keyValObj - Key Value Object: The group key.
+ * @param plaBytArr - Plain Bytes Array: The bytes to encrypt.
+ *
+ * @returns A promise that resolves with the ciphertext and its IV.
+ *
+ * @example
+ * ```ts
+ * encBytFun(keyValObj, jpgBytArr) // => { cipTexArr, iniVecArr }
+ * ```
+ *
+*/
+
+const encBytFun = async ( keyValObj : CryptoKey, plaBytArr : Uint8Array< ArrayBuffer > ) : Promise< { cipTexArr : Uint8Array< ArrayBuffer >, iniVecArr : Uint8Array< ArrayBuffer > } > => { // What: Encrypt Bytes Function. Why: Firebase only ever sees ciphertext for content (Section 6). How: This encrypts with a fresh IV.
+
+
+	const iniVecArr = crypto.getRandomValues( new Uint8Array( 12 ) ); // What: Initialization Vector Array. Why: AES-GCM needs a fresh IV for every encryption under one key. How: This draws 12 random bytes.
+
+
+	const cipTexArr = new Uint8Array( await crypto.subtle.encrypt( { iv : iniVecArr, name : 'AES-GCM' }, keyValObj, plaBytArr ) ); // What: Cipher Text Array. Why: The bytes are stored encrypted, with their 16-byte tag. How: This encrypts them.
+
+
+
+	return { cipTexArr, iniVecArr }; // What: Encrypted Return. Why: Both are stored together. How: This returns the ciphertext and its IV.
+
+
+};
+
+// #endregion encBytFun
+
+
+
 // #region encTexFun
 
 /**
@@ -208,26 +283,13 @@ const unwKeyFun = async ( wraBytArr : Uint8Array< ArrayBuffer >, keyParObj : Cry
  *
 */
 
-const encTexFun = async ( keyValObj : CryptoKey, texValStr : string ) : Promise< { cipTexArr : Uint8Array< ArrayBuffer >, iniVecArr : Uint8Array< ArrayBuffer > } > => { // What: Encrypt Text Function. Why: Firebase only ever sees ciphertext for content (Section 6). How: This encrypts with a fresh IV.
-
-
-	const iniVecArr = crypto.getRandomValues( new Uint8Array( 12 ) ); // What: Initialization Vector Array. Why: AES-GCM needs a fresh IV for every encryption under one key. How: This draws 12 random bytes.
-
-
-	const cipTexArr = new Uint8Array( await crypto.subtle.encrypt( { iv : iniVecArr, name : 'AES-GCM' }, keyValObj, new TextEncoder().encode( texValStr ) ) ); // What: Cipher Text Array. Why: The text is stored encrypted, with its 16-byte tag. How: This encrypts its UTF-8 bytes.
-
-
-
-	return { cipTexArr, iniVecArr }; // What: Encrypted Return. Why: Both are stored together. How: This returns the ciphertext and its IV.
-
-
-};
+const encTexFun = ( keyValObj : CryptoKey, texValStr : string ) : Promise< { cipTexArr : Uint8Array< ArrayBuffer >, iniVecArr : Uint8Array< ArrayBuffer > } > => encBytFun( keyValObj, new TextEncoder().encode( texValStr ) ); // What: Encrypt Text Function. Why: Firebase only ever sees ciphertext for content (Section 6). How: This encrypts the text's UTF-8 bytes with a fresh IV.
 
 // #endregion encTexFun
 
 
 
-const decTexFun = async ( keyValObj : CryptoKey, cipTexArr : Uint8Array< ArrayBuffer >, iniVecArr : Uint8Array< ArrayBuffer > ) : Promise< string > => new TextDecoder().decode( await crypto.subtle.decrypt( { iv : iniVecArr, name : 'AES-GCM' }, keyValObj, cipTexArr ) ); // What: Decrypt Text Function. Why: Members read what the group key encrypted. How: This decrypts and decodes it, rejecting when the key, IV, or ciphertext doesn't match.
+const decTexFun = async ( keyValObj : CryptoKey, cipTexArr : Uint8Array< ArrayBuffer >, iniVecArr : Uint8Array< ArrayBuffer > ) : Promise< string > => new TextDecoder().decode( await decBytFun( keyValObj, cipTexArr, iniVecArr ) ); // What: Decrypt Text Function. Why: Members read what the group key encrypted. How: This decrypts and decodes it, rejecting when the key, IV, or ciphertext doesn't match.
 
 
 
@@ -239,7 +301,7 @@ const tokCreFun = () : string => btoa( String.fromCharCode( ...crypto.getRandomV
 
 // #region Exports
 
-export { decTexFun, encTexFun, groKeyFun, tokCreFun, unwKeyFun, wraKeyFun }; // What: Named Exports. Why: Every encrypted feature uses these. How: This exports them.
+export { decBytFun, decTexFun, encBytFun, encTexFun, groKeyFun, tokCreFun, unwKeyFun, wraKeyFun }; // What: Named Exports. Why: Every encrypted feature uses these. How: This exports them.
 
 // #endregion Exports
 

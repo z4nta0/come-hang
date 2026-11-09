@@ -147,7 +147,7 @@ test( 'on a phone the pinned event opens a sheet where items are added, claimed,
 
 
 	const sheDiaObj = curPagObj.getByRole( 'dialog', { name : 'Picnic' } ); // What: Sheet Dialog Object. Why: The checks read the sheet. How: This finds it by the event's title.
-	const staParObj = sheDiaObj.getByRole( 'status' );                      // What: Status Paragraph Object. Why: Each change is announced. How: This finds the sheet's status.
+	const staParObj = sheDiaObj.getByRole( 'status' ).first();              // What: Status Paragraph Object. Why: Each change is announced. How: This finds the list's status, the sheet's first, ahead of the Photos part's.
 
 
 	await expect( sheDiaObj ).toContainText( 'Central Park' );     // What: Place Assertion. Why: The details say where it is. How: This reads the sheet.
@@ -247,9 +247,9 @@ test( 'a label outside its limits is refused with an alert, keeping what was typ
 
 	await addInpObj.press( 'Enter' ); // What: Add Press Call. Why: The form tries to add it. How: This presses Enter.
 
-	await expect( panAsiObj.getByRole( 'alert' ) ).toHaveText( 'Use 1 to 50 characters.' ); // What: Alert Assertion. Why: The refusal is announced and says what's allowed. How: This reads the alert.
-	await expect( addInpObj ).toHaveValue( 'a'.repeat( 51 ) );                              // What: Kept Text Assertion. Why: The text stays to fix. How: This reads the box.
-	await expect( panAsiObj.getByRole( 'listitem' ) ).toHaveCount( 1 );                     // What: Unchanged List Assertion. Why: Nothing was added. How: This expects the one item.
+	await expect( panAsiObj.getByRole( 'alert' ).filter( { hasText : 'characters' } ) ).toHaveText( 'Use 1 to 50 characters.' ); // What: Alert Assertion. Why: The refusal is announced and says what's allowed. How: This reads the alert.
+	await expect( addInpObj ).toHaveValue( 'a'.repeat( 51 ) );                                                                   // What: Kept Text Assertion. Why: The text stays to fix. How: This reads the box.
+	await expect( panAsiObj.getByRole( 'listitem' ) ).toHaveCount( 1 );                                                          // What: Unchanged List Assertion. Why: Nothing was added. How: This expects the one item.
 
 
 } );

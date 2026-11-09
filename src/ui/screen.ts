@@ -42,12 +42,15 @@ type SecNamTyp = 'chat' | 'events' | 'map' | 'people' | 'settings'; // What: Sec
 type ScrStaTyp = { // What: Screen State Type. Why: Each history entry records the screen it shows. How: This types the state an entry holds.
 
 
+	eveStr? : string,                                          // What: Event String. Why: The Events section can open one event at its photos or its list, as a chat line about them asks. How: This is the event's ID.
 	focBoo? : boolean,                                         // What: Focus Boolean. Why: A screen that replaces a group just created, left, or deleted takes focus on its heading. How: This is true on the entry that change opens.
 	groStr? : string,                                          // What: Group String. Why: A group's screen shows one group, and a join screen remembers the group it asked to join. How: This is the group's ID.
 	namStr? : string,                                          // What: Name String. Why: A join screen still names the group it's waiting on after its link changes, and the landing page opened from it names the group to go back to joining. How: This is the group's name as the invite gave it.
+	parStr? : 'list',                                          // What: Part String. Why: An event opened from a bring-list line opens at its list rather than its photos. How: This names the list, absent for the photos.
 	scrStr  : 'about' | 'create' | 'group' | 'join' | 'paste', // What: Screen String. Why: The entry names its screen. How: This is the screen's name.
 	secStr? : SecNamTyp,                                       // What: Section String. Why: A group's screen shows one section, its chat when none is named. How: This is the section's name.
-	tokStr? : string                                           // What: Token String. Why: A join screen opens one invite. How: This is the token from the invite link.
+	tokStr? : string,                                          // What: Token String. Why: A join screen opens one invite. How: This is the token from the invite link.
+	waiStr? : string                                           // What: Waiting String. Why: People or Settings can jump to one item waiting on the member, as the notices sheet asks. How: This is the item's kind and person, such as `join:u1`.
 
 
 };
@@ -74,10 +77,11 @@ const SEC_NAM_ARR : SecNamTyp[]             = [ 'chat', 'events', 'map', 'people
  *
  * @summary
  * Checks a history entry's state is a screen this version knows: an object
- * naming one of SCR_NAM_ARR's screens, whose group, name, and token, when it
- * has them, are strings, whose focus flag, when it has one, is a
- * boolean, and whose section, when it names one, is one this version knows.
- * A join screen also needs its token.
+ * naming one of SCR_NAM_ARR's screens, whose event, group, name, token, and
+ * waiting item, when it has them, are strings, whose focus flag, when it has
+ * one, is a boolean, whose part, when it names one, is the list, and whose
+ * section, when it names one, is one this version knows. A join screen also
+ * needs its token.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -99,23 +103,29 @@ const isaScrFun = ( staValAny : unknown ) : staValAny is ScrStaTyp => { // What:
 
 
 
+	const eveValAny : unknown = Reflect.get( staValAny, 'eveStr' ); // What: Event Value Any. Why: The event is optional. How: This reads it, untyped.
 	const focValAny : unknown = Reflect.get( staValAny, 'focBoo' ); // What: Focus Value Any. Why: The focus flag is optional. How: This reads it, untyped.
 	const groValAny : unknown = Reflect.get( staValAny, 'groStr' ); // What: Group Value Any. Why: The group is optional. How: This reads it, untyped.
 	const namValAny : unknown = Reflect.get( staValAny, 'namStr' ); // What: Name Value Any. Why: The group's name is optional. How: This reads it, untyped.
+	const parValAny : unknown = Reflect.get( staValAny, 'parStr' ); // What: Part Value Any. Why: The event's part is optional. How: This reads it, untyped.
 	const scrValAny : unknown = Reflect.get( staValAny, 'scrStr' ); // What: Screen Value Any. Why: The screen's name decides what shows. How: This reads it, untyped.
 	const secValAny : unknown = Reflect.get( staValAny, 'secStr' ); // What: Section Value Any. Why: The section is optional. How: This reads it, untyped.
 	const tokValAny : unknown = Reflect.get( staValAny, 'tokStr' ); // What: Token Value Any. Why: Only a join screen has a token, and needs one. How: This reads it, untyped.
+	const waiValAny : unknown = Reflect.get( staValAny, 'waiStr' ); // What: Waiting Value Any. Why: The waiting item is optional. How: This reads it, untyped.
 
+	const eveOkaBoo = eveValAny === undefined || typeof eveValAny === 'string';                                // What: Event Okay Boolean. Why: An event of any other type isn't one this version wrote. How: This is true when it's absent or a string.
 	const focOkaBoo = focValAny === undefined || typeof focValAny === 'boolean';                               // What: Focus Okay Boolean. Why: A flag of any other type isn't one this version wrote. How: This is true when it's absent or a boolean.
 	const groOkaBoo = groValAny === undefined || typeof groValAny === 'string';                                // What: Group Okay Boolean. Why: A group of any other type isn't one this version wrote. How: This is true when it's absent or a string.
 	const namOkaBoo = namValAny === undefined || typeof namValAny === 'string';                                // What: Name Okay Boolean. Why: A name of any other type isn't one this version wrote. How: This is true when it's absent or a string.
+	const parOkaBoo = parValAny === undefined || parValAny === 'list';                                         // What: Part Okay Boolean. Why: A part of any other value isn't one this version wrote. How: This is true when it's absent or the list.
 	const scrOkaBoo = SCR_NAM_ARR.some( ( scrNamStr ) => scrNamStr === scrValAny );                            // What: Screen Okay Boolean. Why: Only a known screen can be shown. How: This is true when it's one this version lists.
 	const secOkaBoo = secValAny === undefined || SEC_NAM_ARR.some( ( secNamStr ) => secNamStr === secValAny ); // What: Section Okay Boolean. Why: Only a known section can be shown. How: This is true when it's absent or one this version lists.
 	const tokOkaBoo = scrValAny === 'join' ? typeof tokValAny === 'string' : tokValAny === undefined;          // What: Token Okay Boolean. Why: A join screen opens its invite, and no other screen has one. How: This is true for a join screen with a string token, or another screen without one.
+	const waiOkaBoo = waiValAny === undefined || typeof waiValAny === 'string';                                // What: Waiting Okay Boolean. Why: An item of any other type isn't one this version wrote. How: This is true when it's absent or a string.
 
 
 
-	return focOkaBoo && groOkaBoo && namOkaBoo && scrOkaBoo && secOkaBoo && tokOkaBoo; // What: Check Return. Why: The state is a screen only when every field is. How: This combines the six checks.
+	return eveOkaBoo && focOkaBoo && groOkaBoo && namOkaBoo && parOkaBoo && scrOkaBoo && secOkaBoo && tokOkaBoo && waiOkaBoo; // What: Check Return. Why: The state is a screen only when every field is. How: This combines the nine checks.
 
 
 };
