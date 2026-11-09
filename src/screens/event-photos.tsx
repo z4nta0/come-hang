@@ -17,8 +17,8 @@ import { phoDelFun   } from '../state/photos.ts';   // What: Photo Delete Functi
 import { phoFluFun   } from '../state/photos.ts';   // What: Photos Flush Function. Why: Leaving the photos means the member is done adding them. How: This ends the burst, posting its chat line.
 import { phoGetFun   } from '../state/photos.ts';   // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
 import { phoWatFun   } from '../state/photos.ts';   // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
-import { redMotFun   } from '../utils/motion.ts';   // What: Reduced Motion Function. Why: A jump to the photos scrolls smoothly unless the member asked for less motion. How: This reads the preference.
 import { SheDiaCom   } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
+import { sheJumFun   } from '../ui/sheet.tsx';      // What: Sheet Jump Function. Why: A chat line about photos opens its event at them. How: This scrolls the part into view once the sheet has risen.
 import { useCallback } from 'react';                // What: Use Callback. Why: The arrow keys step the viewer through a listener that shouldn't change on every render. How: This keeps the step function the same between renders.
 import { useEffect   } from 'react';                // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
 import { useRef      } from 'react';                // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
@@ -411,18 +411,14 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 
-	useEffect( () => { // What: Jump Effect. Why: A chat line about photos opens its event at them. How: This scrolls the part to the top of its sheet a frame after it opens, smoothly unless the member asked for less motion.
+	useEffect( () => { // What: Jump Effect. Why: A chat line about photos opens its event at them. How: This scrolls the part to the top of its sheet once the sheet has risen, smoothly unless the member asked for less motion.
 
 
-		if ( !jumBoo ) return; // What: Stay Guard. Why: An event opened from its card starts at its top. How: This returns.
-
-
-
-		const fraIdeNum = requestAnimationFrame( () => secEleRef.current?.scrollIntoView( { behavior : redMotFun() ? 'instant' : 'smooth', block : 'start' } ) ); // What: Frame Identifier Number. Why: The sheet has to have laid out before it can scroll. How: This scrolls on the next frame, keeping the request to cancel it.
+		if ( !jumBoo || secEleRef.current === null ) return; // What: Stay Guard. Why: An event opened from its card starts at its top, and an undrawn part has nowhere to jump. How: This returns.
 
 
 
-		return () => cancelAnimationFrame( fraIdeNum ); // What: Cleanup Return. Why: A part gone before the frame mustn't scroll. How: This cancels the request.
+		return sheJumFun( secEleRef.current ); // What: Jump Return. Why: Details gone before the jump mustn't scroll. How: This starts the jump, which waits for the sheet to rise, and returns the function that cancels it.
 
 
 	}, [ jumBoo ] ); // What: Effect Dependency Array. Why: The jump happens as the part opens asked to. How: jumBoo changes with the ask.

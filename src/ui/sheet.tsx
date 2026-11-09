@@ -6,10 +6,11 @@
 import cssModObj from './sheet.module.css'; // What: CSS Module Object. Why: The sheet is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { IcoSvgCom           } from './icon.tsx'; // What: Icon SVG Component. Why: The sheet's close button shows a cross. How: This draws it.
-import { useImperativeHandle } from 'react';      // What: Use Imperative Handle. Why: The screen that owns a sheet opens and closes it. How: This hands that screen the two functions.
-import { useRef              } from 'react';      // What: Use Reference. Why: The sheet opens and closes as a dialog element. How: This holds it.
-import { useState            } from 'react';      // What: Use State. Why: The sheet plays its closing slide before it closes. How: This holds whether it's closing.
+import { IcoSvgCom           } from './icon.tsx';         // What: Icon SVG Component. Why: The sheet's close button shows a cross. How: This draws it.
+import { redMotFun           } from '../utils/motion.ts'; // What: Reduced Motion Function. Why: A jump within a sheet scrolls smoothly unless the member asked for less motion. How: This reads that choice.
+import { useImperativeHandle } from 'react';              // What: Use Imperative Handle. Why: The screen that owns a sheet opens and closes it. How: This hands that screen the two functions.
+import { useRef              } from 'react';              // What: Use Reference. Why: The sheet opens and closes as a dialog element. How: This holds it.
+import { useState            } from 'react';              // What: Use State. Why: The sheet plays its closing slide before it closes. How: This holds whether it's closing.
 
 // #endregion Imports
 
@@ -21,10 +22,12 @@ import { useState            } from 'react';      // What: Use State. Why: The s
  * @summary
  * A modal sheet that rises from the bottom of the screen over a dimmed page:
  * a bar with its title and a close button, then whatever the screen puts in
- * it. The screen that owns it opens and closes it through a handle.
+ * it. The screen that owns it opens and closes it through a handle, and a
+ * screen can scroll a part of it into view once it has risen.
  *
  * Sections:
  *  - Types
+ *  - Helpers
  *  - Components
  *  - Exports
  *
@@ -39,6 +42,62 @@ import { useState            } from 'react';      // What: Use State. Why: The s
 type SheHanTyp = { cloFun : () => void, opeFun : () => void }; // What: Sheet Handle Type. Why: The screen that owns a sheet opens and closes it. How: This types the two functions the sheet hands it.
 
 // #endregion Types
+
+
+
+// #region Helpers
+
+// #region sheJumFun
+
+/**
+ * sheJumFun = Sheet Jump Function
+ *
+ * @summary
+ * Scrolls an element to the top of the sheet holding it, smoothly unless the
+ * member asked for less motion, once the sheet's panel has finished sliding
+ * up, since a smooth scroll started while the panel slid left the sheet
+ * where it was in Chromium, Firefox, and WebKit (measured 2026-11-09). An
+ * element outside a sheet scrolls in the next frame. Returns the function
+ * that cancels a jump not yet made.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param eleValObj - Element Value Object: The element to bring to the top.
+ *
+ * @returns The function that cancels the jump.
+ *
+ * @example
+ * ```ts
+ * sheJumFun(lisHeaRef.current) // => () => void
+ * ```
+ *
+*/
+
+const sheJumFun = ( eleValObj : HTMLElement ) : ( () => void ) => { // What: Sheet Jump Function. Why: A chat line opens its event at the part it's about. How: This waits out the panel's slide, then scrolls the element into view, unless cancelled first.
+
+
+	let canValBoo = false; // What: Cancelled Value Boolean. Why: Details gone before the jump mustn't scroll. How: This is true once the jump is cancelled.
+
+	const fraIdeNum = requestAnimationFrame( () => void Promise.allSettled( ( eleValObj.closest( '[data-element-name-hook~="shePanDiv"]' )?.getAnimations() ?? [] ).map( ( aniValObj ) => aniValObj.finished ) ).then( () => { if ( !canValBoo ) eleValObj.scrollIntoView( { behavior : redMotFun() ? 'instant' : 'smooth', block : 'start' } ); } ) ); // What: Frame Identifier Number. Why: The sheet has to have laid out, and its panel finished sliding, before the scroll holds. How: This waits a frame, then for each of the panel's own animations to settle, which they do under reduced motion too, then scrolls unless cancelled.
+
+
+
+	return () => { // What: Cancel Return. Why: The caller cancels a jump its details no longer need. How: This returns the function that stops it.
+
+
+		canValBoo = true; // What: Cancelled Assignment. Why: A jump already waiting on the slide mustn't scroll. How: This marks it cancelled.
+
+		cancelAnimationFrame( fraIdeNum ); // What: Frame Cancel Call. Why: A jump still waiting on its frame mustn't start. How: This cancels the request.
+
+
+	};
+
+
+};
+
+// #endregion sheJumFun
+
+// #endregion Helpers
 
 
 
@@ -128,6 +187,8 @@ function SheDiaCom ( { children, ideStr, onCloFun = () => {}, ref, titStr } : Sd
 			<div
 				className={ cssModObj.shePanDiv }
 
+				data-element-name-hook='shePanDiv'
+
 				onAnimationEnd={ ( aniEveObj ) => { // What: Panel Animation End Handler. Why: The sheet closes once its slide down finishes, which still ends under reduced motion. How: This closes the dialog after the panel's own closing animation.
 
 
@@ -143,7 +204,7 @@ function SheDiaCom ( { children, ideStr, onCloFun = () => {}, ref, titStr } : Sd
 
 
 				} }
-			>{ /* What: Sheet Panel Div Element. Why: The sheet's content sits on a surface rising from the bottom. How: This holds the bar above the children. */ }
+			>{ /* What: Sheet Panel Div Element. Why: The sheet's content sits on a surface rising from the bottom. How: This holds the bar above the children, with a hook the sheet's jump finds it by to wait out its slide. */ }
 
 
 				<div className={ cssModObj.sheBarDiv }>{ /* What: Sheet Bar Div Element. Why: The sheet's title sits beside its close button. How: This lays them out in one row. */ }
@@ -201,7 +262,7 @@ function SheDiaCom ( { children, ideStr, onCloFun = () => {}, ref, titStr } : Sd
 
 // #region Exports
 
-export { SheDiaCom, type SheHanTyp }; // What: Named Exports. Why: Screens show their sheets with it and open them through the handle. How: This exports the component and the handle's type.
+export { SheDiaCom, type SheHanTyp, sheJumFun }; // What: Named Exports. Why: Screens show their sheets with it, open them through the handle, and jump to a part of one. How: This exports the component, the handle's type, and the jump.
 
 // #endregion Exports
 

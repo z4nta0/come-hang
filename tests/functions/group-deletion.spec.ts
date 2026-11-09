@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { BUC_URL_STR               } from '../support/storage.ts';        // What: Bucket URL String. Why: The function deletes from Storage's default bucket. How: This names it for the test's seeds.
 import { calCreFun                 } from '../support/callers.ts';        // What: Caller Create Function. Why: The tests call as signed-in and signed-out callers. How: This builds each one.
 import { DBS_URL_STR               } from '../support/database.ts';       // What: Database URL String. Why: The Realtime Database is read in the instance the app and functions share. How: This names it.
 import { deleteApp                 } from 'firebase/app';                 // What: Delete App. Why: Each caller's app closes with the suite. How: This shuts one down.
@@ -11,11 +12,12 @@ import { expect                    } from '@playwright/test';             // Wha
 import { get                       } from 'firebase/database';            // What: Get. Why: The group's Realtime Database data is read back. How: This reads a location once.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: Documents are read back after the call. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests seed and read the emulators past their rules, as the server would. How: This connects to them.
-import { listAll                   } from 'firebase/storage';             // What: List All. Why: The group's history transfers are checked for. How: This lists a folder's files.
 import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The deletion push is checked. How: This reads what reached a token.
 import { ref                       } from 'firebase/database';            // What: Ref. Why: Every Realtime Database read and write names a location. How: This builds a reference.
 import { set                       } from 'firebase/database';            // What: Set. Why: The tests seed the group's chat, presence, and mirror. How: This writes a location.
 import { setDoc                    } from 'firebase/firestore';           // What: Set Doc. Why: The tests seed the group's documents. How: This writes a document.
+import { stoCleFun                 } from '../support/storage.ts';        // What: Storage Clear Function. Why: Each test starts from an empty bucket. How: This clears it folder by folder.
+import { stoLisFun                 } from '../support/storage.ts';        // What: Storage List Function. Why: The group's files are checked for. How: This lists a folder's file names.
 import { ref as stoRefFun          } from 'firebase/storage';             // What: Storage Ref Function. Why: Storage's ref shares its name with the Realtime Database's. How: This imports it under its own name to build a file reference.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the deletion is its own test. How: This declares them.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
@@ -39,10 +41,9 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * suite. Callers sign in anonymously through the Auth emulator and call the
  * function as the app will, while the tests seed and read the group's data
  * past the rules: its Firestore documents, its chat, presence, and mirror in
- * the Realtime Database, and its history transfers in Storage.
+ * the Realtime Database, and its files in Storage, such as profile photos.
  *
  * Sections:
- *  - Constants
  *  - Module State
  *  - Helpers
  *  - Module Init
@@ -50,14 +51,6 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
-
-
-
-// #region Constants
-
-const BUC_URL_STR = 'gs://demo-come-hang.appspot.com';                     // What: Bucket URL String. Why: The function deletes from Storage's default bucket, which the emulator names after the project with .appspot.com. How: This names the same bucket for the test's seed and check.
-
-// #endregion Constants
 
 
 
@@ -116,9 +109,10 @@ const reaDocFun = async ( patValStr : string ) : Promise< Record< string, unknow
  * @summary
  * Seeds a group, gro1, owned by Alice with Bob as a member, holding one of
  * everything the deletion removes: its documents and their collections, its
- * invite, both accounts, its chat, presence, and mirror, and a history
- * transfer. Bob's account and the Realtime Database also hold another group,
- * gro2, which the deletion must leave alone.
+ * invite, both accounts, its chat, presence, and mirror, and its files: a
+ * history transfer, a profile photo, and an event's full photo. Bob's account
+ * and the Realtime Database also hold another group, gro2, which the deletion
+ * must leave alone.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -148,13 +142,16 @@ const seeGroFun = () => funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj )
 	await setDoc( doc( fsDatObj, 'invites/tok1' ), { groupId : 'gro1', groupName : 'Picnic' } );                                                        // What: Invite Seed. Why: The group's link stops working. How: This writes its invite.
 	await setDoc( doc( fsDatObj, 'groups/gro1/events/eve1' ), { titleEnc : 'x' } );                                                                     // What: Event Seed. Why: Events go with the group. How: This writes one.
 	await setDoc( doc( fsDatObj, 'groups/gro1/events/eve1/assignments/ite1' ), { label : 'x' } );                                                       // What: Item Seed. Why: A collection under a collection goes too. How: This writes one of the event's items.
+	await setDoc( doc( fsDatObj, 'groups/gro1/events/eve1/photos/pho1' ), { uploaderUid : bobCalObj.uidValStr } );                                      // What: Photo Seed. Why: An event's photos go with the group. How: This writes one of Bob's.
 	await setDoc( doc( fsDatObj, 'groups/gro1/joinRequests/carol' ), { name : 'Carol' } );                                                              // What: Join Request Seed. Why: Pending requests go with the group. How: This writes Carol's.
 
 	await set( ref( reDatObj, 'chats/gro1/messages/msg1' ), { sentAt : 1 } ); // What: Chat Seed. Why: The group's chat goes. How: This writes a message.
 	await set( ref( reDatObj, 'chats/gro2/messages/msg1' ), { sentAt : 1 } ); // What: Other Chat Seed. Why: Another group's chat must stay. How: This writes gro2's message.
 	await set( ref( reDatObj, 'presence/gro1/bob' ), { online : true } );     // What: Presence Seed. Why: The group's presence goes. How: This marks Bob online.
 
-	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'groupHistoryTransfers/gro1/bob' ), new Uint8Array( 10 ) );                         // What: Transfer Seed. Why: The group's history transfers go. How: This uploads one.
+	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'avatars/gro1/bob' ), new Uint8Array( 10 ) );               // What: Avatar Seed. Why: The members' profile photos go. How: This uploads Bob's.
+	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'groupHistoryTransfers/gro1/bob' ), new Uint8Array( 10 ) ); // What: Transfer Seed. Why: The group's history transfers go. How: This uploads one.
+	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'photos/gro1/eve1/pho1' ), new Uint8Array( 10 ) );          // What: Full Photo Seed. Why: An event's full photos go. How: This uploads the photo's.
 
 
 } );
@@ -205,9 +202,9 @@ test.afterAll( async () => { // What: Teardown Hook. Why: The connections should
 test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from empty databases and storage. How: This clears all three.
 
 
-	await funEnvObj.clearDatabase();  // What: Database Clear Call. Why: No test sees another's Realtime Database data. How: This clears it.
-	await funEnvObj.clearFirestore(); // What: Firestore Clear Call. Why: No test sees another's documents. How: This clears them.
-	await funEnvObj.clearStorage();   // What: Storage Clear Call. Why: No test sees another's files. How: This clears the bucket.
+	await funEnvObj.clearDatabase();           // What: Database Clear Call. Why: No test sees another's Realtime Database data. How: This clears it.
+	await funEnvObj.clearFirestore();          // What: Firestore Clear Call. Why: No test sees another's documents. How: This clears them.
+	await stoCleFun( funEnvObj, BUC_URL_STR ); // What: Storage Clear Call. Why: No test sees another's files. How: This clears the functions' bucket, folders included.
 
 
 } );
@@ -227,6 +224,7 @@ test( 'the owner deletes a group whole, freeing their slot and leaving each othe
 	expect( await reaDocFun( 'groups/gro1' ) ).toBeUndefined();                                                                    // What: Group Gone. Why: The group itself is deleted. How: This expects no document.
 	expect( await reaDocFun( `groups/gro1/members/${ bobCalObj.uidValStr }` ) ).toBeUndefined();                                   // What: Membership Gone. Why: Nobody keeps access. How: This expects Bob's member document gone.
 	expect( await reaDocFun( 'groups/gro1/events/eve1/assignments/ite1' ) ).toBeUndefined();                                       // What: Item Gone. Why: Collections nested under the group go too. How: This expects the item gone.
+	expect( await reaDocFun( 'groups/gro1/events/eve1/photos/pho1' ) ).toBeUndefined();                                            // What: Photo Document Gone. Why: An event's photos go with it. How: This expects the photo's document gone.
 	expect( await reaDocFun( 'groups/gro1/joinRequests/carol' ) ).toBeUndefined();                                                 // What: Join Request Gone. Why: A pending request has nothing left to join. How: This expects Carol's gone.
 	expect( await reaDocFun( 'invites/tok1' ) ).toBeUndefined();                                                                   // What: Invite Gone. Why: The link opens nothing. How: This expects the invite gone.
 	expect( ( await reaDocFun( `accounts/${ aliCalObj.uidValStr }` ) )?.ownedGroups ).toEqual( {} );                               // What: Owner Slot Freed. Why: The owner can start a new group. How: This expects gro1 gone from Alice's owned map.
@@ -241,7 +239,9 @@ test( 'the owner deletes a group whole, freeing their slot and leaving each othe
 
 	await expect.poll( () => reaDbsFun( 'mirrors/gro1' ) ).toBeNull(); // What: Mirror Gone. Why: The rules' copy of the membership goes too, and the mirror's own triggers run after the deletion. How: This waits for it to be empty.
 
-	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { expect( ( await listAll( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'groupHistoryTransfers/gro1' ) ) ).items ).toHaveLength( 0 ); } ); // What: Transfers Gone. Why: A history bundle mustn't outlive its group. How: This expects the group's folder empty.
+	expect( await stoLisFun( funEnvObj, 'avatars/gro1' ) ).toEqual( [] );               // What: Avatars Gone. Why: A profile photo mustn't outlive its group. How: This expects the group's folder empty.
+	expect( await stoLisFun( funEnvObj, 'groupHistoryTransfers/gro1' ) ).toEqual( [] ); // What: Transfers Gone. Why: A history bundle mustn't outlive its group. How: This expects the group's folder empty.
+	expect( await stoLisFun( funEnvObj, 'photos/gro1/eve1' ) ).toEqual( [] );           // What: Photos Gone. Why: A full photo mustn't outlive its group. How: This expects the event's folder empty.
 
 
 } );

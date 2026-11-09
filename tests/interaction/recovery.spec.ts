@@ -25,8 +25,9 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * engine the project runs, against the Emulator Suite: a member links Google
  * on their first phone, then on a new one a closed sign-in is told, and the
  * next brings the group back, focus landing on it, while its chat waits for
- * the key; the owner shares the key from the People section, focus moving to
- * the members, and the new phone reads the group again.
+ * the key; the owner opens the request from the sheet of what's waiting and
+ * shares the key from the People section, focus moving to the members, and the
+ * new phone's open chat loads without a reload.
  *
  * Sections:
  *  - Module State
@@ -125,7 +126,9 @@ pagTesObj( 'a member gets their groups back on a new phone through Google, and t
 
 	await curPagObj.goto( '/' ); // What: Owner Open Call. Why: The owner shares the key. How: This opens the app on their phone.
 
-	await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: Key requests show in the People section. How: This presses its tab.
+	await expect( curPagObj.getByRole( 'dialog', { name : 'While you were away' } ) ).toContainText( "Dana Lee needs Beach Day's key on a new device." ); // What: Waiting Notice Assertion. Why: A key request waits on the owner, so the sheet of what's waiting opens as the app does. How: This waits for the request's sentence.
+
+	await curPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByRole( 'button', { name : 'Review' } ).click(); // What: Review Click Call. Why: The owner goes straight to the request. How: This presses its Review, which opens the People section at it.
 
 	await expect( curPagObj.getByRole( 'heading', { level : 3, name : "Waiting for the group's key" } ) ).toBeVisible(); // What: Key List Assertion. Why: The owner sees who's waiting. How: This waits for its heading.
 
@@ -134,10 +137,7 @@ pagTesObj( 'a member gets their groups back on a new phone through Google, and t
 	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Shared the key with Dana Lee.' ); // What: Shared Status Assertion. Why: The share is announced. How: This reads the status.
 	await expect( curPagObj.getByRole( 'heading', { level : 3, name : /^Members \(\d+\)$/ } ) ).toBeFocused();         // What: Members Focus Assertion. Why: The share's row went with its button, and no one else waits. How: This expects the members' heading focused.
 
-	await newPagObj.reload(); // What: New Phone Reload Call. Why: The chat loads the key again. How: This opens it afresh.
-
-	await expect( newPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeVisible();                                // What: Reopened Assertion. Why: The chat has to show before its note is judged. How: This waits for the group.
-	await expect( newPagObj.getByText( "This group's key is waiting for a member to share it.", { exact : false } ) ).toHaveCount( 0 ); // What: Key Shared Assertion. Why: The shared key opens on the new phone. How: This expects the note gone.
+	await expect( newPagObj.getByText( "This group's key is waiting for a member to share it.", { exact : false } ) ).toHaveCount( 0 ); // What: Key Shared Assertion. Why: The shared key opens the chat on the new phone without a reload. How: This waits for the note to go on the page left open.
 
 	await newConObj.close(); // What: Context Close Call. Why: The new phone isn't needed again. How: This closes it.
 
