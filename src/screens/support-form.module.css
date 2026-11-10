@@ -146,7 +146,7 @@
 
 /* #region supForFor */
 
-.supForFor { /* What: Support Form Form. Why: The form is clipped while its row grows, yet its focus rings shouldn't be, and its fields, details, and buttons read top to bottom. How: This lets it shrink to nothing and clips its overflow, with room inside its edges for a ring that its negative margin gives back, stacking its children a tier 3 space apart in order, since its fields share one class. */
+.supForFor { /* What: Support Form Form. Why: The form is clipped while its row grows, yet its focus rings shouldn't be, and its fields, details, and buttons read top to bottom. How: This lets it shrink to nothing, clips its overflow, and holds its hidden field inside it, with room inside its edges for a ring that its negative margin gives back, stacking its children a tier 3 space apart in order, since its fields share one class. */
 
 
 	display    : grid;
@@ -154,6 +154,7 @@
 	min-height : 0;
 	overflow   : hidden;
 	padding    : calc( var( --bor-wid-lar ) * 2 );   /* Border Width Large ~= 4.070px */ /* What: Ring Room Note. Why: A focus ring sits a ring's width outside its control, and the clipping would cut it at the form's edges. How: The padding is the ring's offset and width, twice the large border width, which the margin takes back so the form lines up with the part. */
+	position   : relative;                           /* What: Positioned Note. Why: The honeypot field is absolutely positioned, and with no positioned box above it the page placed it at its spot deep in the scrolled Settings panel, stretching the whole page to reach it. How: This makes the form its containing box, so the field stays inside the panel. */
 	row-gap    : var( --tie-ver-003 );               /* Tier Vertical 3 ~= 14.572px */
 
 
