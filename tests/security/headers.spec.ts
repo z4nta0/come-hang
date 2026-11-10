@@ -163,16 +163,34 @@ test( "a build's policy names exactly its own project, and sign-in passes throug
 	const redLinArr = depRedFun( readFileSync( RED_PAT_STR, 'utf8' ), PRO_CON_OBJ ).split( '\n' );           // What: Redirects Line Array. Why: The rules' order matters. How: This fills in the redirects and splits them into lines.
 
 
-	expect( appCspStr ).toContain( 'https://us-central1-come-hang-live.cloudfunctions.net' );                     // What: Functions Assertion. Why: Callables go to the project's own functions. How: This expects its address.
-	expect( appCspStr ).toContain( 'wss://come-hang-live-default-rtdb.firebaseio.com' );                          // What: Database Assertion. Why: Chat connects to the project's own database. How: This expects its address.
-	expect( appCspStr ).toContain( "frame-src 'self' https://www.google.com/recaptcha/" );                        // What: App Check Frame Assertion. Why: Sign-in's page is the app's own, and reCAPTCHA frames Google's. How: This expects both.
-	expect( appCspStr ).toContain( "script-src 'self' https://www.google.com/recaptcha/" );                       // What: App Check Script Assertion. Why: reCAPTCHA's script is Google's. How: This expects it beside the app's.
-	expect( appCspStr ).not.toContain( 'firebaseapp.com' );                                                       // What: No Sign-In Domain Assertion. Why: Sign-in runs on the app's own domain. How: This expects Firebase's sign-in domain absent.
-	expect( appCspStr ).not.toContain( '%' );                                                                     // What: Filled Policy Assertion. Why: A placeholder left behind would break the policy. How: This expects none.
-	expect( offCspStr ).toContain( "frame-src 'self';" );                                                         // What: Off Frame Assertion. Why: Without App Check only sign-in's page is framed. How: This expects the app alone.
-	expect( offCspStr ).not.toContain( 'recaptcha' );                                                             // What: Off reCAPTCHA Assertion. Why: Nothing loads reCAPTCHA without App Check. How: This expects it absent.
-	expect( redLinArr ).toContain( '/__/auth/*    https://come-hang-live.firebaseapp.com/__/auth/:splat   200' ); // What: Passthrough Assertion. Why: Sign-in's pages come from the project. How: This expects the rule naming its domain.
+	expect( appCspStr ).toContain( 'https://us-central1-come-hang-live.cloudfunctions.net' );                       // What: Functions Assertion. Why: Callables go to the project's own functions. How: This expects its address.
+	expect( appCspStr ).toContain( 'wss://come-hang-live-default-rtdb.firebaseio.com' );                            // What: Database Assertion. Why: Chat connects to the project's own database. How: This expects its address.
+	expect( appCspStr ).toContain( "frame-src 'self' https://www.google.com/recaptcha/" );                          // What: App Check Frame Assertion. Why: Sign-in's page is the app's own, and reCAPTCHA frames Google's. How: This expects both.
+	expect( appCspStr ).toContain( "script-src 'self' https://apis.google.com https://www.google.com/recaptcha/" ); // What: App Check Script Assertion. Why: Google sign-in's helper and reCAPTCHA's script are Google's. How: This expects both beside the app's.
+	expect( appCspStr ).toMatch( /connect-src [^;]* https:\/\/www\.google\.com\/recaptcha\// );                     // What: App Check Connect Assertion. Why: reCAPTCHA reaches Google from the page. How: This expects its address in connect-src.
+	expect( appCspStr ).not.toContain( 'firebaseapp.com' );                                                         // What: No Sign-In Domain Assertion. Why: Sign-in runs on the app's own domain. How: This expects Firebase's sign-in domain absent.
+	expect( appCspStr ).not.toContain( '%' );                                                                       // What: Filled Policy Assertion. Why: A placeholder left behind would break the policy. How: This expects none.
+	expect( offCspStr ).toContain( "frame-src 'self';" );                                                           // What: Off Frame Assertion. Why: Without App Check only sign-in's page is framed. How: This expects the app alone.
+	expect( offCspStr ).toContain( "script-src 'self' https://apis.google.com;" );                                  // What: Off Script Assertion. Why: Google sign-in needs its helper whether or not App Check is on. How: This expects it alone beside the app's.
+	expect( offCspStr ).not.toContain( 'recaptcha' );                                                               // What: Off reCAPTCHA Assertion. Why: Nothing loads reCAPTCHA without App Check. How: This expects it absent.
+	expect( redLinArr ).toContain( '/__/auth/*    https://come-hang-live.firebaseapp.com/__/auth/:splat   200' );   // What: Passthrough Assertion. Why: Sign-in's pages come from the project. How: This expects the rule naming its domain.
 	expect( redLinArr.findIndex( ( linTexStr ) => linTexStr.startsWith( '/__/auth/' ) ) ).toBeLessThan( redLinArr.findIndex( ( linTexStr ) => linTexStr.startsWith( '/*' ) ) ); // What: Order Assertion. Why: Netlify takes the first rule that matches, and the fallback matches everything. How: This expects the passthrough first.
+
+
+} );
+
+
+
+test( 'only a build marked to stay out of search asks search engines to skip every page', () => { // What: No Index Test. Why: The staging site mustn't show up in search beside the real one, while the real site must. How: This fills in the headers for a stand-in project with the setting on and off, and checks the robots header and that the policy is unchanged.
+
+
+	const offAllObj = heaAllFun( PRO_CON_OBJ );       // What: Off All Object. Why: The real site's build sets nothing. How: This reads its headers.
+	const onnAllObj = heaAllFun( PRO_CON_OBJ, true ); // What: On All Object. Why: The staging site's build asks to stay out of search. How: This reads its headers.
+
+
+	expect( onnAllObj[ 'x-robots-tag' ] ).toBe( 'noindex' );                                         // What: No Index Assertion. Why: Search engines skip a page sent noindex. How: This expects the header.
+	expect( offAllObj[ 'x-robots-tag' ] ).toBeUndefined();                                           // What: Indexed Assertion. Why: The real site belongs in search. How: This expects no robots header.
+	expect( onnAllObj[ 'content-security-policy' ] ).toBe( offAllObj[ 'content-security-policy' ] ); // What: Same Policy Assertion. Why: Staying out of search changes nothing else. How: This expects the same policy either way.
 
 
 } );

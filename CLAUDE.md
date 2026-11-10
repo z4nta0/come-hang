@@ -37,7 +37,7 @@ Firestore collection in ARCHITECTURE.md's data model, `database.rules.json`
 covers chat and presence, and `storage.rules` covers history transfers. The
 Cloud Functions so far are the membership mirror, group deletion, the removal
 and offer notices, the offer decline, the daily run, the daily cleanup of
-unused identities, and the pushes, with the
+unused identities, the billing cutoff, and the pushes, with the
 push token rules, including the activity pushes for chat, join requests,
 history requests, and key requests, and the purchase's Polar checkout and
 webhook. The app has its Firebase services, created on first use, the identity

@@ -52,17 +52,20 @@ const HEA_PAT_STR = fileURLToPath( new URL( '../../public/_headers', import.meta
  * heaAllFun = Headers All Function
  *
  * @summary
- * Returns the headers public/_headers sends with every path, its /* block,
- * filled in for the given project or for none, keyed by lowercase header name,
+ * Returns the headers public/_headers sends with every path, its /* blocks,
+ * filled in for the given project or for none, and for a build kept out of
+ * search or not, keyed by lowercase header name,
  * the way Playwright reports response headers. Netlify's format puts each path
  * on a line of its own and indents that path's headers below it, one Name:
  * value pair per line, with # lines as comments, so this reads the indented
- * lines under /* until the next unindented path line, skipping comments.
+ * lines under each /* until the next unindented path line, skipping comments.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param depConObj - Deploy Config Object: The project to fill the file in
  *                    for, by default none, as the suite's build has.
+ * @param noiIndBoo - No Index Boolean: Whether the build stays out of search,
+ *                    as the staging site's does, false by default.
  *
  * @returns The /* block's headers, keyed by lowercase name.
  * @see {@link heaAllObj}
@@ -74,7 +77,7 @@ const HEA_PAT_STR = fileURLToPath( new URL( '../../public/_headers', import.meta
  *
 */
 
-function heaAllFun ( depConObj : DepConTyp = null ) : Record< string, string > {
+function heaAllFun ( depConObj : DepConTyp = null, noiIndBoo = false ) : Record< string, string > {
 
 
 	const heaAllObj : Record< string, string > = {}; // What: Headers All Object. Why: Each header is looked up by name. How: This collects the /* block's headers.
@@ -82,7 +85,7 @@ function heaAllFun ( depConObj : DepConTyp = null ) : Record< string, string > {
 	let insBloBoo = false; // What: Inside Block Boolean. Why: Only the lines under /* belong to it. How: This turns on at the /* line and off at the next unindented line that names a path.
 
 
-	for ( const linTexStr of depHeaFun( readFileSync( HEA_PAT_STR, 'utf8' ), depConObj ).split( '\n' ) ) { // What: Line Loop. Why: The file is read line by line, the way Netlify reads it, as a build fills it in. How: This walks every line of public/_headers, filled in for the project.
+	for ( const linTexStr of depHeaFun( readFileSync( HEA_PAT_STR, 'utf8' ), depConObj, noiIndBoo ).split( '\n' ) ) { // What: Line Loop. Why: The file is read line by line, the way Netlify reads it, as a build fills it in. How: This walks every line of public/_headers, filled in for the project and the search setting.
 
 
 		if ( /^\S/.test( linTexStr ) && !linTexStr.startsWith( '#' ) ) { insBloBoo = linTexStr.trim() === '/*'; continue; } // What: Path Line Guard. Why: An unindented line that isn't a comment names the path the lines below it apply to. How: This notes whether it's /* and moves on.
