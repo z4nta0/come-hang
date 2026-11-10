@@ -2499,8 +2499,10 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          `functions/src/daily-run.ts` changed together (2026-11-09), the
          rules suite's main project moved to an open copy and two tests that
          own two groups marking their identity paid.
-   - [ ] The rules (Firestore, Realtime Database, Storage) and the Cloud
-         Functions, both schedules included, deployed to staging.
+   - [x] The rules (Firestore, Realtime Database, Storage) and the Cloud
+         Functions, both schedules included, deployed to staging, and to
+         live too (2026-11-09), the paywall's rules and daily run deployed
+         to both once it was switched on.
    - [x] The privacy policy and terms written (2026-11-03), published at
          `/privacy` and `/terms` with the first deploy, before Google
          sign-in is set up (its verification asks for both URLs). Worth a
