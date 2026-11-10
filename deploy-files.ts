@@ -12,13 +12,15 @@
  * exactly its own project's addresses. The policy opens connect-src to
  * Firestore, Auth, the Realtime Database, Storage, FCM, and the project's
  * Cloud Functions, frame-src to the app itself for the sign-in page Netlify
- * passes through, and, with App Check on, script-src and frame-src to
- * reCAPTCHA. The redirects pass /__/auth/ through to the project's sign-in
- * domain, so Google sign-in runs on the app's own domain, which Safari's
- * storage rules require. A build without a project, such as a test build,
- * keeps the strict policy and drops the passthrough. A build Netlify marks
- * with SITE_NOINDEX, the staging site's, also asks search engines to leave
- * every page out, so staging never stands in for the real site.
+ * passes through, script-src to the helper Google sign-in loads from
+ * apis.google.com, and, with App Check on, connect-src, script-src, and
+ * frame-src to reCAPTCHA. The redirects pass /__/auth/ through to the
+ * project's sign-in domain, so Google sign-in runs on the app's own domain,
+ * which Safari's storage rules require. A build without a project, such as a
+ * test build, keeps the strict policy and drops the passthrough. A build
+ * Netlify marks with SITE_NOINDEX, the staging site's, also asks search
+ * engines to leave every page out, so staging never stands in for the real
+ * site.
  *
  * Sections:
  *  - Types
@@ -42,7 +44,9 @@ type DepConTyp = { appChkBoo : boolean, datUrlStr : string, proIdeStr : string }
 
 // #region Constants
 
+const GOO_SCR_STR = ' https://apis.google.com';                                                   // What: Google Script String. Why: Firebase's Google sign-in loads a helper script from Google before it opens the sign-in page, and fails with an internal error when the policy blocks it (measured on staging, 2026-11-09). How: This names its address, with a leading space.
 const NOI_RUL_STR = "\n\n\n\n# What: No Index Rule. Why: The staging site mustn't show up in search beside the real one. How: This asks search engines to leave every path out.\n/*\n\tX-Robots-Tag: noindex\n"; // What: No Index Rule String. Why: A build for the staging site asks search engines to skip it. How: This is the headers block it appends, spaced like the file's own blocks.
+const REC_CON_STR = ' https://www.google.com/recaptcha/';                                         // What: reCAPTCHA Connect String. Why: App Check's reCAPTCHA reaches Google from the page, as ease-my-life's live policy allows. How: This names its address, with a leading space.
 const REC_FRA_STR = ' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/'; // What: reCAPTCHA Frame String. Why: App Check's reCAPTCHA runs in a frame from Google. How: This lists its frame addresses, each with a leading space.
 const REC_SCR_STR = ' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/';      // What: reCAPTCHA Script String. Why: App Check's reCAPTCHA loads its script from Google. How: This lists its script addresses, each with a leading space.
 
@@ -91,8 +95,9 @@ const linFilFun = ( filTexStr : string, plaMapObj : Record< string, string > ) :
  * @summary
  * Fills in the headers file's placeholders: %FIREBASE_CONNECT%,
  * %FIREBASE_FRAME%, and %FIREBASE_SCRIPT%. With a project, connect-src gains
- * its addresses and frame-src the app itself, plus reCAPTCHA's with App Check
- * on; without one, the extra sources are empty and frame-src stays 'none'.
+ * its addresses, frame-src the app itself, and script-src Google sign-in's
+ * helper, each plus reCAPTCHA's with App Check on; without one, the extra
+ * sources are empty and frame-src stays 'none'.
  * The Realtime Database moves a connection to a server of its own under
  * firebaseio.com, so its addresses are allowed across that domain. A build
  * asked to stay out of search also gains a rule sending X-Robots-Tag:
@@ -127,11 +132,11 @@ const depHeaFun = ( heaTexStr : string, depConObj : DepConTyp, noiIndBoo = false
 	const datHosStr = new URL( depConObj.datUrlStr ).host; // What: Database Host String. Why: The database's own address is where its connection starts. How: This reads the host from its URL.
 
 
-	const conSouStr = ` https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://content-firebaseappcheck.googleapis.com https://us-central1-${ depConObj.proIdeStr }.cloudfunctions.net https://${ datHosStr } wss://${ datHosStr } https://*.firebaseio.com wss://*.firebaseio.com`; // What: Connect Sources String. Why: The app reads and writes Firestore, signs in through Auth, chats through the database, moves history through Storage, registers for pushes, gets App Check tokens, and calls the project's functions. How: This lists each address, the functions' and database's named for the project.
+	const conSouStr = ` https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebasestorage.googleapis.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://content-firebaseappcheck.googleapis.com https://us-central1-${ depConObj.proIdeStr }.cloudfunctions.net https://${ datHosStr } wss://${ datHosStr } https://*.firebaseio.com wss://*.firebaseio.com${ depConObj.appChkBoo ? REC_CON_STR : '' }`; // What: Connect Sources String. Why: The app reads and writes Firestore, signs in through Auth, chats through the database, moves history through Storage, registers for pushes, gets App Check tokens, and calls the project's functions. How: This lists each address, the functions' and database's named for the project, plus reCAPTCHA's with App Check on.
 
 
 
-	return linFilFun( robTexStr, { '%FIREBASE_CONNECT%' : conSouStr, '%FIREBASE_FRAME%' : `'self'${ depConObj.appChkBoo ? REC_FRA_STR : '' }`, '%FIREBASE_SCRIPT%' : depConObj.appChkBoo ? REC_SCR_STR : '' } ); // What: Headers Return. Why: The policy opens exactly what the project needs. How: This fills in the connections, the frames, and the scripts.
+	return linFilFun( robTexStr, { '%FIREBASE_CONNECT%' : conSouStr, '%FIREBASE_FRAME%' : `'self'${ depConObj.appChkBoo ? REC_FRA_STR : '' }`, '%FIREBASE_SCRIPT%' : `${ GOO_SCR_STR }${ depConObj.appChkBoo ? REC_SCR_STR : '' }` } ); // What: Headers Return. Why: The policy opens exactly what the project needs. How: This fills in the connections, the frames, and the scripts, Google sign-in's helper always and reCAPTCHA's with App Check on.
 
 
 };

@@ -7,9 +7,11 @@
 # placeholders from its project (deploy-files.ts): %FIREBASE_CONNECT% adds
 # the project's addresses to connect-src, %FIREBASE_FRAME% sets frame-src to
 # the app itself, for the sign-in page Netlify passes through, plus
-# reCAPTCHA's frames when App Check is on, and %FIREBASE_SCRIPT% adds
-# reCAPTCHA's script then. A build without a project, such as a test build,
-# adds nothing and keeps frame-src at 'none'.
+# reCAPTCHA's frames when App Check is on, and %FIREBASE_SCRIPT% adds the
+# helper script Google sign-in loads from apis.google.com, plus reCAPTCHA's
+# script then. With App Check on, connect-src also gains reCAPTCHA. A build
+# without a project, such as a test build, adds nothing and keeps frame-src
+# at 'none'.
 #
 # default-src 'self' is the fallback every unlisted fetch directive inherits,
 # such as the one for fonts, so those need no lines of their own. The
