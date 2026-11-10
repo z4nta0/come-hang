@@ -191,7 +191,7 @@ emulators need Java, 21 installed.
   root, which a signed-out visitor meets as the landing, and the legal
   pages) are indexed; every screen behind identity or holding personal data
   carries `noindex`. Live URL: https://comehang.app (domain
-  registered 2026-10-22, not yet deployed). Since the app answers at one
+  registered 2026-10-22, live since 2026-11-09). Since the app answers at one
   address, `index.html` holds the one title, description, and canonical
   (decided 2026-10-30): "Come Hang: plan get-togethers with your group",
   described as "Plan get-togethers with your group in one place: chat, set
