@@ -8,6 +8,7 @@ import { expect                    } from '@playwright/test';             // Wha
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The checks read Firestore past the rules. How: This connects to the emulator.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: A leave needs a member who isn't the owner. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: The member leaves from a device of their own. How: This declares a test with a second page.
+import { paiSetFun                 } from '../support/client.ts';         // What: Paid Set Function. Why: The deletion test owns two groups. How: This marks the owner paid.
 import { popFilFun                 } from '../support/client.ts';         // What: Popup Fill Function. Why: Linking Google signs in through the Auth emulator's popup. How: This picks or adds the account there.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Groups are made the way the app makes them. How: This calls the app's functions in a page.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each behavior is its own test. How: This declares them.
@@ -157,6 +158,8 @@ test( 'the owner deletes a group only once its name is typed, focus landing on t
 
 	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The deleted group is read back. How: This creates the first group by name. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
 
+
+	await paiSetFun( setEnvObj, groIdeStr ); // What: Paid Set Call. Why: A free identity owns 1 group once the paywall is locked, and this test needs two. How: This marks the owner paid, as a purchase would.
 
 	await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Book Club', 'Alice' ); // What: Second Group Call. Why: A deletion lands on the next group when there is one. How: This creates it.
 

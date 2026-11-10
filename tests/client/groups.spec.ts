@@ -7,6 +7,7 @@ import { doc                       } from 'firebase/firestore';           // Wha
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the group was created as it should be. How: This asserts on what the page and the emulator return.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: The created documents are read back. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests read what the page wrote, past the rules. How: This connects to the emulator.
+import { paiSetFun                 } from '../support/client.ts';         // What: Paid Set Function. Why: The list test owns two groups. How: This marks the owner paid.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Renaming and deleting run as the page's identity. How: This calls a module's function in the page.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of creating a group is its own test. How: This declares them.
 
@@ -348,12 +349,18 @@ test( 'a device with no identity lists no groups without starting Firebase', asy
 test( 'the group list follows the account as groups are created, renamed, and deleted, sorted by name', async ( { page } ) => { // What: Group List Test. Why: The rail and the group switcher show every group by name and keep up as groups change. How: This creates two groups, watches them, then renames one and deletes the other, checking each report.
 
 
-	const groIdeArr = await page.evaluate( async () => { // What: Group Identifier Array. Why: The list needs groups to report, and the test changes them later. How: This creates two groups in the page and starts watching.
+	const zebIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Zebra Club', 'Alice' ) as string; // What: Zebra Identifier String. Why: The first group, named to sort last. How: This creates it in the page. // What: Type Assertion Note. Why: groCreFun resolves with the new group's ID. How: The as reads it as a string.
+
+
+	await paiSetFun( groEnvObj, zebIdeStr ); // What: Paid Set Call. Why: A free identity owns 1 group once the paywall is locked, and the list needs two of its own. How: This marks the owner paid, as the purchase webhook does.
+
+
+
+	const appIdeStr = await page.evaluate( async () => { // What: Apple Identifier String. Why: The list needs a second group, and the test watches every report. How: This creates the second group in the page and starts watching.
 
 
 		const modPatStr = '/src/state/groups.ts';                                // What: Module Path String. Why: The dev server serves the app's source by path. How: This names the groups module.
 		const groModObj = await import( /* @vite-ignore */ modPatStr );          // What: Groups Module Object. Why: The page runs the real module. How: This imports it.
-		const zebIdeStr = await groModObj.groCreFun( 'Zebra Club', 'Alice' );    // What: Zebra Identifier String. Why: The first group, named to sort last. How: This creates it.
 		const appIdeStr = await groModObj.groCreFun( 'Apple Pickers', 'Alice' ); // What: Apple Identifier String. Why: The second group, named to sort first. How: This creates it.
 
 
@@ -369,10 +376,12 @@ test( 'the group list follows the account as groups are created, renamed, and de
 
 
 
-		return [ appIdeStr, zebIdeStr ]; // What: Identifiers Return. Why: The test renames and deletes these. How: This returns both IDs.
+		return appIdeStr; // What: Identifier Return. Why: The test deletes this group. How: This returns its ID.
 
 
 	} );
+
+	const groIdeArr = [ appIdeStr, zebIdeStr ]; // What: Group Identifier Array. Why: The checks name each group by its sorted place. How: This lists the Apple group, then the Zebra group.
 
 	const repGetFun = () => page.evaluate( () => Reflect.get( globalThis, 'groLisArr' ) ); // What: Report Get Function. Why: Each check polls the latest report. How: This reads it from the page.
 

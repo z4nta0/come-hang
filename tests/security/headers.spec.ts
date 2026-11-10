@@ -49,6 +49,7 @@ import { test          } from '@playwright/test';      // What: Test. Why: Each 
 const BIN_EXT_REG = /\.(ico|png|webp|woff2)$/;                                              // What: Binary Extension Regular Expression. Why: Images and fonts hold no text to search, and their bytes could match a pattern by chance. How: This matches the built file types the secret search skips.
 const DIS_DIR_STR = fileURLToPath( new URL( '../../dist/', import.meta.url ) );             // What: Distribution Directory String. Why: The secret search reads what visitors download. How: This resolves the build folder, dist/.
 const FUN_DIR_STR = fileURLToPath( new URL( '../../functions/', import.meta.url ) );        // What: Functions Directory String. Why: The Cloud Functions ship dependencies from their own lockfile. How: This resolves the functions folder.
+const HEA_PAT_STR = fileURLToPath( new URL( '../../public/_headers', import.meta.url ) );   // What: Headers Path String. Why: The manifest's rule is checked in the file Netlify reads. How: This resolves public/_headers.
 const RED_PAT_STR = fileURLToPath( new URL( '../../public/_redirects', import.meta.url ) ); // What: Redirects Path String. Why: The sign-in passthrough is checked in the file Netlify reads. How: This resolves public/_redirects.
 const ROO_DIR_STR = fileURLToPath( new URL( '../..', import.meta.url ) );                   // What: Root Directory String. Why: npm audit reads the app's lockfile at the repo root. How: This resolves the repo root.
 
@@ -136,6 +137,16 @@ test( 'the other hardening headers are set', () => { // What: Hardening Headers 
 
 
 } );
+
+test( 'the web app manifest is sent with its own content type', () => { // What: Manifest Type Test. Why: Netlify would send the manifest as a generic file, which some browsers refuse to install from. How: This reads public/_headers and checks the manifest's rule sets its type.
+
+
+	expect( readFileSync( HEA_PAT_STR, 'utf8' ) ).toMatch( /^\/manifest\.webmanifest\n\tContent-Type: application\/manifest\+json$/m ); // What: Manifest Rule Assertion. Why: Netlify reads the path and its indented header together. How: This expects the rule's two lines.
+
+
+} );
+
+
 
 test( 'a build without a project keeps the policy strict and drops the sign-in passthrough', () => { // What: No Project Test. Why: The suite's own build, and any build missing its config, should open nothing beyond the app itself. How: This fills in both files for no project and checks the policy and the redirects.
 

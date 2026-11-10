@@ -41,9 +41,9 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * starting its account and publishing its key, a group created in one batch,
  * and the forgeries and missing parts the rules turn away.
  *
- * The caps are checked twice: in the main project, under the rules as they
- * ship, with the paywall open, and in a second project loaded with the same
- * rules but the paywall's switch turned on.
+ * The caps are checked twice: in the main project, under the rules with the
+ * paywall's switch turned off, open to everyone, and in a second project
+ * loaded with the rules as they ship, the paywall locked.
  *
  * Sections:
  *  - Constants
@@ -63,7 +63,7 @@ const DAY_MIL_NUM = 86400000;                                                   
 const GRO_NAM_STR = 'Dinner Club';                                                 // What: Group Name String. Why: Most groups need a name the rules accept. How: This is an ordinary one.
 const HIS_REL_OBJ = { claimedAt : null, claimedByUid : null, status : 'pending' }; // What: History Release Object. Why: Every release clears the claim the same way. How: This is the change a release makes.
 const HOU_MIL_NUM = 3600000;                                                       // What: Hour Milliseconds Number. Why: A shared location expires an hour after its last update. How: This is one hour in milliseconds.
-const LOC_SWI_STR = 'return false; // What: Paywall Locked Return';                // What: Locked Switch String. Why: The locked rules are the real rules with the switch turned on. How: This is the switch's line, which the locked copy replaces.
+const LOC_SWI_STR = 'return true; // What: Paywall Locked Return';                 // What: Locked Switch String. Why: The open rules are the real rules with the switch turned off. How: This is the switch's line, which the open copy replaces.
 const NEW_TOK_STR = 'N'.repeat( 22 );                                              // What: New Token String. Why: A rotation moves the group to a second valid token. How: This is 22 base64url characters.
 const OFF_END_OBJ = { pendingOfferedAt : null, pendingOwnerUid : null };           // What: Offer End Object. Why: A withdrawal clears the offer, as the decline function does. How: This is the change that does it.
 const TOK_ONE_STR = 'abcdefghijABCDEFGHIJ_-';                                      // What: Token One String. Why: Most groups need an invite token the rules accept. How: This is 22 base64url characters.
@@ -87,7 +87,7 @@ const EVE_END_NUM = Date.now() + 2 * DAY_MIL_NUM;              // What: Event En
 const RUL_TEX_STR = readFileSync( 'firestore.rules', 'utf8' ); // What: Rules Text String. Why: Both emulator projects load the real rules. How: This reads the file once.
 
 
-if ( !RUL_TEX_STR.includes( LOC_SWI_STR ) ) throw new Error( 'the paywall switch line is missing from firestore.rules' ); // What: Switch Guard. Why: The locked copy is only a real test while the switch is found and replaced. How: This stops the suite when the line has changed.
+if ( !RUL_TEX_STR.includes( LOC_SWI_STR ) ) throw new Error( 'the paywall switch line is missing from firestore.rules' ); // What: Switch Guard. Why: The open copy is only a real test while the switch is found and replaced. How: This stops the suite when the line has changed.
 
 
 
@@ -1187,16 +1187,16 @@ const hisDatFun = ( uidValStr : string, kinValStr : string, hisChaObj : Record< 
 
 // #region Module Init
 
-test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one connection to each emulator project. How: This connects to both, with the real rules and the locked copy.
+test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one connection to each emulator project. How: This connects to both, with the open copy and the real rules.
 
 
 	setLogLevel( 'silent' ); // What: Log Silence Call. Why: The tests expect refusals, and assertFails already checks each one. How: This stops the SDK printing them.
 
 
-	locEnvObj = await initializeTestEnvironment({ // What: Locked Environment Assignment. Why: The paywall's locked caps need rules with the switch on. How: This connects to a second demo project loaded with that copy.
+	locEnvObj = await initializeTestEnvironment({ // What: Locked Environment Assignment. Why: The paywall's locked caps need the rules as they ship, with the switch on. How: This connects to a second demo project loaded with them.
 
 
-		firestore : { host : '127.0.0.1', port : 8200, rules : RUL_TEX_STR.replace( LOC_SWI_STR, 'return true; // What: Paywall Locked Return' ) }, // What: Firestore Options. Why: The locked copy differs from the real rules only in the switch. How: This names the emulator's address and the rules with the switch turned on.
+		firestore : { host : '127.0.0.1', port : 8200, rules : RUL_TEX_STR }, // What: Firestore Options. Why: The locked caps are the real rules as they ship. How: This names the emulator's address and the rules file's text.
 		projectId : 'demo-come-hang-locked' // What: Project Identifier. Why: Each emulator project holds its own rules and data. How: This names the second one.
 
 
@@ -1205,8 +1205,8 @@ test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one conn
 	tesEnvObj = await initializeTestEnvironment({ // What: Environment Assignment. Why: Most tests reach the emulator through it. How: This connects to the emulator's Firestore under the main demo project.
 
 
-		firestore : { host : '127.0.0.1', port : 8200, rules : RUL_TEX_STR }, // What: Firestore Options. Why: The emulator has to check the real rules. How: This names its address, the port firebase.json gives it, and the rules file's text.
-		projectId : 'demo-come-hang-firestore'                                // What: Project Identifier. Why: A demo project can never reach a real one, and demo-come-hang's own data belongs to the Storage spec, whose rules read that project's Firestore. How: This names a project of this spec's own.
+		firestore : { host : '127.0.0.1', port : 8200, rules : RUL_TEX_STR.replace( LOC_SWI_STR, 'return false; // What: Paywall Locked Return' ) }, // What: Firestore Options. Why: Most tests check the rules apart from the paywall, with every identity counted as paid. How: This names the emulator's address and the real rules with the switch turned off.
+		projectId : 'demo-come-hang-firestore'                                                                  // What: Project Identifier. Why: A demo project can never reach a real one, and demo-come-hang's own data belongs to the Storage spec, whose rules read that project's Firestore. How: This names a project of this spec's own.
 
 
 	});

@@ -40,3 +40,9 @@
 	Strict-Transport-Security: max-age=63072000; includeSubDomains
 	X-Content-Type-Options: nosniff
 	X-Frame-Options: DENY
+
+
+
+# What: Manifest Content Type Rule. Why: Netlify serves a .webmanifest file as application/octet-stream, which Chrome tolerates but Firefox and some install paths reject, as ease-my-life found. How: This sends the manifest with its own type.
+/manifest.webmanifest
+	Content-Type: application/manifest+json
