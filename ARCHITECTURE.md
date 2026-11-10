@@ -2507,9 +2507,9 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          `/privacy` and `/terms` with the first deploy, before Google
          sign-in is set up (its verification asks for both URLs). Worth a
          lawyer's look before launch.
-   - [ ] Netlify Forms: after the first deploy with Settings' support form,
+   - [x] Netlify Forms: after the first deploy with Settings' support form,
          email notifications turned on for the `support` form in Netlify's
-         dashboard under Forms, or its messages never reach the maker.
+         dashboard under Forms, or its messages never reach the maker. Done 2026-11-09.
    - [x] Checked through Cloudflare, as the maker's other sites were: the
          pages, the redirects, every security header, the head tags, the
          crawler files and icons, the mail records, and that TLS 1.0 and
