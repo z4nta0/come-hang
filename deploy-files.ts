@@ -16,7 +16,9 @@
  * reCAPTCHA. The redirects pass /__/auth/ through to the project's sign-in
  * domain, so Google sign-in runs on the app's own domain, which Safari's
  * storage rules require. A build without a project, such as a test build,
- * keeps the strict policy and drops the passthrough.
+ * keeps the strict policy and drops the passthrough. A build Netlify marks
+ * with SITE_NOINDEX, the staging site's, also asks search engines to leave
+ * every page out, so staging never stands in for the real site.
  *
  * Sections:
  *  - Types
@@ -40,6 +42,7 @@ type DepConTyp = { appChkBoo : boolean, datUrlStr : string, proIdeStr : string }
 
 // #region Constants
 
+const NOI_RUL_STR = "\n\n\n\n# What: No Index Rule. Why: The staging site mustn't show up in search beside the real one. How: This asks search engines to leave every path out.\n/*\n\tX-Robots-Tag: noindex\n"; // What: No Index Rule String. Why: A build for the staging site asks search engines to skip it. How: This is the headers block it appends, spaced like the file's own blocks.
 const REC_FRA_STR = ' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/'; // What: reCAPTCHA Frame String. Why: App Check's reCAPTCHA runs in a frame from Google. How: This lists its frame addresses, each with a leading space.
 const REC_SCR_STR = ' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/';      // What: reCAPTCHA Script String. Why: App Check's reCAPTCHA loads its script from Google. How: This lists its script addresses, each with a leading space.
 
@@ -91,26 +94,33 @@ const linFilFun = ( filTexStr : string, plaMapObj : Record< string, string > ) :
  * its addresses and frame-src the app itself, plus reCAPTCHA's with App Check
  * on; without one, the extra sources are empty and frame-src stays 'none'.
  * The Realtime Database moves a connection to a server of its own under
- * firebaseio.com, so its addresses are allowed across that domain.
+ * firebaseio.com, so its addresses are allowed across that domain. A build
+ * asked to stay out of search also gains a rule sending X-Robots-Tag:
+ * noindex on every path.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param heaTexStr - Headers Text String: The headers file as written.
  * @param depConObj - Deploy Config Object: {@link DepConTyp}
+ * @param noiIndBoo - No Index Boolean: Whether the build stays out of search,
+ *                    false by default.
  *
  * @returns The headers file for the build.
  *
  * @example
  * ```ts
- * depHeaFun(heaTexStr, depConObj) // => 'Content-Security-Policy: ...'
+ * depHeaFun(heaTexStr, depConObj, true) // => 'Content-Security-Policy: ...'
  * ```
  *
 */
 
-const depHeaFun = ( heaTexStr : string, depConObj : DepConTyp ) : string => { // What: Deploy Headers Function. Why: The policy names exactly the build's own project. How: This replaces each placeholder for it.
+const depHeaFun = ( heaTexStr : string, depConObj : DepConTyp, noiIndBoo = false ) : string => { // What: Deploy Headers Function. Why: The policy names exactly the build's own project, and staging stays out of search. How: This replaces each placeholder for it, adding the no index rule when asked.
 
 
-	if ( depConObj === null ) return linFilFun( heaTexStr, { '%FIREBASE_CONNECT%' : '', '%FIREBASE_FRAME%' : "'none'", '%FIREBASE_SCRIPT%' : '' } ); // What: No Project Guard. Why: A build without a project talks to no other origin. How: This keeps the strict policy.
+	const robTexStr = noiIndBoo ? `${ heaTexStr.trimEnd() }${ NOI_RUL_STR }` : heaTexStr; // What: Robots Text String. Why: The staging site's build stays out of search. How: This appends the no index rule when asked, after the file's last block.
+
+
+	if ( depConObj === null ) return linFilFun( robTexStr, { '%FIREBASE_CONNECT%' : '', '%FIREBASE_FRAME%' : "'none'", '%FIREBASE_SCRIPT%' : '' } ); // What: No Project Guard. Why: A build without a project talks to no other origin. How: This keeps the strict policy.
 
 
 
@@ -121,7 +131,7 @@ const depHeaFun = ( heaTexStr : string, depConObj : DepConTyp ) : string => { //
 
 
 
-	return linFilFun( heaTexStr, { '%FIREBASE_CONNECT%' : conSouStr, '%FIREBASE_FRAME%' : `'self'${ depConObj.appChkBoo ? REC_FRA_STR : '' }`, '%FIREBASE_SCRIPT%' : depConObj.appChkBoo ? REC_SCR_STR : '' } ); // What: Headers Return. Why: The policy opens exactly what the project needs. How: This fills in the connections, the frames, and the scripts.
+	return linFilFun( robTexStr, { '%FIREBASE_CONNECT%' : conSouStr, '%FIREBASE_FRAME%' : `'self'${ depConObj.appChkBoo ? REC_FRA_STR : '' }`, '%FIREBASE_SCRIPT%' : depConObj.appChkBoo ? REC_SCR_STR : '' } ); // What: Headers Return. Why: The policy opens exactly what the project needs. How: This fills in the connections, the frames, and the scripts.
 
 
 };

@@ -179,6 +179,22 @@ test( "a build's policy names exactly its own project, and sign-in passes throug
 
 
 
+test( 'only a build marked to stay out of search asks search engines to skip every page', () => { // What: No Index Test. Why: The staging site mustn't show up in search beside the real one, while the real site must. How: This fills in the headers for a stand-in project with the setting on and off, and checks the robots header and that the policy is unchanged.
+
+
+	const offAllObj = heaAllFun( PRO_CON_OBJ );       // What: Off All Object. Why: The real site's build sets nothing. How: This reads its headers.
+	const onnAllObj = heaAllFun( PRO_CON_OBJ, true ); // What: On All Object. Why: The staging site's build asks to stay out of search. How: This reads its headers.
+
+
+	expect( onnAllObj[ 'x-robots-tag' ] ).toBe( 'noindex' );                                         // What: No Index Assertion. Why: Search engines skip a page sent noindex. How: This expects the header.
+	expect( offAllObj[ 'x-robots-tag' ] ).toBeUndefined();                                           // What: Indexed Assertion. Why: The real site belongs in search. How: This expects no robots header.
+	expect( onnAllObj[ 'content-security-policy' ] ).toBe( offAllObj[ 'content-security-policy' ] ); // What: Same Policy Assertion. Why: Staying out of search changes nothing else. How: This expects the same policy either way.
+
+
+} );
+
+
+
 test( 'a build reads its project from its config and refuses an incomplete one', () => { // What: Config Test. Why: A deploy with a broken config should fail the build rather than ship a broken policy. How: This reads no config, a full one, and one missing its database, checking each.
 
 

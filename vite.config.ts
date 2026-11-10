@@ -254,8 +254,8 @@ const depWriFun = () : Plugin => { // What: Deploy Write Function. Why: Each env
 		closeBundle : () => { // What: Close Bundle Hook. Why: The hosting files are in the build only once public/ has been copied. How: This rewrites both there.
 
 
-			writeFileSync( resolve( outDirStr, '_headers' ), depHeaFun( readFileSync( resolve( outDirStr, '_headers' ), 'utf8' ), depConObj ) );     // What: Headers Write Call. Why: The policy names the build's project. How: This fills in the headers file.
-			writeFileSync( resolve( outDirStr, '_redirects' ), depRedFun( readFileSync( resolve( outDirStr, '_redirects' ), 'utf8' ), depConObj ) ); // What: Redirects Write Call. Why: Sign-in passes through to the build's project. How: This fills in the redirects file.
+			writeFileSync( resolve( outDirStr, '_headers' ), depHeaFun( readFileSync( resolve( outDirStr, '_headers' ), 'utf8' ), depConObj, process.env.SITE_NOINDEX === 'true' ) ); // What: Headers Write Call. Why: The policy names the build's project, and the staging site stays out of search. How: This fills in the headers file, adding the no index rule when Netlify sets SITE_NOINDEX.
+			writeFileSync( resolve( outDirStr, '_redirects' ), depRedFun( readFileSync( resolve( outDirStr, '_redirects' ), 'utf8' ), depConObj ) );                                  // What: Redirects Write Call. Why: Sign-in passes through to the build's project. How: This fills in the redirects file.
 
 
 		}
