@@ -245,7 +245,7 @@ const useSetActFun = () : SarRetTyp => { // What: Use Settings Actions Function.
 
 // #region Exports
 
-export { type SarRetTyp, useSetActFun }; // What: Named Exports. Why: Every part of Settings runs its changes through the hook, and the phone's and account's parts take its result. How: This exports the hook and its return's type.
+export { FAI_SET_STR, type SarRetTyp, useSetActFun }; // What: Named Exports. Why: Every part of Settings runs its changes through the hook, and the phone's and account's parts take its result and its general failure message. How: This exports the hook, its return's type, and the message.
 
 // #endregion Exports
 

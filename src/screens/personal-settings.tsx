@@ -6,29 +6,31 @@
 import cssModObj from './personal-settings.module.css'; // What: CSS Module Object. Why: The parts are styled in their own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom            } from '../ui/button.tsx';          // What: Button Base Component. Why: Buying the upgrade is the account part's leading action. How: This draws it as the main action button.
-import { canProFun            } from '../platform/install.ts';    // What: Can Prompt Function. Why: The Install button shows only while the browser can install. How: This checks for its prompt.
-import { colModGetFun         } from '../platform/color-mode.ts'; // What: Color Mode Get Function. Why: The appearance choice starts from the one kept on this phone. How: This reads it.
-import { colModSetFun         } from '../platform/color-mode.ts'; // What: Color Mode Set Function. Why: Picking light, dark, or the phone's setting applies at once and is kept. How: This applies and keeps it.
-import { DelDatCom            } from './delete-data.tsx';         // What: Delete Data Component. Why: The account part offers to delete the member's data. How: This draws its button and confirmation.
-import { gooLinFun            } from '../state/identity.ts';      // What: Google Link Function. Why: Linking Google lets the member get their groups back on a new phone (Section 8). How: This links through Google's popup.
-import { gooStaFun            } from '../state/identity.ts';      // What: Google State Function. Why: The account part says whether Google is linked. How: This reads it.
-import { insProFun            } from '../platform/install.ts';    // What: Install Prompt Function. Why: The Install button asks the browser to install. How: This shows its prompt.
-import { insSubFun            } from '../platform/install.ts';    // What: Install Subscribe Function. Why: The Install button follows the prompt as it comes and goes. How: This subscribes to it.
-import { isaInsFun            } from '../platform/install.ts';    // What: Is-An Installed Function. Why: An installed app needs no install part. How: This checks whether it runs installed.
-import { isaIosFun            } from '../platform/install.ts';    // What: Is-An iOS Function. Why: An iPhone installs through Safari's own menu. How: This checks for an iPhone or iPad.
-import { LegDocCom            } from '../legal/docs.tsx';         // What: Legal Documents Component. Why: Settings holds the privacy policy and the terms. How: This draws their part and its sheet.
-import { ProSetCom            } from './profile-settings.tsx';    // What: Profile Settings Component. Why: Settings holds the member's profile photo. How: This draws its part.
-import { purBuyFun            } from '../state/purchase.ts';      // What: Purchase Buy Function. Why: The upgrade is bought once (Section 18). How: This asks for the checkout's address.
-import { purPaiFun            } from '../state/purchase.ts';      // What: Purchase Paid Function. Why: The account part says whether the upgrade is bought. How: This reads it.
-import { pusActFun            } from '../state/push.ts';          // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
-import { pusDisFun            } from '../state/push.ts';          // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
-import { pusEnaFun            } from '../state/push.ts';          // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
-import { SupForCom            } from './support-form.tsx';        // What: Support Form Component. Why: About offers a way to write to the maker. How: This draws the form.
-import { useEffect            } from 'react';                     // What: Use Effect. Why: The account is read as the parts open, and a link moves focus. How: This starts the read and moves the focus.
-import { useRef               } from 'react';                     // What: Use Reference. Why: A link replaces its button, so focus lands on the part's heading. How: This holds the heading.
-import { useState             } from 'react';                     // What: Use State. Why: The appearance, notifications, link, and upgrade change while the parts are open. How: This holds each.
-import { useSyncExternalStore } from 'react';                     // What: Use Sync External Store. Why: The browser's prompt arrives outside React. How: This rerenders the part when it does.
+import { ButBasCom            } from '../ui/button.tsx';            // What: Button Base Component. Why: Buying the upgrade is the account part's leading action. How: This draws it as the main action button.
+import { canProFun            } from '../platform/install.ts';      // What: Can Prompt Function. Why: The Install button shows only while the browser can install. How: This checks for its prompt.
+import { colModGetFun         } from '../platform/color-mode.ts';   // What: Color Mode Get Function. Why: The appearance choice starts from the one kept on this phone. How: This reads it.
+import { colModSetFun         } from '../platform/color-mode.ts';   // What: Color Mode Set Function. Why: Picking light, dark, or the phone's setting applies at once and is kept. How: This applies and keeps it.
+import { DelDatCom            } from './delete-data.tsx';           // What: Delete Data Component. Why: The account part offers to delete the member's data. How: This draws its button and confirmation.
+import { FAI_SET_STR          } from './settings-actions.ts';       // What: Failure Settings String. Why: A redirected link refused for a reason no map names still has to be told. How: This is the general failure message.
+import { gooLinFun            } from '../state/identity.ts';        // What: Google Link Function. Why: Linking Google lets the member get their groups back on a new phone (Section 8). How: This links through Google's popup.
+import { gooStaFun            } from '../state/identity.ts';        // What: Google State Function. Why: The account part says whether Google is linked. How: This reads it.
+import { insProFun            } from '../platform/install.ts';      // What: Install Prompt Function. Why: The Install button asks the browser to install. How: This shows its prompt.
+import { insSubFun            } from '../platform/install.ts';      // What: Install Subscribe Function. Why: The Install button follows the prompt as it comes and goes. How: This subscribes to it.
+import { isaInsFun            } from '../platform/install.ts';      // What: Is-An Installed Function. Why: An installed app needs no install part. How: This checks whether it runs installed.
+import { isaIosFun            } from '../platform/install.ts';      // What: Is-An iOS Function. Why: An iPhone installs through Safari's own menu. How: This checks for an iPhone or iPad.
+import { LegDocCom            } from '../legal/docs.tsx';           // What: Legal Documents Component. Why: Settings holds the privacy policy and the terms. How: This draws their part and its sheet.
+import { outTakFun            } from '../state/google-redirect.ts'; // What: Outcome Take Function. Why: A link that left for Google's page finishes as the app reopens. How: This hands the account part its outcome once.
+import { ProSetCom            } from './profile-settings.tsx';      // What: Profile Settings Component. Why: Settings holds the member's profile photo. How: This draws its part.
+import { purBuyFun            } from '../state/purchase.ts';        // What: Purchase Buy Function. Why: The upgrade is bought once (Section 18). How: This asks for the checkout's address.
+import { purPaiFun            } from '../state/purchase.ts';        // What: Purchase Paid Function. Why: The account part says whether the upgrade is bought. How: This reads it.
+import { pusActFun            } from '../state/push.ts';            // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
+import { pusDisFun            } from '../state/push.ts';            // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
+import { pusEnaFun            } from '../state/push.ts';            // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
+import { SupForCom            } from './support-form.tsx';          // What: Support Form Component. Why: About offers a way to write to the maker. How: This draws the form.
+import { useEffect            } from 'react';                       // What: Use Effect. Why: The account is read as the parts open, and a link moves focus. How: This starts the read and moves the focus.
+import { useRef               } from 'react';                       // What: Use Reference. Why: A link replaces its button, so focus lands on the part's heading. How: This holds the heading.
+import { useState             } from 'react';                       // What: Use State. Why: The appearance, notifications, link, and upgrade change while the parts are open. How: This holds each.
+import { useSyncExternalStore } from 'react';                       // What: Use Sync External Store. Why: The browser's prompt arrives outside React. How: This rerenders the part when it does.
 
 
 import type { ColModTyp } from '../platform/color-mode.ts'; // What: Color Mode Type. Why: Each appearance choice names a mode. How: This types it.
@@ -103,7 +105,7 @@ const GOO_ERR_OBJ : Record< string, string > = { // What: Google Error Object. W
 
 // #region Components
 
-type PscProTyp = { setActObj : SarRetTyp }; // What: Personal Settings Component Props Type. Why: The parts run their changes through the section that holds them. How: This types PerSetCom's props.
+type PscProTyp = { retPatStr? : string, setActObj : SarRetTyp }; // What: Personal Settings Component Props Type. Why: The parts run their changes through the section that holds them, and a link that leaves for Google's page comes back to them. How: This types PerSetCom's props.
 
 // #region PerSetCom
 
@@ -118,13 +120,18 @@ type PscProTyp = { setActObj : SarRetTyp }; // What: Personal Settings Component
  * and keeps it at once; the notifications button turns them on or off for this
  * device; Install shows the browser's prompt where it can; Link Google account
  * links through Google's popup, focus then landing on the account part's
- * heading; and Buy the upgrade opens Polar's checkout once Google is linked.
- * About's links and its tip open in a new tab, except the support address,
- * which opens an email. The account is read as the parts open, and the part
- * says it's checking until it's read.
+ * heading, or through a full-page redirect when the popup is blocked, whose
+ * outcome the account part announces once the app reopens; and Buy the
+ * upgrade opens Polar's checkout once Google is linked. About's links and its
+ * tip open in a new tab, except the support address, which opens an email.
+ * The account is read as the parts open, and the part says it's checking
+ * until it's read.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
+ * @param props.retPatStr - Return Path String: The address a redirected link
+ *                          reopens the app at, the current one when left
+ *                          out.
  * @param props.setActObj - Settings Actions Object: The section's runners
  *                          and messages, from {@link useSetActFun}.
  *
@@ -132,12 +139,12 @@ type PscProTyp = { setActObj : SarRetTyp }; // What: Personal Settings Component
  *
  * @example
  * ```tsx
- * PerSetCom({ setActObj }) // => <PerSetCom />
+ * PerSetCom({ retPatStr, setActObj }) // => <PerSetCom />
  * ```
  *
 */
 
-function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
+function PerSetCom ( { retPatStr, setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 	const accHeaRef = useRef< HTMLHeadingElement >( null ); // What: Account Heading Reference. Why: A link replaces its button, so focus lands on the part's heading. How: This holds it.
@@ -165,10 +172,30 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 
 
+		void outTakFun( 'link', null, ( outRecObj ) => { // What: Redirect Outcome Call. Why: A link that left for Google's page finishes as the app reopens, and the member should hear how it went. How: This takes the link's outcome once, while the parts are open, and announces it.
+
+
+			if ( !actValBoo ) return false; // What: Closed Guard. Why: Parts torn down before announcing leave the outcome for the parts that replace them. How: This passes it by.
+
+
+
+			if ( outRecObj.errCodStr === null ) { setGooLinBoo( true ); setStaMesStr( 'Linked your Google account.' ); } // What: Linked Block. Why: The link went through. How: This shows it and announces it, as a link through the popup does.
+
+			else setErrMesStr( Object.hasOwn( GOO_ERR_OBJ, outRecObj.errCodStr ) ? GOO_ERR_OBJ[ outRecObj.errCodStr ] : FAI_SET_STR ); // What: Failed Branch. Why: A refused link says why. How: This announces its reason, or the general failure.
+
+
+
+			return true; // What: Used Return. Why: The outcome is announced once. How: This marks it taken.
+
+
+		} );
+
+
+
 		return () => { actValBoo = false; }; // What: Cleanup Return. Why: Reads still out shouldn't land after the parts close. How: This marks them closed.
 
 
-	}, [] ); // What: Effect Dependency Array. Why: The account is read once. How: The empty list reads it as the parts open.
+	}, [ setErrMesStr, setStaMesStr ] ); // What: Effect Dependency Array. Why: The account is read once, and a redirected link's outcome announced through the section's messages. How: Both setters are the section's state setters, which never change, so the account is read as the parts open.
 
 
 
@@ -433,7 +460,7 @@ function PerSetCom ( { setActObj } : PscProTyp ) : React.JSX.Element {
 
 									type='button'
 
-									onClick={ () => void chaRunFun( 'link', accHeaRef, async () => { await gooLinFun(); setGooLinBoo( true ); }, 'Linked your Google account.', GOO_ERR_OBJ ) } // What: Link Handler. Why: Linking opens Google's sign-in, and the button goes once it's done. How: This links, marks Google linked, owes the heading focus, and announces it, a known failure saying why.
+									onClick={ () => void chaRunFun( 'link', accHeaRef, async () => { await gooLinFun( retPatStr ); setGooLinBoo( true ); }, 'Linked your Google account.', GOO_ERR_OBJ ) } // What: Link Handler. Why: Linking opens Google's sign-in, and the button goes once it's done. How: This links, marks Google linked, owes the heading focus, and announces it, a known failure saying why.
 								>{ actKinStr === 'link' ? 'Linking…' : 'Link Google account' }</button>{ /* What: Action Plain Button Element. Why: The link is made on purpose, and the label shows while it's out. How: This links Google, reading "Linking…" while the link is out. */ }
 
 

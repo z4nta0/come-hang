@@ -6,37 +6,38 @@
 import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Why: The host's status is styled in its own module, whose class names Vite hashes. How: Its element reads its class from this object.
 
 
-import { chaOutFun       } from '../state/chat.ts';           // What: Chat Outbox Function. Why: Messages written offline go once the device is back. How: This sends a group's outbox.
-import { CreGroCom       } from './create-group.tsx';         // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
-import { GroFraCom       } from './group-frame.tsx';          // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
-import { groWatFun       } from '../state/groups.ts';         // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
-import { ideEnsFun       } from '../state/identity.ts';       // What: Identity Ensure Function. Why: What's waiting on the member is judged by their UID. How: This reads it.
-import { ideHasFun       } from '../state/deletion.ts';       // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
-import { InsIosCom       } from './install-ios.tsx';          // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
-import { isaInsFun       } from '../platform/install.ts';     // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
-import { isaIosFun       } from '../platform/install.ts';     // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
-import { JoiGroCom       } from './join-group.tsx';           // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
-import { LanPagCom       } from './landing/page.tsx';         // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
-import { LoaScrCom       } from './loading.tsx';              // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
-import { NotSheCom       } from './notices.tsx';              // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
-import { offLisFun       } from '../state/waiting.ts';        // What: Offer List Function. Why: An offer of a group waits on the member it names. How: This lists the live ones.
-import { PasInvCom       } from './paste-invite.tsx';         // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
-import { plaPruFun       } from '../platform/place-store.ts'; // What: Place Prune Function. Why: A group's event places shouldn't stay on a device that's no longer in it. How: This removes the places of every group not listed.
-import { proSynFun       } from '../state/avatars.ts';        // What: Profile Sync Function. Why: A group joined after the photo was set should hold it too. How: This copies the photo where it's missing.
-import { safConFun       } from '../platform/install.ts';     // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
-import { scrReaFun       } from '../ui/scroll-top.ts';        // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
-import { shaEndFun       } from '../state/sharing.ts';        // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
-import { shaGetFun       } from '../state/sharing.ts';        // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
-import { shaResFun       } from '../state/sharing.ts';        // What: Sharing Resume Function. Why: Sharing kept from before a reload resumes as the app opens. How: This resumes it.
-import { useCallback     } from 'react';                      // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
-import { useEffect       } from 'react';                      // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing and the kept places are checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing and the places.
-import { useLayoutEffect } from 'react';                      // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
-import { useOnlBooFun    } from '../ui/online.ts';            // What: Use Online Boolean Function. Why: The outbox sends once the device is online. How: This follows the connection.
-import { useRef          } from 'react';                      // What: Use Reference. Why: Carrying on in Safari owes focus to the screen that follows. How: This holds whether it's owed.
-import { useScrOpeFun    } from '../ui/screen.ts';            // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
-import { useScrStaFun    } from '../ui/screen.ts';            // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
-import { useState        } from 'react';                      // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
-import { waiWatFun       } from '../state/waiting.ts';        // What: Waiting Watch Function. Why: Requests waiting on the member mark the frame and open the notices sheet. How: This watches them across the groups.
+import { chaOutFun       } from '../state/chat.ts';            // What: Chat Outbox Function. Why: Messages written offline go once the device is back. How: This sends a group's outbox.
+import { CreGroCom       } from './create-group.tsx';          // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
+import { GroFraCom       } from './group-frame.tsx';           // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
+import { groWatFun       } from '../state/groups.ts';          // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
+import { ideEnsFun       } from '../state/identity.ts';        // What: Identity Ensure Function. Why: What's waiting on the member is judged by their UID. How: This reads it.
+import { ideHasFun       } from '../state/deletion.ts';        // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
+import { InsIosCom       } from './install-ios.tsx';           // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
+import { isaInsFun       } from '../platform/install.ts';      // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
+import { isaIosFun       } from '../platform/install.ts';      // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
+import { JoiGroCom       } from './join-group.tsx';            // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
+import { LanPagCom       } from './landing/page.tsx';          // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
+import { LoaScrCom       } from './loading.tsx';               // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
+import { NotSheCom       } from './notices.tsx';               // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
+import { offLisFun       } from '../state/waiting.ts';         // What: Offer List Function. Why: An offer of a group waits on the member it names. How: This lists the live ones.
+import { outTakFun       } from '../state/google-redirect.ts'; // What: Outcome Take Function. Why: A recovery that left for Google's page finishes as the app reopens. How: This hands the host a finished recovery once.
+import { PasInvCom       } from './paste-invite.tsx';          // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
+import { plaPruFun       } from '../platform/place-store.ts';  // What: Place Prune Function. Why: A group's event places shouldn't stay on a device that's no longer in it. How: This removes the places of every group not listed.
+import { proSynFun       } from '../state/avatars.ts';         // What: Profile Sync Function. Why: A group joined after the photo was set should hold it too. How: This copies the photo where it's missing.
+import { safConFun       } from '../platform/install.ts';      // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
+import { scrReaFun       } from '../ui/scroll-top.ts';         // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
+import { shaEndFun       } from '../state/sharing.ts';         // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
+import { shaGetFun       } from '../state/sharing.ts';         // What: Sharing Get Function. Why: A current record is checked against the groups. How: This reads it.
+import { shaResFun       } from '../state/sharing.ts';         // What: Sharing Resume Function. Why: Sharing kept from before a reload resumes as the app opens. How: This resumes it.
+import { useCallback     } from 'react';                       // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
+import { useEffect       } from 'react';                       // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing and the kept places are checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing and the places.
+import { useLayoutEffect } from 'react';                       // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
+import { useOnlBooFun    } from '../ui/online.ts';             // What: Use Online Boolean Function. Why: The outbox sends once the device is online. How: This follows the connection.
+import { useRef          } from 'react';                       // What: Use Reference. Why: Carrying on in Safari owes focus to the screen that follows. How: This holds whether it's owed.
+import { useScrOpeFun    } from '../ui/screen.ts';             // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
+import { useScrStaFun    } from '../ui/screen.ts';             // What: Use Screen State Function. Why: The history entry says which screen to show. How: This reads it.
+import { useState        } from 'react';                       // What: Use State. Why: The groups, the watch's restarts, a group that's gone, and the message about it change what shows. How: This holds each.
+import { waiWatFun       } from '../state/waiting.ts';         // What: Waiting Watch Function. Why: Requests waiting on the member mark the frame and open the notices sheet. How: This watches them across the groups.
 
 
 import type { GroRecTyp } from '../state/groups.ts';  // What: Group Record Type. Why: The host reads the groups the watch reports. How: This types them.
@@ -658,7 +659,7 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-	const recGroFun = () : void => { // What: Recover Groups Function. Why: An identity brought back from Google comes with its groups, which the running watch didn't know of. How: This restarts the watch, announces the sign-in, and asks the next screen to take focus.
+	const recGroFun = useCallback( () : void => { // What: Recover Groups Function. Why: An identity brought back from Google comes with its groups, which the running watch didn't know of. How: This restarts the watch, announces the sign-in, and asks the next screen to take focus.
 
 
 		setWatVerNum( ( preVerNum ) => preVerNum + 1 ); // What: Watch Restart Call. Why: The watch started before the identity came back. How: This starts a new run.
@@ -668,7 +669,38 @@ function ScrHosCom () : React.JSX.Element {
 		scrOpeFun( { focBoo : true, scrStr : 'group' }, true ); // What: Screen Replace Call. Why: The screen that follows, the first group or the welcome again, takes focus on its heading. How: This replaces the entry with one asking for focus.
 
 
-	};
+	}, [ scrOpeFun ] ); // What: Callback Dependency Array. Why: The recovery opens the next screen through the host's opener. How: scrOpeFun is that opener, kept stable by its hook, and the state setters never change.
+
+
+
+	useEffect( () => { // What: Redirect Recovery Effect. Why: A recovery whose popup was blocked comes back signed in from Google's page, this device's key pair still to make and its groups to show. How: This takes a finished recovery's outcome once, makes the key pair, and hands over as the popup's recovery does.
+
+
+		let actValBoo = true; // What: Active Value Boolean. Why: An outcome arriving after the host closed mustn't act. How: This is true until the cleanup runs.
+
+
+		void outTakFun( 'recover', false, () => { // What: Outcome Take Call. Why: Only a finished recovery has anything to finish. How: This takes it while the host is open, then finishes it.
+
+
+			if ( !actValBoo ) return false; // What: Closed Guard. Why: A host torn down leaves the outcome for the one that replaces it. How: This passes it by.
+
+
+
+			ideEnsFun().then( recGroFun, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Finish Call. Why: The recovered identity needs this device's key pair published, so a member can share each group's key, and its groups come into view announced. How: This runs the bootstrap for it, then restarts the watch and opens the first group, logging a failure.
+
+
+
+			return true; // What: Used Return. Why: The recovery is finished once. How: This marks the outcome taken.
+
+
+		} );
+
+
+
+		return () => { actValBoo = false; }; // What: Cleanup Return. Why: An outcome still out shouldn't act after the host closes. How: This marks it closed.
+
+
+	}, [ recGroFun ] ); // What: Effect Dependency Array. Why: The finished recovery hands over through recGroFun. How: recGroFun stays the same while the opener does, and the outcome is taken only once anyway.
 
 
 

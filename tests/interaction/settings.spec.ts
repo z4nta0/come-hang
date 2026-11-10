@@ -489,6 +489,40 @@ test( 'the account links Google through its popup, focus landing on its heading,
 } );
 
 
+
+
+test( "a link whose popup the browser blocks goes through Google's page instead, coming back to Settings announced", async ( { browserName, page : curPagObj } ) => { // What: Redirect Link Test. Why: An installed app on a phone can have its sign-in popup blocked, and the link should still go through. How: This makes the popup fail as a blocked one does, links through the redirect, and checks the app comes back to Settings saying so.
+
+
+	test.skip( browserName === 'webkit', "The Auth emulator's sign-in page sits on another site, whose stored result WebKit's storage partitioning keeps from the app (measured 2026-11-10); the real site serves that page through its own domain." ); // What: WebKit Skip Call. Why: The redirect's result can't reach the app across sites in WebKit, which only the test setup splits. How: This skips the test there, saying why.
+
+
+
+	await curPagObj.addInitScript( () => { window.open = () => null; } ); // What: Popup Block Call. Why: A browser that blocks a popup hands back nothing from window.open. How: This makes every popup fail that way.
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ); // What: Group Create Call. Why: Settings belong to a group's screen. How: This creates one.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The account is in the Settings section. How: This opens it.
+
+	await curPagObj.getByRole( 'button', { name : 'Link Google account' } ).click(); // What: Link Click Call. Why: The member links Google. How: This presses the button.
+
+	await curPagObj.waitForURL( /\/emulator\/auth\// ); // What: Redirect Wait. Why: The blocked popup gives way to Google's page in the app's own tab. How: This waits for the Auth emulator's sign-in page.
+
+	await curPagObj.reload(); // What: Page Reload Call. Why: Headless Chromium sometimes leaves the emulator's sign-in page unpainted after the redirect, its buttons never settling (measured 2026-11-10). How: This loads the page again before it's used.
+
+	await popFilFun( curPagObj, `alice-${ crypto.randomUUID() }@example.com` ); // What: Page Fill Call. Why: The link finishes once an account is chosen. How: This picks a new account on the page.
+
+	await expect( curPagObj.getByRole( 'main' ).getByRole( 'status' ).filter( { hasText : 'Linked' } ) ).toHaveText( 'Linked your Google account.' ); // What: Linked Status Assertion. Why: The link is announced once the app reopens. How: This reads the section's status.
+	await expect( curPagObj.getByText( 'Your account is linked to Google.', { exact : false } ) ).toBeVisible();                                      // What: Linked Note Assertion. Why: The app reopened at Settings, where the account part shows the link. How: This waits for its note.
+	await expect( curPagObj ).toHaveURL( /\/$/ );                                                                                                     // What: Root Address Assertion. Why: The entry address the redirect came back to is replaced by the root. How: This checks the address.
+
+
+} );
+
 // #endregion Module Init
 
 

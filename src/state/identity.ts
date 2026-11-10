@@ -11,10 +11,13 @@ import { GoogleAuthProvider } from 'firebase/auth';            // What: Google A
 import { keyGetFun          } from '../platform/key-store.ts'; // What: Key Get Function. Why: A key pair made before is reused. How: This reads it from IndexedDB.
 import { keyPutFun          } from '../platform/key-store.ts'; // What: Key Put Function. Why: A new key pair has to survive the app closing. How: This stores it in IndexedDB.
 import { linkWithPopup      } from 'firebase/auth';            // What: Link With Popup. Why: An identity is linked to Google from the person's tap. How: This links it through Google's popup.
+import { linkWithRedirect   } from 'firebase/auth';            // What: Link With Redirect. Why: A link whose popup is blocked leaves for Google's page instead. How: This links through a full-page redirect.
+import { popRedFun          } from './google-redirect.ts';     // What: Popup Redirect Function. Why: Each Google sign-in falls back from a blocked popup the same way. How: This tries the popup, then redirects.
 import { serverTimestamp    } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules require the server's time on a new user document. How: This asks the server to fill it in.
 import { setDoc             } from 'firebase/firestore';       // What: Set Doc. Why: The bootstrap creates the user and account documents. How: This writes a document.
 import { signInAnonymously  } from 'firebase/auth';            // What: Sign In Anonymously. Why: No signup is required (Section 8). How: This creates an anonymous identity.
 import { signInWithPopup    } from 'firebase/auth';            // What: Sign In With Popup. Why: A new phone takes a linked identity back. How: This signs in through Google's popup.
+import { signInWithRedirect } from 'firebase/auth';            // What: Sign In With Redirect. Why: A recovery whose popup is blocked leaves for Google's page instead. How: This signs in through a full-page redirect.
 import { stoPerFun          } from '../platform/persist.ts';   // What: Storage Persist Function. Why: The device holds what only it has. How: This asks the browser to keep the storage.
 import { updateDoc          } from 'firebase/firestore';       // What: Update Doc. Why: A replaced key pair republishes its public key. How: This updates the user document.
 
@@ -212,28 +215,51 @@ const ideEnsFun = () : Promise< IdeRecTyp > => { // What: Identity Ensure Functi
  * tap, through Google's sign-in popup, so the identity, with its groups, can
  * be recovered on a new phone (Section 8). Rejects with Firebase's error when
  * the popup is closed, or when that Google account is already linked to
- * another identity.
+ * another identity. When the browser blocks the popup, it links through a
+ * full-page redirect instead (google-redirect.ts), first moving the address
+ * to the return path, if one is given, so the app reopens there, and putting
+ * the address back when the redirect fails to start.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
- * @param void - This function takes no parameters.
+ * @param retPatStr - Return Path String: The address the app reopens at after
+ *                    a redirect, the current one when left out.
  *
  * @returns A promise that settles once the identity is linked, with no
  *          value.
  *
  * @example
  * ```ts
- * gooLinFun() // => Promise<void>
+ * gooLinFun('/open/gro1/settings') // => Promise<void>
  * ```
  *
 */
 
-const gooLinFun = async () : Promise< void > => { // What: Google Link Function. Why: Recovery is opt-in, through Google sign-in alone for now (Section 8). How: This links the identity through the popup.
+const gooLinFun = async ( retPatStr? : string ) : Promise< void > => { // What: Google Link Function. Why: Recovery is opt-in, through Google sign-in alone for now (Section 8). How: This links the identity through the popup, or a redirect when the popup is blocked.
 
 
 	await ideEnsFun(); // What: Identity Ensure Call. Why: Only an identity that exists can be linked. How: This makes sure it does.
 
-	await linkWithPopup( firGetFun().autValObj.currentUser!, new GoogleAuthProvider() ); // What: Link Call. Why: The identity keeps its UID, now reachable from Google. How: This links it through the popup. // What: Non-Null Note. Why: The bootstrap just signed the identity in. How: The ! says it's there.
+
+	const curUsrObj = firGetFun().autValObj.currentUser!; // What: Current User Object. Why: The identity is what gets linked. How: This reads it. // What: Non-Null Note. Why: The bootstrap just signed the identity in. How: The ! says it's there.
+
+
+	await popRedFun( () => linkWithPopup( curUsrObj, new GoogleAuthProvider() ), async () => { // What: Link Call. Why: The identity keeps its UID, now reachable from Google. How: This links it through the popup, or a redirect that returns to the given path.
+
+
+		const preHreStr = window.location.href; // What: Previous Hypertext-Reference String. Why: A redirect that fails to start leaves the app where it was. How: This keeps the address to put back.
+
+
+		if ( retPatStr ) history.replaceState( history.state, '', retPatStr ); // What: Return Path Call. Why: Firebase brings the app back to the address it left from. How: This moves the address to the return path first.
+
+
+
+		try { await linkWithRedirect( curUsrObj, new GoogleAuthProvider() ); } // What: Redirect Try. Why: A redirect can't be blocked. How: This leaves for Google's page.
+
+		catch ( errCatObj ) { history.replaceState( history.state, '', preHreStr ); throw errCatObj; } // What: Redirect Catch. Why: The address shouldn't keep a path the app isn't showing. How: This puts it back and passes the failure on.
+
+
+	}, 'link' );
 
 
 };
@@ -249,7 +275,8 @@ const gooLinFun = async () : Promise< void > => { // What: Google Link Function.
  *
  * @summary
  * Takes a linked identity back on this phone, from the person's tap, by
- * signing in with Google through the popup, then runs the bootstrap again,
+ * signing in with Google through the popup, or a full-page redirect when the
+ * popup is blocked, then runs the bootstrap again,
  * which makes this phone's key pair and publishes it. Each group's key then
  * waits for a member to share it (Section 6). A Google account not linked to
  * any identity becomes a new identity linked from the start. Refuses with an
@@ -290,7 +317,7 @@ const gooRecFun = async () : Promise< IdeRecTyp > => { // What: Google Recover F
 
 
 
-	await signInWithPopup( autValObj, new GoogleAuthProvider() ); // What: Sign In Call. Why: The linked identity comes back by its Google account. How: This signs in through the popup.
+	await popRedFun( () => signInWithPopup( autValObj, new GoogleAuthProvider() ), () => signInWithRedirect( autValObj, new GoogleAuthProvider() ), 'recover' ); // What: Sign In Call. Why: The linked identity comes back by its Google account. How: This signs in through the popup, or a redirect when the popup is blocked, after which the app's next load runs the bootstrap for it.
 
 	ideProObj = null; // What: Bootstrap Reset. Why: The bootstrap ran, if at all, for the identity signed out. How: This forgets it.
 

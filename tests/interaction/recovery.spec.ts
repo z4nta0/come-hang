@@ -144,6 +144,53 @@ pagTesObj( 'a member gets their groups back on a new phone through Google, and t
 
 } );
 
+
+
+pagTesObj( "a new device's recovery whose popup the browser blocks goes through Google's page instead, and comes back to the group", async ( { browser, browserName, page : curPagObj, secPagObj } ) => { // What: Redirect Recovery Test. Why: An installed app on a phone can have its sign-in popup blocked, and getting groups back should still work. How: This links a member, then on a new device whose popups fail recovers them through the redirect and checks the group waits for its key.
+
+
+	pagTesObj.skip( browserName === 'webkit', "The Auth emulator's sign-in page sits on another site, whose stored result WebKit's storage partitioning keeps from the app (measured 2026-11-10); the real site serves that page through its own domain." ); // What: WebKit Skip Call. Why: The redirect's result can't reach the app across sites in WebKit, which only the test setup splits. How: This skips the test there, saying why.
+
+
+
+	pagTesObj.setTimeout( 90000 ); // What: Timeout Call. Why: The test runs three devices and two sign-ins. How: This allows a minute and a half.
+
+	await curPagObj.goto( '/' ); // What: Owner Page Load Call. Why: The owner's device needs the app's modules. How: This opens the app.
+
+	await memSetFun( recEnvObj, curPagObj, secPagObj ); // What: Member Setup Call. Why: The member recovered needs a group. How: This creates the group with an owner and a member.
+
+
+	const emaValStr = `dana-${ crypto.randomUUID() }@example.com`; // What: Email Value String. Why: The Auth emulator keeps each account for the whole run. How: This names a new Google account for the member.
+
+
+	await gooRunFun( secPagObj, 'gooLinFun', emaValStr ); // What: Link Call. Why: Only a member linked to Google can be recovered. How: This links them on their first device.
+
+
+	const newConObj = await browser.newContext( { baseURL : new URL( curPagObj.url() ).origin } ); // What: New Context Object. Why: The new device starts with no identity of its own. How: This opens a new browser context.
+	const newPagObj = await newConObj.newPage();                                                   // What: New Page Object. Why: The member uses the new device's page. How: This opens one.
+
+
+	await newPagObj.addInitScript( () => { window.open = () => null; } ); // What: Popup Block Call. Why: A browser that blocks a popup hands back nothing from window.open. How: This makes every popup on the new device fail that way.
+
+	await newPagObj.goto( '/' ); // What: New Device Load Call. Why: The new device opens at the landing page. How: This opens the app.
+
+	await newPagObj.getByRole( 'button', { name : 'Get my groups back' } ).click(); // What: Recover Click Call. Why: The member starts to sign in. How: This presses the button.
+
+	await newPagObj.waitForURL( /\/emulator\/auth\// ); // What: Redirect Wait. Why: The blocked popup gives way to Google's page in the app's own tab. How: This waits for the Auth emulator's sign-in page.
+
+	await newPagObj.reload(); // What: Page Reload Call. Why: Headless Chromium sometimes leaves the emulator's sign-in page unpainted after the redirect, its buttons never settling (measured 2026-11-10). How: This loads the page again before it's used.
+
+	await popFilFun( newPagObj, emaValStr ); // What: Page Fill Call. Why: The member signs in with the linked account. How: This picks it on the page.
+
+	await expect( newPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeVisible();                                               // What: Group Assertion. Why: The recovered identity's group opens as the app comes back. How: This waits for its heading.
+	await expect( newPagObj.getByText( "This group's key is waiting for a member to share it.", { exact : false } ) ).toBeVisible();                // What: Key Waiting Assertion. Why: The new device's key pair was made and published, so the group waits for its key. How: This waits for the chat's note.
+	await expect( newPagObj.getByRole( 'status' ).filter( { hasText : 'Google' } ) ).toHaveText( 'Signed in with Google.' );                        // What: Signed In Status Assertion. Why: The finished recovery is announced, as through the popup. How: This reads the host's status.
+
+	await newConObj.close(); // What: Context Close Call. Why: The new device's context isn't the fixture's to close. How: This closes it.
+
+
+} );
+
 // #endregion Module Init
 
 
