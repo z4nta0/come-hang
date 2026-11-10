@@ -3,10 +3,11 @@
 
 // #region Imports
 
-import { doc    } from 'firebase/firestore'; // What: Doc. Why: A document is read by path. How: This builds a reference.
-import { expect } from '@playwright/test';   // What: Expect. Why: A send is retried until it lands. How: This polls it.
-import { getDoc } from 'firebase/firestore'; // What: Get Doc. Why: The tests read back what the pages wrote. How: This reads one document.
-import { test   } from '@playwright/test';   // What: Test. Why: The client specs need a second identity beside the page's own. How: This is extended with a second page.
+import { doc       } from 'firebase/firestore'; // What: Doc. Why: A document is read by path. How: This builds a reference.
+import { expect    } from '@playwright/test';   // What: Expect. Why: A send is retried until it lands. How: This polls it.
+import { getDoc    } from 'firebase/firestore'; // What: Get Doc. Why: The tests read back what the pages wrote. How: This reads one document.
+import { test      } from '@playwright/test';   // What: Test. Why: The client specs need a second identity beside the page's own. How: This is extended with a second page.
+import { updateDoc } from 'firebase/firestore'; // What: Update Doc. Why: A test marks an identity paid. How: This updates its account past the rules.
 
 
 import type { Bytes                } from 'firebase/firestore';           // What: Bytes. Why: A member's encrypted name comes back as Firestore bytes. How: This types it.
@@ -239,6 +240,45 @@ const keyRawFun = ( pagValObj : Page, groIdeStr : string ) : Promise< string > =
 }, groIdeStr ); // What: Page Argument. Why: The callback runs in the page, apart from the test's variables. How: This passes the group's ID in.
 
 // #endregion keyRawFun
+
+
+
+// #region paiSetFun
+
+/**
+ * paiSetFun = Paid Set Function
+ *
+ * @summary
+ * Marks a group's owner paid with the rules off, as the purchase webhook
+ * does, for a test whose one identity has to own more than one group now
+ * that the paywall is locked.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param envTesObj - Environment Test Object: The spec's environment.
+ * @param groIdeStr - Group Identifier String: A group the identity owns.
+ *
+ * @returns A promise that settles once the account is marked, with no value.
+ *
+ * @example
+ * ```ts
+ * paiSetFun(envTesObj, 'Xk3...') // => Promise<void>
+ * ```
+ *
+*/
+
+const paiSetFun = ( envTesObj : RulesTestEnvironment, groIdeStr : string ) : Promise< void > => envTesObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { // What: Paid Set Function. Why: A free identity owns 1 group once the paywall is locked. How: This reads the group's owner and sets the paid flag on their account.
+
+
+	const ownUidStr = ( await getDoc( doc( cotAdmObj.firestore(), `groups/${ groIdeStr }` ) ) ).get( 'ownerUid' ) as string; // What: Owner UID String. Why: The flag belongs on the owner's account. How: This reads the group's owner. // What: Type Assertion Note. Why: A created group always names its owner. How: The as reads it as a string.
+
+
+	await updateDoc( doc( cotAdmObj.firestore(), `accounts/${ ownUidStr }` ), { paid : true } ); // What: Paid Update Call. Why: Only the webhook sets the flag in the app. How: This writes it on the account past the rules.
+
+
+} );
+
+// #endregion paiSetFun
 
 
 
@@ -492,7 +532,7 @@ const senPolFun = async ( pagValObj : Page, groIdeStr : string, mesTexStr : stri
 
 // #region Exports
 
-export { decNamFun, docReaFun, gooRunFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, popFilFun, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
+export { decNamFun, docReaFun, gooRunFun, joiWaiFun, keyRawFun, memSetFun, pagTesObj, paiSetFun, popFilFun, runPagFun, senPolFun }; // What: Named Exports. Why: Every client spec with two identities checks the pages this way. How: This exports the test object and the helpers.
 
 // #endregion Exports
 

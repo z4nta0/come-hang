@@ -61,7 +61,7 @@ const DAY_MIL_NUM = 24 * 60 * 60 * 1000; // What: Day Milliseconds Number. Why: 
 const CLA_RES_NUM = 30 * DAY_MIL_NUM; // What: Claim Reset Number. Why: Once everyone has passed, people get a while before being asked again. How: This is 30 days in milliseconds.
 const INA_LIM_NUM = 30 * DAY_MIL_NUM; // What: Inactive Limit Number. Why: An owner away this long can have the group claimed (Section 18). How: This is 30 days in milliseconds.
 const OFF_LIF_NUM = 7 * DAY_MIL_NUM;  // What: Offer Lifetime Number. Why: An offer lapses after 7 days (Section 18). How: This is 7 days in milliseconds.
-const PAY_LOC_BOO = false;            // What: Paywall Locked Boolean. Why: A free owned slot depends on the paywall, which firestore.rules switches in payLocFun. How: This has to match that function's answer, and switches with it.
+const PAY_LOC_BOO = true;             // What: Paywall Locked Boolean. Why: A free owned slot depends on the paywall, which firestore.rules switches in payLocFun. How: This has to match that function's answer, and switches with it.
 
 // #endregion Constants
 

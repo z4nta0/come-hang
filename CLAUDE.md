@@ -346,5 +346,8 @@ emulators need Java, 21 installed.
 - Firebase/Google Analytics stays **off** in every Firebase project.
 - Budget alerts and the automatic billing cutoff are set up the same day
   Blaze is enabled (ARCHITECTURE.md Section 15).
-- Switching the paywall on means changing `payLocFun` in `firestore.rules`
-  and `PAY_LOC_BOO` in `functions/src/daily-run.ts` together.
+- The paywall is on (switched 2026-11-09). Turning it off, or on again,
+  means changing `payLocFun` in `firestore.rules` and `PAY_LOC_BOO` in
+  `functions/src/daily-run.ts` together, and a test whose one identity owns
+  more than one group marks it paid first (`paiSetFun` in
+  `tests/support/client.ts`).
