@@ -6,6 +6,8 @@
 import cssModObj from './screen-host.module.css'; // What: CSS Module Object. Why: The host's status is styled in its own module, whose class names Vite hashes. How: Its element reads its class from this object.
 
 
+import { actTakFun       } from '../state/identity.ts';        // What: Active Take Function. Why: A device that stepped back can take the identity back. How: This publishes its key again.
+import { actWatFun       } from '../state/identity.ts';        // What: Active Watch Function. Why: A device the identity moved away from steps back. How: This watches the published key.
 import { chaOutFun       } from '../state/chat.ts';            // What: Chat Outbox Function. Why: Messages written offline go once the device is back. How: This sends a group's outbox.
 import { CreGroCom       } from './create-group.tsx';          // What: Create Group Component. Why: Starting a group has its own screen. How: The host shows it when the entry asks for it.
 import { GroFraCom       } from './group-frame.tsx';           // What: Group Frame Component. Why: Someone in a group sees it framed with the rest. How: The host shows it for the open group.
@@ -18,12 +20,15 @@ import { isaIosFun       } from '../platform/install.ts';      // What: Is-An iO
 import { JoiGroCom       } from './join-group.tsx';            // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
 import { LanPagCom       } from './landing/page.tsx';          // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
 import { LoaScrCom       } from './loading.tsx';               // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
+import { MovDevCom       } from './moved.tsx';                 // What: Moved Device Component. Why: A device the identity moved away from shows why, and what it can still do. How: The host shows it while another device is active.
 import { NotSheCom       } from './notices.tsx';               // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
 import { offLisFun       } from '../state/waiting.ts';         // What: Offer List Function. Why: An offer of a group waits on the member it names. How: This lists the live ones.
 import { outTakFun       } from '../state/google-redirect.ts'; // What: Outcome Take Function. Why: A recovery that left for Google's page finishes as the app reopens. How: This hands the host a finished recovery once.
 import { PasInvCom       } from './paste-invite.tsx';          // What: Paste Invite Component. Why: Joining with an invite link has its own screen. How: The host shows it when the entry asks for it.
 import { plaPruFun       } from '../platform/place-store.ts';  // What: Place Prune Function. Why: A group's event places shouldn't stay on a device that's no longer in it. How: This removes the places of every group not listed.
 import { proSynFun       } from '../state/avatars.ts';         // What: Profile Sync Function. Why: A group joined after the photo was set should hold it too. How: This copies the photo where it's missing.
+import { pusRefFun       } from '../state/push.ts';            // What: Push Refresh Function. Why: The active device's token is refreshed as the app opens. How: This rewrites it when it's gone, changed, or a day old.
+import { pusRelFun       } from '../state/push.ts';            // What: Push Release Function. Why: Pushes should follow the identity to the device it moved to. How: This deletes the stored token while it's this device's own.
 import { safConFun       } from '../platform/install.ts';      // What: Safari Continue Function. Why: Someone who chose to carry on in Safari isn't stopped again. How: This reads the kept choice.
 import { scrReaFun       } from '../ui/scroll-top.ts';         // What: Screen Ready Function. Why: A reload's scroll position can only be restored once the real screen has rendered. How: The host calls it once the groups have loaded.
 import { shaEndFun       } from '../state/sharing.ts';         // What: Sharing End Function. Why: Sharing stops with a group that's gone. How: This ends it.
@@ -97,6 +102,88 @@ const RET_MIL_NUM = 2000; // What: Retry Milliseconds Number. Why: A send refuse
 
 
 // #region Hooks
+
+// #region useActDevFun
+
+/**
+ * useActDevFun = Use Active Device Function
+ *
+ * @summary
+ * Follows whether this device is the identity's active one (ARCHITECTURE.md
+ * Section 8), watching while the device holds an identity and starting again
+ * with each run, since a recovery or a deletion changes it. Returns true or
+ * false once the watch reports, and null while it hasn't, or with no
+ * identity.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param ideHasBoo - Identity Has Boolean: Whether the device holds an
+ *                    identity, null while checking.
+ * @param watVerNum - Watch Version Number: The watch's run, which restarts
+ *                    the watch when it changes.
+ *
+ * @returns Whether this device is the active one, or null.
+ *
+ * @example
+ * ```ts
+ * useActDevFun(true, 0) // => true
+ * ```
+ *
+*/
+
+const useActDevFun = ( ideHasBoo : boolean | null, watVerNum : number ) : boolean | null => { // What: Use Active Device Function. Why: A device the identity moved away from steps back, and comes back when it's taken back. How: This watches the published key while there's an identity.
+
+
+	const [ actDevObj, setActDevObj ] = useState< { actBoo : boolean, watVerNum : number } | null >( null ); // What: Active Device Object And Setter. Why: An answer has to be told apart from an earlier run's. How: This holds the latest answer with its run.
+
+
+
+	useEffect( () => { // What: Active Watch Effect. Why: Another device can take the identity at any moment. How: This watches while there's an identity, stopping on cleanup.
+
+
+		if ( ideHasBoo !== true ) return; // What: No Identity Guard. Why: A device without an identity has nothing to watch, and watching would make one. How: This returns.
+
+
+
+		let actValBoo = true;     // What: Active Value Boolean. Why: A report or a stop arriving after cleanup mustn't act. How: This is true until the cleanup runs.
+		let stoWatFun = () => {}; // What: Stop Watch Function. Why: The watch's stop arrives once it has started. How: This holds it, doing nothing until then.
+
+
+		actWatFun( ( actRepBoo ) => { if ( actValBoo ) setActDevObj( { actBoo : actRepBoo, watVerNum } ); } ).then( ( stoFunVal ) => { // What: Watch Start Call. Why: Each report says whether this device is active. How: This keeps each report with its run while it's current, and keeps the stop.
+
+
+			if ( actValBoo ) stoWatFun = stoFunVal; // What: Stop Keep Call. Why: The cleanup stops the watch. How: This keeps the stop.
+
+			else stoFunVal(); // What: Late Stop Call. Why: The run ended before the watch started. How: This stops it at once.
+
+
+		}, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Watch Failure Handler. Why: A watch that can't start leaves the device as it is, but the failure stays visible to someone debugging. How: This logs it.
+
+
+
+		return () => { // What: Watch Cleanup. Why: A later run replaces this one. How: This marks it inactive and stops the watch.
+
+
+			actValBoo = false; // What: Inactive Set. Why: Late reports and stops mustn't act. How: This marks the run done.
+
+			stoWatFun(); // What: Watch Stop Call. Why: The listener closes. How: This stops the watch.
+
+
+		};
+
+
+	}, [ ideHasBoo, watVerNum ] ); // What: Effect Dependency Array. Why: The watch starts once there's an identity, and again for each run. How: ideHasBoo changes when the check answers, and watVerNum when an identity may have changed.
+
+
+
+	return ideHasBoo === true && actDevObj?.watVerNum === watVerNum ? actDevObj.actBoo : null; // What: Active Return. Why: Without an identity, or before this run reports, nothing is known. How: This returns the run's answer, or null.
+
+
+};
+
+// #endregion useActDevFun
+
+
 
 // #region useGroLisFun
 
@@ -395,8 +482,6 @@ const useProSynFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
 
 
 
-type WaiLisTyp = { uidValStr : string, waiRecArr : WaiRecTyp[] }; // What: Waiting List Type. Why: The notices sheet words the member's own requests apart from others'. How: This types the hook's result, the member's UID beside the waiting items.
-
 // #region useWaiLisFun
 
 /**
@@ -415,16 +500,16 @@ type WaiLisTyp = { uidValStr : string, waiRecArr : WaiRecTyp[] }; // What: Waiti
  * @param groRecArr - Group Record Array: The member's groups, or null while
  *                    loading.
  *
- * @returns The member's UID, empty until read, and the waiting items.
+ * @returns The waiting items.
  *
  * @example
  * ```ts
- * useWaiLisFun(groRecArr) // => { uidValStr : 'u1', waiRecArr : [...] }
+ * useWaiLisFun(groRecArr) // => [{ kinValStr : 'join', ... }]
  * ```
  *
 */
 
-const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiLisTyp => { // What: Use Waiting List Function. Why: The frame and the notices sheet follow what's waiting on the member. How: This watches the requests and adds the offers.
+const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiRecTyp[] => { // What: Use Waiting List Function. Why: The frame and the notices sheet follow what's waiting on the member. How: This watches the requests and adds the offers.
 
 
 	const [ uidValStr, setUidValStr ] = useState( '' );                 // What: UID Value String And Setter. Why: The items are judged against the member. How: This holds their UID, empty until read.
@@ -471,7 +556,7 @@ const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiLisTyp => { // What
 
 
 
-	return { uidValStr, waiRecArr : [ ...offLisFun( groRecArr ?? [], uidValStr, Date.now() ), ...waiRecArr.filter( ( waiRecObj ) => groIdeArr.includes( waiRecObj.groIdeStr ) ) ].sort( ( recOneObj, recTwoObj ) => recOneObj.timNum - recTwoObj.timNum ) }; // What: Items Return. Why: The longest wait reads first, a group just left has nothing waiting, and the sheet needs the member's UID. How: This returns the UID, and joins the offers and the watched requests still in the groups, oldest first.
+	return [ ...offLisFun( groRecArr ?? [], uidValStr, Date.now() ), ...waiRecArr.filter( ( waiRecObj ) => groIdeArr.includes( waiRecObj.groIdeStr ) ) ].sort( ( recOneObj, recTwoObj ) => recOneObj.timNum - recTwoObj.timNum ); // What: Items Return. Why: The longest wait reads first, and a group just left has nothing waiting. How: This joins the offers and the watched requests still in the groups, oldest first.
 
 
 };
@@ -532,9 +617,9 @@ function ScrHosCom () : React.JSX.Element {
 
 	const groRecArr = useGroLisFun( watVerNum );                                                    // What: Group Record Array. Why: The groups decide between the first screens and a group. How: This watches them, null while loading.
 	const ideHasBoo = useIdeHasFun( watVerNum );                                                    // What: Identity Has Boolean. Why: A phone in no group sees the landing page or the welcome by whether it holds an identity. How: This checks it, null while checking.
+	const actDevBoo = useActDevFun( ideHasBoo, watVerNum );                                         // What: Active Device Boolean. Why: A device the identity moved away from shows the moved screen instead. How: This follows whether this device is the active one, null while unknown.
 	const visGroArr = groRecArr?.filter( ( groRecObj ) => groRecObj.ideStr !== gonIdeStr ) ?? null; // What: Visible Group Array. Why: A group just left or deleted is gone to the member at once. How: This leaves it out of the groups, null while loading.
-
-	const { uidValStr, waiRecArr } = useWaiLisFun( visGroArr ); // What: UID Value String. Why: The notices sheet words the member's own requests apart. How: This reads the member's UID, empty until read. // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
+	const waiRecArr = useWaiLisFun( visGroArr );                                                    // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
 
 
 	useOutFluFun( visGroArr ); // What: Outbox Flush Call. Why: Messages written offline go once the device is back online. How: This sends them whichever screen is open.
@@ -585,6 +670,29 @@ function ScrHosCom () : React.JSX.Element {
 
 
 	}, [ groRecArr ] ); // What: Effect Dependency Array. Why: The places are checked against each report. How: groRecArr changes as the watch reports.
+
+
+
+	useEffect( () => { // What: Active Device Effect. Why: Pushes and a shared location belong to the device the identity is on. How: This refreshes the active device's push token, and on a device that stepped back releases its token and ends its sharing.
+
+
+		if ( actDevBoo === true ) pusRefFun().catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Push Refresh Call. Why: A token left unrefreshed expires, and one another device took over has to come back when this device takes the identity back. How: This refreshes it, logging a failure.
+
+
+
+		if ( actDevBoo !== false ) return; // What: Not Stepped Back Guard. Why: Only a device that stepped back gives up its pushes and sharing. How: This returns otherwise.
+
+
+
+		const shaRecObj = shaGetFun(); // What: Sharing Record Object. Why: A device that stepped back shouldn't keep sharing where the member is. How: This reads any sharing kept here.
+
+
+		pusRelFun().catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Push Release Call. Why: Pushes should reach the device the identity moved to. How: This deletes the stored token while it's this device's own, logging a failure.
+
+		if ( shaRecObj ) void shaEndFun( shaRecObj.groIdeStr ); // What: Sharing End Call. Why: Sharing stops with the device that stepped back. How: This ends it.
+
+
+	}, [ actDevBoo ] ); // What: Effect Dependency Array. Why: The token and sharing follow whether this device is active. How: actDevBoo changes when the watch reports.
 
 
 
@@ -659,6 +767,48 @@ function ScrHosCom () : React.JSX.Element {
 	};
 
 	// #endregion gonGroFun
+
+
+
+	// #region takDevFun
+
+	/**
+	 * takDevFun = Take Device Function
+	 *
+	 * @summary
+	 * Makes this device the identity's active one again, from the moved
+	 * screen, then announces it and opens the first group, or the welcome,
+	 * with focus on its heading, since the button that did it is gone.
+	 * Rejects, changing nothing on screen, when the key can't be published.
+	 *
+	 * @author z4nta0 <https://github.com/z4nta0>
+	 *
+	 * @param void - This function takes no parameters.
+	 *
+	 * @returns A promise that settles once the device is active again, with
+	 *          no value.
+	 *
+	 * @example
+	 * ```ts
+	 * takDevFun() // => Promise<void>
+	 * ```
+	 *
+	*/
+
+	const takDevFun = async () : Promise< void > => { // What: Take Device Function. Why: Someone can move their identity back to this device. How: This publishes the device's key, announces it, and opens the groups.
+
+
+		await actTakFun(); // What: Take Call. Why: The device whose key is published is the active one. How: This publishes this device's key.
+
+
+		setAnnMesStr( 'Come Hang is back on this device.' ); // What: Announce Set Call. Why: The moved screen's button goes with the move. How: This says it worked.
+
+		scrOpeFun( { focBoo : true, scrStr : 'group' }, true ); // What: Screen Replace Call. Why: The screen that follows takes focus on its heading. How: This replaces the entry with the first group's, asking for focus.
+
+
+	};
+
+	// #endregion takDevFun
 
 
 
@@ -751,6 +901,26 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
+		if ( actDevBoo === false ) { // What: Moved Block. Why: A device the identity moved away from shows why, whatever the entry asks for. How: This shows the moved screen.
+
+
+			return (
+
+
+				<MovDevCom
+					groRecArr={ visGroArr }
+
+					onTakFun={ takDevFun }
+				/> // What: Moved Device Component. Why: The device stepped back, with the member's groups' keys still to share and the way back. How: This shows the screen with the groups and the take-back.
+
+
+			);
+
+
+		}
+
+
+
 		if ( scrStaObj?.scrStr === 'join' && tokValStr !== undefined ) { // What: Join Block. Why: An invite link opens its screen whatever groups someone is in. How: This shows it for the entry's token.
 
 
@@ -837,12 +1007,11 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-			{ !iosGatBoo && groRecArr !== null && ( // What: Notice Sheet Condition. Why: The sheet opens over a real screen, not the install steps or the wait, its watch restarting with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the install screen.
+			{ !iosGatBoo && groRecArr !== null && actDevBoo !== false && ( // What: Notice Sheet Condition. Why: The sheet opens over a real screen, not the install steps or the wait, its watch restarting with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the install screen and a device that stepped back.
 
 
 				<NotSheCom
 					groRecArr={ groRecArr }
-					uidValStr={ uidValStr }
 					waiRecArr={ waiRecArr }
 					watVerNum={ watVerNum }
 				/> // What: Notice Sheet Component. Why: What's waiting on the member, and what happened while they were away, opens over the screen. How: This shows the sheet, closed until something arrives.

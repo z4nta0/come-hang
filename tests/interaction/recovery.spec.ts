@@ -28,7 +28,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * the key; the owner opens the request from the sheet of what's waiting and
  * shares the key from the People section, focus moving to the members, and the
  * new phone's open chat loads without a reload; the member's own first device
- * shares the key with their new one the same way, and keeps reading the group.
+ * steps back as the identity moves, shares the keys with the new one, and can
+ * take the identity back, the new one stepping back in turn.
  *
  * Sections:
  *  - Module State
@@ -147,7 +148,7 @@ pagTesObj( 'a member gets their groups back on a new phone through Google, and t
 
 
 
-pagTesObj( "a member's first device shares the key with their new one from People, and keeps reading the group", async ( { browser, page : curPagObj, secPagObj } ) => { // What: Own Share Test. Why: A member who still has their first device can bring a new one in without waiting on anyone else (Section 6). How: This recovers the member onto a new device, has their first device open the request from the sheet and share the key from People, then checks the new device's chat loads and the first device still reads the group.
+pagTesObj( "a member's first device steps back as they recover on a new one, shares the keys with it, and can take the account back", async ( { browser, page : curPagObj, secPagObj } ) => { // What: Moved Device Test. Why: One identity is used on one device at a time, and a member who still has their first device can bring a new one in without waiting on anyone else (Sections 6 and 8). How: This recovers the member onto a new device while the first is open, checks the first steps back and lists the waiting group, shares the keys, checks the new device's chat loads, takes the account back, and checks each device's screen.
 
 
 	pagTesObj.setTimeout( 90000 ); // What: Timeout Call. Why: The test runs three devices, two sign-ins, and a share. How: This allows a minute and a half.
@@ -161,6 +162,10 @@ pagTesObj( "a member's first device shares the key with their new one from Peopl
 
 
 	await gooRunFun( secPagObj, 'gooLinFun', emaValStr ); // What: Link Call. Why: Only a member linked to Google can be recovered. How: This links them on their first device.
+
+	await secPagObj.goto( '/' ); // What: First Device Open Call. Why: The first device is open on the group as the identity moves. How: This opens the app on it.
+
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeVisible(); // What: First Device Group Assertion. Why: The first device watches the identity once it's showing the group. How: This waits for the group's heading.
 
 
 	const newConObj = await browser.newContext( { baseURL : new URL( curPagObj.url() ).origin } ); // What: New Context Object. Why: The new device starts with no identity of its own. How: This opens a new browser context on the same server.
@@ -181,22 +186,24 @@ pagTesObj( "a member's first device shares the key with their new one from Peopl
 
 	await expect( newPagObj.getByText( "This group's key is waiting for a member to share it.", { exact : false } ) ).toBeVisible(); // What: Key Waiting Assertion. Why: The new device's key pair can't open the old wrap. How: This waits for the chat's note.
 
-	await secPagObj.goto( '/' ); // What: First Device Open Call. Why: The member's first device still holds the key. How: This opens the app on it.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang is open on another device' } ) ).toBeVisible(); // What: Stepped Back Assertion. Why: The first device steps back as the identity moves, without a reload. How: This waits for the moved screen's heading.
 
-	await expect( secPagObj.getByRole( 'dialog', { name : 'While you were away' } ) ).toContainText( "Your new device needs Beach Day's key." ); // What: Waiting Notice Assertion. Why: The member's own request waits on a device of theirs holding the key. How: This waits for the request's sentence.
+	await expect( secPagObj.getByRole( 'main' ).getByRole( 'listitem' ).filter( { hasText : 'Beach Day' } ) ).toBeVisible(); // What: Waiting Group Assertion. Why: The new device is waiting on the group's key, which the first device holds. How: This waits for the group in the list.
 
-	await secPagObj.getByRole( 'dialog', { name : 'While you were away' } ).getByRole( 'button', { name : 'Review' } ).click(); // What: Review Click Call. Why: The member goes straight to the request. How: This presses its Review, which opens the People section at it.
+	await secPagObj.getByRole( 'button', { name : 'Share the keys' } ).click(); // What: Share Click Call. Why: The member shares the keys with their new device. How: This presses the button.
 
-	await expect( secPagObj.getByRole( 'listitem' ).filter( { hasText : 'Your new device' } ) ).toBeVisible(); // What: Own Row Assertion. Why: The member's own request reads as their new device. How: This waits for its row.
+	await expect( secPagObj.getByRole( 'status' ).filter( { hasText : 'Shared' } ) ).toHaveText( 'Shared the keys. Your new device can read those groups now.' ); // What: Shared Status Assertion. Why: The share is announced. How: This reads the status.
+	await expect( secPagObj.getByRole( 'heading', { level : 2, name : "Your groups' keys" } ) ).toBeFocused();                                                    // What: Keys Focus Assertion. Why: The button went with the list. How: This expects the keys' heading focused.
+	await expect( newPagObj.getByText( "This group's key is waiting for a member to share it.", { exact : false } ) ).toHaveCount( 0 );                           // What: Key Shared Assertion. Why: The shared key opens the chat on the new device without a reload. How: This waits for the note to go.
 
-	await secPagObj.getByRole( 'button', { name : 'Share the key with your new device' } ).click(); // What: Share Click Call. Why: The member shares the key with themselves. How: This presses the button.
+	await secPagObj.getByRole( 'button', { name : 'Use Come Hang here instead' } ).click(); // What: Take Back Click Call. Why: The member moves their identity back to the first device. How: This presses the button.
 
-	await expect( secPagObj.getByRole( 'main' ).getByRole( 'status' ) ).toHaveText( 'Shared the key with your new device.' );                      // What: Shared Status Assertion. Why: The share is announced. How: This reads the status.
-	await expect( newPagObj.getByText( "This group's key is waiting for a member to share it.", { exact : false } ) ).toHaveCount( 0 ); // What: Key Shared Assertion. Why: The shared key opens the chat on the new device without a reload. How: This waits for the note to go.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeFocused();                           // What: Back Group Assertion. Why: The first device opens its group again, focus on it. How: This expects the group's heading focused.
+	await expect( newPagObj.getByRole( 'heading', { level : 1, name : 'Come Hang is open on another device' } ) ).toBeVisible(); // What: New Stepped Back Assertion. Why: The new device steps back in turn. How: This waits for its moved screen.
 
-	await secPagObj.reload(); // What: First Device Reload Call. Why: Sharing replaced the wrap the first device was let in with, which its own copy of the key outlives. How: This loads the app again, back at People.
+	await secPagObj.reload(); // What: First Device Reload Call. Why: The first device stays the active one after a reload. How: This loads the app again.
 
-	await expect( secPagObj.getByRole( 'main' ).getByRole( 'listitem' ).filter( { hasText : 'Dana Lee' } ) ).toBeVisible(); // What: Still Reading Assertion. Why: The members' names are encrypted with the group's key, so the first device reads them only while it keeps the key. How: This waits for the member's row.
+	await expect( secPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeVisible(); // What: Still Active Assertion. Why: The first device keeps the identity. How: This waits for the group's heading.
 
 	await newConObj.close(); // What: Context Close Call. Why: The new device's context isn't the fixture's to close. How: This closes it.
 

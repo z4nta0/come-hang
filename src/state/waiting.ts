@@ -26,13 +26,12 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
  * @summary
  * Watches what's waiting on this member across their groups (ARCHITECTURE.md
  * Section 11.1): someone asking to join, a member waiting on a new device
- * for the group's key, this member's own new device included, a member
- * asking for chat history this device holds, and an offer of a group to this
- * member. Each item names its group, its kind, the person it's about, and
- * when it began, with a key that tells it apart from an earlier item of the
- * same kind, so the notices sheet shows each one once and the frame marks
- * the sections that hold them. An item leaves as soon as it's answered, by
- * this member or another.
+ * for the group's key, a member asking for chat history this device holds,
+ * and an offer of a group to this member. Each item names its group, its
+ * kind, the person it's about, and when it began, with a key that tells it
+ * apart from an earlier item of the same kind, so the notices sheet shows
+ * each one once and the frame marks the sections that hold them. An item
+ * leaves as soon as it's answered, by this member or another.
  *
  * Sections:
  *  - Types
@@ -101,11 +100,10 @@ const offLisFun = ( groRecArr : GroRecTyp[], uidValStr : string, nowTimNum : num
  * @summary
  * Watches each group's join requests, key requests, and history requests,
  * and reports every item waiting on this member across the groups whenever
- * any of them changes, until the returned function stops every watch. A key
- * request counts only while this device holds the group's key, the member's
- * own from a new device included, while any other request this member made
- * isn't waiting on them, and a history request counts only while it's
- * unclaimed and this device holds its range. A watch that fails is
+ * any of them changes, until the returned function stops every watch. A
+ * request this member made isn't waiting on them, a key request counts only
+ * while this device holds the group's key, and a history request only while
+ * it's unclaimed and this device holds its range. A watch that fails is
  * logged and reports nothing for its part.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -159,11 +157,11 @@ const waiWatFun = ( groIdeArr : string[], uidValStr : string, onWaiFun : ( waiRe
 
 		stoFunArr.push( reqWatFun( groIdeStr, ( reqRecArr ) => parSetFun( `${ groIdeStr }/join`, reqRecArr.filter( ( reqRecObj ) => reqRecObj.uidValStr !== uidValStr ).map( ( reqRecObj ) => ( { groIdeStr, kinValStr : 'join', namTexStr : reqRecObj.namTexStr, seeKeyStr : seeKeyFun( groIdeStr, 'join', reqRecObj.uidValStr, reqRecObj.reqTimNum ), timNum : reqRecObj.reqTimNum, uidValStr : reqRecObj.uidValStr } ) ) ), ( errCatObj ) => console.warn( errCatObj ) ) ); // What: Join Watch Call. Why: Someone asking to join waits on every member. How: This watches the group's requests, leaving out one of the member's own, and keeps each as an item named as the joiner asked.
 
-		stoFunArr.push( onSnapshot( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/members` ), ( memSnaObj ) => { // What: Key Watch Call. Why: A member on a new device waits on any device holding the group's key, their own old one included. How: This watches the memberships and keeps each standing request, once the device's key is checked.
+		stoFunArr.push( onSnapshot( collection( firGetFun().fstDatObj, `groups/${ groIdeStr }/members` ), ( memSnaObj ) => { // What: Key Watch Call. Why: A member on a new device waits on any member holding the group's key. How: This watches the memberships and keeps each other member's standing request, once the device's key is checked.
 
 
 			const curSeqNum = ++keySeqNum;                                                                                                                         // What: Current Sequence Number. Why: Only the latest report's check may land. How: This numbers this one.
-			const reqDocArr = memSnaObj.docs.filter( ( memDocObj ) => memDocObj.get( 'keyRequestedAt', { serverTimestamps : 'estimate' } ) !== undefined ); // What: Request Document Array. Why: Any standing request waits on a device holding the key, the member's own from their new device included. How: This keeps those memberships, estimating a time the server hasn't confirmed.
+			const reqDocArr = memSnaObj.docs.filter( ( memDocObj ) => memDocObj.id !== uidValStr && memDocObj.get( 'keyRequestedAt', { serverTimestamps : 'estimate' } ) !== undefined ); // What: Request Document Array. Why: Only another member's standing request waits on this one. How: This keeps those memberships, estimating a time the server hasn't confirmed.
 
 
 
