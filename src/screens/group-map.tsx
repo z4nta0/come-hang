@@ -32,6 +32,7 @@ import { useEffect            } from 'react';                   // What: Use Eff
 import { useRef               } from 'react';                   // What: Use Reference. Why: Focus moves to the note that replaces a pressed button, and newcomers are spotted among the shares. How: This holds the note and the known UIDs.
 import { useState             } from 'react';                   // What: Use State. Why: The events, shares, members, and messages change while the section is open. How: This holds each.
 import { useSyncExternalStore } from 'react';                   // What: Use Sync External Store. Why: The sharing record lives outside React and changes from elsewhere. How: This reads it and redraws on each change.
+import { useWakLocFun         } from '../ui/wake-lock.ts';      // What: Use Wake Lock Function. Why: Sharing as someone moves needs the screen on. How: This keeps it on while sharing.
 
 
 import type { EveRecTyp } from '../state/events.ts';     // What: Event Record Type. Why: Sharing belongs to one of the group's events. How: This types each.
@@ -494,6 +495,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 
 
+	useWakLocFun( recEveObj?.shaBoo === true ); // What: Wake Lock Call. Why: Sharing follows the member as they move only while the app is open with the screen on (Section 10). How: This keeps the screen on while they share for the open event with the Map showing.
+
+
+
 	useEffect( () => { // What: Post Focus Effect. Why: A pressed status button goes, and focus mustn't fall to the page. How: This focuses the note that replaces it, once the post the member made lands.
 
 
@@ -712,7 +717,7 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 						<p className={ cssModObj.eveRanPar }>{ eveRanFun( eveOpeObj.staTimNum, eveOpeObj.endTimNum ) }</p>{ /* What: Event Range Paragraph Element. Why: The hours say how long sharing lasts. How: This shows them. */ }
 
-						<p className={ cssModObj.eveNotPar }>{ recEveObj?.shaBoo ? 'You’re sharing your location. Keep Come Hang open with the screen on to share as you move, or it updates when you open the app.' : "Share your location so the group can find you. It updates as you move while Come Hang is open with the screen on, and otherwise when you open the app or say you've arrived. Only the group can see it, and it's deleted when the event ends." }</p>{ /* What: Event Note Paragraph Element. Why: The member should know plainly how sharing works before and while they share (Section 10). How: This says it, by whether they're sharing. */ }
+						<p className={ cssModObj.eveNotPar }>{ recEveObj?.shaBoo ? 'You’re sharing your location. While the Map is open, Come Hang keeps your screen on so it shares as you move. Otherwise it updates when you open the app.' : "Share your location so the group can find you. It updates as you move while Come Hang is open with the screen on, and otherwise when you open the app or say you've arrived. Only the group can see it, and it's deleted when the event ends." }</p>{ /* What: Event Note Paragraph Element. Why: The member should know plainly how sharing works before and while they share (Section 10). How: This says it, by whether they're sharing. */ }
 
 
 

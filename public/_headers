@@ -28,14 +28,15 @@
 # built-in HTTPS list and is slow to undo. Referrer-Policy sends a referrer
 # only to this same origin. Permissions-Policy turns off powerful browser
 # features the app doesn't use yet, such as the camera, and allows
-# geolocation to this origin alone, for sharing a location on an event day.
+# geolocation and the screen wake lock to this origin alone, for sharing a
+# location on an event day with the screen kept on.
 #
 # @author z4nta0 <https://github.com/z4nta0>
 
 # What: Security Headers Rule. Why: Every response should refuse framing, sniffing, plain HTTP, referrer leaks to other sites, unused browser features, and anything loaded from another origin but its own Firebase project. How: This applies the Content-Security-Policy, its project's placeholders filled in by the build, the permissions and referrer policies, HSTS, a nosniff content type, and a deny on framing to every path.
 /*
 	Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'%FIREBASE_CONNECT%; form-action 'self'; frame-ancestors 'none'; frame-src %FIREBASE_FRAME%; img-src 'self' blob:; object-src 'none'; script-src 'self'%FIREBASE_SCRIPT%; style-src 'self'
-	Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()
+	Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(self), serial=(), usb=(), xr-spatial-tracking=()
 	Referrer-Policy: same-origin
 	Strict-Transport-Security: max-age=63072000; includeSubDomains
 	X-Content-Type-Options: nosniff

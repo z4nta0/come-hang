@@ -234,7 +234,9 @@ emulators need Java, 21 installed.
   runs on that project-less build, so the Firebase web config's browser key,
   public by design, never meets its Google key pattern.
   Location sharing opened `geolocation` to the app's own origin
-  (`geolocation=(self)`), which the headers spec checks.
+  (`geolocation=(self)`), and keeping the screen on while sharing opened the
+  screen wake lock the same way (`screen-wake-lock=(self)`), both of which
+  the headers spec checks.
 - **Firestore SDK override**: the Firestore SDK's Node build pins
   `@grpc/grpc-js` to 1.9, which carries a high advisory and failed the
   security suite's audit, so `package.json` overrides it to 1.14.6 under

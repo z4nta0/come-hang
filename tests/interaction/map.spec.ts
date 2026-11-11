@@ -283,6 +283,60 @@ test( 'blocked location says what to do, and the member stays not sharing', asyn
 
 
 
+test( 'sharing keeps the screen on while the Map shows, and lets it sleep on leaving the Map or stopping', async ( { page : curPagObj } ) => { // What: Wake Lock Test. Why: Sharing follows the member as they move only while the app is open with the screen on (Section 10). How: This stands in for the browser's wake lock, recording each request and release, then shares, leaves the Map, returns, and stops, checking the record after each.
+
+
+	await curPagObj.addInitScript( () => { // What: Wake Lock Stand-In Call. Why: A test browser's real lock can't be read back, and each engine grants it differently. How: This replaces it with one that records each request and release.
+
+
+		const wakLogArr : string[] = []; // What: Wake Log Array. Why: The checks read what happened in order. How: This collects each step.
+
+
+		Reflect.set( window, '__wakLogArr', wakLogArr ); // What: Log Expose Call. Why: The test reads the log from the page. How: This puts it on the window.
+
+		Object.defineProperty( navigator, 'wakeLock', { configurable : true, value : { request : async () => { wakLogArr.push( 'request' ); const senValObj = { released : false, release : async () => { senValObj.released = true; wakLogArr.push( 'release' ); } }; return senValObj; } } } ); // What: Wake Lock Define Call. Why: The app asks the browser for the lock. How: This answers with a lock that logs its request and its release.
+
+
+	} );
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The event is planned for the group. How: This creates it as the app does. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+	const wakLogFun = () : Promise< unknown > => curPagObj.evaluate( () => Reflect.get( window, '__wakLogArr' ) );          // What: Wake Log Function. Why: Each check reads the log. How: This reads it from the page.
+
+
+	await eveCreFun( curPagObj, groIdeStr, HOU_MIL_NUM, 2 * HOU_MIL_NUM ); // What: Event Create Call. Why: Sharing is open within 3 hours of the start. How: This plans one starting in an hour.
+
+	await posSetFun( curPagObj, 51.5, -0.12 ); // What: Position Call. Why: The member's device has a position. How: This places it.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj, 'Map' ); // What: Map Open Call. Why: Sharing is in the Map section. How: This opens it.
+
+	expect( await wakLogFun() ).toEqual( [] ); // What: Not Sharing Assertion. Why: Without sharing, the screen sleeps as usual. How: This expects no request.
+
+	await curPagObj.getByRole( 'button', { name : 'Share my location' } ).click(); // What: Share Click Call. Why: The member shares. How: This presses the button.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request' ] ); // What: Held Assertion. Why: Sharing on the Map keeps the screen on. How: This waits for the request.
+
+	await secOpeFun( curPagObj, 'Chat' ); // What: Chat Open Call. Why: Leaving the Map lets the screen sleep. How: This opens the chat.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release' ] ); // What: Released Assertion. Why: The lock goes with the Map. How: This waits for the release.
+
+	await secOpeFun( curPagObj, 'Map' ); // What: Map Return Call. Why: Sharing still runs. How: This opens the Map again.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release', 'request' ] ); // What: Held Again Assertion. Why: Back on the Map while sharing, the screen stays on again. How: This waits for a new request.
+
+	await curPagObj.getByRole( 'button', { name : 'Stop sharing' } ).click(); // What: Stop Click Call. Why: Stopping lets the screen sleep. How: This presses the button.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release', 'request', 'release' ] ); // What: Stopped Assertion. Why: The lock goes with the sharing. How: This waits for the release.
+
+
+} );
+
+
+
 test( 'a reload resumes sharing with a fresh fix and keeps what the member said', async ( { page : curPagObj } ) => { // What: Resume Test. Why: Opening the app sends a fresh fix while sharing (Section 10). How: This shares and posts leaving, reloads, then checks the button, the note, and that the share was sent again.
 
 
