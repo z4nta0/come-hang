@@ -203,6 +203,39 @@ test( 'offline, a banner says so and a message waits on the device, shown as wai
 
 
 
+test( "messages written offline keep the order they were written in, even when the device's clock steps back", async ( { page : curPagObj } ) => { // What: Clock Step Test. Why: Waiting messages send in the order they were dated, and a clock that steps back between two of them once dated the second first. How: This writes one message offline, steps the page's clock back a minute, writes another, and checks the outbox keeps them in order.
+
+
+	await groOpeFun( curPagObj ); // What: Open Call. Why: The test writes in a group's chat. How: This creates the group and opens it.
+
+
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } );        // What: Text Box Object. Why: The messages are typed there. How: This finds the composer.
+	const waiIteObj = curPagObj.getByRole( 'listitem' ).filter( { hasText : 'Waiting to send' } ); // What: Waiting Item Object. Why: Both messages wait before the outbox is read. How: This finds those entries.
+
+
+	await curPagObj.context().setOffline( true ); // What: Offline Call. Why: The messages wait on the device. How: This cuts the page off.
+
+	await texBoxObj.fill( 'First' ); // What: First Fill Call. Why: The first message is written. How: This types it.
+
+	await texBoxObj.press( 'Enter' ); // What: First Send Call. Why: Enter sends. How: This presses it.
+
+	await expect( texBoxObj ).toHaveValue( '' ); // What: Cleared Box Assertion. Why: The first message is kept before the clock moves. How: This waits for the box to empty.
+
+	await curPagObj.evaluate( () => { const reaNowFun = Date.now.bind( Date ); Date.now = () => reaNowFun() - 60000; } ); // What: Clock Step Call. Why: A device's clock can be set back, as a sync corrects it. How: This makes the page's clock read a minute behind.
+
+	await texBoxObj.fill( 'Second' ); // What: Second Fill Call. Why: The second message is written after the step. How: This types it.
+
+	await texBoxObj.press( 'Enter' ); // What: Second Send Call. Why: Enter sends. How: This presses it.
+
+	await expect( waiIteObj ).toHaveCount( 2 ); // What: Waiting Count Assertion. Why: Both messages wait. How: This waits for two marked entries.
+
+	await expect.poll( () => outTexFun( curPagObj ) ).toEqual( [ 'First', 'Second' ] ); // What: Order Assertion. Why: The second message, though dated by a clock behind the first's, still sends after it. How: This reads the outbox in the order it sends.
+
+
+} );
+
+
+
 test( 'offline, a change that needs the server says it has to wait, and goes through once the device is back', async ( { page : curPagObj } ) => { // What: Paused Change Test. Why: A change offline shouldn't hang or fail vaguely (Section 14). How: This goes offline in an event's list, tries to add an item, checks the message and the list, then adds it online.
 
 

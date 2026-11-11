@@ -534,12 +534,14 @@
 
 
 
-.fraConMai { /* What: Frame Content Main. Why: The open section fills the rest of the screen below the bar, and its own parts scroll inside it. How: This makes it a one-cell grid in its own area, allowed to shrink below its content. */
+.fraConMai { /* What: Frame Content Main. Why: The open section fills the rest of the screen below the bar, and its own parts scroll inside it. How: This makes it a one-cell grid in its own area, allowed to shrink below its content, holding and clipping any element positioned against it. */
 
 
 	display    : grid;
 	grid-area  : fraConMai;
 	min-height : 0;
+	overflow   : hidden;   /* What: Overflow Clip Note. Why: An element positioned against the content area, such as a link's visually hidden words, mustn't stretch the page below the app. How: This clips anything outside the area, which only hidden helpers reach. */
+	position   : relative; /* What: Positioning Note. Why: An absolutely positioned element with no positioned box above it is placed against the whole page, which grew to reach it while someone shared on the map. How: This makes the content area that box for every section. */
 
 
 }

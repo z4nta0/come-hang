@@ -206,11 +206,13 @@ pagTesObj( "members share, see each other, and post that they're on their way an
 
 	await curPagObj.getByRole( 'button', { name : 'Share my location' } ).click(); // What: Owner Share Click Call. Why: The owner shares too. How: This presses the button.
 
-	await expect( memRowObj ).toContainText( '1.0 km north · updated' );                                                                         // What: Distance Assertion. Why: The owner sees how far and which way the member is. How: This expects about a kilometer north.
-	await expect( curPagObj.getByRole( 'img', { name : 'Everyone sharing', exact : false } ) ).toBeVisible();                                       // What: Plot Assertion. Why: The plot is drawn around the owner. How: This waits for it.
-	await expect( curPagObj.getByText( 'The outer ring is 1.0 km from you.' ) ).toBeVisible();                                                     // What: Scale Assertion. Why: The ring's distance follows the farthest member. How: This reads the caption.
+	await expect( memRowObj ).toContainText( '0.6 mi north · updated' );                                                                             // What: Distance Assertion. Why: The owner sees how far and which way the member is. How: This expects about a kilometer north.
+	await expect( curPagObj.getByRole( 'img', { name : 'Everyone sharing', exact : false } ) ).toBeVisible();                                        // What: Plot Assertion. Why: The plot is drawn around the owner. How: This waits for it.
+	await expect( curPagObj.getByText( 'The outer ring is 0.6 mi from you.' ) ).toBeVisible();                                                       // What: Scale Assertion. Why: The ring's distance follows the farthest member. How: This reads the caption.
 	await expect( memRowObj.getByRole( 'link', { name : 'Open in Google Maps for Dana Lee' } ) ).toHaveAttribute( 'href', /query=51\.509,-0\.12$/ ); // What: Link Assertion. Why: The member's spot opens in Google Maps. How: This expects their coordinates in its address.
-	await expect( memRowObj.getByRole( 'link' ) ).toHaveAttribute( 'rel', 'noopener noreferrer' );                                                // What: Link Safety Assertion. Why: A new tab mustn't reach back. How: This expects the link's rel.
+	await expect( memRowObj.getByRole( 'link' ) ).toHaveAttribute( 'rel', 'noopener noreferrer' );                                                   // What: Link Safety Assertion. Why: A new tab mustn't reach back. How: This expects the link's rel.
+
+	expect( await curPagObj.evaluate( () => document.documentElement.scrollHeight - window.innerHeight ) ).toBeLessThanOrEqual( 0 ); // What: No Page Scroll Assertion. Why: A row's hidden link text once stretched the page below the app while someone shared. How: This expects the page no taller than the screen.
 
 	await wayButObj.click(); // What: Way Click Call. Why: The member leaves for the event. How: This presses the button.
 
@@ -275,6 +277,60 @@ test( 'blocked location says what to do, and the member stays not sharing', asyn
 
 	await expect( curPagObj.getByRole( 'alert' ) ).toHaveText( "Location is blocked for Come Hang. Allow it in your browser's settings, then try again." ); // What: Blocked Alert Assertion. Why: The member should learn how to allow it. How: This reads the alert.
 	await expect( shaButObj ).toBeFocused();                                                                                                              // What: Kept Focus Assertion. Why: The button stays to try again. How: This expects it still focused.
+
+
+} );
+
+
+
+test( 'sharing keeps the screen on while the Map shows, and lets it sleep on leaving the Map or stopping', async ( { page : curPagObj } ) => { // What: Wake Lock Test. Why: Sharing follows the member as they move only while the app is open with the screen on (Section 10). How: This stands in for the browser's wake lock, recording each request and release, then shares, leaves the Map, returns, and stops, checking the record after each.
+
+
+	await curPagObj.addInitScript( () => { // What: Wake Lock Stand-In Call. Why: A test browser's real lock can't be read back, and each engine grants it differently. How: This replaces it with one that records each request and release.
+
+
+		const wakLogArr : string[] = []; // What: Wake Log Array. Why: The checks read what happened in order. How: This collects each step.
+
+
+		Reflect.set( window, '__wakLogArr', wakLogArr ); // What: Log Expose Call. Why: The test reads the log from the page. How: This puts it on the window.
+
+		Object.defineProperty( navigator, 'wakeLock', { configurable : true, value : { request : async () => { wakLogArr.push( 'request' ); const senValObj = { released : false, release : async () => { senValObj.released = true; wakLogArr.push( 'release' ); } }; return senValObj; } } } ); // What: Wake Lock Define Call. Why: The app asks the browser for the lock. How: This answers with a lock that logs its request and its release.
+
+
+	} );
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The event is planned for the group. How: This creates it as the app does. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+	const wakLogFun = () : Promise< unknown > => curPagObj.evaluate( () => Reflect.get( window, '__wakLogArr' ) );          // What: Wake Log Function. Why: Each check reads the log. How: This reads it from the page.
+
+
+	await eveCreFun( curPagObj, groIdeStr, HOU_MIL_NUM, 2 * HOU_MIL_NUM ); // What: Event Create Call. Why: Sharing is open within 3 hours of the start. How: This plans one starting in an hour.
+
+	await posSetFun( curPagObj, 51.5, -0.12 ); // What: Position Call. Why: The member's device has a position. How: This places it.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj, 'Map' ); // What: Map Open Call. Why: Sharing is in the Map section. How: This opens it.
+
+	expect( await wakLogFun() ).toEqual( [] ); // What: Not Sharing Assertion. Why: Without sharing, the screen sleeps as usual. How: This expects no request.
+
+	await curPagObj.getByRole( 'button', { name : 'Share my location' } ).click(); // What: Share Click Call. Why: The member shares. How: This presses the button.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request' ] ); // What: Held Assertion. Why: Sharing on the Map keeps the screen on. How: This waits for the request.
+
+	await secOpeFun( curPagObj, 'Chat' ); // What: Chat Open Call. Why: Leaving the Map lets the screen sleep. How: This opens the chat.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release' ] ); // What: Released Assertion. Why: The lock goes with the Map. How: This waits for the release.
+
+	await secOpeFun( curPagObj, 'Map' ); // What: Map Return Call. Why: Sharing still runs. How: This opens the Map again.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release', 'request' ] ); // What: Held Again Assertion. Why: Back on the Map while sharing, the screen stays on again. How: This waits for a new request.
+
+	await curPagObj.getByRole( 'button', { name : 'Stop sharing' } ).click(); // What: Stop Click Call. Why: Stopping lets the screen sleep. How: This presses the button.
+
+	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release', 'request', 'release' ] ); // What: Stopped Assertion. Why: The lock goes with the sharing. How: This waits for the release.
 
 
 } );

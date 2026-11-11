@@ -3,14 +3,15 @@
 
 // #region Imports
 
-import { cleanupOutdatedCaches   } from 'workbox-precaching';    // What: Cleanup Outdated Caches. Why: An older version's caches would only take up room. How: This deletes caches an earlier Workbox left.
-import { createHandlerBoundToURL } from 'workbox-precaching';    // What: Create Handler Bound To URL. Why: Every address the app answers renders the same page. How: This serves the cached index.html for them.
-import { getMessaging            } from 'firebase/messaging/sw'; // What: Get Messaging. Why: FCM delivers pushes to this worker. How: This sets up Messaging's handler, which shows each push.
-import { initializeApp           } from 'firebase/app';          // What: Initialize App. Why: Messaging hangs off a Firebase app. How: This creates it from the web config.
-import { NavigationRoute         } from 'workbox-routing';       // What: Navigation Route. Why: Opening any of the app's addresses is a page navigation. How: This matches them.
-import { precacheAndRoute        } from 'workbox-precaching';    // What: Precache And Route. Why: The app opens without a connection. How: This caches the build's files and serves them from the cache.
-import { registerRoute           } from 'workbox-routing';       // What: Register Route. Why: Navigations are served by the app's page. How: This adds the route.
-import { tarPatFun               } from './core/push-target.ts'; // What: Target Path Function. Why: A tap on a push opens where its news is. How: This builds the address from the push's data.
+import { cleanupOutdatedCaches   } from 'workbox-precaching';              // What: Cleanup Outdated Caches. Why: An older version's caches would only take up room. How: This deletes caches an earlier Workbox left.
+import { createHandlerBoundToURL } from 'workbox-precaching';              // What: Create Handler Bound To URL. Why: Every address the app answers renders the same page. How: This serves the cached index.html for them.
+import { getMessaging            } from 'firebase/messaging/sw';           // What: Get Messaging. Why: FCM delivers pushes to this worker. How: This sets up Messaging's handler, which shows each push.
+import { initializeApp           } from 'firebase/app';                    // What: Initialize App. Why: Messaging hangs off a Firebase app. How: This creates it from the web config.
+import { NavigationRoute         } from 'workbox-routing';                 // What: Navigation Route. Why: Opening any of the app's addresses is a page navigation. How: This matches them.
+import { precacheAndRoute        } from 'workbox-precaching';              // What: Precache And Route. Why: The app opens without a connection. How: This caches the build's files and serves them from the cache.
+import { registerRoute           } from 'workbox-routing';                 // What: Register Route. Why: Navigations are served by the app's page. How: This adds the route.
+import { tarPatFun               } from './core/push-target.ts';           // What: Target Path Function. Why: A tap on a push opens where its news is. How: This builds the address from the push's data.
+import { tarPutFun               } from './platform/push-target-store.ts'; // What: Target Put Function. Why: An app a tap launches may start at its root, so the address is left where it finds it. How: This keeps it in the target database.
 
 
 import type { FirebaseOptions } from 'firebase/app'; // What: Firebase Options. Why: The web config has a known shape. How: This types it.
@@ -71,9 +72,11 @@ const PRO_CON_STR = import.meta.env.VITE_FIREBASE_CONFIG; // What: Production Co
  *
  * @summary
  * Brings the app forward after a tap on a push, at the address the push
- * leads to: an open window of the app is focused and told the address in a
- * message, which the app follows without reloading, and with none open, a
- * window is opened at the address.
+ * leads to: an open window of the app is told the address in a message,
+ * which the app follows without reloading, then focused where the browser
+ * allows it, and with none open, the address is kept in the target database
+ * and a window is opened at it, so an app that starts at its root still finds
+ * it.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -98,9 +101,9 @@ const appOpeFun = async ( patValStr : string ) : Promise< void > => { // What: A
 	if ( winCliArr.length > 0 ) { // What: Open Window Block. Why: The app is already open, and a reload would lose its place. How: This brings its first window forward and tells it the address.
 
 
-		await winCliArr[ 0 ].focus(); // What: Focus Call. Why: The app comes forward. How: This focuses its first window.
+		winCliArr[ 0 ].postMessage( { patStr : patValStr } ); // What: Address Message Call. Why: The app opens the push's group and section itself. How: This sends it the address, before the focus, which a browser may refuse.
 
-		winCliArr[ 0 ].postMessage( { patStr : patValStr } ); // What: Address Message Call. Why: The app opens the push's group and section itself. How: This sends it the address.
+		await winCliArr[ 0 ].focus().catch( () => undefined ); // What: Focus Call. Why: The app comes forward, and a focus the browser refuses mustn't stop anything. How: This focuses its first window, ignoring a refusal.
 
 
 
@@ -110,6 +113,8 @@ const appOpeFun = async ( patValStr : string ) : Promise< void > => { // What: A
 	}
 
 
+
+	await tarPutFun( patValStr ).catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Target Keep Call. Why: An installed app on an iPad opened at its root rather than the address, so the app finds the address as it starts. How: This keeps the address in the target database, logging a failure.
 
 	await self.clients.openWindow( patValStr ); // What: Window Open Call. Why: The app isn't open. How: This opens it at the address, which it reads as it starts.
 

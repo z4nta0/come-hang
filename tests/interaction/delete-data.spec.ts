@@ -175,6 +175,8 @@ pagTesObj( 'an owner deletes their data from Settings only once delete is typed,
 	const delInpObj = curPagObj.getByLabel( 'Type "delete" to confirm' );           // What: Delete Input Object. Why: The word is typed there. How: This finds the box by its label.
 
 
+	expect( await delButObj.evaluate( ( butEleObj ) => butEleObj.getBoundingClientRect().width < butEleObj.parentElement!.getBoundingClientRect().width / 2 ) ).toBe( true ); // What: Natural Width Assertion. Why: The button once stretched across its whole column, wider than its words. How: This expects it under half the column's width. // What: Non-Null Note. Why: The button always sits inside its part. How: The ! says its parent is there.
+
 	await delButObj.click(); // What: Open Click Call. Why: The owner starts the deletion. How: This opens the confirmation.
 
 	await expect( delInpObj ).toBeFocused(); // What: Box Focus Assertion. Why: Typing the word is the next step. How: This expects the box focused.

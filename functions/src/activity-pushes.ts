@@ -3,6 +3,7 @@
 
 // #region Imports
 
+import { FieldPath         } from 'firebase-admin/firestore';        // What: Field Path. Why: A group's ID becomes a key in the token's map of chat push times. How: This names that key without reading it as a dotted path.
 import { FIR_DAT_OBJ       } from './setup.ts';                      // What: Firestore Database Object. Why: Members, names, and requests live in Firestore. How: This reads them past the rules.
 import { FUN_OPT_OBJ       } from './setup.ts';                      // What: Function Options Object. Why: Every function shares the deploy options. How: Each trigger spreads them into its own.
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'; // What: On Document Created. Why: A new join request is a created document. How: This registers a create trigger.
@@ -28,16 +29,27 @@ import { REA_DAT_OBJ       } from './setup.ts';                      // What: Re
  * member. A new join request pushes every member with how many requests are
  * waiting, tagged so it replaces the group's earlier join push on the phone. A
  * new chat message pushes each member still waiting on it who doesn't have the
- * group open by presence, tagged so a busy chat shows as one notification. A
+ * group open by presence, tagged so a busy chat shows as one notification,
+ * and at most once every 2 minutes for each member and group, so a burst of
+ * messages never reads to a phone as spam. A
  * member asking for the group's key on a new phone pushes every other member.
  *
  * Sections:
+ *  - Constants
  *  - Helpers
  *  - Exports
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
 */
+
+
+
+// #region Constants
+
+const THR_MIL_NUM = 2 * 60 * 1000; // What: Throttle Milliseconds Number. Why: A burst of chat messages should buzz a phone once, since Android can block an app that notifies too often. How: This is the 2 minutes a member's chat push in one group waits after the last.
+
+// #endregion Constants
 
 
 
@@ -51,6 +63,66 @@ const namGetFun = async ( groIdeStr : string ) : Promise< string | null > => ( a
 
 
 
+// #region thrPasFun
+
+/**
+ * thrPasFun = Throttle Pass Function
+ *
+ * @summary
+ * Decides whether a chat push in a group may go to a member now, and records
+ * it when it may. The time of the member's last chat push in each group is
+ * kept in a map on their push token's document, which a fresh token
+ * replaces. A push within THR_MIL_NUM of the last one in the same group is
+ * held back, since the notification already showing stands for the burst,
+ * and a member with no token is too, since there's nothing to push. Runs as
+ * a transaction, so two messages arriving together pass once.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param uidValStr - UID Value String: The member to push.
+ * @param groIdeStr - Group Identifier String: The group whose chat moved.
+ *
+ * @returns A promise that resolves with true when the push may go.
+ *
+ * @example
+ * ```ts
+ * thrPasFun('bob', 'gro1') // => true
+ * ```
+ *
+*/
+
+const thrPasFun = ( uidValStr : string, groIdeStr : string ) : Promise< boolean > => FIR_DAT_OBJ.runTransaction( async ( traValObj ) => { // What: Throttle Pass Function. Why: Each member hears of a busy chat once in a while rather than for every message. How: This reads and stamps the member's last chat push for the group in one transaction.
+
+
+	const tokRefObj = FIR_DAT_OBJ.doc( `accounts/${ uidValStr }/pushToken/current` ); // What: Token Reference Object. Why: The last push times sit beside the token they went to. How: This names the document.
+
+	const tokSnaObj = await traValObj.get( tokRefObj ); // What: Token Snapshot Object. Why: The last push time decides. How: This reads the document in the transaction.
+
+
+	if ( !tokSnaObj.exists ) return false; // What: No Token Guard. Why: A member without notifications on gets no push anyway. How: This holds it back.
+
+
+
+	const lasTimAny : unknown = tokSnaObj.get( new FieldPath( 'chatPushedAt', groIdeStr ) ); // What: Last Time Any. Why: A push within the window is held back. How: This reads the last chat push's time for the group, undefined when there's none.
+
+
+	if ( typeof lasTimAny === 'number' && Date.now() - lasTimAny < THR_MIL_NUM ) return false; // What: Recent Guard. Why: The notification already showing stands for the burst. How: This holds the push back.
+
+
+
+	traValObj.update( tokRefObj, new FieldPath( 'chatPushedAt', groIdeStr ), Date.now() ); // What: Stamp Call. Why: The next push in the group waits from now. How: This records the time.
+
+
+
+	return true; // What: Pass Return. Why: The push may go. How: This resolves true.
+
+
+} );
+
+// #endregion thrPasFun
+
+
+
 // #region chaPusFun
 
 /**
@@ -59,9 +131,10 @@ const namGetFun = async ( groIdeStr : string ) : Promise< string | null > => ( a
  * @summary
  * Runs when a chat message is created and pushes each member on its
  * waiting-on list who has no presence entry in the group, meaning the group
- * isn't open on their phone, tagged by the chat so later pushes replace it.
- * A message marked quiet, nobody waits on, or in a group that's gone, pushes
- * nobody.
+ * isn't open on their phone, tagged by the chat so later pushes replace it,
+ * and at most once every 2 minutes for each of them, which thrPasFun
+ * decides. A message marked quiet, nobody waits on, or in a group that's
+ * gone, pushes nobody.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -105,7 +178,7 @@ const chaPusFun = onValueCreated( { ...FUN_OPT_OBJ, ref : '/chats/{conIdeStr}/me
 
 
 
-	await Promise.all( awaUidArr.map( ( awaUidStr ) => pusSenFun( awaUidStr, 'chatMessage', groNamStr, { groIdeStr : conIdeStr, tagStr : `chat-${ conIdeStr }` } ) ) ); // What: Push Send Calls. Why: Each away member learns the chat moved on, as one notification however busy it is. How: This pushes each, tagged by the chat.
+	await Promise.all( awaUidArr.map( async ( awaUidStr ) => { if ( await thrPasFun( awaUidStr, conIdeStr ) ) await pusSenFun( awaUidStr, 'chatMessage', groNamStr, { groIdeStr : conIdeStr, tagStr : `chat-${ conIdeStr }` } ); } ) ); // What: Push Send Calls. Why: Each member away from the group learns the chat moved, at most once every 2 minutes. How: This checks each member's throttle, then pushes those it passes, tagged by the chat so a push replaces the last.
 
 
 } );

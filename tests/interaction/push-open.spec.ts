@@ -86,6 +86,37 @@ test( "the worker's message opens a push's group and section in an open app, and
 
 } );
 
+
+
+test( 'an address a tap left for the app it launched opens its group and section once, and a stale one is ignored', async ( { page } ) => { // What: Launch Target Test. Why: An installed app on an iPad started at its root rather than the tapped push's address, so the worker leaves the address for the app to follow. How: This leaves a fresh address and reloads, checking its section opens and the address is used up, then leaves a stale one and checks it's ignored.
+
+
+	await page.goto( '/' ); // What: Home Visit. Why: The dev server serves the modules there. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The address names this group. How: This creates it. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+	const tarSetFun = ( patValStr : string, ageMilNum : number ) : Promise< void > => page.evaluate( ( [ tarPatStr, tarAgeNum ] ) => new Promise< void >( ( resValFun ) => { const opeReqObj = indexedDB.open( 'come-hang-push-target', 1 ); opeReqObj.onupgradeneeded = () => opeReqObj.result.createObjectStore( 'target' ); opeReqObj.onsuccess = () => { const traValObj = opeReqObj.result.transaction( 'target', 'readwrite' ); traValObj.objectStore( 'target' ).put( { patStr : tarPatStr, timNum : Date.now() - tarAgeNum }, 'current' ); traValObj.oncomplete = () => { opeReqObj.result.close(); resValFun(); }; }; } ), [ patValStr, ageMilNum ] as const ); // What: Target Set Function. Why: The worker leaves the address where the app reads it. How: This writes the entry the worker would, aged as asked. // What: Type Assertion Note. Why: A plain array would type both entries alike. How: The as const keeps each entry's own type.
+
+
+	await tarSetFun( `/open/${ groIdeStr }/settings`, 0 ); // What: Fresh Target Call. Why: A tap just launched the app. How: This leaves its address.
+
+	await page.reload(); // What: Launch Reload Call. Why: The app reads the address as it starts. How: This loads it again.
+
+	await expect( page.getByRole( 'heading', { level : 2, name : 'Settings' } ) ).toBeVisible(); // What: Settings Assertion. Why: The launch opens where the push leads. How: This expects Settings' heading.
+
+	expect( await page.evaluate( () => new Promise< boolean >( ( resValFun ) => { const opeReqObj = indexedDB.open( 'come-hang-push-target', 1 ); opeReqObj.onsuccess = () => { const getReqObj = opeReqObj.result.transaction( 'target' ).objectStore( 'target' ).get( 'current' ); getReqObj.onsuccess = () => { opeReqObj.result.close(); resValFun( getReqObj.result === undefined ); }; }; } ) ) ).toBe( true ); // What: Used Up Assertion. Why: An address is followed once. How: This expects the entry gone.
+
+	await tarSetFun( `/open/${ groIdeStr }/people`, 2 * 60000 ); // What: Stale Target Call. Why: An address left long ago mustn't move the app. How: This leaves one two minutes old.
+
+	await page.reload(); // What: Stale Reload Call. Why: The app reads the address as it starts. How: This loads it again.
+
+	await expect( page.getByRole( 'heading', { level : 2, name : 'Settings' } ) ).toBeVisible(); // What: Ignored Assertion. Why: The stale address is passed by. How: This expects Settings still showing.
+
+	expect( await page.evaluate( () => new Promise< boolean >( ( resValFun ) => { const opeReqObj = indexedDB.open( 'come-hang-push-target', 1 ); opeReqObj.onsuccess = () => { const getReqObj = opeReqObj.result.transaction( 'target' ).objectStore( 'target' ).get( 'current' ); getReqObj.onsuccess = () => { opeReqObj.result.close(); resValFun( getReqObj.result === undefined ); }; }; } ) ) ).toBe( true ); // What: Stale Gone Assertion. Why: A stale address is cleared too. How: This expects the entry gone.
+
+
+} );
+
 // #endregion Module Init
 
 

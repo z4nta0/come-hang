@@ -16,6 +16,7 @@ import { disTexFun            } from '../core/geo.ts';          // What: Distanc
 import { eveLisFun            } from '../state/events.ts';      // What: Event List Function. Why: Sharing belongs to the event whose window is open. How: This lists the events, soonest first.
 import { eveRanFun            } from '../utils/date.ts';        // What: Event Range Function. Why: The event's part says the hours it runs. How: This formats its range.
 import { ideEnsFun            } from '../state/identity.ts';    // What: Identity Ensure Function. Why: The member's own share is the plot's center. How: This reads their UID.
+import { impUniFun            } from '../core/geo.ts';          // What: Imperial Units Function. Why: Distances read in miles where the device's region uses them. How: This checks the device's language.
 import { iniTexFun            } from '../utils/text.ts';        // What: Initials Text Function. Why: Each avatar and dot shows its member's initials. How: This takes them from the name.
 import { KEY_WAI_STR          } from '../state/groups.ts';      // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its locations. How: The section shows this message then.
 import { locWatFun            } from '../state/location.ts';    // What: Location Watch Function. Why: Members see each other move as updates arrive. How: This watches the shares.
@@ -31,6 +32,7 @@ import { useEffect            } from 'react';                   // What: Use Eff
 import { useRef               } from 'react';                   // What: Use Reference. Why: Focus moves to the note that replaces a pressed button, and newcomers are spotted among the shares. How: This holds the note and the known UIDs.
 import { useState             } from 'react';                   // What: Use State. Why: The events, shares, members, and messages change while the section is open. How: This holds each.
 import { useSyncExternalStore } from 'react';                   // What: Use Sync External Store. Why: The sharing record lives outside React and changes from elsewhere. How: This reads it and redraws on each change.
+import { useWakLocFun         } from '../ui/wake-lock.ts';      // What: Use Wake Lock Function. Why: Sharing as someone moves needs the screen on. How: This keeps it on while sharing.
 
 
 import type { EveRecTyp } from '../state/events.ts';     // What: Event Record Type. Why: Sharing belongs to one of the group's events. How: This types each.
@@ -61,6 +63,7 @@ import type { StaKinTyp } from '../core/chat-status.ts'; // What: Status Kind Ty
  * Sections:
  *  - Types
  *  - Constants
+ *  - Module State
  *  - Helpers
  *  - Hooks
  *  - Components
@@ -92,6 +95,14 @@ const PLO_RAD_NUM = 80;                                                         
 const TIC_MIL_NUM = 30000;                                                                              // What: Tick Milliseconds Number. Why: Ages and the sharing window move with time. How: This redraws the section every 30 seconds.
 
 // #endregion Constants
+
+
+
+// #region Module State
+
+const IMP_UNI_BOO = impUniFun( navigator.language ); // What: Imperial Units Boolean. Why: Distances read in the units the device's region uses, miles in the United States. How: This checks the device's language as the app loads.
+
+// #endregion Module State
 
 
 
@@ -412,7 +423,7 @@ function MapPloCom ( { memRecMap, othLocArr, ownLocObj } : MpcProTyp ) : React.J
 
 			</svg>
 
-			<figcaption className={ cssModObj.ploCapFig }>The outer ring is { disTexFun( maxDisNum ) } from you.</figcaption>{ /* What: Plot Caption Figcaption Element. Why: The plot's scale changes with the farthest member. How: This says how far the ring is. */ }
+			<figcaption className={ cssModObj.ploCapFig }>The outer ring is { disTexFun( maxDisNum, IMP_UNI_BOO ) } from you.</figcaption>{ /* What: Plot Caption Figcaption Element. Why: The plot's scale changes with the farthest member. How: This says how far the ring is. */ }
 
 
 		</figure>
@@ -481,6 +492,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 	const shaLocArr = locRecArr.filter( ( locRecObj ) => locRecObj.eveIdeStr === eveOpeObj?.eveIdeStr ); // What: Shared Location Array. Why: Only shares for the open event belong on its map. How: This keeps them.
 	const ownLocObj = shaLocArr.find( ( locRecObj ) => locRecObj.uidValStr === uidValStr );              // What: Own Location Object. Why: The member's own share centers the plot and measures the others. How: This finds it, undefined when they aren't sharing.
 	const othLocArr = shaLocArr.filter( ( locRecObj ) => locRecObj.uidValStr !== uidValStr );            // What: Other Location Array. Why: The plot draws the others around the member. How: This keeps everyone else's.
+
+
+
+	useWakLocFun( recEveObj?.shaBoo === true ); // What: Wake Lock Call. Why: Sharing follows the member as they move only while the app is open with the screen on (Section 10). How: This keeps the screen on while they share for the open event with the Map showing.
 
 
 
@@ -702,7 +717,7 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 						<p className={ cssModObj.eveRanPar }>{ eveRanFun( eveOpeObj.staTimNum, eveOpeObj.endTimNum ) }</p>{ /* What: Event Range Paragraph Element. Why: The hours say how long sharing lasts. How: This shows them. */ }
 
-						<p className={ cssModObj.eveNotPar }>{ recEveObj?.shaBoo ? 'You’re sharing your location. Keep Come Hang open with the screen on to share as you move, or it updates when you open the app.' : "Share your location so the group can find you. It updates as you move while Come Hang is open with the screen on, and otherwise when you open the app or say you've arrived. Only the group can see it, and it's deleted when the event ends." }</p>{ /* What: Event Note Paragraph Element. Why: The member should know plainly how sharing works before and while they share (Section 10). How: This says it, by whether they're sharing. */ }
+						<p className={ cssModObj.eveNotPar }>{ recEveObj?.shaBoo ? 'You’re sharing your location. While the Map is open, Come Hang keeps your screen on so it shares as you move. Otherwise it updates when you open the app.' : "Share your location so the group can find you. It updates as you move while Come Hang is open with the screen on, and otherwise when you open the app or say you've arrived. Only the group can see it, and it's deleted when the event ends." }</p>{ /* What: Event Note Paragraph Element. Why: The member should know plainly how sharing works before and while they share (Section 10). How: This says it, by whether they're sharing. */ }
 
 
 
@@ -834,7 +849,7 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 										const namValStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' );   // What: Name Value String. Why: A row names its member, even one with no name yet or who left. How: This takes their name, or a stand-in.
 										const disValNum = ownLocObj && !ownRowBoo ? disMetFun( ownLocObj, locRecObj ) : null; // What: Distance Value Number. Why: The row says how far the member is, when the viewer shares too. How: This measures it, or null.
 
-										const wayTexStr = disValNum === null || !ownLocObj ? '' : `${ disTexFun( disValNum ) }${ disValNum < 10 ? '' : ` ${ dirTexFun( beaDegFun( ownLocObj, locRecObj ) ) }` } · `; // What: Way Text String. Why: The row says how far and which way the member is. How: This gives the distance and compass direction, or "nearby" alone, followed by a dot, or nothing without a distance.
+										const wayTexStr = disValNum === null || !ownLocObj ? '' : `${ disTexFun( disValNum, IMP_UNI_BOO ) }${ disValNum < 10 ? '' : ` ${ dirTexFun( beaDegFun( ownLocObj, locRecObj ) ) }` } · `; // What: Way Text String. Why: The row says how far and which way the member is. How: This gives the distance and compass direction, or "nearby" alone, followed by a dot, or nothing without a distance.
 
 
 
