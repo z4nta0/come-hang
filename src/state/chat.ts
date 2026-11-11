@@ -96,6 +96,8 @@ const outRunSet = new Set< string >(); // What: Outbox Run Set. Why: Two sends o
 const ownLisMap = new Map< string, Set< ( mesRecObj : MesRecTyp ) => void > >(); // What: Own Listener Map. Why: A watch skips this device's own message while it's being sent, so a post made away from the chat, such as a bring-list line, would wait for a reload. How: This holds each group's open watches, which a send hands its message to once it's kept.
 const senPenSet = new Set< string >(); // What: Send Pending Set. Why: The database tells this device's listeners of its own write at once, before the server accepts or refuses it, and a refused message mustn't be shown or kept. How: This holds the IDs of messages this device is sending until the server answers.
 
+let lasCreNum = 0; // What: Last Created Number. Why: Waiting messages send in the order they were written, which a device clock stepping back would reverse. How: This holds the last time handed to a waiting message, which the next one always passes.
+
 // #endregion Module State
 
 
@@ -435,10 +437,13 @@ const chaQueFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< Ou
 
 
 
+	lasCreNum = Math.max( Date.now(), lasCreNum + 1 ); // What: Created Time Assignment. Why: A clock that steps back mustn't date a message ahead of one written before it. How: This takes the device's time, or a moment after the last message's when the clock is behind it.
+
+
 	const outRecObj = { // What: Outbox Record Object. Why: The message waits in the order it was written. How: This dates it and gives it a local ID.
 
 
-		creTimNum : Date.now(),          // What: Created Time Number. Why: Waiting messages send in the order they were written. How: This dates it on the device.
+		creTimNum : lasCreNum,           // What: Created Time Number. Why: Waiting messages send in the order they were written. How: This dates it, always after the message before.
 		groIdeStr,                       // What: Group Identifier String. Why: The message belongs to its group. How: This names it.
 		locIdeStr : crypto.randomUUID(), // What: Local Identifier String. Why: The message has no server ID until it's sent. How: This gives it one of its own.
 		texValStr : mesNorStr            // What: Text Value String. Why: The message sends as tidied. How: This holds its text.
