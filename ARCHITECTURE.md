@@ -1838,7 +1838,10 @@ the Blaze change.
   in place, Chat, Events, Map, and People turned off with `aria-disabled`,
   dimmed, and each saying why ("Start or join a group first") through a
   tooltip and a screen reader description, a press on one leading back to
-  the welcome, and Settings working. Otherwise the content area holds the
+  the welcome, and Settings working. Settings stays open when the group it
+  was opened from turns out to be gone (decided 2026-11-11): a reload can
+  briefly show a just-deleted group from the device's cache, and a press in
+  that moment once bounced someone to the welcome as the group dropped out. Otherwise the content area holds the
   welcome (`src/screens/welcome.tsx`): the mark, "You're not in a group
   yet", a line on what to do, "Start a group", "Join with an invite link",
   "Get my groups back", the line agreeing to the terms and the policy, and
