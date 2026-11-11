@@ -37,7 +37,9 @@ import type { DocumentReference } from 'firebase/firestore'; // What: Document R
  * token that's on, at most once a day or as soon as the token changes, and
  * restores one the server dropped, while one turned off stays off. When the
  * person has withdrawn the permission in the browser's settings, the next
- * open deletes the token and turns notifications off.
+ * open deletes the token and turns notifications off. A device stepping back
+ * from the identity releases a token that's still its own, so pushes follow
+ * the identity to the device it moved to.
  *
  * Sections:
  *  - Constants
@@ -278,13 +280,69 @@ const pusRefFun = async () : Promise< boolean > => { // What: Push Refresh Funct
 
 // #endregion pusRefFun
 
+
+
+// #region pusRelFun
+
+/**
+ * pusRelFun = Push Release Function
+ *
+ * @summary
+ * Hands the identity's pushes over when this device steps back from it
+ * (Section 8): with notifications on here and the stored token still this
+ * device's own, deletes the stored token, so pushes stop reaching a device
+ * that no longer uses the identity. A token another device stored is left
+ * alone, and so is this device's choice, so taking the identity back turns
+ * its notifications on again at the next refresh. Resolves with whether it
+ * deleted the token.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that resolves with true once the token is deleted.
+ *
+ * @example
+ * ```ts
+ * pusRelFun() // => true
+ * ```
+ *
+*/
+
+const pusRelFun = async () : Promise< boolean > => { // What: Push Release Function. Why: Pushes should follow the identity to the device it moved to. How: This deletes the stored token while it's still this device's own.
+
+
+	if ( !pusActFun() ) return false; // What: Not On Guard. Why: A device with notifications off stored no token to hand over. How: This resolves false.
+
+
+
+	const tokRefObj = await tokRefFun(); // What: Token Reference Object. Why: The stored token is read and maybe deleted. How: This names its document.
+
+	const tokSnaObj = await getDoc( tokRefObj ); // What: Token Snapshot Object. Why: Only this device's own token is deleted. How: This reads what's stored.
+
+
+	if ( tokSnaObj.get( 'token' ) !== await tokGetFun() ) return false; // What: Other Token Guard. Why: The device the identity moved to may have stored its own. How: This leaves it and resolves false.
+
+
+
+	await deleteDoc( tokRefObj ); // What: Token Delete Call. Why: Pushes shouldn't reach a device that stepped back. How: This deletes the stored token.
+
+
+
+	return true; // What: Released Return. Why: The caller learns the token went. How: This resolves true.
+
+
+};
+
+// #endregion pusRelFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { pusActFun, pusDisFun, pusEnaFun, pusRefFun }; // What: Named Exports. Why: The settings and the app's opening manage notifications through these. How: This exports the state check, the switches, and the refresh.
+export { pusActFun, pusDisFun, pusEnaFun, pusRefFun, pusRelFun }; // What: Named Exports. Why: The settings, the app's opening, and a device stepping back manage notifications through these. How: This exports the state check, the switches, the refresh, and the release.
 
 // #endregion Exports
 

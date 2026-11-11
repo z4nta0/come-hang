@@ -115,8 +115,7 @@ const secWaiFun = ( waiRecObj : WaiRecTyp ) : SecNamTyp => waiRecObj.kinValStr =
  * @summary
  * Returns the sentence a waiting item shows, naming its group and the person
  * it's about: the joiner as they asked, and otherwise the member by the name
- * read from the group, or a stand-in while it can't be read. A key request
- * of this member's own is named as their new device instead.
+ * read from the group, or a stand-in while it can't be read.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -124,18 +123,17 @@ const secWaiFun = ( waiRecObj : WaiRecTyp ) : SecNamTyp => waiRecObj.kinValStr =
  * @param groNamStr - Group Name String: The item's group's name.
  * @param memNamStr - Member Name String: The person's name read from the
  *                    group, empty when it can't be read.
- * @param uidValStr - UID Value String: This member's UID, empty until read.
  *
  * @returns The sentence.
  *
  * @example
  * ```ts
- * waiMesFun(waiRecObj, 'Lake Weekend', 'Sam', uidValStr) // => 'Sam wants ...'
+ * waiMesFun(waiRecObj, 'Lake Weekend', 'Sam') // => 'Sam wants to join ...'
  * ```
  *
 */
 
-const waiMesFun = ( waiRecObj : WaiRecTyp, groNamStr : string, memNamStr : string, uidValStr : string ) : string => { // What: Waiting Message Function. Why: Each kind of item says what's waiting in its own words. How: This picks the sentence by kind.
+const waiMesFun = ( waiRecObj : WaiRecTyp, groNamStr : string, memNamStr : string ) : string => { // What: Waiting Message Function. Why: Each kind of item says what's waiting in its own words. How: This picks the sentence by kind.
 
 
 	const perNamStr = waiRecObj.namTexStr || memNamStr; // What: Person Name String. Why: A joiner names themself in the request, while a member's name is read from the group. How: This takes whichever is there, empty when neither is.
@@ -146,7 +144,7 @@ const waiMesFun = ( waiRecObj : WaiRecTyp, groNamStr : string, memNamStr : strin
 
 
 
-	if ( waiRecObj.kinValStr === 'key' ) return waiRecObj.uidValStr === uidValStr ? `Your new device needs ${ groNamStr }'s key.` : `${ perNamStr || 'A member' } needs ${ groNamStr }'s key on a new device.`; // What: Key Return. Why: A member recovered onto a new device can't read the group until the key is shared, and this member's own new device is theirs to answer from this one. How: This names their new device, or the member, or a member, and the group.
+	if ( waiRecObj.kinValStr === 'key' ) return `${ perNamStr || 'A member' } needs ${ groNamStr }'s key on a new device.`; // What: Key Return. Why: A member recovered onto a new device can't read the group until the key is shared. How: This names them, or a member, and the group.
 
 
 
@@ -167,7 +165,7 @@ const waiMesFun = ( waiRecObj : WaiRecTyp, groNamStr : string, memNamStr : strin
 
 // #region Components
 
-type NscProTyp = { groRecArr : GroRecTyp[], uidValStr : string, waiRecArr : WaiRecTyp[], watVerNum : number }; // What: Notice Sheet Component Props Type. Why: The sheet names the groups, tells the member's own requests apart, shows what's waiting on the member, and restarts its watch when the identity may have just been made. How: This types NotSheCom's props.
+type NscProTyp = { groRecArr : GroRecTyp[], waiRecArr : WaiRecTyp[], watVerNum : number }; // What: Notice Sheet Component Props Type. Why: The sheet names the groups, shows what's waiting on the member, and restarts its watch when the identity may have just been made. How: This types NotSheCom's props.
 
 // #region NotSheCom
 
@@ -197,8 +195,6 @@ type NscProTyp = { groRecArr : GroRecTyp[], uidValStr : string, waiRecArr : WaiR
  *
  * @param props.groRecArr - Group Record Array: The member's groups, which
  *                          name the items.
- * @param props.uidValStr - UID Value String: This member's UID, empty until
- *                          read.
  * @param props.waiRecArr - Waiting Record Array: What's waiting on the
  *                          member.
  * @param props.watVerNum - Watch Version Number: The watch's run, which
@@ -208,12 +204,12 @@ type NscProTyp = { groRecArr : GroRecTyp[], uidValStr : string, waiRecArr : WaiR
  *
  * @example
  * ```tsx
- * NotSheCom({ groRecArr, uidValStr, waiRecArr, ... }) // => <NotSheCom />
+ * NotSheCom({ groRecArr, waiRecArr, watVerNum }) // => <NotSheCom />
  * ```
  *
 */
 
-function NotSheCom ( { groRecArr, uidValStr, waiRecArr, watVerNum } : NscProTyp ) : React.JSX.Element {
+function NotSheCom ( { groRecArr, waiRecArr, watVerNum } : NscProTyp ) : React.JSX.Element {
 
 
 	const revTarRef = useRef< WaiRecTyp | null >( null ); // What: Review Target Reference. Why: A Review opens its item only once the sheet has closed, so the jump never meets the sheet's hold on the page. How: This holds the item, null when none was chosen.
@@ -455,14 +451,14 @@ function NotSheCom ( { groRecArr, uidValStr, waiRecArr, watVerNum } : NscProTyp 
 								>{ /* What: Notice Row Item Element. Why: An item's sentence and its Review belong together. How: This holds both. */ }
 
 
-									<p className={ cssModObj.notMesPar }>{ waiMesFun( waiRecObj, groRecArr.find( ( groRecObj ) => groRecObj.ideStr === waiRecObj.groIdeStr )?.namStr ?? 'a group', namMapObj[ `${ waiRecObj.groIdeStr }/${ waiRecObj.uidValStr }` ] ?? '', uidValStr ) }</p>{ /* What: Notice Message Paragraph Element. Why: The item says what's waiting. How: This shows its sentence, naming the group and the person, or stand-ins while they can't be read. */ }
+									<p className={ cssModObj.notMesPar }>{ waiMesFun( waiRecObj, groRecArr.find( ( groRecObj ) => groRecObj.ideStr === waiRecObj.groIdeStr )?.namStr ?? 'a group', namMapObj[ `${ waiRecObj.groIdeStr }/${ waiRecObj.uidValStr }` ] ?? '' ) }</p>{ /* What: Notice Message Paragraph Element. Why: The item says what's waiting. How: This shows its sentence, naming the group and the person, or stand-ins while they can't be read. */ }
 
 									<button
 										className={ cssModObj.notRevBut }
 
 										type='button'
 
-										aria-label={ `Review: ${ waiMesFun( waiRecObj, groRecArr.find( ( groRecObj ) => groRecObj.ideStr === waiRecObj.groIdeStr )?.namStr ?? 'a group', namMapObj[ `${ waiRecObj.groIdeStr }/${ waiRecObj.uidValStr }` ] ?? '', uidValStr ) }` } // What: Review Label. Why: Several Review buttons should each say which item they open. How: This joins the word and the item's sentence.
+										aria-label={ `Review: ${ waiMesFun( waiRecObj, groRecArr.find( ( groRecObj ) => groRecObj.ideStr === waiRecObj.groIdeStr )?.namStr ?? 'a group', namMapObj[ `${ waiRecObj.groIdeStr }/${ waiRecObj.uidValStr }` ] ?? '' ) }` } // What: Review Label. Why: Several Review buttons should each say which item they open. How: This joins the word and the item's sentence.
 
 										onClick={ () => { revTarRef.current = waiRecObj; sheHanRef.current?.cloFun(); } } // What: Review Click Handler. Why: The item opens only once the sheet has closed. How: This keeps the item to open and starts the sheet's closing slide.
 									>Review</button>{ /* What: Notice Review Button Element. Why: The member goes straight to the item to act on it. How: This closes the sheet and opens the item's section at the item. */ }

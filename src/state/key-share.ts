@@ -31,12 +31,12 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
  * Sharing a group's key with a member who recovered their identity onto a
  * new device (ARCHITECTURE.md Sections 6 and 8). Their new device has a new
  * key pair, so the wrap made for the old one won't open, and loading the
- * group's key files a request on their membership instead. Any member whose
- * device holds the key, the member's own old device included, lists the
- * standing requests and answers one by wrapping the group key for the
- * member's newly published public key, which replaces the old wrap and ends
- * the request in one write, as the rules require, and the new device,
- * watching its membership, learns the request was answered.
+ * group's key files a request on their membership instead. Any other member
+ * lists the standing requests, and the member's own old device, once it has
+ * stepped back, watches theirs; either answers one by wrapping the group key
+ * for the member's newly published public key, which replaces the old wrap
+ * and ends the request in one write, as the rules require, and the new
+ * device, watching its membership, learns the request was answered.
  *
  * Sections:
  *  - Types
@@ -216,6 +216,91 @@ const keyLisFun = async ( groIdeStr : string ) : Promise< KeyReqTyp[] > => { // 
 
 
 
+// #region keyOwnFun
+
+/**
+ * keyOwnFun = Key Own Function
+ *
+ * @summary
+ * Watches this member's own key requests across the given groups, the ones
+ * their new device files (Section 8), and calls onOwnFun with the groups
+ * whose request stands while this device keeps the group's key, in the order
+ * given, each time one changes. Returns the function that stops every
+ * watch, which works before the watches have started too.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeArr - Group Identifier Array: The member's groups' IDs.
+ * @param onOwnFun  - On Own Function: Called with the IDs of the groups
+ *                    waiting on this device.
+ *
+ * @returns The function that stops the watches.
+ *
+ * @example
+ * ```ts
+ * keyOwnFun(['Xk3...'], (waiIdeArr) => ...) // => () => void
+ * ```
+ *
+*/
+
+const keyOwnFun = ( groIdeArr : string[], onOwnFun : ( waiIdeArr : string[] ) => void ) : () => void => { // What: Key Own Function. Why: A device that stepped back shares each group's key with the member's new device. How: This watches the member's own memberships for a request this device can answer.
+
+
+	let actValBoo = true; // What: Active Value Boolean. Why: A report arriving after the stop mustn't land. How: This is true until the stop.
+
+
+	const stoFunArr : ( () => void )[] = []; // What: Stop Function Array. Why: Each group's watch has its own stop. How: This collects them.
+	const waiIdeSet = new Set< string >();     // What: Waiting Identifier Set. Why: Each report changes one group's answer. How: This holds the groups waiting now.
+
+
+
+	void ideEnsFun().then( ( { uidValStr } ) => { // What: Watch Start Call. Why: The memberships are named by the member's UID. How: This reads it, then watches each group's unless stopped already.
+
+
+		if ( !actValBoo ) return; // What: Stopped Guard. Why: The watches were stopped before they started. How: This returns.
+
+
+
+		for ( const groIdeStr of groIdeArr ) stoFunArr.push( onSnapshot( doc( firGetFun().fstDatObj, `groups/${ groIdeStr }/members/${ uidValStr }` ), ( memSnaObj ) => void keyHasFun( groIdeStr ).then( ( hasKeyBoo ) => { // What: Membership Watch Loop. Why: A request can stand or end in any group. How: This watches each membership and checks the device keeps the key on every change.
+
+
+			if ( !actValBoo ) return; // What: Stopped Guard. Why: A check finishing after the stop mustn't report. How: This returns.
+
+
+
+			if ( hasKeyBoo && memSnaObj.get( 'keyRequestedAt' ) !== undefined ) waiIdeSet.add( groIdeStr ); // What: Waiting Add Call. Why: A standing request this device can answer waits on it. How: This adds the group.
+
+			else waiIdeSet.delete( groIdeStr ); // What: Waiting Delete Call. Why: An answered request, or one this device can't answer, doesn't. How: This removes the group.
+
+
+
+			onOwnFun( groIdeArr.filter( ( groIdeVal ) => waiIdeSet.has( groIdeVal ) ) ); // What: Waiting Report Call. Why: The screen lists the groups waiting. How: This reports them in the order given.
+
+
+		} ), ( errCatObj ) => console.warn( errCatObj ) ) ); // What: Watch Failure Handler. Why: A refused watch, such as for a group just left, leaves the rest working, but the failure stays visible to someone debugging. How: This logs it.
+
+
+	}, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Identity Failure Handler. Why: Without an identity there's nothing to watch, but the failure stays visible. How: This logs it.
+
+
+
+	return () => { // What: Stop Return. Why: The watches shouldn't outlive the screen. How: This marks them stopped and stops each.
+
+
+		actValBoo = false; // What: Inactive Set. Why: Late reports mustn't land. How: This marks the watches stopped.
+
+		stoFunArr.forEach( ( stoFunVal ) => stoFunVal() ); // What: Watch Stop Calls. Why: The listeners close. How: This stops each.
+
+
+	};
+
+
+};
+
+// #endregion keyOwnFun
+
+
+
 // #region keyShaFun
 
 /**
@@ -265,7 +350,7 @@ const keyShaFun = async ( groIdeStr : string, uidValStr : string ) : Promise< vo
 
 // #region Exports
 
-export { keyArrFun, keyHasFun, keyLisFun, keyShaFun, type KeyReqTyp }; // What: Named Exports. Why: The group screens show and answer key requests, check this device can, and open a group once its key arrives. How: This exports the functions and the request's type.
+export { keyArrFun, keyHasFun, keyLisFun, keyOwnFun, keyShaFun, type KeyReqTyp }; // What: Named Exports. Why: The group screens show and answer key requests, check this device can, and open a group once its key arrives, and a device that stepped back answers its member's own. How: This exports the functions and the request's type.
 
 // #endregion Exports
 

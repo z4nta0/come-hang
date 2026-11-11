@@ -12,6 +12,7 @@ import { keyGetFun          } from '../platform/key-store.ts'; // What: Key Get 
 import { keyPutFun          } from '../platform/key-store.ts'; // What: Key Put Function. Why: A new key pair has to survive the app closing. How: This stores it in IndexedDB.
 import { linkWithPopup      } from 'firebase/auth';            // What: Link With Popup. Why: An identity is linked to Google from the person's tap. How: This links it through Google's popup.
 import { linkWithRedirect   } from 'firebase/auth';            // What: Link With Redirect. Why: A link whose popup is blocked leaves for Google's page instead. How: This links through a full-page redirect.
+import { onSnapshot         } from 'firebase/firestore';       // What: On Snapshot. Why: A device learns when another takes the identity over. How: This watches the published key.
 import { popRedFun          } from './google-redirect.ts';     // What: Popup Redirect Function. Why: Each Google sign-in falls back from a blocked popup the same way. How: This tries the popup, then redirects.
 import { serverTimestamp    } from 'firebase/firestore';       // What: Server Timestamp. Why: The rules require the server's time on a new user document. How: This asks the server to fill it in.
 import { setDoc             } from 'firebase/firestore';       // What: Set Doc. Why: The bootstrap creates the user and account documents. How: This writes a document.
@@ -43,7 +44,8 @@ import { updateDoc          } from 'firebase/firestore';       // What: Update D
  * 8), an older phone still signed in to the identity never takes the published
  * key back. Google sign-in links the identity, so it can be recovered on a new
  * phone, where signing in with Google takes it back before the bootstrap makes
- * that phone's key pair.
+ * that phone's key pair. The device whose key is published is the identity's
+ * active one, which an older device watches for and can take back.
  *
  * Sections:
  *  - Types
@@ -202,6 +204,102 @@ const ideEnsFun = () : Promise< IdeRecTyp > => { // What: Identity Ensure Functi
 };
 
 // #endregion ideEnsFun
+
+
+
+// #region actTakFun
+
+/**
+ * actTakFun = Active Take Function
+ *
+ * @summary
+ * Makes this device the identity's active one again (Section 8) by
+ * publishing its own public key over the newer device's, which that device
+ * notices and steps back from. Every wrap made for the other device's key
+ * stays as it is, so a group this device never held the key for asks for it
+ * again the next time it opens.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns A promise that settles once the key is published, with no value.
+ *
+ * @example
+ * ```ts
+ * actTakFun() // => Promise<void>
+ * ```
+ *
+*/
+
+const actTakFun = async () : Promise< void > => { // What: Active Take Function. Why: Someone can move their identity back to a device that stepped back. How: This publishes the device's own public key.
+
+
+	const { keyParObj, uidValStr } = await ideEnsFun(); // What: Identity Values. Why: The key published is this device's own, under its UID. How: This reads the identity.
+
+
+	await updateDoc( doc( firGetFun().fstDatObj, `users/${ uidValStr }` ), { publicKey : Bytes.fromUint8Array( new Uint8Array( await crypto.subtle.exportKey( 'raw', keyParObj.publicKey ) ) ) } ); // What: Key Publish Call. Why: The device whose key is published is the active one. How: This writes the raw public key, as the bootstrap does.
+
+
+};
+
+// #endregion actTakFun
+
+
+
+// #region actWatFun
+
+/**
+ * actWatFun = Active Watch Function
+ *
+ * @summary
+ * Watches whether this device is the identity's active one, the device
+ * whose public key is published (Section 8). One identity is used on one
+ * device at a time: a recovery onto a new device publishes that device's
+ * key, and every older device signed in to the identity then reports false,
+ * until it takes the identity back. Calls onActFun with each answer, skipping
+ * a published key that's missing, as while the identity is being deleted.
+ * Resolves with the function that stops the watch.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param onActFun - On Active Function: Called with true while this device
+ *                   is the active one, and false once another is.
+ *
+ * @returns A promise that resolves with the function that stops the watch.
+ *
+ * @example
+ * ```ts
+ * actWatFun((actValBoo) => ...) // => () => void
+ * ```
+ *
+*/
+
+const actWatFun = async ( onActFun : ( actValBoo : boolean ) => void ) : Promise< () => void > => { // What: Active Watch Function. Why: An older device has to step back once the identity moves, and come back when it's taken back. How: This compares the published key with the device's own on every change.
+
+
+	const { keyParObj, uidValStr } = await ideEnsFun(); // What: Identity Values. Why: The device's own key is compared under its UID. How: This reads the identity.
+
+
+	const ownKeyObj = Bytes.fromUint8Array( new Uint8Array( await crypto.subtle.exportKey( 'raw', keyParObj.publicKey ) ) ); // What: Own Key Object. Why: The published key is compared with it as bytes. How: This exports the device's public key as the bootstrap publishes it.
+
+
+
+	return onSnapshot( doc( firGetFun().fstDatObj, `users/${ uidValStr }` ), ( useSnaObj ) => { // What: Key Watch Return. Why: Another device can take the identity at any moment. How: This reports each change of the published key, and returns the stop.
+
+
+		const pubKeyAny : unknown = useSnaObj.get( 'publicKey' ); // What: Public Key Any. Why: The published key decides which device is active. How: This reads it, undefined while it's missing.
+
+
+		if ( pubKeyAny instanceof Bytes ) onActFun( pubKeyAny.isEqual( ownKeyObj ) ); // What: Active Report Call. Why: Only a published key can name the active device. How: This reports whether it's this device's own.
+
+
+	}, ( errCatObj ) => console.warn( errCatObj ) ); // What: Watch Failure Handler. Why: A refused watch, such as once the identity is deleted, leaves the device as it was, but the failure stays visible to someone debugging. How: This logs it.
+
+
+};
+
+// #endregion actWatFun
 
 
 
@@ -377,7 +475,7 @@ const gooStaFun = async () : Promise< boolean > => { // What: Google State Funct
 
 // #region Exports
 
-export { gooLinFun, gooRecFun, gooStaFun, ideEnsFun, type IdeRecTyp }; // What: Named Exports. Why: Group actions start from the identity, which Google sign-in links and recovers. How: This exports the ensure function, the Google functions, and the record's type.
+export { actTakFun, actWatFun, gooLinFun, gooRecFun, gooStaFun, ideEnsFun, type IdeRecTyp }; // What: Named Exports. Why: Group actions start from the identity, which Google sign-in links and recovers, and one device at a time uses. How: This exports the ensure function, the active device's watch and take-back, the Google functions, and the record's type.
 
 // #endregion Exports
 
