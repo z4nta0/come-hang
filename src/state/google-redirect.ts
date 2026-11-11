@@ -16,12 +16,12 @@ import { getRedirectResult } from 'firebase/auth';           // What: Get Redire
  * @summary
  * Lets Google sign-in fall back from its popup to a full-page redirect
  * (ARCHITECTURE.md Section 8). A browser blocks a popup opened too long after
- * the tap, which an installed app on a phone can reach while Firebase loads its
- * sign-in helper or the app checks the server first, so a sign-in whose popup
- * is blocked leaves for Google's page instead, which no blocker can stop. Before
- * leaving, it notes in session storage which sign-in it was, and once the app
- * loads again the first screen to ask takes the redirect's outcome, success or
- * the reason it failed, once.
+ * the tap, which an installed app on a phone can reach while Firebase loads
+ * its sign-in helper or the app checks the server first, so a sign-in whose
+ * popup is blocked leaves for Google's page instead, which no blocker can
+ * stop. Before leaving, it notes in session storage which sign-in it was, and
+ * once the app loads again the first screen to ask takes the redirect's
+ * outcome, success or the reason it failed, once.
  *
  * Sections:
  *  - Types
