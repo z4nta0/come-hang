@@ -587,7 +587,7 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 	const groKeyObj = await unwKeyFun( ( memSnaObj.get( 'wrappedGroupKey' ) as Bytes ).toUint8Array() as Uint8Array< ArrayBuffer >, keyParObj ).catch( async () => { // What: Group Key Object. Why: The wrap opens with this identity's private key alone. How: This unwraps it, or asks for the key when it won't open. // What: Type Assertion Note. Why: The rules store the wrap as bytes, and toUint8Array returns an array over a plain buffer. How: The two as read them as such.
 
 
-		if ( memSnaObj.get( 'keyRequestedAt' ) === undefined ) await updateDoc( memSnaObj.ref, { keyRequestedAt : serverTimestamp() } ); // What: Key Request Call. Why: The wrap was made for another phone's key, so a member has to share the key again (Section 6). How: This stamps a request at the server's time, unless one stands.
+		if ( memSnaObj.get( 'keyRequestedAt' ) === undefined ) await updateDoc( memSnaObj.ref, { keyRequestedAt : serverTimestamp() } ).catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Key Request Call. Why: The wrap was made for another device's key, so a member has to share the key again (Section 6), and the device's sections load the key together, so one may file the request first and the rules refuse the rest. How: This stamps a request at the server's time, unless one stands, logging a refusal so the load still rejects with the waiting message.
 
 		throw new Error( KEY_WAI_STR ); // What: Waiting Rethrow. Why: The group can't open until the key is shared. How: This rejects with the waiting message.
 

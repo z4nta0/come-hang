@@ -20,9 +20,9 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The group help
  * @summary
  * Checks a group's section tabs as people use them, in whichever engine the
  * project runs, against the Emulator Suite: a tab opens its section and marks
- * itself, back returns to the section before, on a phone and on a wide
- * screen, and a history entry naming a section this version doesn't know
- * opens the chat.
+ * itself, back returns to the section before, and the page itself never
+ * scrolls, on a phone and on a wide screen, and a history entry naming a
+ * section this version doesn't know opens the chat.
  *
  * Sections:
  *  - Helpers
@@ -94,6 +94,36 @@ for ( const sizRecObj of [ { heiNum : 844, ideStr : 'a phone', widNum : 390 }, {
 		await curPagObj.goBack(); // What: Second Back Call. Why: Back keeps walking through the sections. How: This goes back again.
 
 		await expect( secNavObj.getByRole( 'button', { name : 'Chat' } ) ).toHaveAttribute( 'aria-current', 'page' ); // What: Back To Chat Assertion. Why: The chat was where the group opened. How: This expects the chat's tab marked again.
+
+
+	} );
+
+
+
+	test( `on ${ sizRecObj.ideStr } the page itself never scrolls, each section scrolling inside the app`, async ( { page : curPagObj } ) => { // What: Page Scroll Test. Why: A long section scrolls inside the app's frame, and a page that also scrolls lets someone drag the app's bottom up past empty space, as Settings once did when its support form's hidden field was placed by the page. How: This opens each section and checks the page is no taller than the screen.
+
+
+		await curPagObj.setViewportSize( { height : sizRecObj.heiNum, width : sizRecObj.widNum } ); // What: Size Call. Why: The frame takes each layout. How: This sizes the page.
+
+		await groOpeFun( curPagObj ); // What: Group Open Call. Why: The sections belong to a group. How: This creates one and opens it.
+
+
+		const secNavObj = curPagObj.getByRole( 'navigation', { name : 'Group sections' } ); // What: Section Nav Object. Why: Each section opens from its tab. How: This finds the tabs.
+
+
+		for ( const secNamStr of [ 'Chat', 'Events', 'Map', 'People', 'Settings' ] ) { // What: Section Loop. Why: Any section could stretch the page. How: This opens each in turn and measures the page.
+
+
+			await secNavObj.getByRole( 'button', { name : secNamStr } ).click(); // What: Tab Click Call. Why: The section opens from its tab. How: This presses it.
+
+			await expect( curPagObj.getByRole( 'heading', { level : 2, name : secNamStr } ) ).toBeVisible(); // What: Section Wait. Why: The section has to show before it's measured. How: This waits for its heading.
+
+			if ( secNamStr === 'Settings' ) await expect( curPagObj.getByRole( 'button', { name : 'Contact support' } ) ).toBeAttached(); // What: Support Form Wait. Why: The support form holds the hidden field that once stretched the page. How: This waits for its button.
+
+			expect( await curPagObj.evaluate( () => document.documentElement.scrollHeight - window.innerHeight ) ).toBeLessThanOrEqual( 0 ); // What: No Page Scroll Assertion. Why: Only the section scrolls, never the page. How: This expects the page no taller than the screen.
+
+
+		}
 
 
 	} );

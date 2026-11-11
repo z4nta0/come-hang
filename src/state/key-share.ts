@@ -3,18 +3,19 @@
 
 // #region Imports
 
-import { Bytes       } from 'firebase/firestore';      // What: Bytes. Why: The new wrap is stored as Firestore bytes, and the public key is read as them. How: This wraps and reads them.
-import { collection  } from 'firebase/firestore';      // What: Collection. Why: Requests stand on the group's memberships. How: This names the members collection.
-import { deleteField } from 'firebase/firestore';      // What: Delete Field. Why: A shared key ends the request. How: This removes its time.
-import { doc         } from 'firebase/firestore';      // What: Doc. Why: The member's public key and membership are named by path. How: This builds a reference.
-import { firGetFun   } from '../platform/firebase.ts'; // What: Firebase Get Function. Why: The memberships and keys live in Firestore. How: This returns the services.
-import { getDoc      } from 'firebase/firestore';      // What: Get Doc. Why: The member's public key is read before wrapping. How: This reads it.
-import { getDocs     } from 'firebase/firestore';      // What: Get Docs. Why: The standing requests are found among the memberships. How: This reads them.
-import { ideEnsFun   } from './identity.ts';           // What: Identity Ensure Function. Why: A member's own membership is watched for an answered request. How: This reads their UID.
-import { keyLoaFun   } from './groups.ts';             // What: Key Load Function. Why: Only a member holding the key can share it. How: This reads this device's key.
-import { onSnapshot  } from 'firebase/firestore';      // What: On Snapshot. Why: A member waiting for the key learns the moment it's shared. How: This watches their membership.
-import { updateDoc   } from 'firebase/firestore';      // What: Update Doc. Why: Sharing replaces the wrap and ends the request. How: This writes both.
-import { wraKeyFun   } from '../platform/crypto.ts';   // What: Wrap Key Function. Why: The key is wrapped for the member's new public key. How: This wraps it.
+import { Bytes       } from 'firebase/firestore';       // What: Bytes. Why: The new wrap is stored as Firestore bytes, and the public key is read as them. How: This wraps and reads them.
+import { collection  } from 'firebase/firestore';       // What: Collection. Why: Requests stand on the group's memberships. How: This names the members collection.
+import { deleteField } from 'firebase/firestore';       // What: Delete Field. Why: A shared key ends the request. How: This removes its time.
+import { doc         } from 'firebase/firestore';       // What: Doc. Why: The member's public key and membership are named by path. How: This builds a reference.
+import { firGetFun   } from '../platform/firebase.ts';  // What: Firebase Get Function. Why: The memberships and keys live in Firestore. How: This returns the services.
+import { getDoc      } from 'firebase/firestore';       // What: Get Doc. Why: The member's public key is read before wrapping. How: This reads it.
+import { getDocs     } from 'firebase/firestore';       // What: Get Docs. Why: The standing requests are found among the memberships. How: This reads them.
+import { ideEnsFun   } from './identity.ts';            // What: Identity Ensure Function. Why: A member's own membership is watched for an answered request. How: This reads their UID.
+import { keyGetFun   } from '../platform/key-store.ts'; // What: Key Get Function. Why: Only a device holding the group's key can share it. How: This reads the key without recovering it.
+import { keyLoaFun   } from './groups.ts';              // What: Key Load Function. Why: Only a member holding the key can share it. How: This reads this device's key.
+import { onSnapshot  } from 'firebase/firestore';       // What: On Snapshot. Why: A member waiting for the key learns the moment it's shared. How: This watches their membership.
+import { updateDoc   } from 'firebase/firestore';       // What: Update Doc. Why: Sharing replaces the wrap and ends the request. How: This writes both.
+import { wraKeyFun   } from '../platform/crypto.ts';    // What: Wrap Key Function. Why: The key is wrapped for the member's new public key. How: This wraps it.
 
 
 import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A request's time is read back. How: This types it.
@@ -28,13 +29,14 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
  *
  * @summary
  * Sharing a group's key with a member who recovered their identity onto a
- * new phone (ARCHITECTURE.md Sections 6 and 8). Their new phone has a new
+ * new device (ARCHITECTURE.md Sections 6 and 8). Their new device has a new
  * key pair, so the wrap made for the old one won't open, and loading the
- * group's key files a request on their membership instead. Any other member
- * lists the standing requests and answers one by wrapping the group key for
- * the member's newly published public key, which replaces the old wrap and
- * ends the request in one write, as the rules require, and the member's own
- * device, watching its membership, learns the request was answered.
+ * group's key files a request on their membership instead. Any member whose
+ * device holds the key, the member's own old device included, lists the
+ * standing requests and answers one by wrapping the group key for the
+ * member's newly published public key, which replaces the old wrap and ends
+ * the request in one write, as the rules require, and the new device,
+ * watching its membership, learns the request was answered.
  *
  * Sections:
  *  - Types
@@ -57,6 +59,34 @@ type KeyReqTyp = { reqTimNum : number, uidValStr : string }; // What: Key Reques
 
 // #region Helpers
 
+// #region keyHasFun
+
+/**
+ * keyHasFun = Key Has Function
+ *
+ * @summary
+ * Resolves with whether this device keeps the group's key, without trying
+ * to recover it from the member's wrap, so it never files a key request.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ *
+ * @returns A promise that resolves with true when the device keeps the key.
+ *
+ * @example
+ * ```ts
+ * keyHasFun('Xk3...') // => true
+ * ```
+ *
+*/
+
+const keyHasFun = async ( groIdeStr : string ) : Promise< boolean > => ( await keyGetFun( `group:${ groIdeStr }` ) ) !== undefined; // What: Key Has Function. Why: A member's own request is theirs to answer only from a device holding the key. How: This reads the kept key and says whether it's there.
+
+// #endregion keyHasFun
+
+
+
 // #region keyArrFun
 
 /**
@@ -64,10 +94,11 @@ type KeyReqTyp = { reqTimNum : number, uidValStr : string }; // What: Key Reques
  *
  * @summary
  * Watches this member's membership of a group and calls onArrFun each time a
- * key request the watch saw standing ends while the membership remains, which
- * is how a shared key arrives. A request ended by the membership going, as
- * when the member leaves, calls nothing. Returns the function that stops the
- * watch, which works before the watch has started too.
+ * key request the watch saw standing ends while the membership remains, on a
+ * device that doesn't keep the group's key, which is how a shared key
+ * arrives. A request ended by the membership going, as when the member
+ * leaves, or answered by this very device, calls nothing. Returns the function
+ * that stops the watch, which works before the watch has started too.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -106,7 +137,7 @@ const keyArrFun = ( groIdeStr : string, onArrFun : () => void ) : () => void => 
 
 
 
-			if ( reqSeeBoo && !reqNowBoo && memSnaObj.exists() ) onArrFun(); // What: Arrival Call. Why: A request that ended with the membership still there was answered with the key. How: This reports it.
+			if ( reqSeeBoo && !reqNowBoo && memSnaObj.exists() ) void keyHasFun( groIdeStr ).then( ( hasKeyBoo ) => { if ( actValBoo && !hasKeyBoo ) onArrFun(); }, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Arrival Call. Why: A request that ended with the membership still there was answered with the key, which arrives only on a device without it, not on the member's own old device that answered it. How: This reports it once the device is found not to keep the key, while the watch runs, logging a failed check.
 
 
 
@@ -191,11 +222,11 @@ const keyLisFun = async ( groIdeStr : string ) : Promise< KeyReqTyp[] > => { // 
  * keyShaFun = Key Share Function
  *
  * @summary
- * Shares the group's key with a member who asked for it: wraps this
- * device's key for the member's published public key, then replaces their
- * wrap and ends their request in one write. Rejects when no request stands,
- * such as when another member answered first, or when this device can't
- * load the key itself.
+ * Shares the group's key with a member who asked for it, this member
+ * included when their new device asked: wraps this device's key for the
+ * member's published public key, then replaces their wrap and ends their
+ * request in one write. Rejects when no request stands, such as when another
+ * member answered first, or when this device can't load the key itself.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -234,7 +265,7 @@ const keyShaFun = async ( groIdeStr : string, uidValStr : string ) : Promise< vo
 
 // #region Exports
 
-export { keyArrFun, keyLisFun, keyShaFun, type KeyReqTyp }; // What: Named Exports. Why: The group screens show and answer key requests, and open a group once its key arrives. How: This exports the functions and the request's type.
+export { keyArrFun, keyHasFun, keyLisFun, keyShaFun, type KeyReqTyp }; // What: Named Exports. Why: The group screens show and answer key requests, check this device can, and open a group once its key arrives. How: This exports the functions and the request's type.
 
 // #endregion Exports
 

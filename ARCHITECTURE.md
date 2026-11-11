@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-10 (live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-10 (a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -448,11 +448,21 @@ member or full metadata privacy.
   and ending the request in one write. The member's own device watches its
   membership, and once the request ends with the membership still there,
   the group's open section loads again, so the key's arrival needs no
-  reload. The rules let a member file only
-  their own request, at the server's time, and let only another member
-  answer it, with a new wrap, and only while it stands, so nobody can spoil
-  a wrap that works. A member who's the only one in a group has nobody to
-  ask (Section 12).
+  reload. The member's own old device can answer too (decided 2026-11-10):
+  each device keeps its own copy of a group's key once it has unwrapped it,
+  so a device the member still has keeps reading the group after
+  recovery, and its People section lists the request as "Your new device"
+  with a share, as its "Waiting on you" list does. Replacing the wrap
+  doesn't touch that device's own copy, so it keeps working after sharing,
+  and an old device never publishes its public key over a newer one's. The
+  push reaches only the identity's newest device, which holds its one push
+  token, so the old device shows the request once it's opened. The rules
+  let a member file only their own request, at the server's time, and let
+  any member answer it, themselves included, with a new wrap, and only
+  while it stands, so nobody can spoil a wrap that works. A member who
+  ends their own request with a bad wrap spoils only their own copy, and
+  can ask again. A member who's the only one in a group, with no other
+  device holding its key, has nobody to ask (Section 12).
 - **Group keys stay extractable** (decided 2026-10-28): any member may
   approve a join and wrap the group key for the joiner (Section 17), and
   WebCrypto only wraps an extractable key, so a member's copy of a group
@@ -552,8 +562,19 @@ in place of their name. Any member can reassign or release it (Section 11.5).
     pair it has just made, so an old phone still signed in to the
     identity never takes the published key back from the newer one. A
     Google account linked to one identity can't be linked to another.
-    Whether the popup works in an installed iOS app, or recovery there has
-    to use a redirect instead, is checked on a real phone against staging.
+    A popup the browser blocks falls back to Google's full-page redirect
+    (decided 2026-11-10, `src/state/google-redirect.ts`): an installed app on
+    Android blocked the link's popup, opened after Firebase loaded its
+    sign-in helper and the app checked the server, so a blocked popup notes
+    which sign-in it was in session storage and leaves for Google's page,
+    which no blocker can stop. A link returns to the group's Settings, which
+    announces how it went; a recovery returns to the root, where the screen
+    host makes the device's key pair and opens the groups, and the landing
+    page or the welcome announces a refusal. The tests run the redirect in
+    Chromium and Firefox; WebKit can't read it back in the emulator, whose
+    sign-in page sits on another site, while the real site serves it through
+    its own domain. Whether the popup, or the redirect, works in an
+    installed iOS app is still checked on a real phone against staging.
   - Raw credential/token export (e.g. a backup file containing the
     Firebase refresh token) was explicitly rejected: not a supported
     recovery path, relies on undocumented internals, and creates a
@@ -1526,10 +1547,11 @@ real, and the app is built against both:
 - Data already delivered to a device (chat history, notes, event
   details, and photos) cannot be retroactively revoked
   if that member is later removed from the group.
-- A member recovered onto a new phone reads a group again only once
-  another member shares its key (Section 6), so a group whose other
-  members never come back stays closed to them, and a group they're the
-  only member of can't be opened again at all.
+- A member recovered onto a new device reads a group again only once
+  another member, or another of their own devices still holding it, shares
+  its key (Section 6), so a group whose other members never come back
+  stays closed to them, and a group they're the only member of can't be
+  opened again at all once no device of theirs holds its key.
 - The group's symmetric key is never rotated when a member is removed.
   They still hold a local copy of it, but rotation is skipped: security
   rules already cut off their access to any *future* ciphertext, so a
@@ -1894,9 +1916,10 @@ the Blaze change.
   so the recovered groups show, the first taking focus while the screen
   host announces the sign-in; a closed or blocked sign-in says so. Each
   group's chat then says its key is waiting, and the People section lists
-  the members waiting for the key on a new phone, each with a share, which
-  any other member presses, focus then landing on a heading as it does
-  after answering a join request. In every section, a
+  the members waiting for the key on a new device, each with a share, which
+  any other member presses, or the member's own old device still holding
+  the key, where the request reads "Your new device", focus then landing on
+  a heading as it does after answering a join request. In every section, a
   button that turns into a confirmation (removing a member, blocking,
   replacing the link, cancelling an event) puts focus on the
   confirmation's safe answer, and leaving it returns focus to the button. The Events
@@ -2184,8 +2207,9 @@ the Blaze change.
   notice wouldn't fit them, and a push alone reaches nobody with
   notifications off. The screen host watches each group's join, key, and
   history requests and reads the offers from the groups, keeping only what
-  this member can act on: not their own request, a key request only while
-  this device holds the group's key, a history request only while it's
+  this member can act on: a key request only while this device holds the
+  group's key, their own from a new device included, no other request of
+  their own, a history request only while it's
   unclaimed and this device holds its range, and an offer only when it names
   them and hasn't lapsed. Once anyone answers an item, it's gone for
   everyone.
@@ -2314,7 +2338,12 @@ the Blaze change.
   production build, so the worker suite in `tests/worker/` checks it
   against the preview server, opening the app offline at its root and at
   an address with no file of its own. The web app manifest stays
-  hand-written, so the plugin writes none.
+  hand-written, so the plugin writes none. It leaves out `theme_color`
+  (decided 2026-11-10): an installed Android app paints its navigation bar
+  in that one color, fixed at install, which showed a white bar under the
+  dark app, so Android draws its own bar in the phone's light or dark
+  instead, while the page's light and dark `theme-color` tags still tint
+  the status bar.
 
 **Setup checklist (don't skip)**, in the order the steps depend on each
 other. It records choices and steps only: secret values, account details,
@@ -2408,10 +2437,10 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          fields, and its token holds only `checkouts:write`. The product,
          token, and webhook first made for staging (2026-11-09) turned out
          to be on live Polar rather than the sandbox, so they became live's:
-         the webhook was pointed at live's `polWebFun`, and staging's
-         product was emptied until the sandbox's own product, token, and
-         webhook are made at sandbox.polar.sh, its secrets still holding
-         live Polar's, which the sandbox's API refuses. Live Polar's account review is real and looks at
+         the webhook was pointed at live's `polWebFun`, and staging got its
+         own at sandbox.polar.sh on 2026-11-10: a sandbox product, token,
+         and webhook, its checkout returning buyers to
+         staging.comehang.app. Live Polar's account review is real and looks at
          the website, so live's product is made after the first deploy
          (stage 4), once comehang.app shows the upgrade, its price, the
          terms, and the refund promise. Every project keeps a
@@ -2537,7 +2566,9 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          card turns them on, a message from another member pushes, a
          bring-list line doesn't, and a tap opens the right group and
          section.
-   - [ ] A sandbox purchase, and its refund.
+   - [x] A sandbox purchase, and its refund: done on
+         staging.comehang.app 2026-11-10, the upgrade showing in Settings
+         after the test card's payment and leaving after a full refund.
    - [ ] Photos: a photo taken sideways comes out upright; an iPhone's HEIC
          photo shares from Safari, and a computer's browser that can't read
          it says so; two members adding photos at once; a photo opened on
@@ -2546,6 +2577,22 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
    - [ ] App Check enforcement turned on for Firestore, RTDB, Storage, and
          Functions once the console's metrics show tokens arriving and
          nearly every request verified.
+6. **Search and outside checks** (added 2026-11-10), once the live site
+   is settled:
+   - [ ] Google Search Console: comehang.app added as a domain property,
+         verified by the TXT record it gives, added in Cloudflare as DNS
+         only, as the maker's other domains are, and the sitemap
+         (`https://comehang.app/sitemap.xml`) submitted.
+   - [ ] Bing Webmaster Tools: the site imported from Search Console, or
+         verified on its own, and the same sitemap submitted.
+   - [ ] The security headers checked from outside, through a scanner
+         such as securityheaders.com and Mozilla's HTTP Observatory, on
+         comehang.app, with anything they flag either fixed in `_headers`
+         or recorded here with why it stays.
+   - [ ] The social preview checked through opengraph.xyz and the
+         platforms' own tools (Facebook's Sharing Debugger, LinkedIn's
+         Post Inspector), which also refresh a stale cached card: the
+         title, description, and card image show on comehang.app's link.
 
 **Lower priority, not needed before launch**:
 - Testing follows the global rules (Playwright in Chromium, Firefox, and

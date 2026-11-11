@@ -697,7 +697,10 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 
 
 
-			<PerSetCom setActObj={ setActObj } />{ /* What: Personal Settings Component. Why: This phone's and the account's settings, and the legal documents, belong to no one group. How: This draws their parts above the way out of the group. */ }
+			<PerSetCom
+				retPatStr={ `/open/${ curGroObj.ideStr }/settings` } // What: Return Path String. Why: A link that leaves for Google's page should come back to this group's Settings. How: This names the entry address that opens it there.
+				setActObj={ setActObj }
+			/>{ /* What: Personal Settings Component. Why: This phone's and the account's settings, and the legal documents, belong to no one group. How: This draws their parts above the way out of the group. */ }
 
 
 

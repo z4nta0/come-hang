@@ -272,7 +272,7 @@ test( 'the head links the SVG and ICO favicons and the touch icon, each served a
 
 
 
-test( 'the manifest names the app and lists icons served at their stated sizes, a maskable one among them', async ( { page, request } ) => { // What: Manifest Test. Why: Installing the app reads its name, display, and icons from the manifest. How: This follows the head's manifest link, then checks the manifest's fields and fetches every icon it lists.
+test( 'the manifest names the app, sets no theme color, and lists icons served at their stated sizes, a maskable one among them', async ( { page, request } ) => { // What: Manifest Test. Why: Installing the app reads its name, display, and icons from the manifest. How: This follows the head's manifest link, then checks the manifest's fields and fetches every icon it lists.
 
 
 	await page.goto( '/' ); // What: Home Visit. Why: The manifest is found through the head. How: This opens the app.
@@ -284,13 +284,14 @@ test( 'the manifest names the app and lists icons served at their stated sizes, 
 	expect( manHreStr ).toBe( '/manifest.webmanifest' ); // What: Manifest Link Assertion. Why: The link has to point at the hand-written manifest. How: This checks it.
 
 
-	const manValObj = await ( await request.get( manHreStr! ) ).json() as { display : string, icons : { purpose : string, sizes : string, src : string }[], name : string, start_url : string }; // What: Manifest Value Object. Why: The manifest's fields are checked as installed apps read them. How: This fetches and parses it. // What: Non-Null Note. Why: getAttribute's type allows null. How: The assertion above proved it's the manifest's path. // What: Type Assertion Note. Why: json() returns any. How: The as reads it as the manifest fields this test checks.
+	const manValObj = await ( await request.get( manHreStr! ) ).json() as { display : string, icons : { purpose : string, sizes : string, src : string }[], name : string, start_url : string, theme_color? : string }; // What: Manifest Value Object. Why: The manifest's fields are checked as installed apps read them. How: This fetches and parses it. // What: Non-Null Note. Why: getAttribute's type allows null. How: The assertion above proved it's the manifest's path. // What: Type Assertion Note. Why: json() returns any. How: The as reads it as the manifest fields this test checks.
 
 
 	expect( manValObj.name ).toBe( 'Come Hang' );                                                     // What: Name Assertion. Why: The installed app is named Come Hang. How: This reads the name.
 	expect( manValObj.display ).toBe( 'standalone' );                                                 // What: Display Assertion. Why: The installed app opens without browser bars. How: This reads the display mode.
 	expect( manValObj.start_url ).toBe( '/' );                                                        // What: Start URL Assertion. Why: The app answers at its root. How: This reads the start address.
 	expect( manValObj.icons.some( ( icoRecObj ) => icoRecObj.purpose === 'maskable' ) ).toBe( true ); // What: Maskable Assertion. Why: Android launchers crop a maskable icon to their own shape. How: This checks one is listed.
+	expect( manValObj.theme_color ).toBeUndefined();                                                  // What: No Theme Color Assertion. Why: An installed Android app paints its navigation bar in the manifest's one theme color, which showed a white bar in dark mode, and without it Android draws the bar in the phone's own light or dark. How: This expects none.
 
 
 	for ( const icoRecObj of manValObj.icons ) expect( await pngSizFun( request, icoRecObj.src ) ).toBe( icoRecObj.sizes ); // What: Icon Size Loop. Why: Every listed icon has to exist at the size the manifest states. How: This reads each icon's own size.
