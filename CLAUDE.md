@@ -282,7 +282,12 @@ emulators need Java, 21 installed.
   as a speech bubble's tail, with a subtle inward cut just above the tip and
   three typing dots, the middle one coral (`icon.svg`); smaller sizes drop to
   one coral dot (`icon-small.svg`) and then the outline alone
-  (`icon-tiny.svg`). The wordmark is "Come Hang" in Bricolage Grotesque,
+  (`icon-tiny.svg`). Android's launcher icon, the manifest's maskable one,
+  draws the mark in periwinkle on a pale tile instead (`icon-light.svg`,
+  decided 2026-11-10), since Android's themed icons are built from an icon's
+  own light and dark parts and the periwinkle tile came out inverted beside
+  other apps; every other icon keeps the periwinkle tile. The wordmark is
+  "Come Hang" in Bricolage Grotesque,
   extra bold. `monogram.svg`, a "ch" monogram, wasn't chosen and is kept
   unused in case it's useful later.
 - **Routing** (decided 2026-10-25, an app rather than a website): the app
