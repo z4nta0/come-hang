@@ -8,6 +8,7 @@ import { connectDatabaseEmulator      } from 'firebase/database';  // What: Conn
 import { connectFirestoreEmulator     } from 'firebase/firestore'; // What: Connect Firestore Emulator. Why: Development uses the local Firestore. How: This points Firestore at it.
 import { connectFunctionsEmulator     } from 'firebase/functions'; // What: Connect Functions Emulator. Why: Development calls the local functions. How: This points Functions at them.
 import { connectStorageEmulator       } from 'firebase/storage';   // What: Connect Storage Emulator. Why: Development uses the local Storage. How: This points Storage at it.
+import { enableLogging                } from 'firebase/database';  // What: Enable Logging. Why: A device's database fault is found from the SDK's own log. How: This hands the log to a function that keeps it, while the switch is on.
 import { forceWebSockets              } from 'firebase/database';  // What: Force Web Sockets. Why: The database's long polling fallback loads scripts from its server, which the page's policy rightly blocks, and a browser that once saw a WebSocket fail keeps falling back. How: This keeps the database on WebSockets alone.
 import { getAuth                      } from 'firebase/auth';      // What: Get Auth. Why: Every identity signs in through Auth. How: This returns the app's Auth instance.
 import { getDatabase                  } from 'firebase/database';  // What: Get Database. Why: Chat and presence live in the Realtime Database. How: This returns the app's database.
@@ -76,6 +77,8 @@ type FirSerTyp = { appValObj : FirebaseApp, autValObj : Auth, fstDatObj : Firest
 
 // #region Constants
 
+const DEB_KEY_STR = 'come-hang-debug-log'; // What: Debug Key String. Why: A device that can't be inspected over USB still needs the database's own log to find a fault. How: This names the switch in local storage that turns the log on.
+const DEB_MAX_NUM = 300;                   // What: Debug Maximum Number. Why: The log is kept in memory and shouldn't grow without end. How: This is how many of the latest lines it keeps.
 const EMU_CON_OBJ : FirebaseOptions = { apiKey : 'demo-key', authDomain : 'demo-come-hang.firebaseapp.com', databaseURL : 'http://127.0.0.1:8210?ns=demo-come-hang-default-rtdb', projectId : 'demo-come-hang', storageBucket : 'demo-come-hang.appspot.com' }; // What: Emulator Config Object. Why: Development uses the demo project, which only the emulators answer for. How: This names the demo project, its database namespace on the emulator's port, and its default bucket.
 
 // #endregion Constants
@@ -84,6 +87,8 @@ const EMU_CON_OBJ : FirebaseOptions = { apiKey : 'demo-key', authDomain : 'demo-
 
 // #region Module State
 
+const debLogArr : string[] = []; // What: Debug Log Array. Why: The latest log lines are read from the page, by a bookmark, while the switch is on. How: This holds them, oldest first, filled only then.
+
 let firSerObj : FirSerTyp | null = null; // What: Firebase Services Object. Why: The services are created once, when first needed. How: This holds them after the first call.
 
 // #endregion Module State
@@ -91,6 +96,43 @@ let firSerObj : FirSerTyp | null = null; // What: Firebase Services Object. Why:
 
 
 // #region Helpers
+
+// #region debEnaFun
+
+/**
+ * debEnaFun = Debug Enabled Function
+ *
+ * @summary
+ * Says whether the database's diagnostic log is switched on for this
+ * device, by its key in local storage reading on. It's off by default and
+ * off wherever storage can't be read.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns True when the log is switched on.
+ *
+ * @example
+ * ```ts
+ * debEnaFun() // => false
+ * ```
+ *
+*/
+
+const debEnaFun = () : boolean => { // What: Debug Enabled Function. Why: The log runs only on a device where someone turned it on. How: This reads the switch.
+
+
+	try { return localStorage.getItem( DEB_KEY_STR ) === 'on'; } // What: Switch Read Try. Why: The switch lives in local storage. How: This reads it.
+
+	catch { return false; } // What: Blocked Storage Fallback. Why: Storage that can't be read has no switch on. How: This leaves the log off.
+
+
+};
+
+// #endregion debEnaFun
+
+
 
 // #region firGetFun
 
@@ -138,6 +180,8 @@ const firGetFun = () : FirSerTyp => { // What: Firebase Get Function. Why: Every
 	if ( !import.meta.env.DEV && import.meta.env.VITE_APPCHECK_SITE_KEY ) initializeAppCheck( appValObj, { isTokenAutoRefreshEnabled : true, provider : new ReCaptchaEnterpriseProvider( import.meta.env.VITE_APPCHECK_SITE_KEY ) } ); // What: App Check Call. Why: Only the real app should reach the project's services, which App Check enforces against bots and scripts (Section 15). How: This starts App Check with reCAPTCHA Enterprise before any service is used, in a production build that has a site key, keeping its token fresh.
 
 	forceWebSockets(); // What: Web Socket Call. Why: The Realtime Database remembers a failed WebSocket in the browser's storage and then starts with long polling, whose scripts the page's policy blocks, which left chat unable to connect in that browser for good. How: This keeps the database on WebSockets, which the policy allows, before it's created.
+
+	if ( debEnaFun() ) { enableLogging( ( mesTexStr : string ) => { debLogArr.push( `${ new Date().toISOString().slice( 11, 19 ) } ${ mesTexStr.slice( 0, 300 ) }` ); if ( debLogArr.length > DEB_MAX_NUM ) debLogArr.shift(); } ); Reflect.set( window, '__comHanLog', debLogArr ); } // What: Debug Log Call. Why: A fault in the database's connection on one device can only be found from the SDK's own log, which a phone without USB debugging can't show. How: With the switch on, this keeps the SDK's log lines, timed and trimmed, in memory, where a bookmark reads them from the window.
 
 	const autValObj = getAuth( appValObj ); // What: Auth Value Object. Why: Identities sign in through it. How: This creates it.
 	const funValObj = getFunctions( appValObj, 'us-central1' );                                                                                   // What: Functions Value Object. Why: The functions run in us-central1. How: This creates the instance there.

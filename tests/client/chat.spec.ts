@@ -287,6 +287,32 @@ pagTesObj( 'a message past the retention is deleted though someone still waits, 
 
 } );
 
+
+
+
+pagTesObj( "the database's diagnostic log stays off until its switch is on, then keeps the SDK's lines as chat connects", async ( { page } ) => { // What: Diagnostic Log Test. Why: A device that can't be inspected over USB still needs the database's own log to find a fault, and nobody else should collect one. How: This uses chat with the switch off and checks there's no log, then turns it on, reloads, uses chat again, and checks lines are kept.
+
+
+	await page.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( page, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: Chat needs a group. How: This creates one. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+
+
+	await runPagFun( page, CHA_MOD_STR, 'chaSynFun', groIdeStr ); // What: Off Sync Call. Why: Chat connects the database. How: This syncs the group's chat.
+
+	expect( await page.evaluate( () => Reflect.get( window, '__comHanLog' ) ) ).toBeUndefined(); // What: Off Assertion. Why: Nothing is collected unless someone turns it on. How: This expects no log.
+
+	await page.evaluate( () => localStorage.setItem( 'come-hang-debug-log', 'on' ) ); // What: Switch On Call. Why: The log is turned on per device. How: This sets the switch.
+
+	await page.reload(); // What: Reload Call. Why: The switch is read as the database is created. How: This loads the app again.
+
+	await runPagFun( page, CHA_MOD_STR, 'chaSynFun', groIdeStr ); // What: On Sync Call. Why: Chat connects the database again. How: This syncs the group's chat.
+
+	await expect.poll( () => page.evaluate( () => ( Reflect.get( window, '__comHanLog' ) as string[] | undefined )?.length ?? 0 ) ).toBeGreaterThan( 0 ); // What: Lines Assertion. Why: The SDK's lines are kept while the switch is on. How: This waits for some. // What: Type Assertion Note. Why: The log is an array of strings when it's on. How: The as reads it as one, or missing.
+
+
+} );
 // #endregion Module Init
 
 
