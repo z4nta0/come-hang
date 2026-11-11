@@ -395,6 +395,8 @@ const useProSynFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
 
 
 
+type WaiLisTyp = { uidValStr : string, waiRecArr : WaiRecTyp[] }; // What: Waiting List Type. Why: The notices sheet words the member's own requests apart from others'. How: This types the hook's result, the member's UID beside the waiting items.
+
 // #region useWaiLisFun
 
 /**
@@ -413,16 +415,16 @@ const useProSynFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
  * @param groRecArr - Group Record Array: The member's groups, or null while
  *                    loading.
  *
- * @returns The waiting items.
+ * @returns The member's UID, empty until read, and the waiting items.
  *
  * @example
  * ```ts
- * useWaiLisFun(groRecArr) // => [{ kinValStr : 'join', ... }]
+ * useWaiLisFun(groRecArr) // => { uidValStr : 'u1', waiRecArr : [...] }
  * ```
  *
 */
 
-const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiRecTyp[] => { // What: Use Waiting List Function. Why: The frame and the notices sheet follow what's waiting on the member. How: This watches the requests and adds the offers.
+const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiLisTyp => { // What: Use Waiting List Function. Why: The frame and the notices sheet follow what's waiting on the member. How: This watches the requests and adds the offers.
 
 
 	const [ uidValStr, setUidValStr ] = useState( '' );                 // What: UID Value String And Setter. Why: The items are judged against the member. How: This holds their UID, empty until read.
@@ -469,7 +471,7 @@ const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiRecTyp[] => { // Wh
 
 
 
-	return [ ...offLisFun( groRecArr ?? [], uidValStr, Date.now() ), ...waiRecArr.filter( ( waiRecObj ) => groIdeArr.includes( waiRecObj.groIdeStr ) ) ].sort( ( recOneObj, recTwoObj ) => recOneObj.timNum - recTwoObj.timNum ); // What: Items Return. Why: The longest wait reads first, and a group just left has nothing waiting. How: This joins the offers and the watched requests still in the groups, oldest first.
+	return { uidValStr, waiRecArr : [ ...offLisFun( groRecArr ?? [], uidValStr, Date.now() ), ...waiRecArr.filter( ( waiRecObj ) => groIdeArr.includes( waiRecObj.groIdeStr ) ) ].sort( ( recOneObj, recTwoObj ) => recOneObj.timNum - recTwoObj.timNum ) }; // What: Items Return. Why: The longest wait reads first, a group just left has nothing waiting, and the sheet needs the member's UID. How: This returns the UID, and joins the offers and the watched requests still in the groups, oldest first.
 
 
 };
@@ -531,7 +533,8 @@ function ScrHosCom () : React.JSX.Element {
 	const groRecArr = useGroLisFun( watVerNum );                                                    // What: Group Record Array. Why: The groups decide between the first screens and a group. How: This watches them, null while loading.
 	const ideHasBoo = useIdeHasFun( watVerNum );                                                    // What: Identity Has Boolean. Why: A phone in no group sees the landing page or the welcome by whether it holds an identity. How: This checks it, null while checking.
 	const visGroArr = groRecArr?.filter( ( groRecObj ) => groRecObj.ideStr !== gonIdeStr ) ?? null; // What: Visible Group Array. Why: A group just left or deleted is gone to the member at once. How: This leaves it out of the groups, null while loading.
-	const waiRecArr = useWaiLisFun( visGroArr );                                                    // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
+
+	const { uidValStr, waiRecArr } = useWaiLisFun( visGroArr ); // What: UID Value String. Why: The notices sheet words the member's own requests apart. How: This reads the member's UID, empty until read. // What: Waiting Record Array. Why: What's waiting on the member marks the frame and opens the notices sheet. How: This watches it across the visible groups.
 
 
 	useOutFluFun( visGroArr ); // What: Outbox Flush Call. Why: Messages written offline go once the device is back online. How: This sends them whichever screen is open.
@@ -839,6 +842,7 @@ function ScrHosCom () : React.JSX.Element {
 
 				<NotSheCom
 					groRecArr={ groRecArr }
+					uidValStr={ uidValStr }
 					waiRecArr={ waiRecArr }
 					watVerNum={ watVerNum }
 				/> // What: Notice Sheet Component. Why: What's waiting on the member, and what happened while they were away, opens over the screen. How: This shows the sheet, closed until something arrives.

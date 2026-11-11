@@ -1927,7 +1927,7 @@ test( 'a member writes only their own encrypted name and activity time', async (
 
 
 
-test( "a member asks once for the group's key, and only another member answers it, with a new wrap", async () => { // What: Key Share Test. Why: A member recovered onto a new phone can't open their old wrap, and nobody may spoil a working one (Section 6). How: This files Bob's request with each fault and once validly, then answers it with each fault and once validly, checking which pass.
+test( "a member asks once for the group's key, and any member answers it, themselves included, with a new wrap", async () => { // What: Key Share Test. Why: A member recovered onto a new device can't open their old wrap, nobody may spoil a working one, and their own other device may still hold the key (Section 6). How: This files Bob's request with each fault and once validly, answers it with each fault and once validly, then has Bob ask again and answer himself, checking which pass.
 
 
 	const aliStoObj = accStoFun( 'alice' );                                    // What: Alice Store Object. Why: Alice holds the key to share. How: This acts as her.
@@ -1945,7 +1945,6 @@ test( "a member asks once for the group's key, and only another member answers i
 	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                            // What: Request For Another. Why: Only Bob asks for his key. How: This expects Alice refused.
 	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                         // What: Own Request. Why: Bob asks for the key. How: This expects his request allowed.
 	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                            // What: Second Request. Why: A standing request needs no second one. How: This expects another refused.
-	await assertFails( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                   // What: Own Answer. Why: Bob has no key to share. How: This expects him refused.
 	await assertFails( updateDoc( doc( carStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                   // What: Outsider Answer. Why: Only a member holds the key. How: This expects Carol refused.
 	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField() } ) );                                                                // What: Cleared Request. Why: A request is answered only by a new wrap. How: This expects a clear alone refused.
 	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { wrappedGroupKey : newWraObj } ) );                                                                   // What: Wrap Without Answer. Why: The answer ends the request. How: This expects a wrap that leaves it standing refused.
@@ -1953,6 +1952,8 @@ test( "a member asks once for the group's key, and only another member answers i
 	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { displayNameEnc : bytFilFun( 40 ), keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) ); // What: Answer With Name. Why: Sharing touches the wrap and request alone. How: This expects a name with it refused.
 	await assertSucceeds( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : newWraObj } ) );                                // What: Valid Answer. Why: Alice shares the key. How: This expects her answer allowed.
 	await assertFails( updateDoc( doc( aliStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : bytFilFun( 105 ) } ) );                            // What: Answered Again. Why: Nothing stands once answered. How: This expects a second answer refused.
+	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : serverTimestamp() } ) );                                                         // What: Later Request. Why: Bob gets his account back on yet another device. How: This expects a new request allowed once the last was answered.
+	await assertSucceeds( updateDoc( doc( bobStoObj, bobRefStr ), { keyRequestedAt : deleteField(), wrappedGroupKey : bytFilFun( 104 ) } ) );                         // What: Own Answer. Why: Bob's other device still holds the key, and shares it with his new one. How: This expects his own answer allowed.
 
 
 } );
