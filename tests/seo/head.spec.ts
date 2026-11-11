@@ -272,7 +272,7 @@ test( 'the head links the SVG and ICO favicons and the touch icon, each served a
 
 
 
-test( 'the manifest names the app, sets no theme color, and lists icons served at their stated sizes, a maskable one among them', async ( { page, request } ) => { // What: Manifest Test. Why: Installing the app reads its name, display, and icons from the manifest. How: This follows the head's manifest link, then checks the manifest's fields and fetches every icon it lists.
+test( 'the manifest names the app, sets the light header as its theme color, and lists icons served at their stated sizes, a maskable one among them', async ( { page, request } ) => { // What: Manifest Test. Why: Installing the app reads its name, display, and icons from the manifest. How: This follows the head's manifest link, then checks the manifest's fields and fetches every icon it lists.
 
 
 	await page.goto( '/' ); // What: Home Visit. Why: The manifest is found through the head. How: This opens the app.
@@ -291,7 +291,7 @@ test( 'the manifest names the app, sets no theme color, and lists icons served a
 	expect( manValObj.display ).toBe( 'standalone' );                                                 // What: Display Assertion. Why: The installed app opens without browser bars. How: This reads the display mode.
 	expect( manValObj.start_url ).toBe( '/' );                                                        // What: Start URL Assertion. Why: The app answers at its root. How: This reads the start address.
 	expect( manValObj.icons.some( ( icoRecObj ) => icoRecObj.purpose === 'maskable' ) ).toBe( true ); // What: Maskable Assertion. Why: Android launchers crop a maskable icon to their own shape. How: This checks one is listed.
-	expect( manValObj.theme_color ).toBeUndefined();                                                  // What: No Theme Color Assertion. Why: An installed Android app paints its navigation bar in the manifest's one theme color, which showed a white bar in dark mode, and without it Android draws the bar in the phone's own light or dark. How: This expects none.
+	expect( manValObj.theme_color ).toBe( '#FFFFFF' );                                                // What: Theme Color Assertion. Why: An installed app opens in the manifest's theme color before the app keeps its tag in step with the mode. How: This expects the light header. How: This expects none.
 
 
 	for ( const icoRecObj of manValObj.icons ) expect( await pngSizFun( request, icoRecObj.src ) ).toBe( icoRecObj.sizes ); // What: Icon Size Loop. Why: Every listed icon has to exist at the size the manifest states. How: This reads each icon's own size.
@@ -301,13 +301,36 @@ test( 'the manifest names the app, sets no theme color, and lists icons served a
 
 
 
-test( 'the head tints the browser bars to match the header in light and dark mode', async ( { page } ) => { // What: Theme Color Test. Why: Phones tint their bars around the page, which should match the header in either mode. How: This reads both theme color tags and checks each one's mode and color.
+test( 'the head tints the bars to the light and dark header, and the app keeps one tint in step with the mode showing', async ( { page, request } ) => { // What: Theme Color Test. Why: Phones tint their bars around the page, and an installed app's status and navigation bars, which should match the header in either mode, whether the device or the app chose it. How: This checks both tags in the raw page, then checks the one tag the app keeps as the device's scheme and the app's own choice change.
 
 
-	await page.goto( '/' ); // What: Home Visit. Why: The head is read as the browser sees it. How: This opens the app.
+	const rawHtmStr = await ( await request.get( '/' ) ).text(); // What: Raw HTML String. Why: Link previews read the tags before any script runs. How: This fetches the page as served.
 
-	await expect( page.locator( "meta[name='theme-color'][media='(prefers-color-scheme: light)']" ) ).toHaveAttribute( 'content', '#FFFFFF' ); // What: Light Tint Assertion. Why: The light header is white. How: This checks the light tag's color.
-	await expect( page.locator( "meta[name='theme-color'][media='(prefers-color-scheme: dark)']" ) ).toHaveAttribute( 'content', '#1B1D38' );  // What: Dark Tint Assertion. Why: The dark header is navy. How: This checks the dark tag's color.
+
+	await page.goto( '/' ); // What: Home Visit. Why: The raw page is parsed, and the app's tint read, in a page. How: This opens the app.
+
+
+	const rawTagArr = await page.evaluate( ( parHtmStr ) => [ ...new DOMParser().parseFromString( parHtmStr, 'text/html' ).querySelectorAll( 'meta[name="theme-color"]' ) ].map( ( metEleObj ) => `${ metEleObj.getAttribute( 'media' ) } ${ metEleObj.getAttribute( 'content' ) }` ), rawHtmStr ); // What: Raw Tag Array. Why: Each raw tag pairs a scheme with its color. How: This parses the page and lists each tag's scheme and color.
+	const tinTagObj = page.locator( 'meta[name="theme-color"]' ); // What: Tint Tag Object. Why: The app keeps one tag. How: This finds the tags in the running page.
+
+
+	expect( rawTagArr ).toEqual( [ '(prefers-color-scheme: light) #FFFFFF', '(prefers-color-scheme: dark) #1B1D38' ] ); // What: Raw Tags Assertion. Why: The light header is white and the dark one navy. How: This checks both raw tags.
+
+	await expect( tinTagObj ).toHaveCount( 1 );                        // What: One Tag Assertion. Why: A second tag tied to the device's scheme would win whenever the app's choice differs. How: This expects the app kept one.
+	await expect( tinTagObj ).not.toHaveAttribute( 'media', /./ );     // What: No Scheme Assertion. Why: The tag holds whatever mode shows. How: This expects it to name no scheme.
+	await expect( tinTagObj ).toHaveAttribute( 'content', '#FFFFFF' ); // What: Light Tint Assertion. Why: The page opens light on a light device. How: This expects the white header.
+
+	await page.emulateMedia( { colorScheme : 'dark' } ); // What: Dark Device Call. Why: A page following the device turns dark with it. How: This switches the device's scheme.
+
+	await expect( tinTagObj ).toHaveAttribute( 'content', '#1B1D38' ); // What: Dark Tint Assertion. Why: The bars follow the device to dark. How: This expects the navy header.
+
+	await page.emulateMedia( { colorScheme : 'light' } ); // What: Light Device Call. Why: The app's own choice has to win over the device's. How: This puts the device back to light.
+
+	await page.evaluate( () => localStorage.setItem( 'come-hang-color-mode', 'dark' ) ); // What: Dark Choice Call. Why: A choice made in Settings is kept on the device. How: This keeps dark.
+
+	await page.reload(); // What: Reload Call. Why: The kept choice applies as the app starts. How: This loads the app again.
+
+	await expect( tinTagObj ).toHaveAttribute( 'content', '#1B1D38' ); // What: Chosen Dark Assertion. Why: The bars follow the app's choice over the light device. How: This expects the navy header.
 
 
 } );
