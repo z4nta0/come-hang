@@ -27,6 +27,9 @@ import { useRef       } from 'react';                      // What: Use Referenc
 import { useScrOpeFun } from '../ui/screen.ts';            // What: Use Screen Open Function. Why: "What is Come Hang?" opens the landing page. How: This returns the function that opens a screen.
 import { useState     } from 'react';                      // What: Use State. Why: The phase, the group, the fields, their errors, and the sending states change as the join goes on. How: This holds each.
 
+
+import type { JoiStaTyp } from '../state/joins.ts'; // What: Join Status Type. Why: The watch and the checks hand the same statuses to one handler. How: This types them.
+
 // #endregion Imports
 
 
@@ -352,7 +355,7 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 
 
-	useEffect( () => { // What: Request Watch Effect. Why: A member's answer reaches the joiner while the waiting part shows. How: This watches the request, opening the group on an approval and showing the ended part on any other end.
+	useEffect( () => { // What: Request Watch Effect. Why: A member's answer reaches the joiner while the waiting part shows, even when a live connection stalls, as one did on an iPad after an approval. How: This watches the request, and reads where it stands again as the app comes into view and every 15 seconds, opening the group on an approval and showing the ended part on any other end.
 
 
 		if ( phaValStr !== 'waiting' || curGroStr === '' ) return; // What: Waiting Guard. Why: Only a waiting request is watched. How: This returns otherwise.
@@ -363,7 +366,7 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 		let stoWatFun = () => {}; // What: Stop Watch Function. Why: The watch's stop arrives once it has started. How: This holds it, doing nothing until then.
 
 
-		joiWatFun( curGroStr, ( joiStaStr ) => { // What: Watch Start Call. Why: Each change to the request may be its answer. How: This acts on each status while the effect runs.
+		const staActFun = ( joiStaStr : JoiStaTyp ) : void => { // What: Status Act Function. Why: The watch and the checks act on a status the same way. How: This opens the group on an approval and shows the ended part on any other end, while the effect runs.
 
 
 			if ( !actValBoo ) return; // What: Active Guard. Why: The screen moved on. How: This returns.
@@ -375,7 +378,21 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 			else if ( joiStaStr === 'ended' && !witRunRef.current ) { focHeaRef.current = true; setPhaValStr( 'ended' ); } // What: Ended Call. Why: A request declined, blocked, or expired has to say so, while a withdrawal goes to the form instead. How: This owes the heading focus and shows the ended part, unless a withdrawal is running.
 
 
-		}, ( errValObj ) => console.warn( errValObj ) ).then( ( stoFunVal ) => { // What: Watch Started Handler. Why: The cleanup stops the watch, and a failure stays visible to someone debugging. How: This logs a failure, and keeps the stop, or stops at once when cleanup came first.
+		};
+
+
+
+		const staCheFun = () : void => { reqStaFun( curGroStr ).then( staActFun, ( errCatObj : unknown ) => console.warn( errCatObj ) ); }; // What: Status Check Function. Why: A live connection can stall without saying so, as one did on an iPad, leaving an approval unseen. How: This reads where the request stands directly, acting on it and logging a failure.
+		const visChaFun = () : void => { if ( document.visibilityState === 'visible' ) staCheFun(); };                                     // What: Visibility Change Function. Why: An app coming back into view is when a stalled connection most likely missed the answer. How: This checks again once the page shows.
+
+
+		document.addEventListener( 'visibilitychange', visChaFun ); // What: Visibility Listener Call. Why: The joiner returns to the app after asking someone to approve. How: This checks each time it comes into view.
+
+
+		const intIdeNum = window.setInterval( staCheFun, 15000 ); // What: Interval Identifier Number. Why: A stalled connection while the app stays in view shouldn't leave the joiner waiting for good. How: This checks every 15 seconds, keeping the timer's ID.
+
+
+		joiWatFun( curGroStr, staActFun, ( errValObj ) => console.warn( errValObj ) ).then( ( stoFunVal ) => { // What: Watch Started Handler. Why: The cleanup stops the watch, and a failure stays visible to someone debugging. How: This logs a failure, and keeps the stop, or stops at once when cleanup came first.
 
 
 			if ( actValBoo ) stoWatFun = stoFunVal; // What: Stop Keep Call. Why: The cleanup stops the watch. How: This keeps the stop.
@@ -391,6 +408,10 @@ function JoiGroCom ( { groIdeStr, groNamStr, onAnnFun, onEntFun, onJoiFun, onLea
 
 
 			actValBoo = false; // What: Inactive Set. Why: Late reports and stops mustn't act. How: This marks the run done.
+
+			document.removeEventListener( 'visibilitychange', visChaFun ); // What: Visibility Listener Removal. Why: The checks end with the waiting part. How: This removes the listener.
+
+			window.clearInterval( intIdeNum ); // What: Interval Clear Call. Why: The timer ends with the waiting part. How: This stops it.
 
 			stoWatFun(); // What: Watch Stop Call. Why: The listener closes. How: This stops the watch.
 

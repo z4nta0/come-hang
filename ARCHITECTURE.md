@@ -2034,7 +2034,10 @@ the Blaze change.
   offers to withdraw it, and it watches the request: an approval restarts
   the group list and opens the group, announcing it, and an end without one
   (a decline, a block, or the 7 days running out) says so, with a way to ask
-  again. A member opening a link lands in the group. Each change of part
+  again. Since a live connection on an iPad stalled after an approval,
+  leaving the screen waiting (found 2026-11-11), it also reads where the
+  request stands directly as the app comes into view and every 15 seconds.
+  A member opening a link lands in the group. Each change of part
   moves focus to its heading, and the back button leads to the app,
   restarting the group list, since opening the invite made the identity.
   On an iPhone or iPad in Safari the install screen comes first (built
