@@ -191,6 +191,43 @@ test( 'the composer sends on Enter, keeps a Shift+Enter line break, and clears i
 
 
 
+test( "a browser that once saw the database's WebSocket fail still connects the chat over WebSockets, never long polling", async ( { page : curPagObj } ) => { // What: WebSocket Test. Why: The database remembers a failed WebSocket in the browser's storage and then starts with long polling, whose scripts the live site's policy blocks, which once left a browser's chat unable to send or receive. How: This plants that memory before the app loads, records any long polling request, sends a message, and checks it lands with no long polling.
+
+
+	const lonPolArr : string[] = []; // What: Long Polling Array. Why: Any long polling request means the database fell back. How: This collects their addresses.
+
+
+	curPagObj.on( 'request', ( reqValObj ) => { if ( reqValObj.url().includes( '/.lp?' ) ) lonPolArr.push( reqValObj.url() ); } ); // What: Request Listener. Why: The database's long polling asks for its own address's .lp path. How: This records each such request.
+
+	await curPagObj.addInitScript( () => localStorage.setItem( 'firebase:previous_websocket_failure', 'true' ) ); // What: Failure Memory Call. Why: A browser that once saw the WebSocket fail keeps this in its storage. How: This plants it before every load.
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The test starts in a chat. How: This creates a group and opens it.
+
+
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ); // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
+
+
+	await texBoxObj.fill( 'Still here' ); // What: Message Fill Call. Why: The chat has to send. How: This types a message.
+
+	await expect( async () => { // What: Send Retry Call. Why: A send before the membership mirror catches up is refused and leaves its text. How: This presses Enter until the message shows.
+
+
+		await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it.
+
+		await expect( curPagObj.getByRole( 'log' ).getByRole( 'listitem' ) ).toHaveCount( 1, { timeout : 2000 } ); // What: Message Shown Assertion. Why: The send landed once the log holds it. How: This waits up to 2 seconds for it.
+
+
+	} ).toPass(); // What: Retry Settings. Why: The mirror usually catches up within a moment. How: This retries until the message shows.
+
+	expect( lonPolArr ).toEqual( [] ); // What: No Long Polling Assertion. Why: The database stays on WebSockets whatever the browser remembers. How: This expects no long polling request.
+
+
+} );
+
+
+
 test( 'a message with characters the chat refuses is announced and kept', async ( { page : curPagObj } ) => { // What: Refused Message Test. Why: A sender should learn why a message didn't go, without losing it. How: This sends text holding a direction override and checks the alert and the box.
 
 

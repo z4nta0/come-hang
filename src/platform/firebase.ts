@@ -8,6 +8,7 @@ import { connectDatabaseEmulator      } from 'firebase/database';  // What: Conn
 import { connectFirestoreEmulator     } from 'firebase/firestore'; // What: Connect Firestore Emulator. Why: Development uses the local Firestore. How: This points Firestore at it.
 import { connectFunctionsEmulator     } from 'firebase/functions'; // What: Connect Functions Emulator. Why: Development calls the local functions. How: This points Functions at them.
 import { connectStorageEmulator       } from 'firebase/storage';   // What: Connect Storage Emulator. Why: Development uses the local Storage. How: This points Storage at it.
+import { forceWebSockets              } from 'firebase/database';  // What: Force Web Sockets. Why: The database's long polling fallback loads scripts from its server, which the page's policy rightly blocks, and a browser that once saw a WebSocket fail keeps falling back. How: This keeps the database on WebSockets alone.
 import { getAuth                      } from 'firebase/auth';      // What: Get Auth. Why: Every identity signs in through Auth. How: This returns the app's Auth instance.
 import { getDatabase                  } from 'firebase/database';  // What: Get Database. Why: Chat and presence live in the Realtime Database. How: This returns the app's database.
 import { getFunctions                 } from 'firebase/functions'; // What: Get Functions. Why: Some actions go through callables. How: This returns the app's Functions instance in the functions' region.
@@ -135,6 +136,8 @@ const firGetFun = () : FirSerTyp => { // What: Firebase Get Function. Why: Every
 
 
 	if ( !import.meta.env.DEV && import.meta.env.VITE_APPCHECK_SITE_KEY ) initializeAppCheck( appValObj, { isTokenAutoRefreshEnabled : true, provider : new ReCaptchaEnterpriseProvider( import.meta.env.VITE_APPCHECK_SITE_KEY ) } ); // What: App Check Call. Why: Only the real app should reach the project's services, which App Check enforces against bots and scripts (Section 15). How: This starts App Check with reCAPTCHA Enterprise before any service is used, in a production build that has a site key, keeping its token fresh.
+
+	forceWebSockets(); // What: Web Socket Call. Why: The Realtime Database remembers a failed WebSocket in the browser's storage and then starts with long polling, whose scripts the page's policy blocks, which left chat unable to connect in that browser for good. How: This keeps the database on WebSockets, which the policy allows, before it's created.
 
 	const autValObj = getAuth( appValObj ); // What: Auth Value Object. Why: Identities sign in through it. How: This creates it.
 	const funValObj = getFunctions( appValObj, 'us-central1' );                                                                                   // What: Functions Value Object. Why: The functions run in us-central1. How: This creates the instance there.
