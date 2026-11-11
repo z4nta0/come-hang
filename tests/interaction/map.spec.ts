@@ -206,11 +206,13 @@ pagTesObj( "members share, see each other, and post that they're on their way an
 
 	await curPagObj.getByRole( 'button', { name : 'Share my location' } ).click(); // What: Owner Share Click Call. Why: The owner shares too. How: This presses the button.
 
-	await expect( memRowObj ).toContainText( '1.0 km north · updated' );                                                                         // What: Distance Assertion. Why: The owner sees how far and which way the member is. How: This expects about a kilometer north.
-	await expect( curPagObj.getByRole( 'img', { name : 'Everyone sharing', exact : false } ) ).toBeVisible();                                       // What: Plot Assertion. Why: The plot is drawn around the owner. How: This waits for it.
-	await expect( curPagObj.getByText( 'The outer ring is 1.0 km from you.' ) ).toBeVisible();                                                     // What: Scale Assertion. Why: The ring's distance follows the farthest member. How: This reads the caption.
+	await expect( memRowObj ).toContainText( '0.6 mi north · updated' );                                                                             // What: Distance Assertion. Why: The owner sees how far and which way the member is. How: This expects about a kilometer north.
+	await expect( curPagObj.getByRole( 'img', { name : 'Everyone sharing', exact : false } ) ).toBeVisible();                                        // What: Plot Assertion. Why: The plot is drawn around the owner. How: This waits for it.
+	await expect( curPagObj.getByText( 'The outer ring is 0.6 mi from you.' ) ).toBeVisible();                                                       // What: Scale Assertion. Why: The ring's distance follows the farthest member. How: This reads the caption.
 	await expect( memRowObj.getByRole( 'link', { name : 'Open in Google Maps for Dana Lee' } ) ).toHaveAttribute( 'href', /query=51\.509,-0\.12$/ ); // What: Link Assertion. Why: The member's spot opens in Google Maps. How: This expects their coordinates in its address.
-	await expect( memRowObj.getByRole( 'link' ) ).toHaveAttribute( 'rel', 'noopener noreferrer' );                                                // What: Link Safety Assertion. Why: A new tab mustn't reach back. How: This expects the link's rel.
+	await expect( memRowObj.getByRole( 'link' ) ).toHaveAttribute( 'rel', 'noopener noreferrer' );                                                   // What: Link Safety Assertion. Why: A new tab mustn't reach back. How: This expects the link's rel.
+
+	expect( await curPagObj.evaluate( () => document.documentElement.scrollHeight - window.innerHeight ) ).toBeLessThanOrEqual( 0 ); // What: No Page Scroll Assertion. Why: A row's hidden link text once stretched the page below the app while someone shared. How: This expects the page no taller than the screen.
 
 	await wayButObj.click(); // What: Way Click Call. Why: The member leaves for the event. How: This presses the button.
 

@@ -16,6 +16,7 @@ import { disTexFun            } from '../core/geo.ts';          // What: Distanc
 import { eveLisFun            } from '../state/events.ts';      // What: Event List Function. Why: Sharing belongs to the event whose window is open. How: This lists the events, soonest first.
 import { eveRanFun            } from '../utils/date.ts';        // What: Event Range Function. Why: The event's part says the hours it runs. How: This formats its range.
 import { ideEnsFun            } from '../state/identity.ts';    // What: Identity Ensure Function. Why: The member's own share is the plot's center. How: This reads their UID.
+import { impUniFun            } from '../core/geo.ts';          // What: Imperial Units Function. Why: Distances read in miles where the device's region uses them. How: This checks the device's language.
 import { iniTexFun            } from '../utils/text.ts';        // What: Initials Text Function. Why: Each avatar and dot shows its member's initials. How: This takes them from the name.
 import { KEY_WAI_STR          } from '../state/groups.ts';      // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its locations. How: The section shows this message then.
 import { locWatFun            } from '../state/location.ts';    // What: Location Watch Function. Why: Members see each other move as updates arrive. How: This watches the shares.
@@ -61,6 +62,7 @@ import type { StaKinTyp } from '../core/chat-status.ts'; // What: Status Kind Ty
  * Sections:
  *  - Types
  *  - Constants
+ *  - Module State
  *  - Helpers
  *  - Hooks
  *  - Components
@@ -92,6 +94,14 @@ const PLO_RAD_NUM = 80;                                                         
 const TIC_MIL_NUM = 30000;                                                                              // What: Tick Milliseconds Number. Why: Ages and the sharing window move with time. How: This redraws the section every 30 seconds.
 
 // #endregion Constants
+
+
+
+// #region Module State
+
+const IMP_UNI_BOO = impUniFun( navigator.language ); // What: Imperial Units Boolean. Why: Distances read in the units the device's region uses, miles in the United States. How: This checks the device's language as the app loads.
+
+// #endregion Module State
 
 
 
@@ -412,7 +422,7 @@ function MapPloCom ( { memRecMap, othLocArr, ownLocObj } : MpcProTyp ) : React.J
 
 			</svg>
 
-			<figcaption className={ cssModObj.ploCapFig }>The outer ring is { disTexFun( maxDisNum ) } from you.</figcaption>{ /* What: Plot Caption Figcaption Element. Why: The plot's scale changes with the farthest member. How: This says how far the ring is. */ }
+			<figcaption className={ cssModObj.ploCapFig }>The outer ring is { disTexFun( maxDisNum, IMP_UNI_BOO ) } from you.</figcaption>{ /* What: Plot Caption Figcaption Element. Why: The plot's scale changes with the farthest member. How: This says how far the ring is. */ }
 
 
 		</figure>
@@ -834,7 +844,7 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 										const namValStr = memRecObj?.namTexStr || ( memRecObj ? 'Someone' : 'Former member' );   // What: Name Value String. Why: A row names its member, even one with no name yet or who left. How: This takes their name, or a stand-in.
 										const disValNum = ownLocObj && !ownRowBoo ? disMetFun( ownLocObj, locRecObj ) : null; // What: Distance Value Number. Why: The row says how far the member is, when the viewer shares too. How: This measures it, or null.
 
-										const wayTexStr = disValNum === null || !ownLocObj ? '' : `${ disTexFun( disValNum ) }${ disValNum < 10 ? '' : ` ${ dirTexFun( beaDegFun( ownLocObj, locRecObj ) ) }` } · `; // What: Way Text String. Why: The row says how far and which way the member is. How: This gives the distance and compass direction, or "nearby" alone, followed by a dot, or nothing without a distance.
+										const wayTexStr = disValNum === null || !ownLocObj ? '' : `${ disTexFun( disValNum, IMP_UNI_BOO ) }${ disValNum < 10 ? '' : ` ${ dirTexFun( beaDegFun( ownLocObj, locRecObj ) ) }` } · `; // What: Way Text String. Why: The row says how far and which way the member is. How: This gives the distance and compass direction, or "nearby" alone, followed by a dot, or nothing without a distance.
 
 
 

@@ -2111,7 +2111,14 @@ the Blaze change.
   time is read as the device's estimate until the server's arrives, so the
   member's own new share shows at once. `src/core/geo.ts` holds the
   distance, bearing, and their labels, worked out on the device after each
-  position is decrypted.
+  position is decrypted. Distances read in the units of the device's region
+  (decided 2026-11-11): feet and miles where the device's language names the
+  United States, Liberia, Myanmar, or the United Kingdom, or names no region
+  and is most likely used there, as a bare `en` is, and meters and
+  kilometers everywhere else. The group frame's content area holds and clips
+  anything positioned against it, since a member's row's hidden link words,
+  placed against the whole page, let the map scroll below the app while
+  someone shared.
 - Under the emulator, the app, the Cloud Functions, and the tests share the
   Realtime Database's default instance, `demo-come-hang-default-rtdb`, where
   the emulator loads `database.rules.json`, as production's app and
