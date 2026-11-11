@@ -259,6 +259,26 @@ pagTesObj( "a push's data becomes the address a tap opens, and data out of form 
 
 } );
 
+
+
+
+pagTesObj( "a tapped push's address kept for a launch comes back once, the latest replacing any before it", async ( { page } ) => { // What: Target Store Test. Why: The worker hands a launched app the address it should open, followed once. How: This keeps two addresses and takes them, checking only the latest comes back, once.
+
+
+	const stoModStr = '/src/platform/push-target-store.ts'; // What: Store Module String. Why: The store runs there. How: This names its path.
+
+
+	await page.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await runPagFun( page, stoModStr, 'tarPutFun', '/open/gro1/people' ); // What: First Put Call. Why: An earlier tap left an address. How: This keeps it.
+
+	await runPagFun( page, stoModStr, 'tarPutFun', '/open/gro1/chat' ); // What: Second Put Call. Why: The latest tap's address wins. How: This keeps it over the first.
+
+	expect( Reflect.get( Object( await runPagFun( page, stoModStr, 'tarTakFun' ) ), 'patStr' ) ).toBe( '/open/gro1/chat' ); // What: Latest Take Assertion. Why: Only the latest address is kept. How: This takes it and reads its address.
+	expect( await runPagFun( page, stoModStr, 'tarTakFun' ) ).toBeUndefined();                                            // What: Taken Once Assertion. Why: An address is followed once. How: This expects nothing left.
+
+
+} );
 // #endregion Module Init
 
 

@@ -3,8 +3,10 @@
 
 // #region Imports
 
-import { useEffect   } from 'react';        // What: Use Effect. Why: The worker's messages are heard while the app is open. How: This listens for them once mounted.
-import { useNavigate } from 'react-router'; // What: Use Navigate. Why: A message opens an address inside the app. How: This returns the router's navigate function.
+import { TAR_LIF_NUM } from '../core/push-target.ts';           // What: Target Lifetime Number. Why: Only a fresh address is followed. How: This is how long one stays fresh.
+import { tarTakFun   } from '../platform/push-target-store.ts'; // What: Target Take Function. Why: An app a tapped push launched finds the push's address there. How: This takes it, deleting it.
+import { useEffect   } from 'react';                            // What: Use Effect. Why: The worker's messages are heard while the app is open, and a launch's address is read once. How: This runs each once mounted.
+import { useNavigate } from 'react-router';                     // What: Use Navigate. Why: A message, or an address left for a launch, opens an address inside the app. How: This returns the router's navigate function.
 
 // #endregion Imports
 
@@ -18,11 +20,15 @@ import { useNavigate } from 'react-router'; // What: Use Navigate. Why: A messag
  * Section 11.1). The service worker brings the open window forward and
  * sends it the address the push leads to, and the app navigates there
  * inside the router, rather than reloading, so the screen it was on stays
- * one step back. Only an /open/ entry address made of letters, digits,
+ * one step back. A tap that launches the app leaves its address in the
+ * target database as well, since an installed app on an iPad started at its
+ * root rather than the address, and the app follows one under a minute old
+ * as it starts. Only an /open/ entry address made of letters, digits,
  * hyphens, and underscores is followed.
  *
  * Sections:
  *  - Constants
+ *  - Module State
  *  - Hooks
  *  - Exports
  *
@@ -40,6 +46,14 @@ const OPE_PAT_REG = /^\/open\/[A-Za-z0-9_-]{1,64}\/[A-Za-z0-9_-]{1,64}$/; // Wha
 
 
 
+// #region Module State
+
+let tarReaBoo = false; // What: Target Read Boolean. Why: A launch leaves one address, read once however often the app's root mounts, as development's strict mode mounts it twice. How: This is true once the read has started.
+
+// #endregion Module State
+
+
+
 // #region Hooks
 
 // #region usePusOpeFun
@@ -50,8 +64,12 @@ const OPE_PAT_REG = /^\/open\/[A-Za-z0-9_-]{1,64}\/[A-Za-z0-9_-]{1,64}$/; // Wha
  * @summary
  * Listens for the service worker's messages while the calling component is
  * mounted, and navigates to the address in each one that names an /open/
- * entry address, adding a history entry. A browser without service workers
- * gets no listener.
+ * entry address, adding a history entry. As it mounts, it also takes the
+ * address a tap that launched the app left in the target database, deleting
+ * it, and navigates there in place of the current entry when it's an /open/
+ * address under TAR_LIF_NUM old, once per page however often it mounts. A
+ * browser without service workers gets no listener, and one without the
+ * database reads nothing.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -100,6 +118,37 @@ const usePusOpeFun = () : void => { // What: Use Push Open Function. Why: A tapp
 
 
 	}, [ navRouFun ] ); // What: Effect Dependency Array. Why: The listener navigates with the router's function. How: navRouFun changes only if the router's does.
+
+
+
+	useEffect( () => { // What: Launch Target Effect. Why: A tap that launched the app may have started it at its root, as on an iPad, leaving the push's address behind. How: This takes the address the worker left and follows a fresh one, once.
+
+
+		if ( tarReaBoo || !( 'indexedDB' in window ) ) return; // What: Read Once Guard. Why: A second read could race the first's navigation, and a browser without IndexedDB has no address left in it. How: This returns once a read has started, or without IndexedDB.
+
+
+
+		tarReaBoo = true; // What: Read Started Set. Why: The address is read once per page. How: This marks the read as started.
+
+
+
+		void ( async () => { // What: Target Read Call. Why: The database is read asynchronously. How: This takes the address and follows a fresh, well-formed one.
+
+
+			const tarRecAny = await tarTakFun();                                      // What: Target Record Any. Why: The entry is untrusted until checked. How: This takes it, undefined when none was left.
+			const patValAny : unknown = Reflect.get( Object( tarRecAny ), 'patStr' ); // What: Path Value Any. Why: The entry names the address. How: This reads it, untyped.
+			const timValAny : unknown = Reflect.get( Object( tarRecAny ), 'timNum' ); // What: Time Value Any. Why: Only a fresh address is followed. How: This reads when it was left, untyped.
+
+			const freTarBoo = typeof timValAny === 'number' && Date.now() - timValAny < TAR_LIF_NUM; // What: Fresh Target Boolean. Why: A tap long ago shouldn't move an app opened later. How: This is true for an address left within the lifetime.
+
+
+			if ( freTarBoo && typeof patValAny === 'string' && OPE_PAT_REG.test( patValAny ) ) void navRouFun( patValAny, { replace : true } ); // What: Navigate Call. Why: The launch opens where the tapped push leads, without a step back to the root. How: This replaces the entry with the address.
+
+
+		} )().catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Target Failure Handler. Why: An unreadable entry leaves the app where it started, but the failure stays visible to someone debugging. How: This logs it.
+
+
+	}, [ navRouFun ] ); // What: Effect Dependency Array. Why: The address opens with the router's function. How: navRouFun changes only if the router's does.
 
 
 };

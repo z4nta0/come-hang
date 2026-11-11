@@ -970,14 +970,23 @@ requests, and Settings for anything about ownership, while a removal or a
 deletion carries none, having no group left to open. The service worker
 turns that into an entry address, `/open/<group>/<section>`
 (`src/core/push-target.ts`), opens a window there when the app isn't open,
-and otherwise brings it forward and sends it the address, which the app
-follows inside its router (`src/ui/push-open.ts`), so the screen it was on
-stays one step back.
+and otherwise sends it the address, which the app follows inside its router
+(`src/ui/push-open.ts`), so the screen it was on stays one step back, and
+then brings it forward where the browser allows (decided 2026-11-11, since
+a refused focus once stopped the address being sent). An installed app on
+an iPad that a tap launched opened at its root rather than the address, so
+before opening a window the worker also keeps the address, with the time,
+in a small IndexedDB database of its own
+(`src/platform/push-target-store.ts`), which the app takes as it starts,
+once per page, following it when it's under a minute old. IndexedDB holds
+it where WebKit's cache storage lost an entry across a reload (measured
+2026-11-11).
 
 | Field | Type | Notes |
 |---|---|---|
 | `token` | plaintext | FCM's registration token, letters, digits, colons, hyphens, and underscores, at most 4,096 characters. |
 | `updatedAt` | plaintext | The server's time of the last refresh. The app rewrites the document as it opens, at most once a day, or at once when FCM's token has changed or the document is gone. |
+| `chatPushedAt` | plaintext, written by Cloud Functions only | A map from a group's ID to when the member's last chat push for it went, in milliseconds, which holds the next one back for 2 minutes (11.7). A fresh token replaces the document, and the map with it. |
 | `expireAt` | plaintext, TTL field | 60 days after the last refresh, as Firebase advises for a token, so a phone that stopped opening the app is dropped. The app sets it by its own clock, so the rules accept 50 to 70 days out. |
 
 **Pushes** (decided 2026-10-28, `functions/src/push.ts`): each one carries
@@ -1218,7 +1227,14 @@ its waiting-on list who has no presence entry in the group (11.8), so
 anyone with the group open isn't pushed, and a message marked `quiet`
 pushes nobody. The push says only "New messages"
 under the group's name, tagged by the chat so a busy chat shows as one
-notification that later pushes replace.
+notification that later pushes replace. A member gets at most one chat push
+per group every 2 minutes (decided 2026-11-11, `thrPasFun` in
+`functions/src/activity-pushes.ts`): a burst of messages pushed a phone often
+enough that Android blocked the app's notifications, and since a push never
+says what was written, the one already showing stands for the burst. The
+time of each member's last chat push in a group is kept on their push token's
+document, read and stamped in one transaction, so two messages arriving
+together push once. Other pushes are rare and aren't held back.
 
 **Deletion, still opportunistic and client-triggered** (no Cloud
 Function): whichever client is already reading a message deletes it once

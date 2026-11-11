@@ -7,6 +7,7 @@ import { DBS_URL_STR               } from '../support/database.ts';       // Wha
 import { deleteField               } from 'firebase/firestore';           // What: Delete Field. Why: An answered key request is cleared. How: This removes its time.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore seed names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the right members were pushed. How: This asserts on the pushes the emulator kept.
+import { FieldPath                 } from 'firebase/firestore';           // What: Field Path. Why: A group's ID is a key in the token's map of chat push times. How: This names that key without reading it as a dotted path.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests write as the app would, past the rules. How: This connects to the emulators.
 import { pusLisFun                 } from '../support/pushes.ts';         // What: Push List Function. Why: The pushes are checked. How: This reads what reached a token.
 import { pusTarFun                 } from '../support/pushes.ts';         // What: Push Target Function. Why: A tap on each push should open where its news is. How: This reads each kept push's group and section.
@@ -213,6 +214,41 @@ test( 'a chat message pushes each waiting member away from the group, and nobody
 	expect( await pusLisFun( funEnvObj, 'tok-carol' ) ).toEqual( [] ); // What: Carol Not Pushed. Why: Carol has the group open. How: This expects none for her.
 	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [] ); // What: Sender Not Pushed. Why: Alice isn't waiting on her own message. How: This expects none for her.
 	expect( await pusLisFun( funEnvObj, 'tok-dave' ) ).toEqual( [] );  // What: Quiet Not Pushed. Why: A quiet line sends no push, though Dave is away and waiting. How: This expects none for him.
+
+
+} );
+
+
+
+test( "a burst of chat messages pushes a member once, and the group's next message after 2 minutes pushes again", async () => { // What: Chat Throttle Test. Why: Android can block an app that notifies too often, and a busy chat would. How: This sends two messages together and checks one push, waits to be sure no second one comes, then moves the last push back past the window and checks the next message pushes again.
+
+
+	await seeGroFun( [ 'alice', 'bob' ] ); // What: Group Seed Call. Why: Alice writes and Bob is pushed. How: This seeds them.
+
+
+
+	await funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => { // What: Burst Seed Call. Why: Two messages arriving together are one burst. How: This writes both, Bob waiting on each.
+
+
+		await set( ref( cotAdmObj.database( DBS_URL_STR ), 'chats/gro1/messages/m1' ), { ciphertext : 'x', iv : 'y', senderUid : 'alice', sentAt : Date.now(), waitingOn : { bob : true } } ); // What: First Seed Call. Why: The burst's first message pushes Bob. How: This writes it.
+
+		await set( ref( cotAdmObj.database( DBS_URL_STR ), 'chats/gro1/messages/m2' ), { ciphertext : 'x', iv : 'y', senderUid : 'alice', sentAt : Date.now(), waitingOn : { bob : true } } ); // What: Second Seed Call. Why: The burst's second message is held back. How: This writes it.
+
+
+	} );
+
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-bob' ) ).toHaveLength( 1 ); // What: One Push Poll. Why: The first message pushes Bob. How: This waits for it.
+
+	await new Promise( ( resValFun ) => setTimeout( resValFun, 3000 ) ); // What: Settle Wait. Why: A held-back push leaves nothing to wait for, so the second message's run is given time to finish. How: This waits 3 seconds.
+
+	expect( await pusLisFun( funEnvObj, 'tok-bob' ) ).toHaveLength( 1 ); // What: Still One Check. Why: The burst's second message pushes nobody. How: This expects the one push alone.
+
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'accounts/bob/pushToken/current' ), new FieldPath( 'chatPushedAt', 'gro1' ), Date.now() - 3 * 60 * 1000 ) ); // What: Window Pass Call. Why: Waiting out 2 minutes would slow the suite. How: This moves Bob's last chat push back 3 minutes.
+
+	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => set( ref( cotAdmObj.database( DBS_URL_STR ), 'chats/gro1/messages/m3' ), { ciphertext : 'x', iv : 'y', senderUid : 'alice', sentAt : Date.now(), waitingOn : { bob : true } } ) ); // What: Later Seed Call. Why: A message after the window pushes again. How: This writes it.
+
+	await expect.poll( () => pusLisFun( funEnvObj, 'tok-bob' ) ).toHaveLength( 2 ); // What: Second Push Poll. Why: The window has passed. How: This waits for the second push.
 
 
 } );

@@ -11,7 +11,9 @@
  * it starts, as it does an invite link. A push that names no group, such as
  * a removal, or whose data isn't in that form, opens the app at its root.
  * The service worker builds the address, so this file reads nothing of the
- * page.
+ * page. Where a tap launches a closed app, the worker also leaves the address
+ * for an app that starts at its root to follow, while it's fresh, which this
+ * file says for how long.
  *
  * Sections:
  *  - Constants
@@ -27,6 +29,7 @@
 // #region Constants
 
 const PUS_IDE_REG = /^[A-Za-z0-9_-]{1,64}$/; // What: Push Identifier Regular Expression. Why: A group's ID and a section's name become parts of the address. How: This allows only letters, digits, hyphens, and underscores, up to 64 of them.
+const TAR_LIF_NUM = 60000;                   // What: Target Lifetime Number. Why: An address left by a tap long ago shouldn't move an app opened later. How: This is the minute it's followed for, in milliseconds.
 
 // #endregion Constants
 
@@ -80,7 +83,7 @@ const tarPatFun = ( datValAny : unknown ) : string => { // What: Target Path Fun
 
 // #region Exports
 
-export { tarPatFun }; // What: Named Export. Why: The service worker opens where a tapped push leads. How: This exports the helper.
+export { TAR_LIF_NUM, tarPatFun }; // What: Named Exports. Why: The service worker opens where a tapped push leads, and the app follows an address left for a launch while it's fresh. How: This exports the helper and the address's lifetime.
 
 // #endregion Exports
 
