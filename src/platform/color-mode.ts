@@ -11,7 +11,9 @@
  * The choice is kept on this device in local storage, so it survives a
  * reload and starts the next visit; storage that's blocked or full only
  * means the choice lasts until the page closes. The app applies the kept
- * choice once as it starts, before it first renders.
+ * choice once as it starts, before it first renders. The page's theme color,
+ * which tints the browser's bars and an installed app's status and navigation
+ * bars, follows the surface color of whichever mode shows.
  *
  * Sections:
  *  - Types
@@ -93,6 +95,80 @@ const colModGetFun = () : ColModTyp => { // What: Color Mode Get Function. Why: 
 
 
 
+// #region tinSynFun
+
+/**
+ * tinSynFun = Tint Sync Function
+ *
+ * @summary
+ * Sets the page's theme color to the surface color of the mode now showing,
+ * the color of the app's bars. The head ships a light and a dark theme color
+ * tag, each for the device's own scheme, which an installed app reads only
+ * once and which can't see a light or dark choice made in the app, so this
+ * keeps one tag, drops its scheme, and writes the color resolved from the
+ * page. Chrome on Android repaints an installed app's bars when the tag
+ * changes. With no theme color tag, or a color it can't read, it changes
+ * nothing.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param void - This function takes no parameters.
+ *
+ * @returns This function does not return anything.
+ *
+ * @example
+ * ```ts
+ * tinSynFun() // => void
+ * ```
+ *
+*/
+
+const tinSynFun = () : void => { // What: Tint Sync Function. Why: The bars around the app should match it in whichever mode shows, as installed apps' do. How: This resolves the surface color and writes it into one theme color tag.
+
+
+	const metEleArr = [ ...document.querySelectorAll( 'meta[name="theme-color"]' ) ]; // What: Meta Element Array. Why: The head's tags are the ones the browser reads. How: This finds every theme color tag.
+
+
+	if ( metEleArr.length === 0 ) return; // What: No Tag Guard. Why: A page without a theme color has nothing to keep in step. How: This returns.
+
+
+
+	const proSpaEle = document.createElement( 'span' ); // What: Probe Span Element. Why: A custom property holding light-dark() reads back unresolved, while a color property resolves it for the mode showing. How: This makes an element to read it through.
+
+
+	proSpaEle.style.color = 'var( --bac-sur-col )'; // What: Probe Color Assignment. Why: The bars match the surface the app's bars are drawn in. How: This colors the probe with it. // Background Surface Color = light-dark( #FFFFFF, #1B1D38 )
+
+
+	document.documentElement.append( proSpaEle ); // What: Probe Append Call. Why: Only an element in the page takes its colors. How: This adds it to the root.
+
+
+	const chaValArr = getComputedStyle( proSpaEle ).color.match( /\d+/g ); // What: Channel Value Array. Why: The resolved color reads back as rgb( r, g, b ), which a theme color tag takes as hex. How: This reads its numbers, null when there are none.
+
+
+	proSpaEle.remove(); // What: Probe Remove Call. Why: The probe has done its job. How: This takes it out of the page.
+
+
+
+	if ( chaValArr === null || chaValArr.length < 3 ) return; // What: Unread Color Guard. Why: A color that didn't resolve would tint the bars wrongly. How: This leaves the tags as they are.
+
+
+
+	const hexValStr = `#${ chaValArr.slice( 0, 3 ).map( ( chaValStr ) => Number( chaValStr ).toString( 16 ).padStart( 2, '0' ) ).join( '' ).toUpperCase() }`; // What: Hex Value String. Why: A theme color tag reads plain hex in every browser. How: This writes each channel as two hex digits.
+
+
+	metEleArr.slice( 1 ).forEach( ( metEleObj ) => metEleObj.remove() ); // What: Extra Tag Remove Call. Why: A second tag tied to the device's scheme would win whenever the app's choice differs. How: This removes every tag but the first.
+
+	metEleArr[ 0 ].removeAttribute( 'media' ); // What: Media Remove Call. Why: The kept tag holds whatever mode shows, whatever the device's scheme. How: This drops its scheme.
+
+	metEleArr[ 0 ].setAttribute( 'content', hexValStr ); // What: Content Set Call. Why: The browser tints its bars with this color. How: This writes the surface color.
+
+
+};
+
+// #endregion tinSynFun
+
+
+
 // #region colModAppFun
 
 /**
@@ -101,7 +177,9 @@ const colModGetFun = () : ColModTyp => { // What: Color Mode Get Function. Why: 
  * @summary
  * Applies the choice kept on this device to the page, setting the root's
  * data-color-mode-choice attribute for dark or light and leaving it off for
- * system. The app calls it once as it starts, before it first renders.
+ * system, then sets the theme color to match, and again whenever the
+ * device's own scheme changes. The app calls it once as it starts, before it
+ * first renders.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -125,6 +203,12 @@ const colModAppFun = () : void => { // What: Color Mode Apply Function. Why: A k
 	if ( colModStr !== 'system' ) document.documentElement.dataset.colorModeChoice = colModStr; // What: Choice Attribute Assignment. Why: A kept light or dark choice overrides the phone. How: This sets the attribute, leaving it off to follow the phone.
 
 
+
+	tinSynFun(); // What: Tint Sync Call. Why: The bars should match the mode the app opens in. How: This sets the theme color.
+
+	matchMedia( '(prefers-color-scheme: dark)' ).addEventListener( 'change', tinSynFun ); // What: Scheme Change Listener. Why: A page following the device turns light or dark with it, and its bars should too. How: This sets the theme color again on each change.
+
+
 };
 
 // #endregion colModAppFun
@@ -139,9 +223,9 @@ const colModAppFun = () : void => { // What: Color Mode Apply Function. Why: A k
  * @summary
  * Applies a choice to the page at once and keeps it on this device: dark or
  * light sets the root's data-color-mode-choice attribute and stores the
- * choice, while system removes both, so the page follows the phone again. A
- * storage write that fails is logged, and the choice still applies until the
- * page closes.
+ * choice, while system removes both, so the page follows the phone again, and
+ * the theme color follows the mode either way. A storage write that fails is
+ * logged, and the choice still applies until the page closes.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -162,6 +246,10 @@ const colModSetFun = ( colModStr : ColModTyp ) : void => { // What: Color Mode S
 	if ( colModStr === 'system' ) delete document.documentElement.dataset.colorModeChoice; // What: System Attribute Removal. Why: Without the attribute the page follows the phone. How: This removes it.
 
 	else document.documentElement.dataset.colorModeChoice = colModStr; // What: Choice Attribute Assignment. Why: The attribute holds the page to light or dark. How: This sets it to the choice.
+
+
+
+	tinSynFun(); // What: Tint Sync Call. Why: The bars should change with the page. How: This sets the theme color for the mode now showing.
 
 
 

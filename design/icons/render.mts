@@ -18,13 +18,14 @@ import { writeFileSync } from 'node:fs';          // What: Write File Sync. Why:
  * @summary
  * Rebuilds the app's icons in public/ from the SVG sources in design/brand,
  * each drawn straight from the vector at its exact size, so every icon stays
- * crisp. The set is the SVG favicon modern browsers use, a favicon.ico for
- * the /favicon.ico request browsers make on their own, packing the outline
- * alone at 16px and the one-dot mark at 32 and 48px, the web app manifest's
- * icons at 192 and 512px on the rounded tile, a maskable 512px icon whose
- * square tile a launcher crops to its own shape, with the mark shrunk into
- * the safe zone every shape keeps, and an Apple touch icon on a square tile,
- * since iOS rounds the corners itself. Run it with npm run icons whenever the
+ * crisp. The set is the SVG favicon modern browsers use, a favicon.ico for the
+ * /favicon.ico request browsers make on their own, packing the outline alone
+ * at 16px and the one-dot mark at 32 and 48px, the web app manifest's icons at
+ * 192 and 512px on the rounded tile, a maskable 512px icon whose square tile a
+ * launcher crops to its own shape, with the mark shrunk into the safe zone
+ * every shape keeps, drawn from the light tile so Android's themed icons
+ * render it like most apps', and an Apple touch icon on a square tile, since
+ * iOS rounds the corners itself. Run it with npm run icons whenever the
  * artwork changes.
  *
  * Sections:
@@ -84,7 +85,7 @@ const ICO_REC_ARR : IcoRecTyp[] = [ // What: Icon Record Array. Why: Every PNG i
 	{ filStr : 'apple-touch-icon.png',         sizNum : 180, tilStr : 'square'   }, // What: Apple Touch Icon Row. Why: iOS draws the home screen icon at 180px and rounds its corners itself. How: This renders the full mark on a square tile.
 	{ filStr : 'favicon-192x192.png',          sizNum : 192, tilStr : 'rounded'  }, // What: Large Icon Row. Why: Android and the manifest use a 192px icon. How: This renders the full mark on its rounded tile.
 	{ filStr : 'favicon-512x512.png',          sizNum : 512, tilStr : 'rounded'  }, // What: Extra Large Icon Row. Why: Install screens and splash screens ask for a 512px icon. How: This renders the full mark on its rounded tile.
-	{ filStr : 'favicon-maskable-512x512.png', sizNum : 512, tilStr : 'maskable' }  // What: Maskable Icon Row. Why: Android launchers crop an icon to their own shape. How: This renders the mark shrunk into the safe zone on a square tile.
+	{ filStr : 'favicon-maskable-512x512.png', sizNum : 512, tilStr : 'maskable' }  // What: Maskable Icon Row. Why: Android launchers crop an icon to their own shape. How: This renders the light tile's mark shrunk into the safe zone on a square tile.
 
 
 ];
@@ -104,6 +105,7 @@ const OUT_DIR_STR = fileURLToPath( new URL( '../../public/', import.meta.url ) )
 // #region Module State
 
 const ICO_SVG_STR = readFileSync( new URL( '../brand/icon.svg', import.meta.url ), 'utf8' );       // What: Icon SVG String. Why: The large icons show the full mark with its typing dots. How: This reads design/brand/icon.svg.
+const LIG_SVG_STR = readFileSync( new URL( '../brand/icon-light.svg', import.meta.url ), 'utf8' ); // What: Light SVG String. Why: Android's themed icons draw a launcher icon from its light and dark parts, and a dark mark on a light tile matches most apps'. How: This reads design/brand/icon-light.svg.
 const SMA_SVG_STR = readFileSync( new URL( '../brand/icon-small.svg', import.meta.url ), 'utf8' ); // What: Small SVG String. Why: Icons around 32px show one coral dot in place of three. How: This reads design/brand/icon-small.svg.
 const TIN_SVG_STR = readFileSync( new URL( '../brand/icon-tiny.svg', import.meta.url ), 'utf8' );  // What: Tiny SVG String. Why: At 16px only the outline reads. How: This reads design/brand/icon-tiny.svg.
 
@@ -245,7 +247,7 @@ async function renPngFun ( svgTexStr : string, icoSizNum : number ) : Promise< B
 
 writeFileSync( OUT_DIR_STR + 'favicon.svg', SMA_SVG_STR ); // What: SVG Favicon Write Call. Why: Modern browsers draw the vector favicon, sharp at every size. How: This copies the one-dot mark into public/.
 
-for ( const icoRecObj of ICO_REC_ARR ) writeFileSync( OUT_DIR_STR + icoRecObj.filStr, await renPngFun( tilSvgFun( ICO_SVG_STR, icoRecObj.tilStr ), icoRecObj.sizNum ) ); // What: PNG Icon Loop. Why: Each PNG icon is saved under its own name. How: This renders every row's tile from the full mark and writes it into public/.
+for ( const icoRecObj of ICO_REC_ARR ) writeFileSync( OUT_DIR_STR + icoRecObj.filStr, await renPngFun( tilSvgFun( icoRecObj.tilStr === 'maskable' ? LIG_SVG_STR : ICO_SVG_STR, icoRecObj.tilStr ), icoRecObj.sizNum ) ); // What: PNG Icon Loop. Why: Each PNG icon is saved under its own name. How: This renders every row's tile from the full mark, the maskable row's from the light tile, and writes it into public/.
 
 
 
