@@ -19,6 +19,7 @@ import { ideEnsFun            } from '../state/identity.ts';    // What: Identit
 import { impUniFun            } from '../core/geo.ts';          // What: Imperial Units Function. Why: Distances read in miles where the device's region uses them. How: This checks the device's language.
 import { iniTexFun            } from '../utils/text.ts';        // What: Initials Text Function. Why: Each avatar and dot shows its member's initials. How: This takes them from the name.
 import { KEY_WAI_STR          } from '../state/groups.ts';      // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its locations. How: The section shows this message then.
+import { linGuaFun            } from '../ui/online.ts';         // What: Link Guard Function. Why: A chat post is paused while the chat can't connect. How: This announces the pause and reports it.
 import { locWatFun            } from '../state/location.ts';    // What: Location Watch Function. Why: Members see each other move as updates arrive. How: This watches the shares.
 import { memLisFun            } from '../state/members.ts';     // What: Member List Function. Why: Each share shows its member's name and color. How: This lists the members.
 import { offGuaFun            } from '../ui/online.ts';         // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
@@ -627,6 +628,10 @@ function GroMapCom ( { curGroObj } : GmcProTyp ) : React.JSX.Element {
 
 
 		if ( offGuaFun( setErrMesStr ) ) return; // What: Offline Guard. Why: A change that needs the server can't happen offline, and shouldn't hang or fail vaguely. How: This announces that it has to wait, and returns.
+
+
+
+		if ( linGuaFun( setErrMesStr ) ) return; // What: Chat Link Guard. Why: A status line sent while the chat can't connect would leave the button posting forever. How: This announces that it has to wait, and returns.
 
 
 

@@ -23,6 +23,7 @@ import { ideEnsFun       } from '../state/identity.ts';        // What: Identity
 import { iniTexFun       } from '../utils/text.ts';            // What: Initials Text Function. Why: Each sender's avatar shows their initials. How: This takes them from the name.
 import { KEY_WAI_STR     } from '../state/groups.ts';          // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its chat. How: The chat shows this message then.
 import { linNorFun       } from '../core/text-limits.ts';      // What: Lines Normalize Function. Why: A message keeps its line breaks while each line is tidied. How: This tidies it as it'll be sent.
+import { linNowFun       } from '../state/chat-link.ts';       // What: Link Now Function. Why: A message sent while the chat can't connect would hang. How: This reads the chat's connection.
 import { lisPhrFun       } from '../utils/text.ts';            // What: List Phrase Function. Why: A bring-list line names its items as a phrase. How: This joins them the way English does.
 import { memLisFun       } from '../state/members.ts';         // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
 import { mesLisFun       } from '../platform/chat-store.ts';   // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
@@ -476,9 +477,10 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 	 * Sends what's typed: ignores an empty message or one while another is
 	 * out, announces a message the chat refuses, and otherwise sends it, adds
 	 * it to the log at once, clears the composer, and keeps the log at its
-	 * end. While the device is offline, it keeps the message on the device to
-	 * send later instead, where the log shows it waiting. A failed send is
-	 * announced and leaves the text to try again.
+	 * end. While the device is offline, or the chat can't reach its database,
+	 * it keeps the message on the device to send later instead, where the log
+	 * shows it waiting. A failed send is announced and leaves the text to try
+	 * again.
 	 *
 	 * @author z4nta0 <https://github.com/z4nta0>
 	 *
@@ -514,10 +516,10 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 
 
-		try { // What: Send Try. Why: The message is sent and shown at once. How: This sends it, adds the sender's copy to the log, and clears the composer, or keeps it to send later while offline.
+		try { // What: Send Try. Why: The message is sent and shown at once. How: This sends it, adds the sender's copy to the log, and clears the composer, or keeps it to send later while offline or the chat can't connect.
 
 
-			if ( !onlNowFun() ) { // What: Offline Check. Why: A send would hang until the device is back, and be lost if the app closed first. How: This keeps the message on the device instead, where the log shows it waiting.
+			if ( !onlNowFun() || !linNowFun() ) { // What: Offline Check. Why: A send would hang until the device or the chat's connection is back, and be lost if the app closed first. How: This keeps the message on the device instead, where the log shows it waiting.
 
 
 				await chaQueFun( groIdeStr, norTexStr ); // What: Queue Call. Why: The message sends once the device is back online. How: This keeps it on the device, which the outbox watch shows.
