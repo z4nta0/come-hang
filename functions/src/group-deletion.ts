@@ -3,11 +3,11 @@
 
 // #region Imports
 
+import { CAL_OPT_OBJ } from './setup.ts';                  // What: Callable Options Object. Why: Every function shares the deploy options, and one the app calls refuses a call without App Check outside the emulator. How: The callable takes them.
 import { calGroFun   } from './calls.ts';                  // What: Call Group Function. Why: The deletion names a group and needs a signed-in caller. How: This checks both.
 import { FieldPath   } from 'firebase-admin/firestore';    // What: Field Path. Why: A group's ID becomes a map key in each account. How: This names that key without reading it as a dotted path.
 import { FieldValue  } from 'firebase-admin/firestore';    // What: Field Value. Why: The group is dropped from each account's maps. How: This supplies the field delete.
 import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Database Object. Why: Most of a group lives in Firestore. How: This reads and deletes it.
-import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: Every other member is told the group was deleted. How: This adds their notice to the first batch.
 import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The owner asks for the deletion from the app. How: This registers a callable function, which checks the caller's sign-in.
@@ -220,7 +220,7 @@ const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > =>
  *
 */
 
-const delGroFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Delete Group Function. Why: Only the owner deletes a group, and only a server can delete all of it. How: This checks the caller, then deletes the group in stages.
+const delGroFun = onCall( CAL_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Delete Group Function. Why: Only the owner deletes a group, and only a server can delete all of it. How: This checks the caller, then deletes the group in stages.
 
 
 	const { groIdeStr, uidValStr } = calGroFun( reqValObj ); // What: Call Values. Why: The deletion names a group and its caller. How: This checks and reads both.

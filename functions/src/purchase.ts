@@ -4,9 +4,10 @@
 // #region Imports
 
 import { API_URL_PAR } from './polar.ts';                   // What: API URL Parameter. Why: The checkout is created on this project's Polar. How: This is its address.
+import { CAL_OPT_OBJ } from './setup.ts';                   // What: Callable Options Object. Why: The checkout is called by the app, so it refuses a call without App Check outside the emulator. How: The checkout spreads them into its own.
 import { FieldValue  } from 'firebase-admin/firestore';     // What: Field Value. Why: A refund removes the paid flag. How: This deletes the field.
 import { FIR_DAT_OBJ } from './setup.ts';                   // What: Firestore Database Object. Why: The paid flag and the handled deliveries live in Firestore. How: This reaches it past the rules.
-import { FUN_OPT_OBJ } from './setup.ts';                   // What: Function Options Object. Why: Every function shares the deploy options. How: Both functions spread them into their own.
+import { FUN_OPT_OBJ } from './setup.ts';                   // What: Function Options Object. Why: Every function shares the deploy options. How: The webhook spreads them into its own.
 import { getAuth     } from 'firebase-admin/auth';          // What: Get Auth. Why: Only an identity linked to Google may buy. How: This returns the Admin SDK's Auth.
 import { HttpsError  } from 'firebase-functions/v2/https';  // What: HTTPS Error. Why: A refused checkout tells the app why. How: This throws an error the client receives with its code.
 import { onCall      } from 'firebase-functions/v2/https';  // What: On Call. Why: The app asks for a checkout as its signed-in identity. How: This registers a callable function, which checks the caller's sign-in.
@@ -81,7 +82,7 @@ import type { PolOrdTyp } from './polar.ts'; // What: Polar Order Type. Why: The
  *
 */
 
-const cheCreFun = onCall( { ...FUN_OPT_OBJ, secrets : [ POL_TOK_SEC ] }, async ( reqValObj ) : Promise< { urlValStr : string } > => { // What: Checkout Create Function. Why: Buying the upgrade starts from the app (Section 18). How: This checks the caller, then asks Polar for a checkout tagged with their UID.
+const cheCreFun = onCall( { ...CAL_OPT_OBJ, secrets : [ POL_TOK_SEC ] }, async ( reqValObj ) : Promise< { urlValStr : string } > => { // What: Checkout Create Function. Why: Buying the upgrade starts from the app (Section 18). How: This checks the caller, then asks Polar for a checkout tagged with their UID.
 
 
 	if ( !reqValObj.auth ) throw new HttpsError( 'unauthenticated', 'Sign in first.' ); // What: Sign-In Guard. Why: A purchase belongs to an identity. How: This refuses a caller with no sign-in.

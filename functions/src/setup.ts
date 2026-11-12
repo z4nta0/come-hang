@@ -22,7 +22,9 @@ import { initializeApp      } from 'firebase-admin/app';       // What: Initiali
  * rules, and the options each function is deployed with. Every function runs
  * in us-central1 beside the databases it reacts to, and is capped in how many
  * instances it may start, so a flood of triggers can't run up the bill
- * (ARCHITECTURE.md Section 15).
+ * (ARCHITECTURE.md Section 15). The functions the app calls also refuse a
+ * call without a valid App Check token, outside the emulator, where the app
+ * has none (ARCHITECTURE.md Section 14).
  *
  * Sections:
  *  - Constants
@@ -49,6 +51,9 @@ const ADM_APP_OBJ = initializeApp();                             // What: Admin 
 const DBS_EMU_STR = process.env.FIREBASE_DATABASE_EMULATOR_HOST; // What: Database Emulator String. Why: Under the emulator, the Admin SDK's default namespace isn't the one the rules and the app use. How: This reads the emulator's address, undefined in production.
 
 
+const CAL_OPT_OBJ = { ...FUN_OPT_OBJ, enforceAppCheck : process.env.FUNCTIONS_EMULATOR !== 'true' }; // What: Callable Options Object. Why: A function the app calls should answer only the app itself, while the emulator's app runs without App Check. How: This adds App Check enforcement to every function's options, outside the emulator, which marks its runtime with FUNCTIONS_EMULATOR.
+
+
 const FIR_DAT_OBJ = getFirestore(); // What: Firestore Database Object. Why: Functions read Firestore past its rules. How: This is the Admin SDK's Firestore.
 const STO_ADM_OBJ = getStorage();   // What: Storage Admin Object. Why: Functions delete files past the Storage rules. How: This is the Admin SDK's Storage, whose default bucket each caller opens.
 
@@ -60,7 +65,7 @@ const REA_DAT_OBJ = DBS_EMU_STR ? getDatabaseWithUrl( `http://${ DBS_EMU_STR }?n
 
 // #region Exports
 
-export { FIR_DAT_OBJ, FUN_OPT_OBJ, REA_DAT_OBJ, STO_ADM_OBJ }; // What: Named Exports. Why: Every function module reads the shared services and options. How: This exports the three services and the options.
+export { CAL_OPT_OBJ, FIR_DAT_OBJ, FUN_OPT_OBJ, REA_DAT_OBJ, STO_ADM_OBJ }; // What: Named Exports. Why: Every function module reads the shared services and options. How: This exports the three services, the options every function shares, and those of the functions the app calls.
 
 // #endregion Exports
 
