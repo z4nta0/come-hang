@@ -74,7 +74,7 @@ const CHI_PAT_STR = fileURLToPath( new URL( '../support/app-check-child.ts', imp
  *
  * @example
  * ```ts
- * chiRunFun(false) // => { delGroFun : { mesStr : 'Unauthenticated', stsNum : 401 }, ... }
+ * chiRunFun(false) // => { delGroFun : { mesStr, stsNum : 401 }, ... }
  * ```
  *
 */
