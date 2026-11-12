@@ -194,7 +194,7 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 
 
 
-		const watStaFun = () : void => void chaWatFun( groIdeStr, ( mesRecObj ) => { // What: Watch Start Function. Why: Messages show as they arrive, and a refused watch has to start again. How: This watches the chat, adding each message, and schedules another start when it fails.
+		const watStaFun = () : void => void chaWatFun( groIdeStr, ( mesRecObj ) => { // What: Watch Start Function. Why: Messages show as they arrive, and a refused watch has to start again. How: This watches the chat, adding each message, reads the device's history again once it runs, and schedules another start when it fails.
 
 
 			if ( !actValBoo ) return; // What: Closed Guard. Why: The chat may have closed. How: This ignores the message.
@@ -214,12 +214,17 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 			if ( actValBoo ) retTimNum = window.setTimeout( watStaFun, RET_MIL_NUM ); // What: Retry Call. Why: The mirror usually catches up within a moment. How: This starts the watch again after the wait.
 
 
-		} ).then( ( stoFunVal ) => { // What: Watch Started Handler. Why: The cleanup has to stop the watch, and a chat closed first stops it at once. How: This keeps the stop, or calls it.
+		} ).then( ( stoFunVal ) => { // What: Watch Started Handler. Why: The cleanup has to stop the watch, a chat closed first stops it at once, and a message this device sent before the watch ran had no watch to reach. How: This keeps the stop, or calls it, and reads the device's history again.
 
 
-			if ( actValBoo ) stoWatFun = stoFunVal; // What: Stop Keep Call. Why: The cleanup stops the watch. How: This keeps the stop.
+			if ( !actValBoo ) { stoFunVal(); return; } // What: Late Stop Guard. Why: The chat closed before the watch started. How: This stops it at once and returns.
 
-			else stoFunVal(); // What: Late Stop Call. Why: The chat closed before the watch started. How: This stops it at once.
+
+
+			stoWatFun = stoFunVal; // What: Stop Keep Assignment. Why: The cleanup stops the watch. How: This keeps the stop.
+
+
+			void mesLisFun( groIdeStr ).then( ( stoRecArr ) => { if ( actValBoo ) setMesRecArr( ( preRecArr ) => stoRecArr.reduce( mesMerFun, preRecArr ) ); } ); // What: History Reread Call. Why: A message this device sent before the watch ran, as the outbox does on coming back online, was kept on the device with no watch to hand it to, and in a group of one the server deletes it at once, so only the device still has it (measured 2026-11-11). How: Once the watch runs, this merges the device's history in again, which merging by ID keeps from repeating.
 
 
 		}, ( errCatObj : unknown ) => { // What: Watch Failure Handler. Why: The watch couldn't start, such as while the key waits to be shared. How: This shows the waiting message for a waiting key, and otherwise logs the failure and tries again after a second.
