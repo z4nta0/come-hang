@@ -25,15 +25,18 @@ import type { FirebaseOptions } from 'firebase/app'; // What: Firebase Options. 
  *
  * @summary
  * The app's one service worker (ARCHITECTURE.md Section 14), built by
- * vite-plugin-pwa, which writes the build's file list into it. It caches every
- * file the build produced, so the app opens without a connection, and answers
- * every navigation with the app's page, as Netlify does, apart from the legal
- * pages, which are pages of their own, and the sign-in pages Netlify passes
- * through to Firebase under /__/. In a production build it also receives FCM's
- * pushes and shows each one, and a tap on one brings the app forward where the
- * push leads, its group and section, opening it there when it isn't open. The
- * app hands this worker's registration to FCM, so FCM never registers a second
- * worker of its own.
+ * vite-plugin-pwa, which writes the build's file list into it. A new version
+ * takes over as soon as it installs, rather than waiting for every window of
+ * the app to close, which an installed app left open could put off for days,
+ * so the app's next load runs it. It caches every file the build produced, so
+ * the app opens without a connection, and answers every navigation with the
+ * app's page, as Netlify does, apart from the legal pages, which are pages of
+ * their own, and the sign-in pages Netlify passes through to Firebase under
+ * /__/. In a production build it also receives FCM's pushes and shows each
+ * one, and a tap on one brings the app forward where the push leads, its group
+ * and section, opening it there when it isn't open. The app hands this
+ * worker's registration to FCM, so FCM never registers a second worker of its
+ * own.
  *
  * Sections:
  *  - Types
@@ -138,6 +141,10 @@ self.addEventListener( 'notificationclick', ( cliEveObj ) => { // What: Notifica
 
 
 } );
+
+
+
+self.addEventListener( 'install', () => void self.skipWaiting() ); // What: Install Listener. Why: A waiting version would serve the old app until every window closed, which kept one Pixel on an old version (measured 2026-11-11). How: This makes a newly installed version take over at once, so the next load of any window runs it.
 
 
 

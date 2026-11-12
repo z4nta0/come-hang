@@ -19,6 +19,7 @@ import { isaInsFun       } from '../platform/install.ts';      // What: Is-An In
 import { isaIosFun       } from '../platform/install.ts';      // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
 import { JoiGroCom       } from './join-group.tsx';            // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
 import { LanPagCom       } from './landing/page.tsx';          // What: Landing Page Component. Why: A phone with no identity meets Come Hang through its landing page. How: The host shows it when there's no identity.
+import { linStaFun       } from '../state/chat-link.ts';       // What: Link Start Function. Why: A device with groups watches whether the chat can reach its database. How: This starts the watch.
 import { LoaScrCom       } from './loading.tsx';               // What: Loading Screen Component. Why: Someone waiting on the groups should see the app is working. How: The host shows it while they load.
 import { MovDevCom       } from './moved.tsx';                 // What: Moved Device Component. Why: A device the identity moved away from shows why, and what it can still do. How: The host shows it while another device is active.
 import { NotSheCom       } from './notices.tsx';               // What: Notice Sheet Component. Why: What happened while someone was away shows over whatever screen is up. How: The host shows it once the groups have loaded.
@@ -37,6 +38,7 @@ import { shaResFun       } from '../state/sharing.ts';         // What: Sharing 
 import { useCallback     } from 'react';                       // What: Use Callback. Why: The join screen's effects depend on what the host hands it, which shouldn't change on every render. How: This keeps the same functions between renders.
 import { useEffect       } from 'react';                       // What: Use Effect. Why: The groups are watched while the host is shown, a group that's gone is forgotten once the watch drops it, and sharing and the kept places are checked against the groups. How: This starts and stops the watch, clears the group, and checks sharing and the places.
 import { useLayoutEffect } from 'react';                       // What: Use Layout Effect. Why: The scroll hook should hear the screen is ready before the browser draws it. How: This runs right after the real screen commits.
+import { useLinBooFun    } from '../ui/online.ts';             // What: Use Link Boolean Function. Why: The outbox sends once the chat can reach its database too. How: This follows the chat's connection.
 import { useOnlBooFun    } from '../ui/online.ts';             // What: Use Online Boolean Function. Why: The outbox sends once the device is online. How: This follows the connection.
 import { useRef          } from 'react';                       // What: Use Reference. Why: Carrying on in Safari owes focus to the screen that follows. How: This holds whether it's owed.
 import { useScrOpeFun    } from '../ui/screen.ts';             // What: Use Screen Open Function. Why: A created group opens, and so does the next group after one is left or deleted. How: This returns the function that opens a screen.
@@ -334,8 +336,10 @@ const useIdeHasFun = ( watVerNum : number ) : boolean | null => { // What: Use I
  *
  * @summary
  * Sends every group's chat messages written offline whenever the device is
- * online and the groups are known, so they go as soon as the connection
- * returns, whichever screen is open (ARCHITECTURE.md Section 14). A send
+ * online, the chat can reach its database, and the groups are known, so they
+ * go as soon as the connection returns, whichever screen is open
+ * (ARCHITECTURE.md Section 14). Once there are groups, it also starts the
+ * watch on the chat's connection. A send
  * that fails is logged and tried again after RET_MIL_NUM, up to RET_MAX_NUM
  * tries in all while the device stays online, since the first send after
  * reconnecting can be refused while the sign-in catches up (measured
@@ -359,14 +363,19 @@ const useOutFluFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
 
 
 	const groKeyStr = groRecArr?.map( ( groRecObj ) => groRecObj.ideStr ).sort().join( ',' ) ?? ''; // What: Group Key String. Why: The sends should run only when the groups or the connection change. How: This joins the group IDs into one value to compare.
+	const linValBoo = useLinBooFun();                                                                // What: Link Value Boolean. Why: Messages can go only while the chat can reach its database. How: This follows the chat's connection.
 	const onlValBoo = useOnlBooFun();                                                                // What: Online Value Boolean. Why: Messages can go only while online. How: This follows the connection.
 
 
 
-	useEffect( () => { // What: Flush Effect. Why: Coming back online, or a group appearing, may leave messages to send. How: This sends each group's outbox while online, trying a failed one again after a wait.
+	useEffect( () => { // What: Flush Effect. Why: Coming back online, the chat reconnecting, or a group appearing may leave messages to send. How: This starts the chat's connection watch once there are groups, and sends each group's outbox while both connections are up, trying a failed one again after a wait.
 
 
-		if ( !onlValBoo || groKeyStr === '' ) return; // What: Not Ready Guard. Why: Nothing goes offline or without groups. How: This returns.
+		if ( groKeyStr !== '' ) linStaFun(); // What: Link Start Call. Why: A device with groups uses the chat, whose connection can stick. How: This starts the watch, which runs once however often it's asked.
+
+
+
+		if ( !onlValBoo || !linValBoo || groKeyStr === '' ) return; // What: Not Ready Guard. Why: Nothing goes offline, while the chat can't connect, or without groups. How: This returns.
 
 
 
@@ -425,7 +434,7 @@ const useOutFluFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
 		};
 
 
-	}, [ groKeyStr, onlValBoo ] ); // What: Effect Dependency Array. Why: The sends follow the groups and the connection. How: groKeyStr changes with the groups, and onlValBoo when the device goes online or offline.
+	}, [ groKeyStr, linValBoo, onlValBoo ] ); // What: Effect Dependency Array. Why: The sends follow the groups and both connections. How: groKeyStr changes with the groups, linValBoo when the chat's connection is lost or comes back, and onlValBoo when the device goes online or offline.
 
 
 };

@@ -7,7 +7,8 @@ import cssModObj from './offline-banner.module.css'; // What: CSS Module Object.
 
 
 import { useLayoutEffect } from 'react';            // What: Use Layout Effect. Why: The screen below makes room for the banner before it's drawn. How: This measures the banner after each change of size, before paint.
-import { useOnlBooFun    } from './online.ts';      // What: Use Online Boolean Function. Why: The banner shows only while the device is offline. How: This follows the connection.
+import { useLinBooFun    } from './online.ts';      // What: Use Link Boolean Function. Why: The banner also shows while the chat can't connect. How: This follows the chat's connection.
+import { useOnlBooFun    } from './online.ts';      // What: Use Online Boolean Function. Why: The banner shows while the device is offline. How: This follows the connection.
 import { useRef          } from 'react';            // What: Use Reference. Why: The banner's height is measured. How: This holds its element.
 
 // #endregion Imports
@@ -20,7 +21,9 @@ import { useRef          } from 'react';            // What: Use Reference. Why:
  * @summary
  * The band above every screen while the device is offline (ARCHITECTURE.md
  * Section 14), saying what still works: what's on the device still shows,
- * and messages send once the device is back online. It's a status region
+ * and messages send once the device is back online. While the device is
+ * online but the chat can't reach its database, it says that instead, and
+ * that messages send once the chat is back. It's a status region
  * that's always in the page and empty while online, so a screen reader hears
  * the change, and it shares its height with the screens through the
  * `--off-ban-hei` custom property on the body, so a screen exactly the
@@ -45,7 +48,8 @@ import { useRef          } from 'react';            // What: Use Reference. Why:
  *
  * @summary
  * Renders the offline status region, holding the banner's words while the
- * device is offline and empty otherwise, and keeps the body's
+ * device is offline or the chat can't connect, and empty otherwise, and
+ * keeps the body's
  * `--off-ban-hei` at its height, 0 while it's empty, removing the property
  * when it goes.
  *
@@ -66,7 +70,8 @@ function OffBanCom () : React.JSX.Element {
 
 
 	const banEleRef = useRef< HTMLParagraphElement >( null ); // What: Banner Element Reference. Why: The banner's height is measured. How: This holds its paragraph.
-	const onlValBoo = useOnlBooFun();                         // What: Online Value Boolean. Why: The banner speaks only while offline. How: This reads the connection.
+	const linValBoo = useLinBooFun();                         // What: Link Value Boolean. Why: The banner speaks while the chat can't connect. How: This reads the chat's connection.
+	const onlValBoo = useOnlBooFun();                         // What: Online Value Boolean. Why: The banner speaks while offline. How: This reads the connection.
 
 
 
@@ -111,7 +116,7 @@ function OffBanCom () : React.JSX.Element {
 			className={ cssModObj.offBanPar }
 
 			role='status'
-		>{ onlValBoo ? '' : "You're offline. What's on this device still shows, and your messages will send once you're back online." }{ /* What: Banner Words Check. Why: The banner speaks only while offline. How: This shows the words then, and nothing online. */ }</p> // What: Offline Banner Paragraph Element. Why: Someone offline should know what still works, and a screen reader should hear it. How: This is a status region in the warning colors, empty while online.
+		>{ !onlValBoo ? "You're offline. What's on this device still shows, and your messages will send once you're back online." : linValBoo ? '' : "The chat can't connect right now. What's on this device still shows, and your messages will send once it's back." }{ /* What: Banner Words Check. Why: The banner speaks while offline, and while online but the chat can't connect. How: This shows the offline words, else the chat's words when it can't connect, else nothing. */ }</p> // What: Offline Banner Paragraph Element. Why: Someone offline, or whose chat can't connect, should know what still works, and a screen reader should hear it. How: This is a status region in the warning colors, empty while all is well.
 
 
 	);

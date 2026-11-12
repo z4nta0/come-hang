@@ -8,7 +8,8 @@ import { runPagFun } from '../support/client.ts'; // What: Run Page Function. Wh
 import { test      } from '@playwright/test';     // What: Test. Why: Each behavior is its own test. How: This declares them.
 
 
-import type { Page } from '@playwright/test'; // What: Page. Why: The helpers drive a page. How: This types it.
+import type { Page           } from '@playwright/test'; // What: Page. Why: The helpers drive a page. How: This types it.
+import type { WebSocketRoute } from '@playwright/test'; // What: Web Socket Route. Why: The chat's database connections are held and closed. How: This types each.
 
 // #endregion Imports
 
@@ -23,7 +24,9 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The helpers dr
  * message written meanwhile waits on the device, shown as waiting, and sends
  * in order once the device is back, and a change that needs the server says
  * it has to wait. Playwright's offline mode cuts the page off from the
- * emulators and reports the device offline, as losing a connection does.
+ * emulators and reports the device offline, as losing a connection does. A
+ * device still online whose chat can't reach its database is checked too,
+ * with the database's WebSockets closed as they open.
  *
  * Sections:
  *  - Helpers
@@ -197,6 +200,68 @@ test( 'offline, a banner says so and a message waits on the device, shown as wai
 
 	expect( firIndNum ).toBeGreaterThanOrEqual( 0 ); // What: First Found Assertion. Why: The first message has to be in the log for its place to mean anything. How: This expects its entry found.
 	expect( firIndNum ).toBeLessThan( secIndNum );   // What: Sent Order Assertion. Why: The messages send in the order they were written. How: This expects the first ahead of the second.
+
+
+} );
+
+
+
+test( "online, a chat that can't reach its database says so, and a message waits on the device until the chat connects again", async ( { page : curPagObj } ) => { // What: Chat Link Test. Why: A device can be online while the chat's connection is stuck, and a message sent then hung with nothing said (Section 14). How: This closes the database's WebSockets, checks the banner and the waiting message, then lets them through and waits for it to send.
+
+
+	const rouSocArr : WebSocketRoute[] = []; // What: Route Socket Array. Why: Connections already open are closed when the block starts. How: This keeps each one routed.
+
+	let blkValBoo = false; // What: Block Value Boolean. Why: The chat connects as usual until the test cuts it off. How: This is true while new connections are closed.
+
+
+
+	await curPagObj.routeWebSocket( /:8210\//, ( rouSocObj ) => { // What: Socket Route Call. Why: The chat's database is reached through WebSockets to the emulator's port. How: This passes each through, or closes it while the block is on.
+
+
+		rouSocArr.push( rouSocObj ); // What: Route Keep Call. Why: An open connection is closed when the block starts. How: This keeps it.
+
+
+		if ( blkValBoo ) void rouSocObj.close(); // What: Blocked Close Call. Why: A stuck chat never connects. How: This closes the connection while the block is on.
+
+		else rouSocObj.connectToServer(); // What: Pass Through Call. Why: The chat works until the block. How: This connects it to the emulator.
+
+
+	} );
+
+
+
+	await groOpeFun( curPagObj ); // What: Open Call. Why: The test writes in a group's chat. How: This creates the group and opens it.
+
+
+	const linTexObj = curPagObj.getByText( "The chat can't connect right now.", { exact : false } ); // What: Link Text Object. Why: The banner's words are checked. How: This finds them.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } );         // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
+	const waiIteObj = curPagObj.getByRole( 'listitem' ).filter( { hasText : 'Waiting to send' } );  // What: Waiting Item Object. Why: The log marks a message that hasn't gone. How: This finds those entries.
+
+
+	blkValBoo = true; // What: Block Set. Why: The chat's connection sticks. How: This closes new connections.
+
+
+	for ( const rouSocObj of rouSocArr ) await rouSocObj.close(); // What: Close Loop. Why: The chat's open connection drops too. How: This closes each kept connection.
+
+
+	await expect( linTexObj ).toBeVisible( { timeout : 20000 } ); // What: Link Banner Assertion. Why: The member should know the chat can't connect, once it's been down past the grace. How: This waits up to 20 seconds for the banner's words.
+
+	await texBoxObj.fill( 'Stuck' ); // What: Fill Call. Why: A message is written while the chat can't connect. How: This types it.
+
+	await texBoxObj.press( 'Enter' ); // What: Send Call. Why: Enter sends. How: This presses it.
+
+	await expect( waiIteObj ).toHaveCount( 1 ); // What: Waiting Assertion. Why: The message waits rather than hanging. How: This waits for one marked entry.
+
+	expect( await outTexFun( curPagObj ) ).toEqual( [ 'Stuck' ] ); // What: Kept Assertion. Why: A waiting message survives the app closing only when it's kept on the device. How: This reads the outbox.
+
+
+	blkValBoo = false; // What: Block Clear. Why: The chat's connection comes back. How: This lets new connections through.
+
+
+	await expect( linTexObj ).toHaveCount( 0, { timeout : 30000 } ); // What: Link Banner Gone Assertion. Why: The banner shows only while the chat can't connect, and the database retries on a growing delay. How: This waits up to 30 seconds for it to go.
+	await expect( waiIteObj ).toHaveCount( 0, { timeout : 15000 } ); // What: Sent Assertion. Why: Once the chat connects, the waiting message sends. How: This waits up to 15 seconds for no entry to be waiting.
+
+	await expect.poll( () => outTexFun( curPagObj ) ).toEqual( [] ); // What: Emptied Assertion. Why: A sent message leaves the device's outbox. How: This waits for the outbox to empty.
 
 
 } );

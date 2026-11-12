@@ -32,9 +32,10 @@ import type { Timestamp            } from 'firebase/firestore';           // Wha
  * a link to Google Maps, with the plot drawn around them; saying "I'm on my
  * way" and "I've arrived" posts lines to the chat, marks the share, and
  * moves focus to the note that replaces each button; stopping removes the
- * share; blocked location says what to do; a reload resumes sharing with a
- * fresh fix while keeping what was said; and a member removed while sharing
- * stops sharing with the group.
+ * share; blocked location says what to do; sharing keeps the screen on while
+ * the Map shows; a status line waits, saying why, while the chat can't reach
+ * its database; a reload resumes sharing with a fresh fix while keeping what
+ * was said; and a member removed while sharing stops sharing with the group.
  *
  * Sections:
  *  - Constants
@@ -331,6 +332,39 @@ test( 'sharing keeps the screen on while the Map shows, and lets it sleep on lea
 	await curPagObj.getByRole( 'button', { name : 'Stop sharing' } ).click(); // What: Stop Click Call. Why: Stopping lets the screen sleep. How: This presses the button.
 
 	await expect.poll( wakLogFun ).toEqual( [ 'request', 'release', 'request', 'release' ] ); // What: Stopped Assertion. Why: The lock goes with the sharing. How: This waits for the release.
+
+
+} );
+
+
+
+test( "a status line waits, saying why, while the chat can't reach its database", async ( { page : curPagObj } ) => { // What: Chat Link Test. Why: A status line sent while the chat's connection was stuck left the button posting forever (Section 14). How: This closes the database's WebSockets as they open, shares, waits for the banner, presses "I'm on my way", and checks the alert and the button.
+
+
+	await curPagObj.routeWebSocket( /:8210\//, ( rouSocObj ) => void rouSocObj.close() ); // What: Socket Route Call. Why: The chat's database is reached through WebSockets to the emulator's port, and a stuck chat never connects. How: This closes each as it opens.
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The event is planned for the group. How: This creates it as the app does. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+
+
+	await eveCreFun( curPagObj, groIdeStr, HOU_MIL_NUM, 2 * HOU_MIL_NUM ); // What: Event Create Call. Why: Sharing is open within 3 hours of the start. How: This plans one starting in an hour.
+
+	await posSetFun( curPagObj, 51.5, -0.12 ); // What: Position Call. Why: The member's device has a position. How: This places it.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj, 'Map' ); // What: Map Open Call. Why: Sharing is in the Map section. How: This opens it.
+
+	await curPagObj.getByRole( 'button', { name : 'Share my location' } ).click(); // What: Share Click Call. Why: Status lines are offered while sharing. How: This presses the button.
+
+	await expect( curPagObj.getByText( "The chat can't connect right now.", { exact : false } ) ).toBeVisible( { timeout : 20000 } ); // What: Link Banner Assertion. Why: The chat counts as unreachable once it's been down past the grace. How: This waits up to 20 seconds for the banner's words.
+
+	await curPagObj.getByRole( 'button', { name : "I'm on my way" } ).click(); // What: Way Click Call. Why: The member says they're leaving. How: This presses the button.
+
+	await expect( curPagObj.getByText( "The chat can't connect right now, so this has to wait until it's back." ) ).toBeVisible(); // What: Paused Alert Assertion. Why: The member should know why nothing was posted. How: This waits for the alert's words.
+	await expect( curPagObj.getByRole( 'button', { name : "I'm on my way" } ) ).toBeEnabled();                                   // What: Not Posting Assertion. Why: The button shouldn't be left posting. How: This expects it still offered.
 
 
 } );

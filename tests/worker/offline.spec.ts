@@ -18,7 +18,8 @@ import { test   } from '@playwright/test'; // What: Test. Why: The worker's cach
  * preview server serves, in whichever engine the project runs: it registers
  * on the first visit, controls the page from the next load, and opens the
  * app with no connection, at its root and at an address the app answers
- * without a file of its own.
+ * without a file of its own, and a new version takes over while the app is
+ * still open.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -50,6 +51,24 @@ test( 'the service worker takes over and opens the app without a connection', as
 
 	await expect( page.getByRole( 'heading', { level : 1 } ) ).toHaveText( 'Plans made. Fun had. Memories created.' ); // What: Offline Unknown Check. Why: The worker served the app's page, which replaces the address with its root. How: This waits for the landing page's headline.
 	await expect( page ).toHaveURL( '/' );                                                                             // What: Root Address Check. Why: The app keeps no address it doesn't use. How: This waits for the root.
+
+
+} );
+
+
+
+test( 'a new version of the service worker takes over while the app is still open', async ( { page } ) => { // What: Update Test. Why: A version that waited for every window to close kept a device on an old app for days. How: This installs the worker, controls the page, installs a second version under another address, and checks it becomes the active worker with the page still open.
+
+
+	await page.goto( '/' ); // What: First Visit. Why: The first visit installs the worker. How: This opens the app.
+
+	await page.evaluate( async () => { await navigator.serviceWorker.ready; } ); // What: Ready Wait. Why: The first version has to be active before a second arrives. How: This waits for it.
+
+	await page.reload(); // What: Controlled Reload. Why: A waiting version waits only for pages the old one controls. How: This reloads, so the worker controls the page.
+
+	await page.evaluate( async () => { await navigator.serviceWorker.register( '/service-worker.js?ver=2', { scope : '/' } ); } ); // What: Second Version Call. Why: A worker at another address is a new version of the same registration, which the preview server serves with the same file. How: This registers it.
+
+	await expect.poll( () => page.evaluate( async () => ( await navigator.serviceWorker.getRegistration( '/' ) )?.active?.scriptURL ?? '' ), { timeout : 15000 } ).toMatch( /\?ver=2$/ ); // What: Takeover Assertion. Why: The new version should take over without the page closing, where without it it would wait. How: This waits up to 15 seconds for the active worker to be the second version.
 
 
 } );
