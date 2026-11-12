@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-12 (App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -2385,7 +2385,15 @@ the Blaze change.
   addresses in the policy. A config missing its project or database fails
   the build.
 - App Check moves from "later" to launch, given the concern about bots
-  and abuse (Section 15).
+  and abuse (Section 15). It's enforced (2026-11-12) for Firestore, the
+  Realtime Database, Storage, and Authentication in each project's console,
+  and for the functions the app calls in their code: `CAL_OPT_OBJ` in
+  `functions/src/setup.ts` adds `enforceAppCheck` to their options outside
+  the emulator, where the app runs without App Check, and
+  `tests/functions/app-check.spec.ts` checks each refuses a call with no
+  token as deployed and takes one under the emulator. The triggers and the
+  Polar webhook aren't called by the app, so they aren't enforced, the
+  webhook checking Polar's signature instead.
 - Location (decided 2026-10-28): every service in us-central1, so Cloud
   Functions sit beside the databases they react to and Firestore has its
   cheapest pricing. The Realtime Database offers only three locations, and
@@ -2529,6 +2537,17 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          and `photos/` prefixes, since profile photos under `avatars/` last
          as long as their membership (Section 21). Set on both projects
          2026-11-09.
+   - [x] Storage reachable from the app (added 2026-11-11): the Storage
+         rules read Firestore to check membership, which the emulator
+         allows but a real project refuses until its Storage service agent,
+         `service-<project number>@gcp-sa-firebasestorage.iam.gserviceaccount.com`,
+         has the "Firebase Rules Firestore Service Agent" role in IAM; and
+         the bucket needs a CORS setting allowing `GET` from the project's
+         own domains, set with `gcloud storage buckets update
+         gs://<bucket> --cors-file=<file>` in Cloud Shell, since a full
+         photo is downloaded with `getBytes`, which the browser fetches
+         across origins. Photos failed to upload, then to open, until each
+         was added. Both set on both projects 2026-11-11.
    - [x] Nothing deleted lingers in a copy (added 2026-11-09): the Storage
          bucket's soft delete off and object versioning off, and no
          scheduled Firestore backups, since each would keep deleted photos,
@@ -2545,7 +2564,7 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
    - [x] The web push (VAPID) key pair generated in each project's Cloud
          Messaging settings (2026-11-09), its public key set as
          `VITE_FIREBASE_VAPID_KEY` in Netlify in stage 3.
-   - [ ] Polar: the upgrade's product made in the sandbox (staging) and
+   - [x] Polar: the upgrade's product made in the sandbox (staging) and
          live (live), each project's `POLAR_ACCESS_TOKEN` and
          `POLAR_WEBHOOK_SECRET` set with `firebase functions:secrets:set`,
          its `functions/.env.<projectId>` giving `POLAR_PRODUCT_ID`,
@@ -2567,8 +2586,8 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          (stage 4), once comehang.app shows the upgrade, its price, the
          terms, and the refund promise. Every project keeps a
          `functions/.env.<projectId>`, since a deploy needs the settings
-         even before the product exists. Left open until live's product
-         is made in stage 4.
+         even before the product exists. Done 2026-11-10, once live's
+         product was made and tested with a real purchase and refund.
 3. **Netlify**:
    - [x] Two sites, both built from `main` with `npm run build` into
          `dist` on Node 24 (decided 2026-11-09, over one site with a
@@ -2601,7 +2620,7 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          project: staging's first sign-in failed with an internal error
          without it (2026-11-09), since the test suites sign in against the
          emulator, which loads no helper.
-   - [ ] Sign-in on the app's own domain: the site's domains in Firebase
+   - [x] Sign-in on the app's own domain: the site's domains in Firebase
          Auth's authorized domains, and each domain's
          `https://<domain>/__/auth/handler` added as an authorized redirect
          URI on the project's Google OAuth client. Deploy previews change
@@ -2615,8 +2634,8 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          need Google's brand review, and is published to production, since
          a screen in testing lets only listed test users sign in. Staging's
          worked 2026-11-09, linking Google on staging.comehang.app; live's,
-         set up the same day for comehang.app and www.comehang.app, is
-         tried once comehang.app is attached.
+         set up the same day for comehang.app and www.comehang.app, worked
+         once comehang.app was attached, linking Google on a Pixel.
    - [x] A Google account on support@comehang.app (added 2026-11-09), as
          ease-my-life has on its own support address, given access to both
          projects as Owner, so the sign-in consent screen can name it as the
@@ -2625,15 +2644,15 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          browser key limited to websites, its own domains and its
          `firebaseapp.com` sign-in page, its API list left as Firebase set
          it. Both done 2026-11-09.
-   - [ ] App Check: a reCAPTCHA Enterprise site key for each project's
+   - [x] App Check: a reCAPTCHA Enterprise site key for each project's
          domain, set as `VITE_APPCHECK_SITE_KEY` in Netlify for that
          environment, and the app registered with App Check. Deploy
          previews aren't on the key, so they fail App Check, as
          ease-my-life's do. Each key is score-based, with no checkbox, and
-         every service stays unenforced until real requests show as
-         verified. Staging's showed 67 of 67 verified on 2026-11-09; live's
+         each service was enforced only once real requests showed as
+         verified, in the stage 5 item below. Staging's showed 67 of 67 verified on 2026-11-09; live's
          key, for comehang.app and www.comehang.app, is registered and
-         built in, waiting for the domain.
+         built in, in use since comehang.app went live that day.
    - [x] DNSSEC turned on once the domain is active: Cloudflare signs the
          zone, and its DS record goes in at name.com with Max Sig Life
          left blank, then Confirm clicked in Cloudflare, which the record
@@ -2681,24 +2700,36 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          sending it as `application/manifest+json`, as ease-my-life's does.
 5. **Real-device checks against staging**, which the test suites can't
    cover without a real project:
-   - [ ] Google sign-in, App Check, chat, and pushes all working under the
+   - [x] Google sign-in, App Check, chat, and pushes all working under the
          built policy, Google sign-in in the installed iPhone app included.
-   - [ ] Installing, on iPhone, iPad, and Android.
-   - [ ] Pushes, which never arrive under the emulators: the notifications
+         Checked on devices 2026-11-10 to 2026-11-12.
+   - [x] Installing, on iPhone, iPad, and Android. Checked 2026-11-10 to
+         2026-11-12.
+   - [x] Pushes, which never arrive under the emulators: the notifications
          card turns them on, a message from another member pushes, a
          bring-list line doesn't, and a tap opens the right group and
-         section.
+         section. Checked 2026-11-10 to 2026-11-12, apart from a tap that
+         launches the installed app on an iPad, which opens the group list,
+         accepted as an iPadOS limit (Section 11.1).
    - [x] A sandbox purchase, and its refund: done on
          staging.comehang.app 2026-11-10, the upgrade showing in Settings
          after the test card's payment and leaving after a full refund.
-   - [ ] Photos: a photo taken sideways comes out upright; an iPhone's HEIC
+   - [x] Photos: a photo taken sideways comes out upright; an iPhone's HEIC
          photo shares from Safari, and a computer's browser that can't read
          it says so; two members adding photos at once; a photo opened on
          a second device while the first is still uploading; and group and
-         data deletion clearing photos and their files.
-   - [ ] App Check enforcement turned on for Firestore, RTDB, Storage, and
-         Functions once the console's metrics show tokens arriving and
-         nearly every request verified.
+         data deletion clearing photos and their files. Checked 2026-11-11
+         to 2026-11-12, after the Storage rules' service agent role and the
+         bucket's CORS setting were added on both projects (2026-11-11).
+   - [x] App Check enforcement turned on for Firestore, RTDB, Storage,
+         Authentication, and Functions once the console's metrics show
+         tokens arriving and nearly every request verified. The four
+         services were enforced in the console on staging, tried on a
+         device there, then on live, 2026-11-12, Authentication's tried
+         with a new device, linking Google, getting groups back on another
+         device, and linking with pop-ups blocked. Functions are enforced
+         in code (Section 14's infrastructure), taking effect with the
+         functions deploy that follows it.
 6. **Search and outside checks** (added 2026-11-10), once the live site
    is settled:
    - [ ] Google Search Console: comehang.app added as a domain property,

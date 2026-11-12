@@ -3,10 +3,10 @@
 
 // #region Imports
 
+import { CAL_OPT_OBJ  } from './setup.ts';                  // What: Callable Options Object. Why: Every function shares the deploy options, and one the app calls refuses a call without App Check outside the emulator. How: The callable takes them.
 import { FieldPath    } from 'firebase-admin/firestore';    // What: Field Path. Why: A group's ID becomes a map key in each account. How: This names that key without reading it as a dotted path.
 import { FieldValue   } from 'firebase-admin/firestore';    // What: Field Value. Why: Counts fall and map entries go. How: This supplies the increment and the field delete.
 import { FIR_DAT_OBJ  } from './setup.ts';                  // What: Firestore Database Object. Why: Most of an identity's data lives in Firestore. How: This reads and deletes it.
-import { FUN_OPT_OBJ  } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { groDelRunFun } from './group-deletion.ts';         // What: Group Deletion Run Function. Why: A group its owner was alone in is deleted. How: This runs the deletion's stages.
 import { HttpsError   } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { ideDelFun    } from './identity-cleanup.ts';       // What: Identity Delete Function. Why: Once the identity is in no group, what's left of it goes. How: This deletes its account, public key, and sign-in record.
@@ -305,7 +305,7 @@ const joiDelFun = async ( uidValStr : string ) : Promise< void > => { // What: J
  *
 */
 
-const delDatFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Delete Data Function. Why: Someone can delete everything of theirs the service keeps (the privacy policy's rights). How: This takes them out of every group, then deletes what's left.
+const delDatFun = onCall( CAL_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Delete Data Function. Why: Someone can delete everything of theirs the service keeps (the privacy policy's rights). How: This takes them out of every group, then deletes what's left.
 
 
 	if ( !reqValObj.auth ) throw new HttpsError( 'unauthenticated', 'Sign in first.' ); // What: Sign-In Guard. Why: Only an identity has data to delete. How: This refuses a caller with no sign-in.

@@ -167,7 +167,9 @@ other suites clear, and `npm test` runs it last. Its specs run one
 at a time, since each clears the data the next one's triggers write.
 Playwright's loader can't link the HTTP functions' module, so the purchase
 spec runs the checkout and webhook in a Node process of their own,
-`tests/support/purchase-child.ts`, which loads the functions' build. It
+`tests/support/purchase-child.ts`, which loads the functions' build, and the
+App Check spec serves the callables' build over a local HTTP server in
+`tests/support/app-check-child.ts`, calling each without a token. It
 can't link the Admin SDK's Auth module either, so the identity cleanup spec
 runs the cleanup in `tests/support/cleanup-child.ts` the same way. The
 Admin SDK's default Storage bucket there is `demo-come-hang.appspot.com`. The

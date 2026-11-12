@@ -3,11 +3,11 @@
 
 // #region Imports
 
+import { CAL_OPT_OBJ } from './setup.ts';                  // What: Callable Options Object. Why: Every function shares the deploy options, and one the app calls refuses a call without App Check outside the emulator. How: The callable takes them.
 import { calGroFun   } from './calls.ts';                  // What: Call Group Function. Why: The decline names a group and needs a signed-in caller. How: This checks both.
 import { claRefFun   } from './claims.ts';                 // What: Claim Reference Function. Why: Declining a claim offer is recorded as a pass. How: This names the claim record.
 import { FieldPath   } from 'firebase-admin/firestore';    // What: Field Path. Why: A UID becomes a key in the claim record's passed map. How: This names that key without reading it as a dotted path.
 import { FIR_DAT_OBJ } from './setup.ts';                  // What: Firestore Database Object. Why: The offer and the notice live in Firestore. How: This reaches it past the rules.
-import { FUN_OPT_OBJ } from './setup.ts';                  // What: Function Options Object. Why: Every function shares the deploy options. How: The callable takes them.
 import { HttpsError  } from 'firebase-functions/v2/https'; // What: HTTPS Error. Why: A refused call tells the app why. How: This throws an error the client receives with its code.
 import { notBatFun   } from './notices.ts';                // What: Notice Batch Function. Why: The owner is told of the decline. How: This adds their notice to a batch.
 import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The member offered the group declines from the app. How: This registers a callable function, which checks the caller's sign-in.
@@ -70,7 +70,7 @@ import { pusSenFun   } from './push.ts';                   // What: Push Send Fu
  *
 */
 
-const decOffFun = onCall( FUN_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Decline Offer Function. Why: Only the member offered the group declines it, and the owner has to learn of it. How: This clears the offer as that member, then writes the owner's notice.
+const decOffFun = onCall( CAL_OPT_OBJ, async ( reqValObj ) : Promise< void > => { // What: Decline Offer Function. Why: Only the member offered the group declines it, and the owner has to learn of it. How: This clears the offer as that member, then writes the owner's notice.
 
 
 	const { groIdeStr, uidValStr } = calGroFun( reqValObj ); // What: Call Values. Why: The decline names a group and its caller. How: This checks and reads both.
