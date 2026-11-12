@@ -107,7 +107,8 @@ group's avatars, each group keeping its own encrypted copy. Offline, a banner
 says so, chat messages wait on the device and send once back online, and
 other changes are paused with a note saying they have to wait.
 The app's one service worker opens it offline and shows pushes, a tap on one opening its
-group at the section its news is in. In development, a member switcher on the
+group at the section its news is in, and a new version of it takes over without
+waiting for the app to close. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per
 member. Next steps are in ARCHITECTURE.md's Section 14.
 
