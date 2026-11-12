@@ -797,7 +797,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region updMemFun
 
-		function updMemFun ( groIdeStr, uidValStr ) { // What: Update Member Function. Why: A member writes their own encrypted display name, and marks when they were last active, while the rest of the membership stays as it was granted. How: This is true for the member changing only those fields, validly.
+		function updMemFun ( uidValStr ) { // What: Update Member Function. Why: A member writes their own encrypted display name, and marks when they were last active, while the rest of the membership stays as it was granted. How: This is true for the member changing only those fields, validly.
 
 
 			let memNewObj = request.resource.data; // What: Member New Object. Why: The checks read the membership as it will be. How: This names it.
@@ -2352,7 +2352,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 				allow read   : if isaMemFun( groIdeStr );                                                                           // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
 				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr );                           // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
-				allow update : if updMemFun( groIdeStr, uidValStr ) || avaSetFun( uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr, uidValStr ); // What: Member Update Rule. Why: A member writes their own name, activity time, or profile photo, asks for the group key on a new phone, or shares it with a member who asked, themselves on another device included. How: This allows it when updMemFun, avaSetFun, keyReqFun, or keyShaFun passes.
+				allow update : if updMemFun( uidValStr ) || avaSetFun( uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr, uidValStr ); // What: Member Update Rule. Why: A member writes their own name, activity time, or profile photo, asks for the group key on a new phone, or shares it with a member who asked, themselves on another device included. How: This allows it when updMemFun, avaSetFun, keyReqFun, or keyShaFun passes.
 				allow delete : if delMemFun( groIdeStr, uidValStr );                                                                // What: Member Delete Rule. Why: A member leaves, or the owner removes them. How: This allows it when delMemFun passes.
 
 
