@@ -841,7 +841,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region keyShaFun
 
-		function keyShaFun ( groIdeStr, uidValStr ) { // What: Key Share Function. Why: Any member holding the group key can wrap it for a member who asked, as an approval does, the member's own other device included (Section 6). How: This is true for a member replacing the wrap and ending a standing request, with a wrap of the right size.
+		function keyShaFun ( groIdeStr ) { // What: Key Share Function. Why: Any member holding the group key can wrap it for a member who asked, as an approval does, the member's own other device included (Section 6). How: This is true for a member replacing the wrap and ending a standing request, with a wrap of the right size.
 
 
 			let memNewObj = request.resource.data; // What: Member New Object. Why: The checks read the membership as it will be. How: This names it.
@@ -2167,7 +2167,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 				allow read   : if isaMemFun( groIdeStr );                                                                           // What: Member Read Rule. Why: Members see who else is in the group. How: This lets members fetch and list the member documents.
 				allow create : if creMemFun( groIdeStr, uidValStr ) || appMemFun( groIdeStr, uidValStr );                           // What: Member Create Rule. Why: The owner becomes the first member as the group is created, and a joiner as they're approved. How: This allows it when creMemFun or appMemFun passes.
-				allow update : if updMemFun( uidValStr ) || avaSetFun( uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr, uidValStr ); // What: Member Update Rule. Why: A member writes their own name, activity time, or profile photo, asks for the group key on a new phone, or shares it with a member who asked, themselves on another device included. How: This allows it when updMemFun, avaSetFun, keyReqFun, or keyShaFun passes.
+				allow update : if updMemFun( uidValStr ) || avaSetFun( uidValStr ) || keyReqFun( uidValStr ) || keyShaFun( groIdeStr ); // What: Member Update Rule. Why: A member writes their own name, activity time, or profile photo, asks for the group key on a new phone, or shares it with a member who asked, themselves on another device included. How: This allows it when updMemFun, avaSetFun, keyReqFun, or keyShaFun passes.
 				allow delete : if delMemFun( groIdeStr, uidValStr );                                                                // What: Member Delete Rule. Why: A member leaves, or the owner removes them. How: This allows it when delMemFun passes.
 
 
