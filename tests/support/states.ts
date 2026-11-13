@@ -41,10 +41,10 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 
 	heiNum  : number,                        // What: Height Number. Why: The viewport's height decides what's on screen. How: This is the viewport height in CSS pixels.
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
-	iosBoo? : boolean,                       // What: iOS Boolean. Why: An iPhone in Safari shows the install steps first. How: This makes the page report an iPhone's Safari when true.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
 	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	uasStr? : string,                        // What: User Agent String. Why: An iPhone in Safari shows the install steps first, and another app's built-in browser the way out of it. How: This is the user agent the page reports, the browser's own when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
 
@@ -56,8 +56,10 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 
 // #region Constants
 
+const FAI_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/22A3354 [FBAN/FBIOS;FBAV/480.0.0.0;FBDV/iPhone15,2;FBSN/iOS;FBSV/18.0;FBLC/en_US]'; // What: Facebook-iOS User Agent String. Why: A built-in browser state runs as Facebook's on an iPhone. How: This is the shape of the user agent Facebook's browser sends there.
 const INV_PAT_STR = `/join/${ 'A'.repeat( 22 ) }`;                                                                                                     // What: Invite Path String. Why: An iPhone's Safari keeps an invite link's token without reading the invite, so any well-formed one will do. How: This is a link with a token no invite has.
-const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'; // What: iOS User Agent String. Why: The install states run as an iPhone's Safari. How: This is the user agent that Safari on iOS 18 sends.
+const IOS_UAS_STR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';                                                  // What: iOS User Agent String. Why: The install states run as an iPhone's Safari. How: This is the user agent that Safari on iOS 18 sends.
+const MEA_UAS_STR = 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/AP2A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0.0.0 Mobile Safari/537.36 [FB_IAB/Orca-Android;FBAV/480.0.0.0;]';   // What: Messenger-Android User Agent String. Why: A built-in browser state runs as Messenger's on Android. How: This is the shape of the user agent Messenger's browser sends there.
 
 
 
@@ -145,9 +147,11 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 900, ideStr : 'join-desktop',         patStr : '/',         widNum : 1440, steStr : 'join'                     }, // What: Join Desktop State. Why: The form an invite link opens is checked at a desktop width. How: This opens another's link at 1,440px.
 	{ heiNum : 844, ideStr : 'join-phone',           patStr : '/',         widNum : 390,  steStr : 'join'                     }, // What: Join Phone State. Why: The join form is checked at a phone width. How: This opens another's link at 390px.
 	{ heiNum : 844, ideStr : 'waiting-phone',        patStr : '/',         widNum : 390,  steStr : 'waiting'                  }, // What: Waiting Phone State. Why: A sent request's waiting part is checked with its withdrawal. How: This asks through another's link at 390px.
-	{ heiNum : 844, ideStr : 'install-phone',        patStr : '/',         widNum : 390,  iosBoo : true                       }, // What: Install Phone State. Why: An iPhone in Safari shows the install steps before anything else. How: This opens the app as an iPhone's Safari at 390px.
-	{ heiNum : 900, ideStr : 'install-tablet',       patStr : '/',         widNum : 1024, iosBoo : true                       }, // What: Install Tablet State. Why: An iPad shows the same steps at a wider width. How: This opens the app as an iPad's Safari at 1,024px.
-	{ heiNum : 844, ideStr : 'invited-phone',        patStr : INV_PAT_STR, widNum : 390,  iosBoo : true                       }, // What: Invited Phone State. Why: An invite link opened in an iPhone's Safari keeps its link to copy before the steps. How: This opens a link as an iPhone's Safari at 390px.
+	{ heiNum : 844, ideStr : 'install-phone',        patStr : '/',         widNum : 390,  uasStr : IOS_UAS_STR                }, // What: Install Phone State. Why: An iPhone in Safari shows the install steps before anything else. How: This opens the app as an iPhone's Safari at 390px.
+	{ heiNum : 900, ideStr : 'install-tablet',       patStr : '/',         widNum : 1024, uasStr : IOS_UAS_STR                }, // What: Install Tablet State. Why: An iPad shows the same steps at a wider width. How: This opens the app as an iPad's Safari at 1,024px.
+	{ heiNum : 844, ideStr : 'in-app-phone',         patStr : INV_PAT_STR, widNum : 390,  uasStr : FAI_UAS_STR                }, // What: In-App Phone State. Why: An invite link opened in Facebook's browser on an iPhone shows the way out first. How: This opens a link as Facebook's browser on an iPhone at 390px.
+	{ heiNum : 844, ideStr : 'in-app-android',       patStr : '/',         widNum : 390,  uasStr : MEA_UAS_STR                }, // What: In-App Android State. Why: Messenger's browser on Android shows the way out with its own wording. How: This opens the app as Messenger's browser on Android at 390px.
+	{ heiNum : 844, ideStr : 'invited-phone',        patStr : INV_PAT_STR, widNum : 390,  uasStr : IOS_UAS_STR                }, // What: Invited Phone State. Why: An invite link opened in an iPhone's Safari keeps its link to copy before the steps. How: This opens a link as an iPhone's Safari at 390px.
 	{ heiNum : 900, ideStr : 'privacy-desktop',      patStr : '/privacy',  widNum : 1440                                      }, // What: Privacy Desktop State. Why: The static privacy policy page is checked at a desktop width. How: This loads /privacy at 1,440px.
 	{ heiNum : 844, ideStr : 'privacy-phone',        patStr : '/privacy',  widNum : 390                                       }, // What: Privacy Phone State. Why: The policy's page is checked at a phone width. How: This loads /privacy at 390px.
 	{ heiNum : 900, ideStr : 'terms-desktop',        patStr : '/terms',    widNum : 1440                                      }, // What: Terms Desktop State. Why: The static terms page is checked at a desktop width. How: This loads /terms at 1,440px.
@@ -1096,7 +1100,7 @@ async function opeStaFun ( curPagObj : Page, staRecObj : StaRecTyp ) : Promise< 
 
 	await curPagObj.setViewportSize( { height : staRecObj.heiNum, width : staRecObj.widNum } ); // What: Viewport Size Call. Why: The state's layout depends on its width. How: This sizes the page before it loads, so breakpoints apply from the first paint.
 
-	if ( staRecObj.iosBoo === true ) await curPagObj.addInitScript( ( uasValStr ) => Object.defineProperty( Navigator.prototype, 'userAgent', { get : () => uasValStr } ), IOS_UAS_STR ); // What: iOS Agent Call. Why: The app tells an iPhone by its user agent, which the suite's browsers don't send. How: This makes the page report an iPhone's Safari before it loads.
+	if ( staRecObj.uasStr !== undefined ) await curPagObj.addInitScript( ( uasValStr ) => Object.defineProperty( Navigator.prototype, 'userAgent', { get : () => uasValStr } ), staRecObj.uasStr ); // What: Agent Call. Why: The app tells an iPhone and a built-in browser by the user agent, which the suite's browsers don't send. How: This makes the page report the state's agent before it loads.
 
 	if ( staRecObj.steStr === 'loading' ) await curPagObj.addInitScript( datHolFun, -1 ); // What: Database Hold Call. Why: The waiting screen shows only while the app's check is held. How: This holds the app's database for good, before the page loads.
 

@@ -7,7 +7,7 @@
  * @summary
  * Styles for ButBasCom: a periwinkle pill with bold text, at least a touch
  * target tall, that darkens and lifts 2px on hover, presses in slightly, and
- * grows its focus ring in.
+ * grows its focus ring in, drawn the same as a button or a link.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -15,7 +15,8 @@
 
 
 
-.butBasBut { /* What: Button Base Button. Why: A screen's leading action has to stand out and be easy to hit. How: This draws a pill in the main accent with bold centered text, at least a touch target tall, and eases its hover color, hover lift, press scale, and focus ring. */
+.butBasAnc,
+.butBasBut { /* What: Button Base Button And Anchor. Why: A screen's leading action has to stand out and be easy to hit. How: This draws a pill in the main accent with bold centered text, at least a touch target tall, and eases its hover color, hover lift, press scale, and focus ring. */
 
 
 	background-color : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
@@ -32,7 +33,8 @@
 
 
 }
-.butBasBut:hover { /* What: Hovered Button Base Button. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the pill 2px. */
+.butBasAnc:hover,
+.butBasBut:hover { /* What: Hovered Button Base Button And Anchor. Why: A button should respond to the pointer. How: This darkens the accent a step and lifts the pill 2px. */
 
 
 	background-color : oklch( from var( --acc-mai-col ) calc( l - 0.08 ) c h ); /* Accent Main Color = #4A4FC9, darkened by 0.08 lightness */
@@ -40,17 +42,19 @@
 
 
 }
-.butBasBut:active { /* What: Pressed Button Base Button. Why: A press should register before anything else happens. How: This presses the pill in slightly, which also undoes its hover lift. */
+.butBasAnc:active,
+.butBasBut:active { /* What: Pressed Button Base Button And Anchor. Why: A press should register before anything else happens. How: This presses the pill in slightly, which also undoes its hover lift. */
 
 
 	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
 
 
 }
-@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Button Base Button. Why: Someone who asked for less motion shouldn't see the button slide. How: This applies only when the reduced-motion preference is set. */
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Button Base Button And Anchor. Why: Someone who asked for less motion shouldn't see the button slide. How: This applies only when the reduced-motion preference is set. */
 
 
-	.butBasBut { /* What: Motionless Button Base Button. Why: The hover, press, and focus looks should switch at once, the lift and press still applying instantly. How: This turns the transition off. */
+	.butBasAnc,
+	.butBasBut { /* What: Motionless Button Base Button And Anchor. Why: The hover, press, and focus looks should switch at once, the lift and press still applying instantly. How: This turns the transition off. */
 
 
 		transition : none;
