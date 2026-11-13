@@ -85,7 +85,11 @@ approval, offers to withdraw the request, and opens the group once they're let
 in. A member whose phone is missing a group's chat asks for it from a banner
 atop the chat, and another member whose phone holds it sends it from People.
 The landing page, the welcome, and the group list also join with a pasted
-invite link. On an
+invite link. In another app's built-in browser, such as Facebook's or
+Messenger's, a screen leading out comes first, its button opening the same
+address in the installed app or the browser on Android and in Safari on an
+iPhone or iPad, with the menu steps, the link to copy, and a way to carry on
+there. On an
 iPhone or iPad in Safari an install screen comes first, keeping an invite's
 link to copy, with a way to carry on in Safari, and where a browser offers its
 own install prompt, a note on the first screens and Settings offer it. The

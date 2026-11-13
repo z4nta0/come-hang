@@ -14,7 +14,10 @@ import { GroFraCom       } from './group-frame.tsx';           // What: Group Fr
 import { groWatFun       } from '../state/groups.ts';          // What: Group Watch Function. Why: Which screen shows depends on the groups someone is in. How: This watches them.
 import { ideEnsFun       } from '../state/identity.ts';        // What: Identity Ensure Function. Why: What's waiting on the member is judged by their UID. How: This reads it.
 import { ideHasFun       } from '../state/deletion.ts';        // What: Identity Has Function. Why: A phone with no identity sees the landing page, and one in no group the welcome. How: This checks without connecting.
+import { InaAppCom       } from './in-app.tsx';                // What: In-App Component. Why: Another app's built-in browser keeps groups apart from the device's browser. How: The host shows it there until someone leaves or carries on.
+import { inaConFun       } from '../platform/install.ts';      // What: In-App Continue Function. Why: Someone who chose to carry on in a built-in browser isn't stopped again. How: This reads the kept choice.
 import { InsIosCom       } from './install-ios.tsx';           // What: Install iOS Component. Why: An iPhone or iPad in Safari installs before anything else. How: The host shows it until the app is installed or someone carries on in Safari.
+import { isaInaFun       } from '../platform/install.ts';      // What: Is-An In-App Function. Why: A built-in browser is stopped before anything else. How: This checks for one.
 import { isaInsFun       } from '../platform/install.ts';      // What: Is-An Installed Function. Why: An installed app needs no install steps. How: This checks whether the app runs installed.
 import { isaIosFun       } from '../platform/install.ts';      // What: Is-An iOS Function. Why: Only iOS keeps an installed app's storage apart from Safari's. How: This checks for an iPhone or iPad.
 import { JoiGroCom       } from './join-group.tsx';            // What: Join Group Component. Why: An invite link has its own screen. How: The host shows it when the entry asks for it.
@@ -76,11 +79,14 @@ import type { WaiRecTyp } from '../state/waiting.ts'; // What: Waiting Record Ty
  * invite made the identity, and the group or the default screen opens in its
  * place. Leaving or deleting a group opens the next group, or the welcome when
  * none is left, and the host announces the change through a status that stays
- * across screens. On an iPhone or iPad in Safari, the install screen shows
- * before any of these, holding an invite link's token to copy, until the app
- * runs installed or someone carries on in Safari, whose main area then takes
- * focus. Once the groups have loaded, the sheet of notices about what happened
- * while someone was away sits over whichever screen shows.
+ * across screens. In another app's built-in browser, the screen that leads
+ * out of it shows before any of these, keeping an invite link's token in the
+ * way out, until someone carries on there. On an iPhone or iPad in Safari,
+ * the install screen shows next, holding an invite link's token to copy,
+ * until the app runs installed or someone carries on in Safari. Once either
+ * screen goes, the main area takes focus. Once the groups have loaded, the
+ * sheet of notices about what happened while someone was away sits over
+ * whichever screen shows.
  *
  * Sections:
  *  - Constants
@@ -595,8 +601,10 @@ const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiRecTyp[] => { // Wh
  * marked to take focus, and the status announces the change. Groups brought
  * back from Google restart the watch, the first of them taking focus. On an
  * iPhone or iPad in Safari, the install screen comes first until the app runs
- * installed or someone carries on in Safari, a choice kept on the device,
- * after which the main area takes focus.
+ * installed or someone carries on in Safari, and in another app's built-in
+ * browser the screen leading out of it comes before that until someone
+ * carries on there, each choice kept on the device, after which the main area
+ * takes focus.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -614,12 +622,13 @@ const useWaiLisFun = ( groRecArr : GroRecTyp[] | null ) : WaiRecTyp[] => { // Wh
 function ScrHosCom () : React.JSX.Element {
 
 
-	const conFocRef = useRef( false ); // What: Continue Focus Reference. Why: Carrying on in Safari takes away the pressed button, so focus is owed to the screen that follows. How: This is true from the press until the focus is given.
+	const conFocRef = useRef( false ); // What: Continue Focus Reference. Why: Carrying on in Safari or a built-in browser takes away the pressed button, so focus is owed to the screen that follows. How: This is true from the press until the focus is given.
 	const scrOpeFun = useScrOpeFun();  // What: Screen Open Function. Why: A created group opens, and so does the next group after one is gone. How: This reads the function that opens a screen.
 	const scrStaObj = useScrStaFun();  // What: Screen State Object. Why: The entry says which screen to show. How: This reads it, null for the default.
 
 	const [ annMesStr, setAnnMesStr ] = useState( '' );        // What: Announce Message String And Setter. Why: Leaving or deleting a group takes away the section that did it, so the host has to say what happened. How: This holds the status's text.
 	const [ gonIdeStr, setGonIdeStr ] = useState( '' );        // What: Gone Identifier String And Setter. Why: A group just left or deleted shouldn't show while the watch catches up. How: This holds its ID, empty when there's none.
+	const [ inaConBoo, setInaConBoo ] = useState( inaConFun ); // What: In-App Continue Boolean And Setter. Why: Someone who chose to carry on in a built-in browser sees the app rather than the way out. How: This starts from the choice kept on the device and turns true on the choice.
 	const [ safConBoo, setSafConBoo ] = useState( safConFun ); // What: Safari Continue Boolean And Setter. Why: Someone on iPhone who chose to carry on in Safari sees the app rather than the install steps. How: This starts from the choice kept on the device and turns true on the choice.
 	const [ watVerNum, setWatVerNum ] = useState( 0 );         // What: Watch Version Number And Setter. Why: A first group is created with the identity, which the running watch didn't have. How: This counts the watch's runs.
 
@@ -637,7 +646,8 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-	const iosGatBoo = isaIosFun() && !isaInsFun() && !safConBoo; // What: iOS Gate Boolean. Why: On an iPhone or iPad in Safari, installing comes before anything else, since nothing done in Safari moves to the app (Section 16). How: This is true there until the app is installed or someone chooses to carry on in Safari.
+	const inaGatBoo = isaInaFun() && !inaConBoo;                                 // What: In-App Gate Boolean. Why: In another app's built-in browser, leaving comes before anything else, since nothing done there reaches the browser or the app (Section 16). How: This is true there until someone chooses to carry on.
+	const iosGatBoo = isaIosFun() && !isaInsFun() && !safConBoo && !isaInaFun(); // What: iOS Gate Boolean. Why: On an iPhone or iPad in Safari, installing comes before anything else, since nothing done in Safari moves to the app (Section 16). How: This is true there until the app is installed or someone chooses to carry on in Safari, and never in a built-in browser, which can't install.
 
 
 	useLayoutEffect( () => { // What: Screen Ready Effect. Why: A reload returns to its scroll position only once the real screen is tall enough to reach it. How: This tells the scroll hook the screen is ready once the groups have loaded.
@@ -705,10 +715,10 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-	useEffect( () => { // What: Continue Focus Effect. Why: The button that carried on in Safari is gone, so focus should land on the screen that replaced it. How: This focuses the main area once the install screen has gone, when focus is owed.
+	useEffect( () => { // What: Continue Focus Effect. Why: The button that carried on in Safari or a built-in browser is gone, so focus should land on the screen that replaced it. How: This focuses the main area once the screen with the button has gone, when focus is owed.
 
 
-		if ( !conFocRef.current || iosGatBoo ) return; // What: Owed Guard. Why: Only the press that carried on owes focus, once its screen shows. How: This returns otherwise.
+		if ( !conFocRef.current || inaGatBoo || iosGatBoo ) return; // What: Owed Guard. Why: Only the press that carried on owes focus, once its screen shows. How: This returns otherwise.
 
 
 
@@ -717,7 +727,7 @@ function ScrHosCom () : React.JSX.Element {
 		document.getElementById( 'main' )?.focus(); // What: Focus Call. Why: The new screen's content is where someone carries on. How: This focuses the main area, the skip link's target, which takes focus without joining the Tab order.
 
 
-	}, [ iosGatBoo ] ); // What: Effect Dependency Array. Why: Focus moves once the install screen goes. How: iosGatBoo turns false when someone carries on.
+	}, [ inaGatBoo, iosGatBoo ] ); // What: Effect Dependency Array. Why: Focus moves once the screen with the button goes. How: inaGatBoo turns false when someone carries on in a built-in browser, and iosGatBoo when someone carries on in Safari.
 
 
 
@@ -902,6 +912,10 @@ function ScrHosCom () : React.JSX.Element {
 	const scrPicFun = () : React.JSX.Element => { // What: Screen Pick Function. Why: One screen shows at a time, beside the host's status. How: This returns the screen the entry and the groups call for.
 
 
+		if ( inaGatBoo ) return <InaAppCom tokValStr={ scrStaObj?.scrStr === 'join' ? tokValStr : undefined } onConFun={ () => { conFocRef.current = true; setInaConBoo( true ); } } />; // What: In-App Return. Why: In another app's built-in browser, leaving it comes first, with an invite's path kept in the way out. How: This shows the screen leading out, handing it the token of an invite link that opened the app.
+
+
+
 		if ( iosGatBoo ) return <InsIosCom tokValStr={ scrStaObj?.scrStr === 'join' ? tokValStr : undefined } onConFun={ () => { conFocRef.current = true; setSafConBoo( true ); } } />; // What: Install Return. Why: On an iPhone or iPad in Safari the install steps come first, with an invite's link kept to copy. How: This shows the install screen, handing it the token of an invite link that opened the app.
 
 
@@ -1016,7 +1030,7 @@ function ScrHosCom () : React.JSX.Element {
 
 
 
-			{ !iosGatBoo && groRecArr !== null && actDevBoo !== false && ( // What: Notice Sheet Condition. Why: The sheet opens over a real screen, not the install steps or the wait, its watch restarting with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the install screen and a device that stepped back.
+			{ !inaGatBoo && !iosGatBoo && groRecArr !== null && actDevBoo !== false && ( // What: Notice Sheet Condition. Why: The sheet opens over a real screen, not the way out of a built-in browser, the install steps, or the wait, its watch restarting with the groups' for an identity just made. How: This shows the sheet once the groups have loaded, outside the way out, the install screen, and a device that stepped back.
 
 
 				<NotSheCom
