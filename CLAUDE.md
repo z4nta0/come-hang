@@ -34,18 +34,19 @@ accessibility, interaction, and security suites, and the Firebase Emulator
 harness with a rules suite and a functions suite. The security rules are
 complete, each walked through with the user: `firestore.rules` covers every
 Firestore collection in ARCHITECTURE.md's data model, `database.rules.json`
-covers chat and presence, and `storage.rules` covers history transfers. The
+covers chat and presence, and `storage.rules` covers event and profile
+photos. The
 Cloud Functions so far are the membership mirror, group deletion, the removal
 and offer notices, the offer decline, the daily run, the daily cleanup of
 unused identities, the billing cutoff, and the pushes, with the
 push token rules, including the activity pushes for chat, join requests,
-history requests, and key requests, and the purchase's Polar checkout and
+and key requests, and the purchase's Polar checkout and
 webhook. The app has its Firebase services, created on first use, the identity
 bootstrap, the group key encryption, group creation and the group list,
 joining through an invite with a member's approval, the membership changes
 (names, activity, leaving, removal, link rotation, and settings), and
 ownership offers and notices, events with their bring-lists, chat with its
-on-device history, presence, history requests, location sharing, push
+on-device history, presence, location sharing, push
 notifications, Google linking and recovery with the group keys shared again,
 and buying the upgrade. The first screens are built: the landing page, which a
 phone holding no identity sees, with its trust section, its route through a
@@ -82,8 +83,8 @@ branded with the app's mark, name, and headline and a "What is Come Hang?"
 that opens the landing page and leads back, which asks for a joiner's name
 and an optional note, waits for a member's
 approval, offers to withdraw the request, and opens the group once they're let
-in. A member whose phone is missing a group's chat asks for it from a banner
-atop the chat, and another member whose phone holds it sends it from People.
+in. A new joiner or a new device sees a group's chat from its arrival on,
+since chat from before isn't sent between devices.
 The landing page, the welcome, and the group list also join with a pasted
 invite link. In another app's built-in browser, such as Facebook's or
 Messenger's, a screen leading out comes first, its button opening the same
@@ -100,7 +101,7 @@ data, handing each group they own to its earliest member. A sheet titled
 "While you were away" opens over any screen when notices are waiting, or
 arrive, such as a removal or an answered offer, and "Got it" or any other
 way of closing it dismisses them all. Its "Waiting on you" part lists what
-a member can act on, such as a join request, a key or history request, or an
+a member can act on, such as a join request, a key request, or an
 offer of a group, each once per device, with a Review that opens the section
 at the item and flashes it, and a coral dot marks the tabs, the rail, the
 switcher, and the group sheet while anything waits. Adding to or claiming

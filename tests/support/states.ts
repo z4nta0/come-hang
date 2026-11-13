@@ -43,7 +43,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	uasStr? : string,                        // What: User Agent String. Why: An iPhone in Safari shows the install steps first, and another app's built-in browser the way out of it. How: This is the user agent the page reports, the browser's own when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
@@ -139,8 +139,6 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 844, ideStr : 'legal-phone',          patStr : '/',         widNum : 390,  steStr : 'legal'                    }, // What: Legal Phone State. Why: The privacy policy opens in a sheet from Settings. How: This opens it in the owner's Settings at 390px.
 	{ heiNum : 844, ideStr : 'notice-phone',         patStr : '/',         widNum : 390,  steStr : 'notice'                   }, // What: Notice Phone State. Why: What happened while someone was away opens in a sheet of its own. How: This leaves a new group's owner two notices at 390px.
 	{ heiNum : 844, ideStr : 'member-phone',         patStr : '/',         widNum : 390,  steStr : 'member'                   }, // What: Member Phone State. Why: A member who isn't the owner sees the settings without the form, and the leave. How: This opens Settings as a member of another's group at 390px.
-	{ heiNum : 844, ideStr : 'history-phone',        patStr : '/',         widNum : 390,  steStr : 'history'                  }, // What: History Phone State. Why: A fresh joiner of an older group is offered its earlier chat in a banner atop the chat. How: This joins another's group, made older, at 390px.
-	{ heiNum : 844, ideStr : 'helping-phone',        patStr : '/',         widNum : 390,  steStr : 'helping'                  }, // What: Helping Phone State. Why: A member who can help sees another's request in People. How: This joins another's group whose owner asks for history, at 390px.
 	{ heiNum : 844, ideStr : 'offered-phone',        patStr : '/',         widNum : 390,  steStr : 'offered'                  }, // What: Offered Phone State. Why: The member an offer names sees its answers. How: This opens Settings as a member offered another's group at 390px.
 	{ heiNum : 900, ideStr : 'map-desktop',          patStr : '/',         widNum : 1440, steStr : 'map'                      }, // What: Map Desktop State. Why: The Map section is checked sharing at a desktop width. How: This shares beside an arrived member at 1,440px.
 	{ heiNum : 844, ideStr : 'map-phone',            patStr : '/',         widNum : 390,  steStr : 'map'                      }, // What: Map Phone State. Why: The Map section is checked sharing at a phone width. How: This shares beside an arrived member at 390px.
@@ -392,7 +390,7 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
  *
 */
 
-const memSteFun = async ( curPagObj : Page, steStr : 'helping' | 'history' | 'map' | 'member' | 'offered' ) : Promise< void > => { // What: Member Steps Function. Why: A member's view of a group needs an owner who isn't the page. How: This has another device create the group and approve the page.
+const memSteFun = async ( curPagObj : Page, steStr : 'map' | 'member' | 'offered' ) : Promise< void > => { // What: Member Steps Function. Why: A member's view of a group needs an owner who isn't the page. How: This has another device create the group and approve the page.
 
 
 	const ownConObj = await curPagObj.context().browser()!.newContext( { baseURL : new URL( curPagObj.url() ).origin } ); // What: Owner Context Object. Why: The owner needs an identity and storage of their own. How: This opens a new browser context on the same server. // What: Non-Null Note. Why: A page from Playwright's own launch always has its browser. How: The ! reads it as present.
@@ -429,11 +427,8 @@ const memSteFun = async ( curPagObj : Page, steStr : 'helping' | 'history' | 'ma
 
 	if ( steStr === 'offered' ) await ownPagObj.evaluate( async ( [ modPatStr, groArgStr, uidArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).offMakFun( groArgStr, uidArgStr ); }, [ '/src/state/ownership.ts', groIdeStr, uidMemStr ] ); // What: Offer Call. Why: The offered state shows the page an offer of the group. How: This offers it with the ownership module.
 
-	if ( steStr === 'history' ) await fetch( `http://127.0.0.1:8200/v1/projects/demo-come-hang/databases/(default)/documents/groups/${ groIdeStr }?updateMask.fieldPaths=createdAt`, { body : JSON.stringify( { fields : { createdAt : { timestampValue : new Date( Date.now() - 30 * 86400000 ).toISOString() } } } ), headers : { Authorization : 'Bearer owner' }, method : 'PATCH' } ); // What: Old Group Call. Why: The history state offers the chat from before the join, which needs a group older than it. How: This moves the group's start 30 days back through the emulator's REST address, whose owner credential passes the rules.
 
-	if ( steStr === 'helping' ) await ownPagObj.evaluate( async ( [ modPatStr, groArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).hisAskFun( groArgStr, 'recovery', null ); }, [ '/src/state/history.ts', groIdeStr ] ); // What: Owner Ask Call. Why: The helping state shows another member's request. How: This files a recovery request as the owner.
 
-	if ( steStr === 'helping' ) await curPagObj.evaluate( async ( [ modPatStr, groArgStr, uidArgStr ] ) => { await ( await import( /* @vite-ignore */ modPatStr ) ).mesPutFun( { groIdeStr : groArgStr, mesIdeStr : 'old', senUidStr : uidArgStr, sntTimNum : 1, texValStr : 'Hi' } ); }, [ '/src/platform/chat-store.ts', groIdeStr, uidMemStr ] ); // What: History Seed Call. Why: Send history is offered only to a phone holding the whole range. How: This stores a message older than the owner's join on the page's device.
 
 
 
@@ -740,7 +735,7 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'helping' | 'history' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -847,32 +842,6 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 
 		return; // What: Map Return. Why: The map state stops at the section. How: This returns.
-
-
-	}
-
-
-
-	if ( steStr === 'helping' || steStr === 'history' ) { // What: History Block. Why: The history states show the banner's offer to a fresh joiner, and People's list to a member who can help. How: This joins the page to another's group set up for each, opens the app, and waits for the part.
-
-
-		await memSteFun( curPagObj, steStr ); // What: Member Steps Call. Why: Both states need the page to be a member of another's group. How: This joins it, with the group made older or the owner asking.
-
-		await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: The watch started before the identity existed. How: This opens the app again on the group's chat.
-
-
-
-		if ( steStr === 'history' ) { await curPagObj.getByRole( 'button', { name : 'Ask the group' } ).waitFor(); return; } // What: Offer Guard. Why: The history state stops at the banner's offer. How: This waits for its button and returns.
-
-
-
-		await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'People' } ).click(); // What: People Click Call. Why: Requests are answered in People. How: This opens it.
-
-		await curPagObj.getByRole( 'button', { name : 'Send history to Alice' } ).waitFor(); // What: Send Wait. Why: The row offers to send once the device's coverage is checked. How: This waits for its button.
-
-
-
-		return; // What: History Return. Why: The helping state stops at the list. How: This returns.
 
 
 	}

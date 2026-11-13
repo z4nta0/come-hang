@@ -12,7 +12,6 @@ import { decOffFun } from './offer-decline.ts';    // What: Decline Offer Functi
 import { delDatFun } from './data-deletion.ts';    // What: Delete Data Function. Why: Someone deletes their data through it. How: This is the callable.
 import { delGroFun } from './group-deletion.ts';   // What: Delete Group Function. Why: The owner deletes a group through it. How: This is the callable.
 import { groChaFun } from './group-changes.ts';    // What: Group Change Function. Why: Removals and ended offers are reported to the people they affect. How: This is its trigger.
-import { hisPusFun } from './activity-pushes.ts';  // What: History Push Function. Why: Members learn someone needs chat history. How: This is the history request trigger.
 import { ideCleFun } from './identity-cleanup.ts'; // What: Identity Cleanup Function. Why: Identities nobody uses are deleted. How: This is the schedule.
 import { joiPusFun } from './activity-pushes.ts';  // What: Join Push Function. Why: Members learn someone is waiting to join. How: This is the join request trigger.
 import { keyPusFun } from './activity-pushes.ts';  // What: Key Push Function. Why: Members learn someone on a new phone needs the group's key. How: This is the key request trigger.
@@ -42,6 +41,6 @@ import { polWebFun } from './purchase.ts';         // What: Polar Webhook Functi
 
 
 
-export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, hisPusFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 

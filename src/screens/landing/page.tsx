@@ -85,7 +85,7 @@ const FAQ_REC_ARR = [ // What: Frequently Asked Question Record Array. Why: The 
 	{ // What: Lost Phone Question Row. Why: With no account, people wonder what a lost phone costs them. How: This answers it.
 
 
-		ansStr : "Link a Google account in Settings, and your groups come back on a new device. Earlier chat comes back if a friend's device still has it and sends it.",
+		ansStr : 'Link a Google account in Settings, and your groups come back on a new device. The chat from before stays on the device you lost.',
 		queStr : 'What if I lose my device?'
 
 

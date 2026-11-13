@@ -504,8 +504,8 @@ const useProSynFun = ( groRecArr : GroRecTyp[] | null ) : void => { // What: Use
  *
  * @summary
  * Returns what's waiting on the member across their groups, oldest first:
- * the live offers of a group to them, read from the groups, and the join,
- * key, and history requests they can answer, watched in each group. The
+ * the live offers of a group to them, read from the groups, and the join and
+ * key requests they can answer, watched in each group. The
  * member's UID is read once there's a group, and the watch restarts only when
  * the groups themselves change, not with every report of them. With no
  * groups, or before the first report, nothing is waiting.
