@@ -5,8 +5,6 @@
 
 import { collection   } from 'firebase/firestore';         // What: Collection. Why: Key requests stand on a group's memberships. How: This names the members collection.
 import { firGetFun    } from '../platform/firebase.ts';    // What: Firebase Get Function. Why: The memberships live in Firestore. How: This returns the services.
-import { hisCovFun    } from './history.ts';               // What: History Coverage Function. Why: A history request waits on a member only when their device holds its range. How: This checks the device's history.
-import { hisWatFun    } from './history.ts';               // What: History Watch Function. Why: A history request can arrive at any time. How: This watches a group's requests.
 import { keyGetFun    } from '../platform/key-store.ts';   // What: Key Get Function. Why: A key request waits on a member only when their device holds the group's key to share. How: This reads the key without recovering it.
 import { OFF_LIF_NUM  } from './ownership.ts';             // What: Offer Life Number. Why: A lapsed offer no longer waits on anyone. How: This is an offer's life.
 import { onSnapshot   } from 'firebase/firestore';         // What: On Snapshot. Why: A key request can arrive at any time. How: This listens to the memberships.
@@ -25,12 +23,11 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
  *
  * @summary
  * Watches what's waiting on this member across their groups (ARCHITECTURE.md
- * Section 11.1): someone asking to join, a member waiting on a new device
- * for the group's key, a member asking for chat history this device holds,
- * and an offer of a group to this member. Each item names its group, its
- * kind, the person it's about, and when it began, with a key that tells it
- * apart from an earlier item of the same kind, so the notices sheet shows
- * each one once and the frame marks the sections that hold them. An item
+ * Section 11.1): someone asking to join, a member waiting on a new device for
+ * the group's key, and an offer of a group to this member. Each item names its
+ * group, its kind, the person it's about, and when it began, with a key that
+ * tells it apart from an earlier item of the same kind, so the notices sheet
+ * shows each one once and the frame marks the sections that hold them. An item
  * leaves as soon as it's answered, by this member or another.
  *
  * Sections:
@@ -46,7 +43,7 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: A 
 
 // #region Types
 
-type WaiKinTyp = 'history' | 'join' | 'key' | 'offer'; // What: Waiting Kind Type. Why: Each kind of item opens its own part of a group. How: This names the four kinds.
+type WaiKinTyp = 'join' | 'key' | 'offer'; // What: Waiting Kind Type. Why: Each kind of item opens its own part of a group. How: This names the three kinds.
 
 type WaiRecTyp = { groIdeStr : string, kinValStr : WaiKinTyp, namTexStr : string, seeKeyStr : string, timNum : number, uidValStr : string }; // What: Waiting Record Type. Why: The sheet words an item and opens its part, and the frame counts them. How: This types one item, its name empty where the person's name is read from the members.
 
@@ -98,13 +95,12 @@ const offLisFun = ( groRecArr : GroRecTyp[], uidValStr : string, nowTimNum : num
  * waiWatFun = Waiting Watch Function
  *
  * @summary
- * Watches each group's join requests, key requests, and history requests,
- * and reports every item waiting on this member across the groups whenever
- * any of them changes, until the returned function stops every watch. A
- * request this member made isn't waiting on them, a key request counts only
- * while this device holds the group's key, and a history request only while
- * it's unclaimed and this device holds its range. A watch that fails is
- * logged and reports nothing for its part.
+ * Watches each group's join requests and key requests, and reports every
+ * item waiting on this member across the groups whenever any of them
+ * changes, until the returned function stops every watch. A request this
+ * member made isn't waiting on them, and a key request counts only while
+ * this device holds the group's key. A watch that fails is logged and
+ * reports nothing for its part.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -148,10 +144,9 @@ const waiWatFun = ( groIdeArr : string[], uidValStr : string, onWaiFun : ( waiRe
 
 
 
-	for ( const groIdeStr of groIdeArr ) { // What: Group Loop. Why: Each group has its own requests. How: This starts three watches per group.
+	for ( const groIdeStr of groIdeArr ) { // What: Group Loop. Why: Each group has its own requests. How: This starts two watches per group.
 
 
-		let hisSeqNum = 0; // What: History Sequence Number. Why: A coverage check finishing after a newer report mustn't replace it. How: This counts the history reports.
 		let keySeqNum = 0; // What: Key Sequence Number. Why: A key check finishing after a newer report mustn't replace it. How: This counts the member reports.
 
 
@@ -183,29 +178,6 @@ const waiWatFun = ( groIdeArr : string[], uidValStr : string, onWaiFun : ( waiRe
 
 
 				} ) );
-
-
-			}, ( errCatObj : unknown ) => console.warn( errCatObj ) );
-
-
-		}, ( errCatObj ) => console.warn( errCatObj ) ) );
-
-		stoFunArr.push( hisWatFun( groIdeStr, ( hisRecArr ) => { // What: History Watch Call. Why: A member asking for chat history waits on the members who hold it. How: This watches the group's requests and keeps each unclaimed one from another member this device can fill.
-
-
-			const curSeqNum = ++hisSeqNum;                                                                                                // What: Current Sequence Number. Why: Only the latest report's checks may land. How: This numbers this one.
-			const penRecArr = hisRecArr.filter( ( hisRecObj ) => hisRecObj.staValStr === 'pending' && hisRecObj.uidReqStr !== uidValStr ); // What: Pending Record Array. Why: A claimed request has its helper, and the member's own waits on others. How: This keeps the unclaimed ones from other members.
-
-
-
-			void Promise.all( penRecArr.map( ( hisRecObj ) => hisCovFun( groIdeStr, hisRecObj.uidReqStr ) ) ).then( ( covValArr ) => { // What: Coverage Check Call. Why: A request the device can't fill isn't waiting on this member. How: This checks each and keeps the ones it covers.
-
-
-				if ( curSeqNum !== hisSeqNum ) return; // What: Stale Guard. Why: A newer report has its own checks. How: This returns.
-
-
-
-				parSetFun( `${ groIdeStr }/history`, penRecArr.flatMap( ( hisRecObj, hisIndNum ) : WaiRecTyp[] => covValArr[ hisIndNum ] ? [ { groIdeStr, kinValStr : 'history', namTexStr : '', seeKeyStr : seeKeyFun( groIdeStr, 'history', hisRecObj.uidReqStr, hisRecObj.ranTimNum ?? 0 ), timNum : hisRecObj.ranTimNum ?? 0, uidValStr : hisRecObj.uidReqStr } ] : [] ) ); // What: History Part Call. Why: The requests this device can fill are the group's history part. How: This makes each one it covers an item, keyed by its range's start, named from the members.
 
 
 			}, ( errCatObj : unknown ) => console.warn( errCatObj ) );

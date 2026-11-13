@@ -12,7 +12,7 @@ import { HttpsError   } from 'firebase-functions/v2/https'; // What: HTTPS Error
 import { ideDelFun    } from './identity-cleanup.ts';       // What: Identity Delete Function. Why: Once the identity is in no group, what's left of it goes. How: This deletes its account, public key, and sign-in record.
 import { onCall       } from 'firebase-functions/v2/https'; // What: On Call. Why: Someone deletes their data from the app. How: This registers a callable function, which checks the caller's sign-in.
 import { REA_DAT_OBJ  } from './setup.ts';                  // What: Realtime Database Object. Why: Presence lives there. How: This removes the identity's.
-import { STO_ADM_OBJ  } from './setup.ts';                  // What: Storage Admin Object. Why: A history transfer the identity asked for lives in Storage. How: This deletes it.
+import { STO_ADM_OBJ  } from './setup.ts';                  // What: Storage Admin Object. Why: A history transfer the identity asked for before history requests were dropped lives in Storage. How: This deletes it.
 import { uplDelFun    } from './photos.ts';                 // What: Uploads Delete Function. Why: Photos the identity shared are its data too. How: This deletes them in a group.
 
 
@@ -62,9 +62,9 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  *
  * @summary
  * Deletes what an identity keeps in one group besides its membership: its
- * request for chat history, its shared location, its presence, the history
- * transfer it asked for, and the photos it added, each of which may not
- * exist.
+ * shared location, its presence, the photos it added, and any request for
+ * chat history and its transfer left from before the app stopped asking for
+ * history, each of which may not exist.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -86,10 +86,10 @@ const perDelFun = async ( groIdeStr : string, uidValStr : string ) : Promise< vo
 	const groRefObj = FIR_DAT_OBJ.doc( `groups/${ groIdeStr }` ); // What: Group Reference Object. Why: The identity's documents sit under the group. How: This names it.
 
 
-	await groRefObj.collection( 'historyRequests' ).doc( uidValStr ).delete();                                                    // What: History Request Delete Call. Why: A request for chat history is keyed by its asker. How: This deletes the identity's.
+	await groRefObj.collection( 'historyRequests' ).doc( uidValStr ).delete();                                                    // What: History Request Delete Call. Why: The app no longer asks for chat history, but a request filed before that waits on its expiry, keyed by its asker. How: This deletes the identity's, if there is one.
 	await groRefObj.collection( 'liveLocations' ).doc( uidValStr ).delete();                                                      // What: Location Delete Call. Why: A shared position is keyed by its member. How: This deletes the identity's.
 	await REA_DAT_OBJ.ref( `presence/${ groIdeStr }/${ uidValStr }` ).remove();                                                   // What: Presence Remove Call. Why: Whether the identity is online is kept per group. How: This removes its entry.
-	await STO_ADM_OBJ.bucket().file( `groupHistoryTransfers/${ groIdeStr }/${ uidValStr }` ).delete( { ignoreNotFound : true } ); // What: Transfer Delete Call. Why: A history bundle is filed under its asker. How: This deletes the identity's, if there is one.
+	await STO_ADM_OBJ.bucket().file( `groupHistoryTransfers/${ groIdeStr }/${ uidValStr }` ).delete( { ignoreNotFound : true } ); // What: Transfer Delete Call. Why: A history bundle sent before the app stopped asking for history waits on its expiry, filed under its asker. How: This deletes the identity's, if there is one.
 	await uplDelFun( groIdeStr, uidValStr );                                                                                      // What: Uploads Delete Call. Why: The photos the identity added are theirs to take with them. How: This deletes them, their full photos following.
 
 

@@ -17,7 +17,7 @@ import { setDoc                    } from 'firebase/firestore';           // Wha
 import { test                      } from '@playwright/test';             // What: Test. Why: Each kind of activity push is its own test. How: This declares them.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A join request's expiry is a timestamp. How: This builds it.
 import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.
-import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: A history request is claimed and released. How: This changes it.
+import { updateDoc                 } from 'firebase/firestore';           // What: Update Doc. Why: A push token and a membership are changed. How: This changes them.
 
 
 import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // What: Rules Test Environment. Why: Every seed and read goes through one. How: This types it.
@@ -33,10 +33,10 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * Checks the activity pushes end to end in the Functions, Firestore, and
  * Realtime Database emulators. Each test seeds a group named Picnic with
  * members and their phones' tokens, then writes as the app would, past the
- * rules, and reads which pushes the emulator kept for each token: history
- * requests as they become pending, join requests with their count and
- * replacing tag, chat messages to waiting members who don't have the group
- * open, and key requests from a member on a new phone.
+ * rules, and reads which pushes the emulator kept for each token: join
+ * requests with their count and replacing tag, chat messages to waiting
+ * members who don't have the group open, and key requests from a member on a
+ * new phone.
  *
  * Sections:
  *  - Module State
@@ -123,39 +123,6 @@ test.beforeEach( async () => { // What: Reset Hook. Why: Each test starts from e
 	await funEnvObj.clearFirestore(); // What: Firestore Clear Call. Why: No test sees another's documents or pushes. How: This clears them.
 
 	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => set( ref( cotAdmObj.database( DBS_URL_STR ) ), null ) ); // What: Database Clear Call. Why: No test sees another's chat or presence. How: This clears the shared instance.
-
-
-} );
-
-
-
-test( 'a history request becoming pending pushes every other member, and a claim pushes nobody', async () => { // What: History Push Test. Why: A request needs an online helper, so members hear of it whenever it opens (Section 11.9). How: This files a request, claims it, releases it, and checks each member's pushes.
-
-
-	await seeGroFun( [ 'alice', 'bob', 'carol' ] ); // What: Group Seed Call. Why: The test needs three members. How: This seeds them.
-
-	await docSetFun( 'groups/gro1/historyRequests/bob', { status : 'pending' } ); // What: Request Call. Why: Bob asks for history. How: This files his request.
-
-	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { body : 'A member is asking for chat history they missed.', title : 'Picnic' } ] ); // What: Alice Pushed. Why: Alice may be the one who can help. How: This waits for her push.
-	await expect.poll( () => pusLisFun( funEnvObj, 'tok-carol' ) ).toHaveLength( 1 );                                                                              // What: Carol Pushed. Why: Carol may help too. How: This waits for her push.
-
-	expect( await pusTarFun( funEnvObj, 'tok-alice' ) ).toEqual( [ { groupId : 'gro1', section : 'people' } ] ); // What: History Target Check. Why: A tap opens People, where requests are answered. How: This expects the push to name the group and People.
-
-	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/historyRequests/bob' ), { status : 'claimed' } ) ); // What: Claim Call. Why: A claimed request needs no more help. How: This claims it.
-
-	await new Promise( ( resValFun ) => setTimeout( resValFun, 2000 ) ); // What: Claim Settle Wait. Why: A push from the claim would arrive within this time. How: This waits 2 seconds.
-
-	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toHaveLength( 1 ); // What: Claim Silent. Why: A claimed request needs no more help. How: This expects no push beyond the first.
-
-	await funEnvObj.withSecurityRulesDisabled( ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), 'groups/gro1/historyRequests/bob' ), { status : 'pending' } ) ); // What: Release Call. Why: A released request needs help again. How: This returns it to pending.
-
-	await expect.poll( () => pusLisFun( funEnvObj, 'tok-alice' ) ).toHaveLength( 2 ); // What: Alice Pushed Again. Why: The release opens the request again, while the claim announced nothing. How: This waits for exactly a second push.
-
-	await new Promise( ( resValFun ) => setTimeout( resValFun, 2000 ) ); // What: Release Settle Wait. Why: Any further push would arrive within this time. How: This waits 2 seconds.
-
-
-	expect( await pusLisFun( funEnvObj, 'tok-alice' ) ).toHaveLength( 2 ); // What: Alice Twice. Why: Only the filing and the release push. How: This expects exactly two.
-	expect( await pusLisFun( funEnvObj, 'tok-bob' ) ).toEqual( [] );       // What: Asker Not Pushed. Why: Bob needn't hear of his own request. How: This expects none for him.
 
 
 } );

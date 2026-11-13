@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-12 (another app's built-in browser stopped first with a way out to the device's browser or the installed app, in Section 16; stage 6, search and outside checks, done, in Section 14's setup checklist; App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-12 (history requests dropped, with a new device or a new joiner seeing chat only from their arrival, in Section 11.9 and every passage that pointed to it, the leftover cleanup in Section 14, and a handoff from the old device as an open idea in Section 13; another app's built-in browser stopped first with a way out to the device's browser or the installed app, in Section 16; stage 6, search and outside checks, done, in Section 14's setup checklist; App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -166,7 +166,7 @@ long-term data store, see Section 5 for retention rules per data type.
 | Firestore | Structured, lower-frequency data: events, notes/assignments, group & membership metadata, invite tokens, live location |
 | Realtime Database (RTDB) | High-frequency, ephemeral data: chat messages, presence |
 | Cloud Messaging (FCM) | Push notifications, the only mechanism that can reach a backgrounded or closed app on either platform |
-| Storage | One-off bulk chat-history transfer blobs for history-sync requests between members, see Section 11.9 |
+| Storage | Encrypted files: event photos (Section 20) and profile photos (Section 21) |
 
 No custom signaling server, TURN server, or WebRTC is used. Firebase's
 listeners and FCM replace the need for a peer-to-peer data channel
@@ -185,9 +185,9 @@ billing model does.
 **Revision (2026-10-22): the project runs on the Blaze plan, not Spark.**
 Three parts of this design turned out to need billing enabled, see Section
 15 for the full reasoning and the cost protections that come with it:
-- Cloud Storage (Section 11.9's history transfers) has required Blaze
+- Cloud Storage (event and profile photos, Sections 20 and 21) has required Blaze
   since February 3, 2026; a Spark project can't reach any bucket.
-- Firestore TTL deletes (Sections 11.4, 11.5, 11.9) are listed by Google
+- Firestore TTL deletes (Sections 11.4 and 11.5) are listed by Google
   among the features that "don't include free usage. You must enable
   billing to use these features."
 - FCM can only be sent from a trusted server holding a service-account
@@ -309,8 +309,8 @@ does).
 - **Resolved**: 48-hour grace period before deletion, so people can
   still review "who brought what" for a bit afterward, chosen as a
   middle ground between practical concerns (out-of-town attendees who
-  won't reopen the app until they're home, no recovery path for
-  events/notes the way chat has via Section 11.9's history-sync) and
+  won't reopen the app until they're home, no way to get events/notes back
+  once they're deleted) and
   staying consistent with this design's overall minimal-retention
   philosophy.
 - **Places stay on each device** (decided 2026-11-07): so the event form
@@ -361,12 +361,11 @@ Strictly sync-based, not time-based, with these refinements:
   group's configured value instead of a hardcoded constant. Changing it
   only affects future enforcement, it doesn't retroactively rescue
   anything already deleted under a prior value.
-  - **Why 30, not something higher**: the risk of being "too
-    aggressive" is softened by the `recovery` history-sync path (Section
-    11.9), a message deleted before a genuinely-infrequent user saw it
-    isn't lost forever, it just now requires an explicit ask instead of
-    silent resync. That safety net makes leaning toward the more
-    privacy-protective default the right call.
+  - **Why 30, not something higher**: a message deleted before a
+    genuinely-infrequent member's device fetched it is lost to that member
+    (Section 11.9), and 30 days already covers anyone who opens the app
+    between get-togethers, so leaning toward the more privacy-protective
+    default is the right call, with the owner able to raise it.
   - **Why a 7-day floor**: below that, the safety valve stops being a
     backstop behind normal sync and starts racing ahead of it, firing
     for perfectly ordinary groups where people simply don't open the app
@@ -377,10 +376,9 @@ Strictly sync-based, not time-based, with these refinements:
     the rest of the year) without stretching toward "basically a year,"
     which would undercut the minimal-retention story this design is
     built around even as an opt-in maximum. A group that's truly
-    annual-only can still function at 180 days, just occasionally
-    needing a `recovery` request for anything older, an acceptable
-    tradeoff for that edge case rather than a reason to raise the
-    global ceiling.
+    annual-only can still function at 180 days, a member away longer
+    missing what was sent while they were gone, an acceptable tradeoff for
+    that edge case rather than a reason to raise the global ceiling.
   - Kept as an advanced/optional group setting rather than a prominent
     choice at group creation, most groups never need to touch it.
 - The user's own device retains full local chat history indefinitely
@@ -602,14 +600,9 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   - **Must be communicated clearly to users**: linking a recovery
     credential restores *identity and group membership only*, not chat
     history. Under the sync-based chat deletion policy, history is
-    already gone from the server once it synced to the original device.
-    A follow-up step can recover the history itself too, not just
-    identity: once relinked, the user can send a history-sync request to
-    a fellow current member whose device still has it cached, see
-    Section 11.9. Not automatic, and not guaranteed (it depends on
-    another member still having and choosing to share it), but it closes
-    most of this gap rather than leaving history loss as a hard,
-    permanent consequence of every device change.
+    already gone from the server once it synced to the original device,
+    and nothing sends it again (Section 11.9), so a new device starts the
+    group's chat from the moment it arrives.
   - **Resolved**: Google sign-in only for v1. It needs no
     password-hygiene UX (no form, no forgot-password flow, no password-
     strength policy to configure) and no recurring cost (unlike Apple
@@ -741,7 +734,7 @@ in place of their name. Any member can reassign or release it (Section 11.5).
   but the owner, and does nothing once the group document is gone. Its
   first batch deletes every member doc, frees every account's slot, writes
   the notices, and deletes the working invite. Then go the group's other
-  collections, its chat, presence, and mirror, and its history transfers,
+  collections, its chat, presence, and mirror, and its files in Storage,
   and the group document goes last, so a retry still passes the owner
   check. Each member's push goes out once the first batch has landed.
 - **Known, accepted limitation**: a removed user can bypass the
@@ -1256,19 +1249,18 @@ its `sentAt` is older than the group's own `chatTtlDays` (Section 5, default
 so this reuses the same cleanup codepath rather than needing separate
 infrastructure for the safety valve. The rules can't check that a sender
 listed every other member, so a sender who leaves someone off only shortens
-how long that message waits, and the history requests in 11.9 cover anyone
-who missed it.
+how long that message waits, and the member left off misses it, as a member
+does any message they never fetch (Section 11.9).
 
-**Resolved** (originally an open question, settled via 11.9): a member
+**Resolved** (originally an open question, settled in 11.9): a member
 who joins after a message was sent does **not** automatically see it,
 since the read rule above only lets them query from their own `joinedAt`.
 Keeps chat consistent with "not a permanent archive" rather than showing
 new joiners a partial, arbitrary slice of not-yet-deleted backlog. This
 does NOT apply to events/notes, those are persistent Firestore documents a
 new joiner should see in full, matching your original description of new
-members "syncing whatever information was already there for that group." A
-new joiner who specifically wants older chat context can request it
-explicitly, see 11.9.
+members "syncing whatever information was already there for that group."
+Earlier chat isn't sent to them either, see 11.9.
 
 ### 11.8 RTDB: `/presence/{groupId}/{uid}`
 
@@ -1280,228 +1272,39 @@ explicitly, see 11.9.
 mirror (11.7), read its presence, and each member writes only their own
 entry, holding nothing but `online`.
 
-### 11.9 Peer-Assisted History Sync Requests
+### 11.9 Chat From Before
 
-Resolves two gaps at once: recovering chat history after linking a new
-device (Section 8's `linkWithCredential()` only recovers identity, not
-content), and giving a new joiner access to older chat context if they
-want it (11.7). Both are really the same underlying problem, "I don't
-have history that another current member's device still has", so one
-mechanism covers both rather than solving each separately.
+Decided 2026-11-12: **chat from before isn't sent between devices.** A
+member sees the chat from the moment their device joined the group, and a
+device holds only what it received. A new joiner doesn't see what was said
+before they arrived, the way someone added to a group text doesn't, and a
+member on a new device, after a lost device or Google recovery, starts the
+group's chat afresh there, while the old device keeps what it held.
 
-Deliberately **not** restricted to the group creator: fulfilling a
-request is just "share a copy of what's already on my device," it
-doesn't touch membership or security the way removal/link-rotation do,
-so requiring the creator specifically would break exactly when the
-creator themselves is the one who needs it (their own new-phone case).
-Any current member can request, any current member can voluntarily
-fulfill.
+An earlier design let any member ask the group for missing chat and let
+another member's device send a copy, encrypted under the group key, through
+a Storage file. It was built and then dropped before anyone relied on it.
+With no server copy of the chat, every version of it rested on another
+member's device being online, holding the right messages, and its owner
+choosing to help, and no device could tell from what it held whether it had
+the whole range: a member who joined after the group began was never
+offered the request, even holding every message, while a device the
+identity had moved to was offered it holding only what came after the move.
+Requests sat unanswered, and each fix opened another case.
 
-No new cryptography is needed: the fulfiller already holds the group's
-symmetric key (from their own `wrappedGroupKey`), and so does the
-requester. A device keeps its chat history decrypted (Section 5), so the
-fulfiller encrypts the requested messages (each one's ID, sender, time, and
-text) as one bundle under the group key, with a fresh IV (decided
-2026-10-29). Firebase relaying the bundle still never sees plaintext, same
-guarantee as live chat, and Storage sees only the bundle's total size, not
-how many messages it holds or how long each is.
+Requests filed before the change expire on their own, through their TTL
+within 14 days and the bucket's lifecycle rule within 15, and until then
+data deletion and group deletion still delete any that remain. Once they've
+expired, that cleanup, the TTL policy, and the lifecycle rule come out
+(Section 14).
 
-| Path | Service | Notes |
-|---|---|---|
-| `/groups/{groupId}/historyRequests/{uid}` | Firestore | `{ requestedByUid, kind: 'recovery' \| 'backlog', rangeStart, createdAt, expireAt, status: 'pending' \| 'claimed' \| 'fulfilled', claimedByUid, claimedAt }`, keyed by the asker's UID (decided 2026-10-28), so each member has at most one open request per group, which caps the notifications one person can send. Visible to all current members; an FCM notification goes to every member but the asker whenever `status` becomes (or reverts to) `pending`. `expireAt` is a native Firestore TTL field: the app sets it 10 days out by its own clock, and the rules accept 7 to 14 days, so an unfulfilled request quietly disappears instead of lingering forever. |
-| `groupHistoryTransfers/{groupId}/{uid}` | Storage | The uploaded bundle, the requested messages encrypted as one under the group key with its 12-byte IV first, keyed like the request it answers, written only by whoever currently holds the claim. One binary file of at most 25 MB (decided 2026-10-28), about 125,000 typical messages. |
-
-**Rules (decided 2026-10-28)**: a member files only their own request,
-pending and unclaimed, at the server's time. Any other member claims a
-pending one in their own name, at the server's time, but only while the
-asker is still in the group, since history goes only to a current member.
-The claimant releases their claim at any time, and any member may release
-it once it's 30 minutes old. Only the asker marks a claimed request
-fulfilled or deletes their request, and a fulfilled one can't be reopened.
-
-**Storage rules (`storage.rules`, decided 2026-10-28)**: they read the
-request and the group's members from Firestore. Only the member holding a
-standing claim uploads the bundle, or replaces a failed attempt, and only
-while both they and the asker are still in the group. A bundle is one file
-typed as generic binary (`application/octet-stream`), 1 byte to 25 MB, with
-no custom metadata, since metadata would sit beside it unencrypted. Only the
-asker downloads it, while still a member. The asker deletes it, and the
-claimant may withdraw it while their claim stands. Nobody lists the folder.
-A bundle nobody collects is deleted by the bucket's own lifecycle setting
-15 days after upload, after its request has expired (decided 2026-10-28), so
-no Cloud Function is needed for it.
-
-**`kind` distinguishes the two cases, and the requester, not the
-fulfiller, sets the scope**:
-- **`recovery`**: the requester already has an existing membership doc
-  with an old `joinedAt`, they're just on a fresh device with an empty
-  local cache. Range is implicit and non-negotiable: their own original
-  `joinedAt` to now, content they already had every right to see.
-  `rangeStart` isn't used for this kind.
-- **`backlog`**: the requester's `joinedAt` is recent, they're asking
-  for content from *before* their own `joinedAt`, genuine new access
-  they didn't have by default. The requester picks `rangeStart` when
-  creating the request, bounded between the group's own creation date
-  and their `joinedAt`, defaulting to "everything" but narrowable if
-  they want less. This is a v1 feature, not deferred: the person asking
-  should control how far back they're actually asking for, rather than
-  leaving that call to whoever happens to fulfill it.
-
-**Fulfillment is a claim, the same compare-and-swap pattern as Section
-7's dish/task assignments, not a broadcast-and-race.** A member willing
-to help runs a transaction: succeed only if `status == 'pending'`, then
-set `status = 'claimed'`, `claimedByUid = me`, `claimedAt = now`. Only
-one transaction wins, so only one blob is ever uploaded per request, no
-redundant transfers, no ambiguity about which copy is authoritative.
-Everyone else's UI just reflects "someone's already helping with this,"
-the identical UX already established for a lost dish-claim race.
-
-This also resolves the "who should get the request, and what about an
-offline creator" question without needing a priority list or online-
-status ranking at all: claiming requires the client to be running and
-to have fetched the request in the first place, so being online is
-already a precondition to enter the race, not something to check for
-separately. If the creator (or anyone else near the top of a
-hypothetical priority list) is offline, they simply never see the
-option to claim, whoever *is* around and willing does, with zero extra
-logic needed to make that happen. A `claimedAt` timeout (30 minutes) is
-the only other piece needed: if the claim stalls, whether the claimant's
-connection drops mid-upload or they simply change their mind, `status`
-reverts to `pending` and re-notifies everyone, rather than the request
-getting stuck behind one unresponsive claimant.
-
-**Trigger, not a click or an invite event**: neither kind is created by
-joining a group or by clicking a link, both fire off a single client-
-side check, "am I a current member of this group with zero locally
-cached chat for it?" That condition is agnostic to *why* the cache is
-empty, so it naturally covers both cases:
-- Empty cache **and** `joinedAt` is right now → fresh join, prompt
-  "Want to see chat from before you joined too?" (a `backlog` request,
-  purely optional, easy to decline).
-- Empty cache **but** `joinedAt` is from a while ago → this device
-  wasn't the one that originally joined, prompt "Looks like you're on a
-  new device, want to recover this group's chat history?" (a `recovery`
-  request, worth defaulting toward "yes" since it's just restoring
-  what they already had).
-
-Neither fires silently in the background, both are a prompt at the
-moment they're actually relevant, the person always chooses. This also
-means a link sitting unclicked for hours, or someone joining a group
-much later than everyone else, doesn't need special-casing, the
-mechanism only ever compares the requester's own `joinedAt` to their own
-local cache, never to absolute time or to when the invite was created.
-
-Flow: requester creates the request doc with `kind` (and `rangeStart` for
-`backlog`) → a willing member wins the claim transaction → that member
-uploads exactly the requested range to the Storage path → requester
-downloads it, merges it into their own local store, marks the request
-`fulfilled` → both the Storage object and the request doc are deleted,
-matching the "transient, delete once delivered" pattern used everywhere
-else in this design, no permanent server-side archive is created just
-because this feature exists.
-
-**Pros**
-- Solves new-phone recovery and new-joiner backlog with one mechanism
-  instead of two separate policy decisions.
-- Fixes the creator-bottleneck problem outright, since fulfillment isn't
-  a privileged action, and the claim mechanism means "who ends up
-  fulfilling it" naturally resolves to whoever's actually online and
-  willing, with no priority list or online-status check needed to make
-  that happen.
-- The requester, not the fulfiller, controls how much history a
-  `backlog` request actually asks for.
-- Reuses two patterns that already exist elsewhere in this design
-  instead of inventing new ones: the claim transaction (Section 7) and
-  the transient relay-then-delete lifecycle (used everywhere else).
-- No new cryptography or key exchange: the bundle is encrypted under the
-  already-shared group key.
-
-**Cons**
-- Only works if *some* current member has cached the requested range
-  locally; if everyone who ever had it has since cleared their device,
-  it's genuinely unrecoverable, by design, there's no fallback archive.
-- Not instant, depends on another person being active and choosing to
-  claim it, unlike the rest of the sync model which is near-real-time.
-  The 30-minute claim timeout bounds how long a stalled attempt can
-  block a retry, but doesn't make the whole thing fast.
-- Introduces a third Firebase product (Storage) into the stack, one
-  more SDK and security-rule surface to maintain.
-- Even with the local-cache pre-filter below, coverage isn't
-  mathematically guaranteed, a member could pass the filter and still
-  have a gap mid-range (e.g. was offline long enough near the group's
-  chat safety-valve edge, `chatTtlDays`, 30 days by default, to miss
-  something before it aged out server-side).
-  Treated as an acceptable residual risk, not something to engineer
-  around further: this feature was never presented as guaranteed-
-  complete, a partial result is still more than the requester had, and
-  they can simply ask again.
-
-**Locked in, not deferred**: a member is only offered the claim option
-for a request if their own local cache actually covers it, specifically,
-their earliest cached message for that group's chat is at or before the
-start of the request's range (the `rangeStart` of a `backlog`, the asker's
-`joinedAt` for a `recovery`). A member who joined at or before that start
-and holds history counts as covering it too (decided 2026-10-29), since a
-chat that began after the start has no message that early, and without
-this nobody could ever answer a request for a group whose chat began
-later. This is a purely local check
-(their own IndexedDB, no network round trip, no new infrastructure) and
-is deliberately based on actual cached coverage rather than `joinedAt`
-alone, `joinedAt` only approximates "could plausibly have it," actual
-local cache reflects whether they still do. This is what replaces a
-priority/ranking system: instead of ordering candidates by likelihood of
-having full coverage, under-qualified candidates are simply never shown
-the option at all, so the claim race only ever happens among people who
-can actually satisfy it.
-
-**Screens (decided and built 2026-11-03)**: the offer is a banner atop the
-group's chat (`src/screens/history-banner.tsx`), shown only while this
-phone holds none of the group's chat. For a day after joining it offers a
-`backlog`, unless the group began within a minute of the join, as it does
-for its creator, with a choice of everything, the last month, or the last
-week, each offered only where the group reaches back that far; after that
-day it offers a `recovery`. "Not now" is kept on the device. Once asked,
-the banner shows the request waiting or being sent, with Withdraw, and
-since nothing tells the asker when the copy lands, it checks every 5
-seconds while the request is claimed, adding the history to the chat and
-saying how many messages came. Helpers find open requests in People
-(`src/screens/history-requests.tsx`), watched live, each offering Send
-history only where this phone covers the range, saying who is sending a
-claimed one, and offering to free a claim stalled for 30 minutes; a push
-about a request opens People.
-
-**Client UX when multiple members are shown the same request**: the
-request-visible-to-all design means several people can see the "help
-sync this" prompt at once, so what happens on everyone else's screen
-once one person claims it matters.
-
-- **Primary path, real-time auto-dismiss**: whatever shows the prompt is
-  already a live listener on the request doc, that's the only way a
-  client knows to show it. That same listener fires again the instant
-  `status` moves off `pending`, on every other subscribed client, so any
-  client still showing the prompt reacts to that update by dismissing it
-  proactively. This isn't new infrastructure, it's the same listener the
-  prompt already depends on to exist at all, and it resolves the common
-  case (five people notified, one claims, the other four's prompts
-  disappear) before the others would realistically have time to act.
-- **Fallback, the claim transaction's own rejection**: network
-  propagation isn't instant, so a small window remains where someone
-  taps "yes" moments before their own client has caught up. Their claim
-  transaction simply fails the same compare-and-swap check used
-  everywhere else in this design, not an error, just "didn't win the
-  race." This is unavoidable in a distributed system and is why the
-  fallback still matters even with fast auto-dismissal.
-- **Neither path is silent.** A prompt that just vanishes with no
-  acknowledgment can read as a glitch, so both paths surface a brief,
-  auto-fading toast (not another modal requiring a tap to dismiss, that
-  would reintroduce the exact friction being avoided): "Already handled
-  by someone else, thanks anyway" for the passive auto-dismiss case, a
-  slightly warmer variant for the case where the person actually tapped
-  and lost the race.
-- The initial prompt itself is worth designing as a lightweight,
-  non-blocking banner or notification-center entry rather than a hard
-  interrupting modal, consistent with minimizing popup fatigue generally,
-  not just at the dismissal step.
+**Pros**: nothing to coordinate between devices, no request that can sit
+unanswered, and less data held anywhere; it matches what people expect from
+a group text.
+**Cons**: a member on a new device, or a new joiner, can't see earlier chat
+at all. If that becomes a real pain point, the simplest way back is for a
+device the identity moves away from to hand its own chat to the new device
+along with the group keys (Section 13).
 
 ### 11.10 Text Limits
 
@@ -1583,10 +1386,9 @@ real, and the app is built against both:
 - No end-to-end encryption; protects against the server/host reading
   content, not against a compromised group member or full metadata
   privacy.
-- Single-device only; no seamless multi-device identity. History can be
-  recovered onto a new device via an explicit, consent-based
-  history-sync request to a fellow member (Section 11.9), but this is
-  not automatic and depends on someone else still having it cached.
+- Single-device only; no seamless multi-device identity. A new device
+  starts each group's chat from the moment it arrives, and the chat from
+  before stays on the device it was on (Section 11.9).
 - A removed member's identity ban can be bypassed by regenerating their
   anonymous identity (clearing data); mitigated, not eliminated, by
   link rotation on removal.
@@ -1619,6 +1421,13 @@ real, and the app is built against both:
   on devices rather than members, so a member's own devices get each
   other's messages. Left for after 1.0.
 
+- **Chat from before on a new device** (raised 2026-11-12): history
+  requests were dropped (Section 11.9). If losing the chat on a device
+  change becomes a pain point, the simplest return is for the device the
+  identity moves away from, which already shares the group keys with the
+  new one (Section 6), to hand over its own chat in the same step, with no
+  other member involved. A lost device's chat would still be gone.
+
 - Whether to eventually support per-person invite tracking as an
   additive feature on top of the shared-link model (Section 9), not
   needed for launch. **Likely superseded** by the join-approval proposal
@@ -1647,12 +1456,6 @@ real, and the app is built against both:
   projects, live and staging, the staging one backing Netlify deploy
   previews. Staging exists because push notifications, App Check, Google
   sign-in, and installing on a real phone can't be emulated.
-- **Resolved**: the fulfill-claim option (Section 11.9) is only offered
-  to members whose own local cache actually covers a `backlog` request's
-  `rangeStart`, checked locally against their earliest cached message,
-  not just `joinedAt`. This is what replaces a priority/ranking system,
-  under-qualified candidates never enter the claim race at all.
-
 - **Resolved (2026-11-07): event photos (Section 20)** ship at launch,
   capped per event and per member by the owner's plan and counted through
   tallies the rules check, open from the event's start, and announced by
@@ -1662,16 +1465,9 @@ real, and the app is built against both:
 **Resolved during the data-model pass** (kept here briefly for the
 record): location moves from RTDB to Firestore (11.4); the group's own
 name stays plaintext for invite-preview purposes (11.2); display names
-are per-group and encrypted, not global (11.1/11.3); new joiners don't
-see chat backlog automatically, but can request a specific range via
-11.9's `backlog` requests, distinct from `recovery` requests for a lost
-device; both are triggered by client-side detection of "member with an
-empty local cache," never by the invite/join event itself; fulfillment
-is a claim transaction, not a broadcast, so exactly one member fulfills
-each request and no priority/online-status list is needed; unfulfilled
-requests and stalled claims both expire rather than lingering
-indefinitely; Redux Toolkit is dropped in favor of hooks-per-collection
-plus Zustand for cross-cutting state (Section 2); the events/notes
+are per-group and encrypted, not global (11.1/11.3); new joiners and new
+devices don't see earlier chat (11.9); Redux Toolkit is dropped in favor
+of hooks-per-collection plus Zustand for cross-cutting state (Section 2); the events/notes
 grace period is set at 48 hours post-event (Section 5); chat's
 safety-valve TTL defaults to 30 days and is a per-group, creator-
 adjustable setting clamped between 7 and 180 days, not a fixed global
@@ -2121,11 +1917,7 @@ the Blaze change.
   are missing.
 - `src/state/presence.ts` marks a member online with an entry the server
   clears if the device drops, clears it on going offline, and watches who's
-  online (Section 11.8). `src/state/history.ts` is peer-assisted history
-  (Section 11.9): asking for a recovery or a backlog, listing open
-  requests, checking this device's coverage, claiming as a compare-and-swap,
-  releasing, sending the range as one encrypted bundle, collecting it while
-  keeping only well-formed messages inside the range, and withdrawing.
+  online (Section 11.8).
 - `src/state/location.ts` is location sharing (Sections 5, 10, and 11.4):
   sharing a position for an event, inside its window and expiring an hour on
   or at the event's end, stopping, listing and watching the valid unexpired
@@ -2292,16 +2084,14 @@ the Blaze change.
 - **What's waiting on the member** (decided 2026-11-08, built in
   `src/state/waiting.ts`, `src/ui/waiting-dot.tsx`, and
   `src/ui/item-jump.ts`): a join request, a member waiting on a new device
-  for a group's key, a member asking for chat history, and an offer of a
-  group are waiting on someone, rather than news of something done, so
+  for a group's key, and an offer of a group are waiting on someone, rather than news of something done, so
   they're shown until they're answered instead of being dismissed. A
   notice wouldn't fit them, and a push alone reaches nobody with
-  notifications off. The screen host watches each group's join, key, and
-  history requests and reads the offers from the groups, keeping only what
-  this member can act on: a key request only while this device holds the
+  notifications off. The screen host watches each group's join and key
+  requests and reads the offers from the groups, keeping only what this
+  member can act on: a key request only while this device holds the
   group's key, their own from a new device included, no other request of
-  their own, a history request only while it's
-  unclaimed and this device holds its range, and an offer only when it names
+  their own, and an offer only when it names
   them and hasn't lapsed. Once anyone answers an item, it's gone for
   everyone.
   - **The dot**: a coral dot marks the People tab for requests and the
@@ -2410,9 +2200,15 @@ the Blaze change.
   dependency audit covers the functions' lockfile too.
 
 **Infrastructure, still open**:
+- After 2026-11-27, once the last history request and transfer filed
+  before their removal has expired (Section 11.9): take their cleanup out
+  of data deletion and group deletion and their parts out of those
+  functions' specs, and drop the `historyRequests` TTL policy and the
+  `groupHistoryTransfers/` prefix from the bucket's lifecycle rule in both
+  projects.
 - The security rules are complete as of 2026-10-28: `firestore.rules`
   covers every collection in Section 11, `database.rules.json` covers chat
-  and presence, and `storage.rules` covers history transfers, proven by the
+  and presence, and `storage.rules` covers event and profile photos, proven by the
   rules suite in `tests/rules/` (`npm run test:rules`), which runs against
   the Firestore, Realtime Database, and Storage emulators that
   `firebase.json` sets up (2026-10-25). Every check in them was confirmed to
@@ -2424,8 +2220,8 @@ the Blaze change.
   notices, the offer decline callable, the daily run (Section 18), and the
   push tokens with the pushes for every notice and for each new offer
   (Section 11.1). Built 2026-10-29 in `functions/src/activity-pushes.ts`:
-  the history request push (Section 11.9), the grouped join request push
-  (Section 17), and chat pushes (Section 11.7). Built 2026-10-29: the
+  the grouped join request push (Section 17), the key request push
+  (Section 6), and chat pushes (Section 11.7). Built 2026-10-29: the
   app's side, asking permission, getting and storing the token, and
   keeping it fresh (Section 11.1), checked in the client suite, which also
   follows a stored token to the push a removal sends.
@@ -2533,8 +2329,9 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
    - [x] Cloud Functions capped with `maxInstances`: 10 each, set in
          `functions/src/setup.ts`.
    - [x] A lifecycle rule on the Storage bucket deleting objects 15 days
-         after upload (Section 11.9), limited to the `groupHistoryTransfers/`
-         and `photos/` prefixes, since profile photos under `avatars/` last
+         after upload (Section 20), limited to the `photos/` prefix and the
+         `groupHistoryTransfers/` prefix left from history requests (Section
+         11.9), which comes off once their last files have expired, since profile photos under `avatars/` last
          as long as their membership (Section 21). Set on both projects
          2026-11-09.
    - [x] Storage reachable from the app (added 2026-11-11): the Storage
@@ -2550,13 +2347,14 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          was added. Both set on both projects 2026-11-11.
    - [x] Nothing deleted lingers in a copy (added 2026-11-09): the Storage
          bucket's soft delete off and object versioning off, and no
-         scheduled Firestore backups, since each would keep deleted photos,
-         messages' history bundles, or records past the deletion the
+         scheduled Firestore backups, since each would keep deleted photos
+         or records past the deletion the
          privacy policy promises, and bill for them. Set on both projects
          2026-11-09.
    - [x] Firestore TTL policies on the `expireAt` field of every collection
          group that has one (`liveLocations`, `events`, `assignments`,
-         `photos`, `historyRequests`, `joinRequests`, `notices`,
+         `photos`, `historyRequests` (left from history requests, Section
+         11.9, and dropped once the last has expired), `joinRequests`, `notices`,
          `pushToken`, `polarEvents`), since a TTL policy is set per
          collection group in the console, not by the rules. Each takes no
          expiration offset, since `expireAt` already holds the deletion
@@ -2927,8 +2725,7 @@ also solves the group-key handoff Section 6 left open: the approver is
 online and holds the key by definition.
 
 **Who can approve**: any current member, not only the creator, so a
-request never waits on one person (the same reasoning as Section 11.9's
-history requests). Declining is open to any member too.
+request never waits on one person. Declining is open to any member too.
 
 **How the approver recognizes the person** (decided 2026-10-22):
 - After opening the link, the joiner enters their **full name**, one
@@ -3216,9 +3013,8 @@ since it reuses chat:
   being removed from the group ends it, like every other group access.
 - **Needed before it ships**: a way to block a person or turn off private
   messages, since it opens a one-to-one channel that group approval
-  doesn't vet; and a decision on history recovery, since only the other
-  person holds a copy (Section 11.9 would become a request to that one
-  person).
+  doesn't vet. As with group chat (Section 11.9), a new device would start
+  the conversation afresh.
 
 ---
 
@@ -3290,7 +3086,7 @@ and the photo rules in `firestore.rules` and `storage.rules`.
 
 - **`photos/{groupId}/{eventId}/{photoId}`** in Cloud Storage: the
   encrypted full photo, typed as generic binary with no custom metadata,
-  as history bundles are (Section 11.9), capped by the rules at 1 MB,
+  as profile photos are (Section 21), capped by the rules at 1 MB,
   which a photo shrunk to 1,600px fits well within at the highest quality
   that fits.
 - **`/groups/{groupId}/events/{eventId}/photoTally/{tallyId}`**: the
@@ -3337,8 +3133,7 @@ and the photo rules in `firestore.rules` and `storage.rules`.
   is shown by today's phone and computer photo apps, and converting to JPEG
   on save waits until someone runs into software that won't open it.
 - **No backlog for new devices or late joiners**: they see the photos still
-  on the server. Photos aren't part of history requests (Section 11.9),
-  since a bundle of them would be far too large.
+  on the server, the same as everything else (Section 11.9).
 
 ### Limits (decided 2026-11-07)
 

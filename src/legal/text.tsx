@@ -56,7 +56,7 @@ function PriPolCom () : React.JSX.Element {
 		<>{ /* What: Privacy Policy Fragment. Why: The policy's headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 8, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 12, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>Come Hang is an app for planning get-togethers with a group. It's made and run by Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below). This policy explains what information Come Hang handles, why, who else handles it, how long it's kept, and the choices you have. If you have a question, write to <a href='mailto:support@comehang.app'>support@comehang.app</a>.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -117,7 +117,7 @@ function PriPolCom () : React.JSX.Element {
 
 				<li>the name and note you type when you ask to join a group, which its members read before letting you in. They're deleted once a member lets you in or declines, or after 7 days, and once you're in, your name is stored encrypted like everything else.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li>requests for a group's earlier chat, and the notices the app shows you, such as a group being deleted</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li>the notices the app shows you, such as a group being deleted</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 
 			</ul>
@@ -196,8 +196,6 @@ function PriPolCom () : React.JSX.Element {
 				<li><strong>Your location</strong> is deleted an hour after your last update, or when the event ends.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Requests to join</strong> are deleted once they're answered, or after 7 days.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
-
-				<li><strong>Earlier chat sent between members</strong> is deleted once it's collected, and in any case within 15 days.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Notices</strong> are deleted after 30 days, and <strong>push tokens</strong> 60 days after your device last opened the app.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -303,7 +301,7 @@ function TerSerCom () : React.JSX.Element {
 		<>{ /* What: Terms Service Fragment. Why: The terms' headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 7, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 12, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>These terms are an agreement between you and Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below), who makes and runs Come Hang. By starting or joining a group, or otherwise using the app, you agree to them, and to the <a href='/privacy'>Privacy Policy</a>, which explains how your information is handled. If you don't agree, please don't use Come Hang.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -317,7 +315,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>Your identity and your device</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>Come Hang has no account to sign up for. Your identity, your encryption keys, and your chat history live on your device, in your browser's storage. If you delete the app's data, lose your device, or uninstall the app, you lose access to your groups, unless you've linked a Google account, which lets you get your groups back on a new device. Even then, earlier chat comes back only if another member's device still has it and sends it. Because what you share is encrypted, we can't recover it for you. Keeping your device and your Google account secure is up to you.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Come Hang has no account to sign up for. Your identity, your encryption keys, and your chat history live on your device, in your browser's storage. If you delete the app's data, lose your device, or uninstall the app, you lose access to your groups, unless you've linked a Google account, which lets you get your groups back on a new device. Even then, the chat from before doesn't come back. Because what you share is encrypted, we can't recover it for you. Keeping your device and your Google account secure is up to you.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<h2>Your content</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 

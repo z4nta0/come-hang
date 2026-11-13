@@ -51,8 +51,8 @@ import type { Message } from 'firebase-admin/messaging'; // What: Message. Why: 
  * @summary
  * Each push kind mapped to the sentence its push shows beneath the group's
  * name. The notice kinds share their names with these keys, while offerMade,
- * claimMade, and the activity kinds (a chat message, a history request, and
- * a join request) push without a notice, since the person sees them in the
+ * claimMade, and the activity kinds (a chat message, a join request, and a
+ * key request) push without a notice, since the person sees them in the
  * app. A join push for several requests replaces its sentence with a count.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -65,7 +65,6 @@ const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why:
 	chatMessage      : 'New messages.',
 	claimMade        : "This group's owner has been away, and you've been asked to take it over.",
 	groupDeleted     : 'The owner deleted this group.',
-	historyRequest   : 'A member is asking for chat history they missed.',
 	joinRequest      : 'Someone wants to join.',
 	keyRequest       : "A member on a new device is waiting for this group's key.",
 	offerAccepted    : 'The member you offered this group to accepted it.',
@@ -85,10 +84,9 @@ const PUS_TEX_OBJ : Record< string, string > = { // What: Push Text Object. Why:
  *
  * @summary
  * Each push kind mapped to the section of its group that a tap on it opens:
- * the chat for a message, People for someone asking for history they missed,
- * to join, or for the key, and Settings for anything about ownership. A kind
- * left out, such as a removal or a deletion, has no group left to open, so its
- * tap opens the app.
+ * the chat for a message, People for someone asking to join or for the key,
+ * and Settings for anything about ownership. A kind left out, such as a
+ * removal or a deletion, has no group left to open, so its tap opens the app.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -99,7 +97,6 @@ const PUS_SEC_OBJ : Record< string, string > = { // What: Push Section Object. W
 
 	chatMessage      : 'chat',
 	claimMade        : 'settings',
-	historyRequest   : 'people',
 	joinRequest      : 'people',
 	keyRequest       : 'people',
 	offerAccepted    : 'settings',

@@ -148,10 +148,6 @@ const waiMesFun = ( waiRecObj : WaiRecTyp, groNamStr : string, memNamStr : strin
 
 
 
-	if ( waiRecObj.kinValStr === 'history' ) return `${ perNamStr || 'A member' } asked for ${ groNamStr }'s chat history.`; // What: History Return. Why: A member is missing the chat this device holds. How: This names them, or a member, and the group.
-
-
-
 	return `${ perNamStr || 'The owner' } offered you ${ groNamStr }.`; // What: Offer Return. Why: The owner wants to hand the group over. How: This names them, or the owner, and the group.
 
 

@@ -13,7 +13,7 @@ import { notBatFun   } from './notices.ts';                // What: Notice Batch
 import { onCall      } from 'firebase-functions/v2/https'; // What: On Call. Why: The owner asks for the deletion from the app. How: This registers a callable function, which checks the caller's sign-in.
 import { pusSenFun   } from './push.ts';                   // What: Push Send Function. Why: Every other member hears of the deletion on their phone. How: This sends each push once the first batch has landed.
 import { REA_DAT_OBJ } from './setup.ts';                  // What: Realtime Database Object. Why: A group's chat, presence, and mirror live there. How: This deletes them.
-import { STO_ADM_OBJ } from './setup.ts';                  // What: Storage Admin Object. Why: A group's history transfers live in Storage. How: This deletes them.
+import { STO_ADM_OBJ } from './setup.ts';                  // What: Storage Admin Object. Why: A group's files, such as its photos, live in Storage. How: This deletes them.
 
 
 import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Document Snapshot. Why: The first batch works from the group as read. How: This types it.
@@ -178,7 +178,7 @@ const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > =>
 	});
 
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `avatars/${ groSnaObj.id }/` } );               // What: Avatars Delete Call. Why: The members' profile photos go with the group, whatever the membership trigger missed. How: This deletes every file under the group's folder.
-	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groSnaObj.id }/` } ); // What: Transfer Delete Call. Why: A history bundle mustn't outlive its group. How: This deletes every file under the group's folder.
+	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groSnaObj.id }/` } ); // What: Transfer Delete Call. Why: A history bundle sent before the app stopped asking for history mustn't outlive its group. How: This deletes every file under the group's ID.
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `photos/${ groSnaObj.id }/` } );                // What: Photos Delete Call. Why: A full photo mustn't outlive its group, even one its trigger hasn't reached yet. How: This deletes every file under the group's folder.
 
 	await groSnaObj.ref.delete(); // What: Group Delete Call. Why: The group document goes last, so a retry can still check the owner. How: This deletes it.
