@@ -7,6 +7,7 @@ import { expect                    } from '@playwright/test';             // Wha
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: Setting up a member reads the group past the rules. How: This connects to the emulator.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: A claim from another member needs a group with two. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: The member claims from a device of their own. How: This declares a test with a second page.
+import { readFile                  } from 'node:fs/promises';             // What: Read File. Why: A saved photo is checked by its bytes. How: This reads the downloaded file.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Groups, events, and items are made the way the app makes them. How: This calls the app's functions in a page.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each behavior is its own test. How: This declares them.
 
@@ -340,6 +341,68 @@ pagTesObj( "an item's label opens a form that relabels and reassigns it, and Esc
 
 } );
 
+
+
+
+test( 'a saved photo downloads as a JPEG, which opens wherever it goes', async ( { page : curPagObj } ) => { // What: Saved Photo Test. Why: Not every place a saved photo goes can open WebP, so a WebP upload is saved as JPEG and a JPEG one as itself (Section 20). How: This shares a photo to an event under way from the pinned event's sheet, saves it, and checks the download is a JPEG named as one.
+
+
+	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: The card opens a sheet below 1,100px wide. How: This sizes the page as a phone.
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The event is planned in this group. How: This creates it. // What: Type Assertion Note. Why: groCreFun resolves with the new group's ID. How: The as reads it so.
+	const staTimNum = Date.now() - 60000;                                                                                // What: Start Time Number. Why: Photos open once the event starts. How: This started it a minute ago.
+
+
+	await runPagFun( curPagObj, '/src/state/events.ts', 'eveCreFun', groIdeStr, { desTexStr : '', endTimNum : staTimNum + 3600000, locTexStr : 'Central Park', staTimNum, titTexStr : 'Picnic' } ); // What: Event Create Call. Why: The photo is shared to an event under way. How: This plans one that started a minute ago, for an hour.
+
+
+
+	const pngB64Str = await curPagObj.evaluate( () => { // What: PNG Base64 String. Why: The picker needs a real image the browser can shrink. How: This draws a two-color rectangle on a canvas and reads it back as a PNG.
+
+
+		const canEleObj = document.createElement( 'canvas' ); // What: Canvas Element Object. Why: The photo is drawn in the page. How: This makes a canvas off the page.
+
+
+		canEleObj.width  = 400; // What: Canvas Width Assignment. Why: The upload shrinks a photo no smaller than 160px on its long side. How: This makes it 400px wide.
+		canEleObj.height = 300; // What: Canvas Height Assignment. Why: The photo needs a size. How: This makes it 300px tall.
+
+
+		canEleObj.getContext( '2d' )!.fillRect( 0, 0, 200, 300 ); // What: Fill Call. Why: The photo needs something in it. How: This fills its left half black. // What: Non-Null Note. Why: A new canvas always gives a 2D context the first time it's asked. How: The ! reads it as present.
+
+
+
+		return canEleObj.toDataURL( 'image/png' ).split( ',' )[ 1 ]; // What: Base64 Return. Why: The test hands the bytes to the picker. How: This returns the PNG's base64, after its data URL prefix.
+
+
+	} );
+
+
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The chat pins the event. How: This opens the app on the group.
+
+	await curPagObj.getByRole( 'button', { name : /Picnic/ } ).click(); // What: Card Click Call. Why: The card opens the sheet, which holds the photos. How: This presses it.
+
+	await curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByLabel( 'Add photos' ).setInputFiles( { buffer : Buffer.from( pngB64Str, 'base64' ), mimeType : 'image/png', name : 'picnic.png' } ); // What: Photo Pick Call. Why: The member shares a photo the way the picker does. How: This hands the file input the drawn PNG, which the app shrinks and encodes as WebP, or as JPEG where the browser can't encode WebP.
+
+
+	const dowValPro = curPagObj.waitForEvent( 'download' ); // What: Download Value Promise. Why: A computer's browser downloads a saved photo. How: This waits for the download Save all starts.
+
+
+	await curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'button', { name : 'Save all' } ).click(); // What: Save All Click Call. Why: The member saves the event's photos. How: This presses Save all once the photo has shown.
+
+
+	const dowValObj = await dowValPro;                          // What: Download Value Object. Why: The saved file is checked. How: This waits for the download.
+	const savBytArr = await readFile( await dowValObj.path() ); // What: Saved Bytes Array. Why: The file is checked by its bytes, not its name alone. How: This reads the downloaded file.
+
+
+	expect( dowValObj.suggestedFilename() ).toBe( 'come-hang-photo-1.jpg' );   // What: JPEG Name Assertion. Why: The file is named as what it is. How: This expects a .jpg name.
+	expect( [ ...savBytArr.subarray( 0, 3 ) ] ).toEqual( [ 0xFF, 0xD8, 0xFF ] ); // What: JPEG Bytes Assertion. Why: The saved photo is a JPEG, whatever was uploaded. How: This expects JPEG's opening bytes.
+
+
+} );
 
 // #endregion Module Init
 
