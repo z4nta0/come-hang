@@ -460,10 +460,10 @@
 
 /* #region chaStaIte */
 
-.chaStaIte { /* What: Chat Status Item. Why: A status post reads as a note in the chat, not a message in a bubble. How: This centers the dot beside the line a tier 5 space apart, sharing the line's middle. */
+.chaStaIte { /* What: Chat Status Item. Why: A status post reads as a note in the chat, not a message in a bubble. How: This sets the dot beside the line a tier 5 space apart, both from the top, where the dot centers itself on the line's first row. */
 
 
-	align-items     : center;
+	align-items     : start;
 	column-gap      : var( --tie-hor-005 ); /* Tier Horizontal 5, about 4.732px - 6.268px */
 	display         : grid;
 	grid-auto-flow  : column;
@@ -477,8 +477,9 @@
 
 	background-color : var( --bor-mai-col );                /* Border Main Color = #E0E1EF */
 	border-radius    : 50%;
-	height           : calc( var( --ver-rhy-m02 ) * 1rem ); /* Vertical Rhythm Base Minus 2 ~= 8.304px */
-	width            : calc( var( --ver-rhy-m02 ) * 1rem ); /* Vertical Rhythm Base Minus 2 ~= 8.304px */
+	height           : calc( var( --ver-rhy-m02 ) * 1rem );                 /* Vertical Rhythm Base Minus 2 ~= 8.304px */
+	margin-top       : calc( ( 1lh - var( --ver-rhy-m02 ) * 1rem ) / 2 ); /* Vertical Rhythm Base Minus 2 ~= 8.304px */ /* What: First Row Note. Why: A line that wraps should keep its dot beside its first row, not halfway down the block. How: The dot drops by half of what one line's height leaves around it, the line height read from the item it shares with the text. */
+	width            : calc( var( --ver-rhy-m02 ) * 1rem );                 /* Vertical Rhythm Base Minus 2 ~= 8.304px */
 
 
 }

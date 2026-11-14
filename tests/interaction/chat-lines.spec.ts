@@ -191,6 +191,53 @@ test( 'a photos line opens its event at its photos', async ( { page : curPagObj 
 
 } );
 
+
+
+test( 'a status line that wraps keeps its dot beside its first row', async ( { page : curPagObj } ) => { // What: Wrapped Line Dot Test. Why: A dot centered on a wrapped line's whole block sits halfway down it, apart from where the line starts. How: This posts a photos line long enough to wrap on a phone and checks the dot's middle is level with the first row's middle.
+
+
+	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: A line wraps soonest on a phone. How: This sizes the page as one.
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The event is planned in this group. How: This creates it. // What: Type Assertion Note. Why: groCreFun resolves with the new group's ID. How: The as reads it so.
+	const staTimNum = Date.now() + 86400000;                                                                             // What: Start Time Number. Why: The event is still to come. How: This starts it a day from now.
+	const titTexStr = 'Family Thanksgiving Dinner At The Lake House';                                                     // What: Title Text String. Why: The line has to wrap onto more than one row. How: This is a long event title the line names.
+	const eveIdeStr = await runPagFun( curPagObj, '/src/state/events.ts', 'eveCreFun', groIdeStr, { desTexStr : '', endTimNum : staTimNum + 3600000, locTexStr : 'Central Park', staTimNum, titTexStr } ) as string; // What: Event Identifier String. Why: The photos line names its event. How: This plans one with the long title. // What: Type Assertion Note. Why: eveCreFun resolves with the new event's ID. How: The as reads it so.
+
+
+	await joiWaiFun( briEnvObj, groIdeStr, ( await runPagFun( curPagObj, '/src/state/identity.ts', 'ideEnsFun' ) as { uidValStr : string } ).uidValStr ); // What: Join Wait Call. Why: A line stamped before the owner's join by a clock that stepped back wouldn't show. How: This waits until the clock is past the join. // What: Type Assertion Note. Why: ideEnsFun resolves with the identity. How: The as reads its UID.
+
+	await runPagFun( curPagObj, '/src/state/chat.ts', 'chaPhoFun', groIdeStr, eveIdeStr, titTexStr ); // What: Photos Line Call. Why: The line is posted as the app posts it. How: This posts it as the owner.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The chat shows the line. How: This opens the app on the group.
+
+	await curPagObj.getByRole( 'button', { name : `You just uploaded photos for ${ titTexStr }` } ).waitFor(); // What: Line Wait Call. Why: The line is measured once it shows. How: This waits for its button.
+
+
+	const posValObj = await curPagObj.getByRole( 'button', { name : `You just uploaded photos for ${ titTexStr }` } ).evaluate( ( butCurEle ) => { // What: Position Value Object. Why: The dot is checked against the line's first row. How: This measures the dot, the line, and the line's height in the page.
+
+
+		const parCurEle = butCurEle.closest( 'p' )!;                              // What: Paragraph Current Element. Why: The line's rows are the paragraph's. How: This finds it. // What: Non-Null Note. Why: The button sits in the line's paragraph. How: The ! reads it as present.
+		const dotCurEle = parCurEle.previousElementSibling!;                      // What: Dot Current Element. Why: The dot sits just before the line. How: This takes the paragraph's sibling. // What: Non-Null Note. Why: Every status line has its dot first. How: The ! reads it as present.
+		const dotRecObj = dotCurEle.getBoundingClientRect();                      // What: Dot Rectangle Object. Why: The dot's middle is compared. How: This measures it.
+		const linHeiNum = parseFloat( getComputedStyle( parCurEle ).lineHeight ); // What: Line Height Number. Why: The first row is one line tall. How: This reads the paragraph's line height in pixels.
+		const parRecObj = parCurEle.getBoundingClientRect();                      // What: Paragraph Rectangle Object. Why: The first row starts at the paragraph's top. How: This measures it.
+
+
+		return { dotMidNum : dotRecObj.top + dotRecObj.height / 2, linHeiNum, parHeiNum : parRecObj.height, rowMidNum : parRecObj.top + linHeiNum / 2 }; // What: Positions Return. Why: The test compares them. How: This returns the dot's middle, the line height, the paragraph's height, and the first row's middle.
+
+
+	} );
+
+
+	expect( posValObj.parHeiNum ).toBeGreaterThan( posValObj.linHeiNum * 2 );                 // What: Wrapped Assertion. Why: The check means something only for a line that wraps. How: This expects the line taller than two rows.
+	expect( Math.abs( posValObj.dotMidNum - posValObj.rowMidNum ) ).toBeLessThan( 1.5 ); // What: Dot Level Assertion. Why: The dot sits beside the line's first row. How: This expects its middle within 1.5px of the first row's.
+
+
+} );
+
 // #endregion Module Init
 
 
