@@ -10,6 +10,7 @@ import { ButBasCom   } from '../ui/button.tsx';     // What: Button Base Compone
 import { filNamFun   } from '../utils/text.ts';     // What: File Name Function. Why: The archive of an event's photos is named after the event. How: This turns its title into a plain piece of a file name.
 import { IcoSvgCom   } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
 import { imaTypFun   } from '../platform/image.ts'; // What: Image Type Function. Why: A shared photo's bytes carry no type. How: This reads it from their first bytes.
+import { jpeConFun   } from '../platform/image.ts'; // What: JPEG Convert Function. Why: A saved photo should open wherever it goes. How: This converts a WebP photo to JPEG and leaves a JPEG as it is.
 import { mesTimFun   } from '../utils/date.ts';     // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
 import { offGuaFun   } from '../ui/online.ts';      // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
 import { phoAddFun   } from '../state/photos.ts';   // What: Photo Add Function. Why: A member shares photos from the event. How: This shrinks, encrypts, and shares one.
@@ -160,8 +161,9 @@ const dowFilFun = ( blbValObj : Blob, namValStr : string ) : void => { // What: 
  * savFilFun = Save Files Function
  *
  * @summary
- * Hands photos to the device. On a touch screen that can share files, the
- * share sheet takes them, which on a phone saves them to its photo library,
+ * Hands photos to the device, each WebP photo converted to JPEG first and a
+ * JPEG one kept as it is. On a touch screen that can share files, the share
+ * sheet takes them, which on a phone saves them to its photo library,
  * and a share the member backs out of is no error. Anywhere else one photo
  * downloads as itself, and several download as one ZIP archive under the
  * given name, so a computer gets one file rather than one download, and in
@@ -185,7 +187,8 @@ const dowFilFun = ( blbValObj : Blob, namValStr : string ) : void => { // What: 
 const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[], zipNamStr : string ) : Promise< void > => { // What: Save Files Function. Why: Photos leave the server with their event, so members keep them on their own device. How: This shares them on a touch screen, or downloads them as one file.
 
 
-	const filValArr = bytValArr.map( ( bytValObj, filIndNum ) => new File( [ bytValObj ], `come-hang-photo-${ filIndNum + 1 }.${ imaTypFun( bytValObj ) === 'image/jpeg' ? 'jpg' : 'webp' }`, { type : imaTypFun( bytValObj ) } ) ); // What: File Value Array. Why: Each photo is saved as a typed file with a plain name. How: This wraps each photo's bytes, numbered in order.
+	const savBytArr = await Promise.all( bytValArr.map( jpeConFun ) ); // What: Saved Bytes Array. Why: Not every place a saved photo goes can open WebP. How: This converts each WebP photo to JPEG, keeping a JPEG one as it is.
+	const filValArr = savBytArr.map( ( bytValObj, filIndNum ) => new File( [ bytValObj ], `come-hang-photo-${ filIndNum + 1 }.${ imaTypFun( bytValObj ) === 'image/jpeg' ? 'jpg' : 'webp' }`, { type : imaTypFun( bytValObj ) } ) ); // What: File Value Array. Why: Each photo is saved as a typed file with a plain name. How: This wraps each photo's bytes, numbered in order.
 
 
 
@@ -206,7 +209,7 @@ const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[], zipNamStr : s
 
 
 
-	dowFilFun( zipBuiFun( filValArr.map( ( filValObj, filIndNum ) => ( { bytArr : bytValArr[ filIndNum ], namStr : filValObj.name } ) ), new Date() ), zipNamStr ); // What: Archive Download Call. Why: Many photos should download as one file. How: This packs every photo under its name into one archive dated now and downloads it.
+	dowFilFun( zipBuiFun( filValArr.map( ( filValObj, filIndNum ) => ( { bytArr : savBytArr[ filIndNum ], namStr : filValObj.name } ) ), new Date() ), zipNamStr ); // What: Archive Download Call. Why: Many photos should download as one file. How: This packs every photo under its name into one archive dated now and downloads it.
 
 
 };

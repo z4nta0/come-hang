@@ -14,7 +14,9 @@
  * at the highest of a few qualities that fits its size limit, drawn smaller
  * still when none does. Drawing it anew leaves behind everything else the file
  * carried, such as the position a camera records. A shared photo's bytes are
- * typed again from their first bytes when they're shown.
+ * typed again from their first bytes when they're shown, and a WebP one is
+ * converted to JPEG when it's saved, which more of the places a saved photo
+ * goes can open, while a JPEG one is saved as it is.
  *
  * Sections:
  *  - Constants
@@ -33,6 +35,7 @@ const AVA_MAX_NUM = 64 * 1024 - 16;            // What: Avatar Maximum Number. W
 const AVA_SID_NUM = 256;                        // What: Avatar Side Number. Why: A profile photo shows at most about 64px across, so 256px stays sharp on the densest screens. How: This is the side it's drawn at, at most.
 const FUL_MAX_NUM = 1024 * 1024 - 16;           // What: Full Maximum Number. Why: A full photo has to fit the Storage rules' 1 MB once encrypted, which adds a 16-byte tag. How: This is the most its bytes may be.
 const FUL_SID_NUM = 1600;                       // What: Full Side Number. Why: A photo 1,600px on its long side looks sharp on a phone at a fraction of a camera's size. How: This is the long side it's drawn at, at most.
+const JPE_QUA_NUM = 0.92;                       // What: JPEG Quality Number. Why: A saved photo converted to JPEG should look the same as the one shown. How: This is the quality it's encoded at, above any the upload uses, so the second encoding adds no visible loss.
 const QUA_STE_ARR = [ 0.82, 0.72, 0.62, 0.52 ]; // What: Quality Steps Array. Why: The best quality that fits the limit should win. How: This lists the qualities tried, highest first.
 const THU_MAX_NUM = 40000 - 16;                 // What: Thumbnail Maximum Number. Why: A thumbnail has to fit the Firestore rules' 40,000 bytes once encrypted, which adds a 16-byte tag. How: This is the most its bytes may be.
 const THU_SID_NUM = 320;                        // What: Thumbnail Side Number. Why: A thumbnail fills a grid cell on a dense screen. How: This is the long side it's drawn at, at most.
@@ -303,13 +306,88 @@ const imaShrFun = async ( filValObj : Blob ) : Promise< { fulBytArr : Uint8Array
 
 const imaTypFun = ( bytValArr : Uint8Array ) : string => bytValArr[ 0 ] === 0xFF && bytValArr[ 1 ] === 0xD8 ? 'image/jpeg' : 'image/webp'; // What: Image Type Function. Why: A shared photo is shown from its bytes, which carry no type. How: This reads JPEG's opening bytes, and WebP otherwise, the only two formats shared.
 
+
+
+const isaWebFun = ( bytValArr : Uint8Array ) : boolean => new TextDecoder().decode( bytValArr.subarray( 0, 4 ) ) === 'RIFF' && new TextDecoder().decode( bytValArr.subarray( 8, 12 ) ) === 'WEBP'; // What: Is-A WebP Function. Why: Only a WebP photo is converted when it's saved, so a JPEG never loses quality to a second encoding. How: This is true when the bytes open with RIFF and name WEBP 8 bytes in, as every WebP file does.
+
+
+
+// #region jpeConFun
+
+/**
+ * jpeConFun = JPEG Convert Function
+ *
+ * @summary
+ * Resolves with a photo's bytes ready to save: a WebP photo decoded and
+ * encoded again as JPEG at its own size, at a quality above any the upload
+ * uses, and anything else, a JPEG included, as the same bytes, untouched.
+ * Rejects when a WebP photo can't be decoded or encoded.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param bytValArr - Bytes Value Array: The photo's bytes.
+ *
+ * @returns A promise that resolves with the bytes to save.
+ *
+ * @example
+ * ```ts
+ * jpeConFun(fulBytArr) // => Uint8Array
+ * ```
+ *
+*/
+
+const jpeConFun = async ( bytValArr : Uint8Array< ArrayBuffer > ) : Promise< Uint8Array< ArrayBuffer > > => { // What: JPEG Convert Function. Why: Not every place a saved photo goes can open WebP, while every one opens JPEG. How: This converts a WebP photo and passes anything else through.
+
+
+	if ( !isaWebFun( bytValArr ) ) return bytValArr; // What: Not WebP Guard. Why: A JPEG would only lose quality to a second encoding, and anything unknown is safer saved as it is. How: This returns the same bytes.
+
+
+
+	const canEleObj = document.createElement( 'canvas' );                                         // What: Canvas Element Object. Why: The browser encodes a JPEG from a canvas. How: This makes one off the page.
+	const imaEleObj = new Image();                                                                // What: Image Element Object. Why: An image element decodes the WebP. How: This makes one off the page.
+	const objUrlStr = URL.createObjectURL( new Blob( [ bytValArr ], { type : 'image/webp' } ) ); // What: Object URL String. Why: The image element reads the photo by address. How: This makes a temporary one for its bytes.
+
+
+
+	try { // What: Convert Attempt. Why: The temporary address has to be freed however converting ends. How: This decodes, draws, and encodes inside it.
+
+
+		imaEleObj.src = objUrlStr; // What: Source Assignment. Why: The element loads the photo. How: This points it at the address.
+
+
+		await imaEleObj.decode(); // What: Decode Call. Why: The photo has to be decoded before it's drawn. How: This waits for it, rejecting for bytes the browser can't show.
+
+
+		canEleObj.width  = imaEleObj.naturalWidth;  // What: Canvas Width Assignment. Why: The saved photo keeps the shown one's size. How: This takes its width.
+		canEleObj.height = imaEleObj.naturalHeight; // What: Canvas Height Assignment. Why: The saved photo keeps the shown one's size. How: This takes its height.
+
+
+		canEleObj.getContext( '2d' )!.drawImage( imaEleObj, 0, 0 ); // What: Draw Call. Why: The canvas holds the photo to encode. How: This paints it at its own size. // What: Non-Null Note. Why: A new canvas always gives a 2D context the first time it's asked. How: The ! reads it as present.
+
+
+		const blbValObj = await new Promise< Blob >( ( resValFun, rejValFun ) => canEleObj.toBlob( ( blbNewObj ) => blbNewObj ? resValFun( blbNewObj ) : rejValFun( new Error( "The photo couldn't be converted." ) ), 'image/jpeg', JPE_QUA_NUM ) ); // What: Blob Value Object. Why: The canvas reports its image through a callback. How: This wraps the JPEG encoding in a promise, rejecting when there's none.
+
+
+
+		return new Uint8Array( await blbValObj.arrayBuffer() ); // What: JPEG Return. Why: The save takes bytes. How: This returns the JPEG's.
+
+
+	}
+
+	finally { URL.revokeObjectURL( objUrlStr ); } // What: Address Free. Why: A temporary address holds the photo in memory until it's freed. How: This frees it.
+
+
+};
+
+// #endregion jpeConFun
+
 // #endregion Helpers
 
 
 
 // #region Exports
 
-export { avaShrFun, imaShrFun, imaTypFun }; // What: Named Exports. Why: Sharing a photo or a profile photo shrinks it, and showing one types its bytes. How: This exports the shrinks and the type check.
+export { avaShrFun, imaShrFun, imaTypFun, jpeConFun }; // What: Named Exports. Why: Sharing a photo or a profile photo shrinks it, showing one types its bytes, and saving one converts a WebP. How: This exports the shrinks, the type check, and the conversion.
 
 // #endregion Exports
 

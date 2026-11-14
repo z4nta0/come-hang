@@ -62,7 +62,7 @@ changing, and cancelling events, whose place field suggests the group's
 earlier places kept on the device, and which keeps ended events under
 "Recently ended" until they're deleted, each event's photos in its details,
 shared from its start, shown as a grid that opens a viewer to save or
-delete them, and announced in the chat once a burst of uploads ends, the
+delete them, a saved WebP photo converted to JPEG, and announced in the chat once a burst of uploads ends, the
 People section with the invite link, the
 people waiting to join, whom any member approves, declines, or blocks, the
 members waiting on a new phone for the group's key, which any other member
