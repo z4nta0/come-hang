@@ -21,8 +21,8 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The helpers th
  * @summary
  * The accessibility checks axe-core can't make, run on every page state in
  * whichever engine the project runs. They read what a scan can't, such as a
- * Tab walk through the page. Most checks list every problem they find, by
- * element.
+ * Tab walk through the page, or a text field small enough that iPhone Safari
+ * zooms in on it. Most checks list every problem they find, by element.
  *
  * Sections:
  *  - Constants
@@ -37,6 +37,7 @@ import type { Page } from '@playwright/test'; // What: Page. Why: The helpers th
 
 // #region Constants
 
+const FIE_MIN_NUM = 16;                                    // What: Field Minimum Number. Why: iPhone Safari zooms in on a text field set below 16px. How: This is the smallest field size in pixels the checks allow.
 const GLY_DEC_REG = /[←↑→↓·•]|\p{Extended_Pictographic}/u; // What: Glyph Decorative Regular Expression. Why: A decorative glyph inside a name is read aloud as noise, such as a right arrow. How: This matches the arrows and dots a decorative glyph would add to a name, plus any emoji or pictograph.
 const REF_WID_NUM = 320;                                   // What: Reflow Width Number. Why: WCAG's reflow criterion asks for no sideways scrolling at 320 CSS pixels, the width of 1,280px at 400% zoom. How: This is the viewport width the reflow check opens each state at.
 const TAB_MAX_NUM = 80;                                    // What: Tab Maximum Number. Why: A keyboard trap would otherwise keep the walk going forever. How: This caps the walk at far more Tab presses than the app has stops.
@@ -585,6 +586,22 @@ for ( const staRecObj of STA_REC_ARR ) { // What: State Test Loop. Why: Every ch
 		await opeStaFun( curPagObj, { ...staRecObj, widNum : REF_WID_NUM } ); // What: Narrow State Open Call. Why: Reflow is judged at WCAG's narrowest width. How: This opens the state with its width replaced by the reflow width.
 
 		expect( await curPagObj.evaluate( () => document.documentElement.scrollWidth - document.documentElement.clientWidth ) ).toBeLessThanOrEqual( 0 ); // What: No Sideways Scroll Assertion. Why: The page passes only when nothing reaches past the viewport's width. How: This subtracts the visible width from the scrollable width, which is zero or less without sideways scrolling.
+
+
+	} );
+
+
+
+	test( `${ staRecObj.ideStr } sets every text field at ${ FIE_MIN_NUM }px or more`, async ( { page : curPagObj } ) => { // What: Field Size Test. Why: iPhone Safari zooms the page in on a text field set smaller and leaves it zoomed, which can push controls off screen. How: This opens the state and lists each shown text field, text area, and dropdown set below the size.
+
+
+		await opeStaFun( curPagObj, staRecObj ); // What: State Open Call. Why: The fields should be read with the state settled. How: This loads and settles it.
+
+
+		const proLisArr = await curPagObj.evaluate( ( minValNum ) => [ ...document.querySelectorAll< HTMLElement >( 'input:not([type="checkbox"], [type="file"], [type="hidden"], [type="radio"]), select, textarea' ) ].filter( ( fieCurEle ) => fieCurEle.getClientRects().length > 0 && !fieCurEle.closest( '[aria-hidden="true"]' ) && parseFloat( getComputedStyle( fieCurEle ).fontSize ) < minValNum ).map( ( fieCurEle ) => `${ fieCurEle.tagName.toLowerCase() } "${ fieCurEle.id || fieCurEle.getAttribute( 'aria-label' ) || fieCurEle.getAttribute( 'placeholder' ) || '' }" is ${ getComputedStyle( fieCurEle ).fontSize }` ), FIE_MIN_NUM ); // What: Problem List Array. Why: Every field set too small should be reported. How: This keeps each shown field below the size, other than one hidden from people, such as a spam trap, which no one focuses, named by its ID, label, or placeholder, with the size it has.
+
+
+		expect( proLisArr ).toEqual( [] ); // What: No Small Fields Assertion. Why: The state passes only when no field would make iPhone Safari zoom. How: This compares the problems with an empty list, so a failure prints each one.
 
 
 	} );

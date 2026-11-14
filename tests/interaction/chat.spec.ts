@@ -27,8 +27,9 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * runs, against the Emulator Suite: another member's message shows their
  * name, initials, and color while the sender sees it as their own, the
  * composer sends on Enter, keeps a Shift+Enter line break, and clears itself,
- * a message with characters the chat refuses is announced and kept, and the
- * group's next event is pinned above the chat.
+ * a chat longer than its log opens at the newest message and reads back to
+ * the first, a message with characters the chat refuses is announced and
+ * kept, and the group's next event is pinned above the chat.
  *
  * Sections:
  *  - Module State
@@ -185,6 +186,60 @@ test( 'the composer sends on Enter, keeps a Shift+Enter line break, and clears i
 
 	await expect( texBoxObj ).toHaveValue( '' );                           // What: Cleared Box Assertion. Why: A sent message leaves the box empty. How: This reads the box.
 	await expect( curPagObj.getByRole( 'complementary' ) ).toHaveCount( 0 ); // What: No Event Assertion. Why: A group with no events shows no event panel. How: This expects none at the test's desktop width.
+
+
+} );
+
+
+
+test( 'a chat longer than its log opens at the newest message and scrolls back to the first', async ( { page : curPagObj } ) => { // What: Long Chat Test. Why: A member has to be able to read back through the chat, which a list spilling past the log's top couldn't. How: This sends more messages than a phone's log holds, checks the newest is in view and the first isn't, then moves the log to its start with the keyboard and checks the first comes into view.
+
+
+	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Viewport Call. Why: A phone's log is the shortest. How: This sizes the page as one.
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The test starts in a chat. How: This creates a group and opens it.
+
+
+	const logEleObj = curPagObj.getByRole( 'log' );                                         // What: Log Element Object. Why: The checks read the log and its messages. How: This finds the log.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ); // What: Text Box Object. Why: The messages are typed there. How: This finds the composer.
+
+
+	await texBoxObj.fill( 'Message 1' ); // What: First Fill Call. Why: The chat starts with its first message. How: This types it.
+
+	await expect( async () => { // What: Send Retry Call. Why: A send before the membership mirror catches up is refused and leaves its text. How: This presses Enter until the message shows.
+
+
+		await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it.
+
+		await expect( logEleObj.getByRole( 'listitem' ) ).toHaveCount( 1, { timeout : 2000 } ); // What: Message Shown Assertion. Why: The send landed once the log holds it. How: This waits up to 2 seconds for it.
+
+
+	} ).toPass(); // What: Retry Settings. Why: The mirror usually catches up within a moment. How: This retries until the message shows.
+
+
+
+	for ( let mesNumNum = 2; mesNumNum <= 25; mesNumNum++ ) { // What: Message Loop. Why: The chat has to outgrow the log. How: This sends 24 more messages, each once the one before has shown.
+
+
+		await texBoxObj.fill( `Message ${ mesNumNum }` ); // What: Message Fill Call. Why: Each message is told apart by its number. How: This types it.
+
+		await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it.
+
+		await expect( logEleObj.getByRole( 'listitem' ) ).toHaveCount( mesNumNum ); // What: Message Count Assertion. Why: The next message waits for this one. How: This waits for the log to hold it.
+
+
+	}
+
+
+
+	await expect( logEleObj.getByRole( 'listitem' ).last() ).toBeInViewport();      // What: Newest Shown Assertion. Why: The chat opens at its newest message. How: This expects the last entry on screen.
+	await expect( logEleObj.getByRole( 'listitem' ).first() ).not.toBeInViewport(); // What: First Hidden Assertion. Why: The chat has outgrown its log. How: This expects the first entry off screen.
+
+	await logEleObj.press( 'Home' ); // What: Home Press Call. Why: A keyboard user reads back from the log's start. How: This focuses the log and moves it to the top.
+
+	await expect( logEleObj.getByRole( 'listitem' ).first() ).toBeInViewport(); // What: First Shown Assertion. Why: Every message can be read back to, which a list spilling past the log's top couldn't. How: This expects the first entry on screen.
 
 
 } );

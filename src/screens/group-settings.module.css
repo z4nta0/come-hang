@@ -107,6 +107,7 @@
 	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
 	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
 	font             : inherit;
+	font-size        : var( --fon-siz-fie );                            /* Font Size Field = 16px */
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
 	min-width        : 0;
 	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
@@ -150,6 +151,7 @@
 	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
 	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
 	font             : inherit;
+	font-size        : var( --fon-siz-fie );                            /* Font Size Field = 16px */
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
 	min-width        : 0;
 	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A field's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */

@@ -207,10 +207,14 @@ pagTesObj( 'the owner removes a member after confirming, which changes the link,
 	const oldLinStr = await curPagObj.getByLabel( 'Invite link', { exact : true } ).inputValue(); // What: Old Link String. Why: A removal has to change the link. How: This reads it first.
 
 
+	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: The question is a whole sentence, which on a phone squeezed the member's name to one letter wide. How: This sizes the page as one before the question shows.
+
 	await curPagObj.getByRole( 'button', { name : 'Remove Dana Lee' } ).click(); // What: Remove Click Call. Why: The owner removes the member. How: This asks to confirm.
 
 	await expect( curPagObj.getByText( 'Remove Dana Lee? This also makes a new invite link.' ) ).toBeVisible(); // What: Confirm Assertion. Why: The owner is told what removing does first. How: This waits for the question.
 	await expect( curPagObj.getByRole( 'button', { name : 'Keep', exact : true } ) ).toBeFocused();             // What: Keep Focus Assertion. Why: The button went with the question, so focus lands on the safe answer. How: This expects Keep focused.
+
+	expect( await curPagObj.getByText( 'Dana Lee', { exact : true } ).evaluate( ( namCurEle ) => namCurEle.getBoundingClientRect().height < parseFloat( getComputedStyle( namCurEle ).lineHeight ) * 1.5 ) ).toBe( true ); // What: One Line Name Assertion. Why: The member's name stays readable beside the question. How: This expects the name no taller than one line.
 
 	await curPagObj.getByRole( 'button', { name : 'Keep', exact : true } ).click(); // What: Keep Click Call. Why: The owner can change their mind. How: This presses the safe answer.
 
