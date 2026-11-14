@@ -95,6 +95,7 @@
 	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
 	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
 	font             : inherit;
+	font-size        : var( --fon-siz-fie );                            /* Font Size Field = 16px */
 	grid-area        : invLinInp;
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
 	min-width        : 0;
@@ -666,6 +667,7 @@
 	border-radius    : var( --rad-bor-med );                            /* Radius Border Medium = 11px */
 	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
 	font             : inherit;
+	font-size        : var( --fon-siz-fie );                            /* Font Size Field = 16px */
 	grid-area        : namEdiInp;
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
 	min-width        : 0;

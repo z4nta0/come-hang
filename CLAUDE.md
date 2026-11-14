@@ -334,6 +334,18 @@ emulators need Java, 21 installed.
   18 or older; the upgrade is refunded in full on request within 14 days;
   support@comehang.app is the contact for privacy too. A change to how
   data is kept or shared updates the policy in the same change.
+- **Text fields are 16px** (decided 2026-11-14, an exception to the type
+  scale and the rem-first rule): iPhone Safari zooms the page in when a text
+  field set below 16px takes focus and leaves it zoomed, which pushed
+  controls off screen, while the body's step is about 14.6px and the next is
+  19.3px. So every text field, text area, and dropdown reads
+  `--fon-siz-fie`, `max( var( --fon-siz-p01 ), 16px )`, in
+  `src/styles/styles.css`'s Font Size Tokens beside the scale rather than
+  as a step of it. The literal 16px is iPhone's own threshold, and the
+  `max()` keeps a field growing with the body when someone raises their
+  browser's text size. An audit leaves both as they are. Stopping the zoom
+  through the viewport tag (`maximum-scale=1`) was ruled out, since it
+  also blocks pinch zoom on Android.
 - **Horizontal sizing** (decided 2026-10-25): every horizontal size, widths
   and spacing alike, reads the horizontal rhythm, `--hor-rhy-*` (the
   viewport width divided by powers of the core design number). There's no

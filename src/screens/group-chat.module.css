@@ -598,6 +598,7 @@
 	color            : var( --tex-mai-col );                            /* Text Main Color = #1D1E33 */
 	field-sizing     : content;
 	font             : inherit;
+	font-size        : var( --fon-siz-fie );                            /* Font Size Field = 16px */
 	grid-area        : comTexTex;
 	max-height       : calc( var( --ver-rhy-p08 ) * 1rem );             /* Vertical Rhythm Base Plus 8 ~= 138.204px */
 	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */

@@ -246,6 +246,8 @@
 	--fon-siz-p07 : calc( var( --fon-siz-bas ) * var( --cdn-pow-007 ) ); /* What: Font Size Base Plus 7 ~= 78.751px. Why: This is the font size scale's step 7 above its base. How: This multiplies the base size by the seventh power. */
 	--fon-siz-p08 : calc( var( --fon-siz-bas ) * var( --cdn-pow-008 ) ); /* What: Font Size Base Plus 8 ~= 104.323px. Why: This is the font size scale's step 8 above its base, its largest step. How: This multiplies the base size by the eighth power. */
 
+	--fon-siz-fie : max( var( --fon-siz-p01 ), 16px ); /* What: Font Size Field = 16px. Why: iPhone Safari zooms the page in on any text field set below 16px and leaves it zoomed, which pushed controls off screen, and 16px sits between the scale's steps, so this token sets it apart from them. How: This takes the body size or 16px, whichever is larger, so a field still grows when someone raises their browser's text size. */
+
 	/* #endregion Font Size Tokens */
 
 
