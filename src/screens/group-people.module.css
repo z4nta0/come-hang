@@ -11,8 +11,9 @@
  * key, each a row of their name, time, and share, and the members part, each
  * member a row with their avatar in their color beside their name and actions,
  * or their name form across the row while it's open. Confirmations take a line
- * of their own above their answers. The status that announces a change is for
- * screen readers alone, while a failure shows in the dark error color.
+ * of their own above their answers, a removal's below the member's name. The
+ * status that announces a change is for screen readers alone, while a failure
+ * shows in the dark error color.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -587,6 +588,15 @@
 	grid-template-areas   : 'memAvaSpa memNamSpa memActSpa';
 	grid-template-columns : auto minmax( 0, 1fr ) auto;
 	padding               : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+.memRowIte:has( .conAskSpa ) { /* What: Confirming Member Row Item. Why: A removal's question is a whole sentence, which beside the name squeezed the name's column to one letter wide. How: This moves the actions onto a line of their own under the avatar and name while the question shows, a tier 4 space below them. */
+
+
+	grid-template-areas   : 'memAvaSpa memNamSpa' 'memActSpa memActSpa';
+	grid-template-columns : auto minmax( 0, 1fr );
+	row-gap               : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
 
 
 }
