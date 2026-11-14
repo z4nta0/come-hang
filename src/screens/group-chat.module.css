@@ -233,17 +233,17 @@
 
 /* #region chaLogDiv */
 
-.chaLogDiv { /* What: Chat Log Div. Why: The messages scroll on their own, settling at the bottom while they're few, and a keyboard user scrolling them needs to see the log has focus. How: This scrolls its one row, at least the log's height, with a tier 3 space above and below and the gutter at the sides, and eases its inset focus ring. */
+.chaLogDiv { /* What: Chat Log Div. Why: The messages scroll on their own, settling at the bottom while they're few, and a keyboard user scrolling them needs to see the log has focus. How: This scrolls an empty row over the row its content takes, with a tier 3 space above and below and the gutter at the sides, and eases its inset focus ring. */
 
 
-	display        : grid;
-	grid-area      : chaLogDiv;
-	grid-auto-rows : minmax( 100%, max-content );               /* What: Fill Row. Why: Few messages should sit at the bottom, and many should scroll. How: The row is at least the log's height and grows with its content. */
-	outline        : 0 solid var( --foc-rin-col );              /* Focus Ring Color = #4A4FC9 */
-	outline-offset : calc( var( --bor-wid-lar ) * -1 );         /* Border Width Large ~= -2.035px */
-	overflow-y     : auto;
-	padding        : var( --tie-ver-003 ) var( --gut-sid-pad ); /* Tier Vertical 3 ~= 14.572px, Gutter Side Padding, about 19.304px - 44.876px */
-	transition     : outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
+	display            : grid;
+	grid-area          : chaLogDiv;
+	grid-template-rows : minmax( 0, 1fr ) auto;                     /* What: Bottom Rows Note. Why: Few messages should sit at the bottom, and many should scroll, which a list aligned to the end of a row held to the log's height can't, since it spills past the top, where nothing scrolls to. How: The empty first row takes the room the content leaves, and shrinks to nothing once the content outgrows the log, so the second row runs off the bottom instead. */
+	outline            : 0 solid var( --foc-rin-col );              /* Focus Ring Color = #4A4FC9 */
+	outline-offset     : calc( var( --bor-wid-lar ) * -1 );         /* Border Width Large ~= -2.035px */
+	overflow-y         : auto;
+	padding            : var( --tie-ver-003 ) var( --gut-sid-pad ); /* Tier Vertical 3 ~= 14.572px, Gutter Side Padding, about 19.304px - 44.876px */
+	transition         : outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 1 ~= 209.1ms, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ) */
 
 
 }
@@ -268,11 +268,11 @@
 
 }
 
-.chaEmpPar { /* What: Chat Empty Paragraph. Why: An empty chat's note sits where the first message will. How: This sets it in the muted text color, centered, at the bottom of the log. */
+.chaEmpPar { /* What: Chat Empty Paragraph. Why: An empty chat's note sits where the first message will. How: This sets it in the muted text color, centered, in the log's bottom row. */
 
 
-	align-self : end;
 	color      : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	grid-row   : 2;                    /* What: Bottom Row Note. Why: The note and the list take the log's one content row in turn, so a named area for each would leave the other's empty. How: This places it in the second row by number. */
 	text-align : center;
 
 
@@ -281,11 +281,11 @@
 
 /* #region chaMesOrd */
 
-.chaMesOrd { /* What: Chat Messages Ordered List. Why: The messages read as one list, settling at the bottom while they're few. How: This stacks them a tier 4 space apart with no numbers, at the bottom of the log's row. */
+.chaMesOrd { /* What: Chat Messages Ordered List. Why: The messages read as one list, settling at the bottom while they're few. How: This stacks them a tier 4 space apart with no numbers, in the log's bottom row. */
 
 
-	align-self : end;
 	display    : grid;
+	grid-row   : 2;                    /* What: Bottom Row Note. Why: The note and the list take the log's one content row in turn, so a named area for each would leave the other's empty. How: This places it in the second row by number. */
 	list-style : none;
 	row-gap    : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
 
