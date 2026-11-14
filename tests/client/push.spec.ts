@@ -34,7 +34,8 @@ import type { RulesTestEnvironment } from '@firebase/rules-unit-testing'; // Wha
  * alike, then run the app's own push module in the page: turning
  * notifications on and the refresh as the app opens, a refused or
  * unsupported browser, turning them off, a permission withdrawn in the
- * browser, and the push a member gets on removal.
+ * browser, a device stepping back releasing its token, and the push a member
+ * gets on removal.
  *
  * Sections:
  *  - Constants
@@ -216,6 +217,40 @@ pagTesObj( 'turning notifications off, or withdrawing the permission, deletes th
 
 	expect( await runPagFun( page, PUS_MOD_STR, 'pusRefFun' ) ).toBe( false ); // What: Regranted Refresh Check. Why: The withdrawal turned notifications off here. How: This expects no write.
 	expect( await tokReaFun( page ) ).toBeUndefined();                         // What: Regranted Off Check. Why: They stay off until turned on. How: This expects no document.
+
+
+} );
+
+
+
+pagTesObj( 'a device stepping back releases only its own token, and taking the identity back stores it again', async ( { page } ) => { // What: Release Test. Why: Pushes follow the identity to the device it's on, and a device stepping back mustn't delete the token the new device stored (Section 8). How: This releases while another device's token is stored, then its own, then with notifications off, checking what's stored each time.
+
+
+	await perSetFun( page, 'default', 'granted' ); // What: Permission Stand-In Call. Why: The person allows notifications. How: This answers the prompt with granted.
+
+	await runPagFun( page, PUS_MOD_STR, 'pusEnaFun' ); // What: Enable Call. Why: Notifications start on, with this device's token stored. How: This turns them on.
+
+	await pusEnvObj.withSecurityRulesDisabled( async ( cotAdmObj ) => updateDoc( doc( cotAdmObj.firestore(), `accounts/${ await uidGetFun( page ) }/pushToken/current` ), { token : 'emulator-other-device' } ) ); // What: Other Device Call. Why: The device the identity moved to may already have stored its own token. How: This stores a different token past the rules.
+
+	expect( await runPagFun( page, PUS_MOD_STR, 'pusRelFun' ) ).toBe( false );    // What: Other Release Check. Why: The token isn't this device's to release. How: This expects no deletion.
+	expect( ( await tokReaFun( page ) )?.token ).toBe( 'emulator-other-device' ); // What: Other Kept Check. Why: Pushes still reach the device the identity is on. How: This expects its token stored.
+	expect( await runPagFun( page, PUS_MOD_STR, 'pusRefFun' ) ).toBe( true );     // What: Take Back Refresh Check. Why: A device taking the identity back stores its own token as the app opens. How: This expects a write.
+
+
+	const ownTokStr = ( await tokReaFun( page ) )?.token as string; // What: Own Token String. Why: The release is checked against this device's own token. How: This reads the token the refresh stored. // What: Type Assertion Note. Why: The rules store the token as a string. How: The as reads it as one.
+
+
+	expect( ownTokStr ).not.toBe( 'emulator-other-device' ); // What: Own Stored Check. Why: The refresh stored this device's token over the other. How: This expects a different token.
+
+	expect( await runPagFun( page, PUS_MOD_STR, 'pusRelFun' ) ).toBe( true );  // What: Own Release Check. Why: A device stepping back releases its own token. How: This expects a deletion.
+	expect( await tokReaFun( page ) ).toBeUndefined();                         // What: Released Check. Why: Pushes stop reaching a device that stepped back. How: This expects no document.
+	expect( await runPagFun( page, PUS_MOD_STR, 'pusActFun' ) ).toBe( true );  // What: Choice Kept Check. Why: Stepping back isn't turning notifications off. How: This expects them still on here.
+	expect( await runPagFun( page, PUS_MOD_STR, 'pusRefFun' ) ).toBe( true );  // What: Return Refresh Check. Why: Taking the identity back turns its pushes on again. How: This expects a write.
+	expect( ( await tokReaFun( page ) )?.token ).toBe( ownTokStr );            // What: Return Token Check. Why: Pushes reach this device again. How: This expects its own token stored.
+
+	await runPagFun( page, PUS_MOD_STR, 'pusDisFun' ); // What: Disable Call. Why: A device with notifications off stored nothing to release. How: This turns them off.
+
+	expect( await runPagFun( page, PUS_MOD_STR, 'pusRelFun' ) ).toBe( false ); // What: Off Release Check. Why: There's nothing of this device's to release. How: This expects no deletion.
 
 
 } );
