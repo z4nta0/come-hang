@@ -305,7 +305,7 @@ function TerSerCom () : React.JSX.Element {
 		<>{ /* What: Terms Service Fragment. Why: The terms' headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 12, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 18, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>These terms are an agreement between you and Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below), who makes and runs Come Hang. By starting or joining a group, or otherwise using the app, you agree to them, and to the <a href='/privacy'>Privacy Policy</a>, which explains how your information is handled. If you don't agree, please don't use Come Hang.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -369,7 +369,7 @@ function TerSerCom () : React.JSX.Element {
 
 			<h2>The upgrade</h2>{ /* What: Section Heading Element. Why: The document reads in titled sections. How: This names one. */ }
 
-			<p>Owning more than one group needs the upgrade, a one-time purchase of $9.99 in US dollars, plus any tax that applies. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, and have up to 50 members in each group you own instead of 20. Buying it needs a linked Google account, so the upgrade follows you to a new device. It's a single payment, not a subscription.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
+			<p>Owning more than one group needs the upgrade, a one-time purchase of $9.99 in US dollars, plus any tax that applies. With it you can own up to 10 groups instead of 1, belong to up to 20 instead of 10, have up to 50 members in each group you own instead of 20, and send up to 30 chat photos a day instead of 10, with up to 120 a day in each group you own instead of 40. Buying it needs a linked Google account, so the upgrade follows you to a new device. It's a single payment, not a subscription.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
 			<p>Polar processes the payment as the merchant of record, so your purchase is also covered by <a href='https://polar.sh/legal/terms' rel='noopener noreferrer' target='_blank'>Polar's terms</a>. The price may change in the future, which won't affect an upgrade you've already bought.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
