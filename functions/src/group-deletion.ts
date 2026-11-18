@@ -178,6 +178,7 @@ const groDelRunFun = async ( groSnaObj : DocumentSnapshot ) : Promise< void > =>
 	});
 
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `avatars/${ groSnaObj.id }/` } );               // What: Avatars Delete Call. Why: The members' profile photos go with the group, whatever the membership trigger missed. How: This deletes every file under the group's folder.
+	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `chatPhotos/${ groSnaObj.id }/` } );            // What: Chat Photos Delete Call. Why: A chat photo mustn't outlive its group, even one its message's trigger hasn't reached yet. How: This deletes every file under the group's folder.
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `groupHistoryTransfers/${ groSnaObj.id }/` } ); // What: Transfer Delete Call. Why: A history bundle sent before the app stopped asking for history mustn't outlive its group. How: This deletes every file under the group's ID.
 	await STO_ADM_OBJ.bucket().deleteFiles( { prefix : `photos/${ groSnaObj.id }/` } );                // What: Photos Delete Call. Why: A full photo mustn't outlive its group, even one its trigger hasn't reached yet. How: This deletes every file under the group's folder.
 

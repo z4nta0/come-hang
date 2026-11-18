@@ -15,9 +15,10 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules r
  * @summary
  * Decides who may read and write the app's Cloud Storage files. Storage
  * refuses any request no rule allows, and the only files the app keeps are
- * profile photos and event photos, so these rules open nothing else, and
- * the tests in tests/rules prove them in the local emulator. The rules read
- * the group's members, and an event photo's document, from Firestore.
+ * profile photos, event photos, and chat photos, so these rules open nothing
+ * else, and the tests in tests/rules prove them in the local emulator. The
+ * rules read the group's members, and an event or chat photo's document,
+ * from Firestore.
  *
  * A profile photo is stored under its group and its member's UID
  * (ARCHITECTURE.md Section 21), one opaque file of at most 64 KB with no
@@ -31,6 +32,12 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 lets Storage rules r
  * most 1 MB with no custom metadata. Members download it, and Cloud
  * Functions delete it with its document, the lifecycle setting the
  * backstop.
+ *
+ * A chat photo is stored under its group and photo IDs (ARCHITECTURE.md
+ * Section 22), uploaded once by the member who added its document, while
+ * still in the group, as one opaque file of at most 200 KB with no custom
+ * metadata. Members download it, and Cloud Functions delete it with its
+ * document once its message is gone, the lifecycle setting the backstop.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -65,6 +72,20 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 
 
 		// #region Document Paths
+
+		// #region chpPatFun
+
+		function chpPatFun ( groIdeStr, phoIdeStr ) { // What: Chat-Photo Path Function. Why: A chat photo's file looks up the document it belongs to. How: This returns that document's path.
+
+
+			return /databases/(default)/documents/groups/$(groIdeStr)/chatPhotos/$(phoIdeStr); // What: Chat-Photo Path Return. Why: A Firestore lookup needs the full path. How: This builds it from the group and photo IDs.
+
+
+		}
+
+		// #endregion chpPatFun
+
+
 
 		// #region memPatFun
 
@@ -126,6 +147,37 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 
 
 
+		// #region Chat Photo Rules
+
+		// #region uplChpFun
+
+		function uplChpFun ( groIdeStr, phoIdeStr ) { // What: Upload Chat-Photo Function. Why: A chat photo is one opaque, encrypted file of bounded size, uploaded by the member who added its document (ARCHITECTURE.md Section 22). How: This is true for a valid file from that member, while still in the group, at a path not yet used.
+
+
+			let chpFilObj = request.resource; // What: Chat-Photo File Object. Why: The file checks read the incoming file. How: This names it once.
+
+			let conTypBoo = chpFilObj.contentType == 'application/octet-stream';                                     // What: Content Type Boolean. Why: A chat photo is encrypted bytes, never an image a browser would render. How: This requires the generic binary type.
+			let isaMemBoo = firestore.exists( memPatFun( groIdeStr, request.auth.uid ) );                            // What: Is-A Member Boolean. Why: Someone who has left sends nothing more. How: This requires the uploader's member document.
+			let isaUplBoo = firestore.get( chpPatFun( groIdeStr, phoIdeStr ) ).data.uploaderUid == request.auth.uid; // What: Is-An Uploader Boolean. Why: A chat photo's file belongs to the document its uploader added first, within the day's limits. How: This requires that document to name the requester.
+			let metNulBoo = chpFilObj.metadata == null || chpFilObj.metadata.size() == 0;                            // What: Metadata Null Boolean. Why: Custom metadata is stored in plain text beside the encrypted photo. How: This refuses any.
+			let newFilBoo = resource == null;                                                                        // What: New File Boolean. Why: A chat photo is added once and never replaced. How: This requires the path to be empty.
+			let sizValBoo = chpFilObj.size > 16 && chpFilObj.size <= 200 * 1024 + 16;                                // What: Size Valid Boolean. Why: A chat photo is shrunk to fit 200 KB, and encryption adds a 16-byte tag. How: This bounds its size in bytes.
+
+			let uplAllBoo = conTypBoo && isaMemBoo && isaUplBoo && metNulBoo && newFilBoo && sizValBoo; // What: Upload Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return uplAllBoo; // What: Upload Allowed Return. Why: The upload rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion uplChpFun
+
+		// #endregion Chat Photo Rules
+
+
+
 		// #region Photo Rules
 
 		// #region uplPhoFun
@@ -163,6 +215,17 @@ service firebase.storage { // What: Storage Service. Why: These rules cover the 
 			allow get            : if firestore.exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Avatar Get Rule. Why: Members see each other's photos. How: This allows a member, while listing stays closed.
 			allow create, update : if uplAvaFun( groIdeStr, uidValStr );                           // What: Avatar Upload Rule. Why: A member sets or replaces their own photo. How: This allows it when uplAvaFun passes.
 			allow delete         : if isaOwnFun( uidValStr );                                      // What: Avatar Delete Rule. Why: A member removes their own photo, and Cloud Functions remove the rest. How: This allows the member.
+
+
+		}
+
+
+
+		match /chatPhotos/{groIdeStr}/{phoIdeStr} { // What: Chat Photo Match. Why: Each photo sent in the chat sits under its group and photo IDs (Section 22). How: This matches one chat photo's file.
+
+
+			allow get    : if firestore.exists( memPatFun( groIdeStr, request.auth.uid ) ); // What: Chat Photo Get Rule. Why: Members download the chat's photos. How: This allows a member, while listing stays closed.
+			allow create : if uplChpFun( groIdeStr, phoIdeStr );                            // What: Chat Photo Create Rule. Why: The uploader adds the file once, after its document. How: This allows it when uplChpFun passes, while only Cloud Functions delete one.
 
 
 		}

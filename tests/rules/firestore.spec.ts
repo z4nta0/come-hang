@@ -1079,6 +1079,71 @@ const phoBatFun = ( stoConObj : StoConTyp, uidValStr : string, phoIdeStr : strin
 // #endregion phoBatFun
 
 
+// #region chpBatFun
+
+type CbfOptTyp = { allNum? : number | null, chpObj? : Record< string, unknown >, dayNum? : number, memNum? : number | null, memStr? : string, talObj? : Record< string, unknown > }; // What: CBF Options Type. Why: Each chat photo test changes or leaves out one part of the batch. How: This lists the overrides, where a null count leaves that tally out, dayNum names another day's tallies, and memStr names whose tally rises.
+
+/**
+ * chpBatFun = Chat-Photo Batch Function
+ *
+ * @summary
+ * Commits the batch a chat photo is sent with (ARCHITECTURE.md Section 22):
+ * the photo's document in the writer's name, with the server's time and an
+ * expiry 181 days out, and the group's and the writer's tallies for today,
+ * the day running from 08:00 UTC, each raised to 1 and expiring in 2 days.
+ * An option changes the photo's or the tallies' fields, sets either count,
+ * leaves a tally out (null), names another day, or raises another member's
+ * tally in place of the writer's own.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param stoConObj - Store Connection Object: The signed-in connection that
+ *                    writes the batch.
+ * @param uidValStr - UID Value String: The writer, named as the uploader.
+ * @param phoIdeStr - Photo Identifier String: The new photo's ID.
+ * @param optValObj - Option Value Object: {@link CbfOptTyp}, empty by
+ *                    default.
+ *
+ * @returns A promise that settles once the batch is committed, with no
+ *          value, and rejects when the rules refuse it.
+ *
+ * @example
+ * ```ts
+ * chpBatFun(bobStoObj, 'bob', 'chp2', { allNum : 2 }) // => Promise<void>
+ * ```
+ *
+*/
+
+const chpBatFun = ( stoConObj : StoConTyp, uidValStr : string, phoIdeStr : string, optValObj : CbfOptTyp = {} ) => { // What: Chat-Photo Batch Function. Why: Most chat photo tests commit the same three writes with one part changed. How: This builds and commits the batch.
+
+
+	const allCouNum = optValObj.allNum === undefined ? 1 : optValObj.allNum;                                    // What: All Count Number. Why: The group's tally rises to the test's count, 1 for the day's first photo. How: This takes the given count, or 1, keeping a null.
+	const batWriObj = writeBatch( stoConObj );                                                                  // What: Batch Write Object. Why: The three writes have to land together. How: This starts the batch.
+	const dayValNum = optValObj.dayNum ?? Math.floor( ( Date.now() - 8 * HOU_MIL_NUM ) / DAY_MIL_NUM );         // What: Day Value Number. Why: The tallies are named by today, which runs from 08:00 UTC. How: This counts whole days since 1970 from 8 hours ago, unless the test names a day.
+	const memCouNum = optValObj.memNum === undefined ? 1 : optValObj.memNum;                                    // What: Member Count Number. Why: The sender's tally rises the same way. How: This takes the given count, or 1, keeping a null.
+	const talDatObj = { expireAt : Timestamp.fromMillis( Date.now() + 2 * DAY_MIL_NUM ), ...optValObj.talObj }; // What: Tally Data Object. Why: Both tallies expire 2 days out, as a backstop. How: This builds their shared fields with the test's changes.
+
+
+	batWriObj.set( doc( stoConObj, `groups/gro1/chatPhotos/${ phoIdeStr }` ), { createdAt : serverTimestamp(), expireAt : Timestamp.fromMillis( Date.now() + 181 * DAY_MIL_NUM ), uploaderUid : uidValStr, ...optValObj.chpObj } ); // What: Photo Write. Why: The photo is the batch's center. How: This adds it in the writer's name, with the test's changes.
+
+
+
+	if ( allCouNum !== null ) batWriObj.set( doc( stoConObj, `groups/gro1/chatPhotoTally/${ dayValNum }-all` ), { count : allCouNum, lastPhotoId : phoIdeStr, ...talDatObj } ); // What: Group Tally Write. Why: The group's count for the day rises with each photo. How: This sets it to the count, naming the photo, unless the test leaves it out.
+
+
+
+	if ( memCouNum !== null ) batWriObj.set( doc( stoConObj, `groups/gro1/chatPhotoTally/${ dayValNum }-${ optValObj.memStr ?? uidValStr }` ), { count : memCouNum, lastPhotoId : phoIdeStr, ...talDatObj } ); // What: Member Tally Write. Why: The sender's own count for the day rises too. How: This sets the named member's to the count, unless the test leaves it out.
+
+
+
+	return batWriObj.commit(); // What: Commit Return. Why: The test expects the batch allowed or refused. How: This commits it and returns the promise.
+
+
+};
+
+// #endregion chpBatFun
+
+
 
 // #region locDatFun
 
@@ -2602,6 +2667,102 @@ test( 'an event takes up to 300 photos and a member 60 while the paywall is open
 	await seeDocFun( locEnvObj, 'accounts/alice', { paid : true }, true ); // What: Paid Owner Seed. Why: Paying lifts the caps for the owner's groups. How: This marks Alice paid.
 
 	await assertSucceeds( phoBatFun( bobLocObj, 'bob', 'pho2', { allNum : 101, memNum : 31 } ) ); // What: Paid Caps Open. Why: A paid owner's event takes 300 photos and a member 60. How: This expects the same photo allowed now.
+
+
+} );
+
+
+
+test( "a member sends a chat photo in their own name as both of the day's tallies rise for it, which only Cloud Functions read or delete", async () => { // What: Chat Photo Test. Why: Chat photos are the group's, the day's limits count every one, and they go only with their message (Section 22). How: This adds photos as Bob and Alice, then tries reads, forged batches, and deletes, checking who the rules let through.
+
+
+	const aliStoObj = accStoFun( 'alice' );                                         // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );                                           // What: Bob Store Object. Why: Bob sends most of the photos. How: This acts as him.
+	const dayValNum = Math.floor( ( Date.now() - 8 * HOU_MIL_NUM ) / DAY_MIL_NUM ); // What: Day Value Number. Why: The tally reads name today. How: This counts whole days since 1970 from 8 hours ago, as the rules do.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob sends photos as a member who isn't the owner. How: This approves Bob into the group.
+
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { allNum : null, memNum : null } ) );               // What: Untallied Photo. Why: A photo has to raise the counts the limits read. How: This expects a photo alone refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { memNum : null } ) );                              // What: Half Tallied Photo. Why: The member's own limit counts too. How: This expects the group's tally alone refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { allNum : 2, memNum : 2 } ) );                     // What: Skipped Count. Why: Each photo raises a tally by exactly one. How: This expects counts of 2 from nothing refused.
+	await assertFails( chpBatFun( aliStoObj, 'alice', 'chp1', { chpObj : { uploaderUid : 'bob' } } ) );         // What: Photo In Another's Name. Why: A photo names who really sent it. How: This expects Alice naming Bob refused.
+	await assertFails( chpBatFun( aliStoObj, 'alice', 'chp1', { memStr : 'bob' } ) );                           // What: Another's Tally. Why: A member's photos count against their own limit. How: This expects Alice raising Bob's tally refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { dayNum : dayValNum - 1 } ) );                     // What: Another Day's Tallies. Why: Only today's counts rise, so a full day can't be dodged. How: This expects yesterday's tallies refused.
+	await assertFails( chpBatFun( accStoFun( 'dave' ), 'dave', 'chp1' ) );                                      // What: Outsider Photo. Why: Only members send photos. How: This expects Dave refused.
+	await assertSucceeds( chpBatFun( bobStoObj, 'bob', 'chp1' ) );                                              // What: First Photo. Why: A member sends a photo. How: This expects Bob's allowed, with both tallies at 1.
+	await assertSucceeds( chpBatFun( bobStoObj, 'bob', 'chp2', { allNum : 2, memNum : 2 } ) );                  // What: Second Photo. Why: Each photo raises both tallies again. How: This expects Bob's next allowed at 2.
+	await assertSucceeds( chpBatFun( aliStoObj, 'alice', 'chp3', { allNum : 3 } ) );                            // What: Owner Photo. Why: The owner sends photos too, starting a tally of her own. How: This expects Alice's allowed, the group at 3 and hers at 1.
+	await assertSucceeds( getDoc( doc( bobStoObj, `groups/gro1/chatPhotoTally/${ dayValNum }-all` ) ) );        // What: Member Tally Read. Why: A member sees how many photos are left to send today. How: This expects Bob's fetch allowed.
+	await assertFails( getDoc( doc( accStoFun( 'dave' ), `groups/gro1/chatPhotoTally/${ dayValNum }-all` ) ) ); // What: Outsider Tally Read. Why: A group's counts are for its members. How: This expects Dave refused.
+	await assertFails( setDoc( doc( bobStoObj, `groups/gro1/chatPhotoTally/${ dayValNum }-bob` ), { count : 3, expireAt : Timestamp.fromMillis( Date.now() + 2 * DAY_MIL_NUM ), lastPhotoId : 'chp2' } ) ); // What: Tally Alone. Why: A tally rises only for a photo the same batch adds. How: This expects Bob raising his tally for an old photo refused.
+	await assertFails( deleteDoc( doc( bobStoObj, `groups/gro1/chatPhotoTally/${ dayValNum }-bob` ) ) );        // What: Tally Delete. Why: A lowered count would reopen the limits. How: This expects Bob refused.
+	await assertFails( getDoc( doc( bobStoObj, 'groups/gro1/chatPhotos/chp1' ) ) );                             // What: Photo Read. Why: A chat photo is found through its message, never its document. How: This expects even its sender refused.
+	await assertFails( deleteDoc( doc( aliStoObj, 'groups/gro1/chatPhotos/chp1' ) ) );                          // What: Owner Delete. Why: A chat photo goes with its message, which a Cloud Function follows. How: This expects even the owner refused.
+
+
+} );
+
+
+
+test( 'a chat photo keeps its three fields, the real time, and a backstop about 181 days out, and its tallies one about 2 days out', async () => { // What: Chat Photo Shape Test. Why: Anything beside the photo's three fields would sit in plain text, and its times decide when the backstops run (Section 22). How: This adds photos with one fault at a time, checking each refused, then a valid one.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Store Object. Why: Bob sends the photos. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob sends photos as a member. How: This approves Bob into the group.
+
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { chpObj : { createdAt : Timestamp.fromMillis( 9e12 ) } } ) );                          // What: Forged Photo Time. Why: A photo's time comes from when it was really sent. How: This expects a chosen time refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { chpObj : { caption : 'Beach' } } ) );                                                 // What: Extra Photo Field. Why: Anything beside the three fields would be stored in plain text. How: This expects a caption refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { chpObj : { expireAt : Timestamp.fromMillis( Date.now() + 30 * DAY_MIL_NUM ) } } ) );  // What: Early Backstop. Why: The backstop can't come before the longest chat retention. How: This expects 30 days refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { chpObj : { expireAt : Timestamp.fromMillis( Date.now() + 400 * DAY_MIL_NUM ) } } ) ); // What: Distant Backstop. Why: A photo can't be kept on the server far past its message. How: This expects 400 days refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { talObj : { expireAt : Timestamp.fromMillis( Date.now() + 30 * DAY_MIL_NUM ) } } ) );  // What: Lasting Tally. Why: A day's tally is no use once its day is over. How: This expects 30 days refused.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp1', { talObj : { note : 'x' } } ) );                                                        // What: Extra Tally Field. Why: A tally holds only its count, expiry, and last photo. How: This expects another field refused.
+	await assertSucceeds( chpBatFun( bobStoObj, 'bob', 'chp1' ) );                                                                                  // What: Valid Photo. Why: A photo with every field right goes through. How: This expects the default batch allowed.
+
+
+} );
+
+
+
+test( 'the chat takes 30 photos a day from a member and 120 from the group while the paywall is open, and 10 and 40 under a free owner once it locks', async () => { // What: Chat Photo Limits Test. Why: Chat photos cost downloads, so the daily limits follow the owner's status (Section 22). How: This seeds each tally one photo from a limit, then checks the photo reaching it allowed and the next refused, in an open and a locked project.
+
+
+	const aliLocObj = locStoFun( 'alice' );                                         // What: Alice Locked Object. Why: Alice owns the locked project's group. How: This acts as her there.
+	const bobLocObj = locStoFun( 'bob' );                                           // What: Bob Locked Object. Why: Bob sends photos under the locked limits. How: This acts as him there.
+	const bobStoObj = accStoFun( 'bob' );                                           // What: Bob Store Object. Why: Bob sends photos under the open limits. How: This acts as him.
+	const dayValNum = Math.floor( ( Date.now() - 8 * HOU_MIL_NUM ) / DAY_MIL_NUM ); // What: Day Value Number. Why: The seeded tallies are today's. How: This counts whole days since 1970 from 8 hours ago, as the rules do.
+	const talPatStr = `groups/gro1/chatPhotoTally/${ dayValNum }`;                  // What: Tally Path String. Why: Every seed names one of today's tallies. How: This is their shared start.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob sends photos as a member. How: This approves Bob into the main project's group.
+
+	await seeAppFun( locEnvObj ); // What: Locked Approval Seed Call. Why: The locked limits need the same group in the second project. How: This seeds it with Bob's request, Alice unpaid.
+
+	await appBatFun( aliLocObj, 'bob' ); // What: Locked Approval Call. Why: Bob becomes a member there too. How: This approves him as Alice.
+
+	await seeDocFun( tesEnvObj, `${ talPatStr }-all`, { count : 100, lastPhotoId : 'old' } ); // What: Open Group Tally Seed. Why: The member limit is checked first, well under the group's. How: This starts the group at 100.
+	await seeDocFun( tesEnvObj, `${ talPatStr }-bob`, { count : 29, lastPhotoId : 'old' } );  // What: Open Member Tally Seed. Why: Bob is one photo from the open member limit. How: This starts him at 29.
+
+	await assertSucceeds( chpBatFun( bobStoObj, 'bob', 'chp1', { allNum : 101, memNum : 30 } ) ); // What: Open Member Limit Reached. Why: A member may send 30 photos a day while the paywall is open. How: This expects Bob's 30th allowed.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp2', { allNum : 102, memNum : 31 } ) );    // What: Open Member Limit Passed. Why: A 31st photo is over the limit. How: This expects it refused.
+
+	await seeDocFun( tesEnvObj, `${ talPatStr }-all`, { count : 119, lastPhotoId : 'old' } ); // What: Open Group Tally Seed. Why: The group is one photo from its open limit. How: This moves it to 119.
+	await seeDocFun( tesEnvObj, `${ talPatStr }-bob`, { count : 0, lastPhotoId : 'old' } );   // What: Open Member Tally Reset. Why: Bob's own limit mustn't be what refuses him. How: This moves him to 0.
+
+	await assertSucceeds( chpBatFun( bobStoObj, 'bob', 'chp3', { allNum : 120 } ) );          // What: Open Group Limit Reached. Why: A group may send 120 photos a day while the paywall is open. How: This expects the 120th allowed.
+	await assertFails( chpBatFun( bobStoObj, 'bob', 'chp4', { allNum : 121, memNum : 2 } ) ); // What: Open Group Limit Passed. Why: A 121st photo is over the limit. How: This expects it refused.
+
+	await seeDocFun( locEnvObj, `${ talPatStr }-all`, { count : 39, lastPhotoId : 'old' } ); // What: Locked Group Tally Seed. Why: The group is one photo from the free limit. How: This starts it at 39.
+	await seeDocFun( locEnvObj, `${ talPatStr }-bob`, { count : 9, lastPhotoId : 'old' } );  // What: Locked Member Tally Seed. Why: Bob is one photo from the free member limit. How: This starts him at 9.
+
+	await assertSucceeds( chpBatFun( bobLocObj, 'bob', 'chp1', { allNum : 40, memNum : 10 } ) ); // What: Free Limits Reached. Why: A free owner's group sends 40 photos a day and a member 10. How: This expects the photo reaching both allowed.
+	await assertFails( chpBatFun( bobLocObj, 'bob', 'chp2', { allNum : 41, memNum : 11 } ) );    // What: Free Limits Passed. Why: One more is over both limits. How: This expects it refused.
+
+	await seeDocFun( locEnvObj, 'accounts/alice', { paid : true }, true ); // What: Paid Owner Seed. Why: Paying lifts the limits for the owner's groups. How: This marks Alice paid.
+
+	await assertSucceeds( chpBatFun( bobLocObj, 'bob', 'chp2', { allNum : 41, memNum : 11 } ) ); // What: Paid Limits Open. Why: A paid owner's group sends 120 photos a day and a member 30. How: This expects the same photo allowed now.
 
 
 } );

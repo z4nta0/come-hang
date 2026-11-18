@@ -35,10 +35,11 @@ import type { UploadMetadata       } from 'firebase/storage';             // Wha
  * test:rules starts and stops around this suite, under a demo project that can
  * never reach a real one. Each test acts as a chosen identity, or as nobody
  * signed in, and expects its requests allowed or refused: a member's own
- * profile photo and an event's full photos, each one bounded binary file.
+ * profile photo, an event's full photos, and the chat's photos, each one
+ * bounded binary file.
  *
- * The rules read the group's members and each photo's document from
- * Firestore.
+ * The rules read the group's members and each event or chat photo's
+ * document from Firestore.
  * The Storage emulator reads them from the demo-come-hang project alone, so
  * this suite seeds that project with the rules off, and the Firestore suite
  * keeps its own data under a project of its own.
@@ -60,6 +61,8 @@ import type { UploadMetadata       } from 'firebase/storage';             // Wha
 const AVA_MAX_NUM = 64 * 1024;                                    // What: Avatar Maximum Number. Why: A profile photo holds at most 64 KB. How: This is the limit in bytes.
 const AVA_PAT_STR = 'avatars/gro1/bob';                           // What: Avatar Path String. Why: The profile photo tests work on Bob's photo in the group. How: This is its Storage path.
 const BIN_MET_OBJ = { contentType : 'application/octet-stream' }; // What: Binary Metadata Object. Why: Every file is uploaded as generic binary. How: This is the metadata every valid upload carries.
+const CHP_MAX_NUM = 200 * 1024 + 16;                              // What: Chat-Photo Maximum Number. Why: A chat photo holds at most 200 KB and its 16-byte tag. How: This is the limit in bytes.
+const CHP_PAT_STR = 'chatPhotos/gro1/chp1';                       // What: Chat-Photo Path String. Why: The chat photo tests work on one photo. How: This is its Storage path.
 const PHO_MAX_NUM = 1024 * 1024;                                  // What: Photo Maximum Number. Why: A full photo holds at most 1 MB. How: This is the limit in bytes.
 const PHO_PAT_STR = 'photos/gro1/eve1/pho1';                      // What: Photo Path String. Why: The event photo tests work on one full photo. How: This is its Storage path.
 
@@ -350,6 +353,57 @@ test( 'a full photo is one binary file of 17 bytes to 1 MB with no custom metada
 	await assertFails( uplFilFun( bobStoObj, 16, BIN_MET_OBJ, PHO_PAT_STR ) );                                               // What: Empty Photo. Why: A photo holds an image beyond its 16-byte tag. How: This expects 16 bytes refused.
 	await assertFails( uplFilFun( bobStoObj, PHO_MAX_NUM + 1, BIN_MET_OBJ, PHO_PAT_STR ) );                                  // What: Oversized Photo. Why: A photo shrunk to 1,600px fits well within 1 MB. How: This expects one byte more refused.
 	await assertSucceeds( uplFilFun( bobStoObj, PHO_MAX_NUM, BIN_MET_OBJ, PHO_PAT_STR ) );                                   // What: Largest Photo. Why: A photo may fill the whole 1 MB. How: This expects one at the limit allowed.
+
+
+} );
+
+
+test( 'a member uploads a chat photo once, after adding its document as its uploader, which only members download', async () => { // What: Chat Photo Test. Why: A chat photo's file belongs to the document its uploader added first within the day's limits, and only Cloud Functions remove one (Section 22). How: This seeds Bob's chat photo document, then uploads, downloads, and deletes as each person, checking who the rules let through.
+
+
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Storage Object. Why: Bob sent the photo. How: This acts as him.
+	const carStoObj = accStoFun( 'carol' ); // What: Carol Storage Object. Why: Carol stands for every other member. How: This acts as her.
+
+
+	await seeGroFun(); // What: Group Seed Call. Why: The rules read the members. How: This writes them.
+
+	await seeDocFun( 'groups/gro1/chatPhotos/chp1', { uploaderUid : 'bob' } ); // What: Chat Photo Document Seed. Why: The upload follows the document its uploader adds. How: This writes Bob's.
+
+	await assertFails( uplFilFun( carStoObj, 100, BIN_MET_OBJ, CHP_PAT_STR ) );            // What: Upload For Another. Why: Only the photo's uploader adds its file. How: This expects Carol refused.
+	await assertFails( uplFilFun( bobStoObj, 100, BIN_MET_OBJ, 'chatPhotos/gro1/chp2' ) ); // What: Undocumented Upload. Why: A chat photo needs its document first. How: This expects Bob's upload with none refused.
+	await assertSucceeds( uplFilFun( bobStoObj, 100, BIN_MET_OBJ, CHP_PAT_STR ) );         // What: Uploader Upload. Why: The uploader adds the file. How: This expects Bob allowed.
+	await assertFails( uplFilFun( bobStoObj, 200, BIN_MET_OBJ, CHP_PAT_STR ) );            // What: Photo Replaced. Why: A photo never changes once sent. How: This expects Bob's second upload refused.
+	await assertSucceeds( getBytes( ref( carStoObj, CHP_PAT_STR ) ) );                     // What: Member Download. Why: Members download the chat's photos. How: This expects Carol's download allowed.
+	await assertFails( getBytes( ref( accStoFun( 'dave' ), CHP_PAT_STR ) ) );              // What: Outsider Download. Why: Photos are for the group only. How: This expects Dave refused.
+	await assertFails( listAll( ref( carStoObj, 'chatPhotos/gro1' ) ) );                   // What: Photo Listing. Why: Members find photos through their messages, never by listing. How: This expects listing the group's chat photos refused.
+	await assertFails( deleteObject( ref( bobStoObj, CHP_PAT_STR ) ) );                    // What: Uploader Delete. Why: A Cloud Function deletes the file with its document. How: This expects Bob refused.
+
+	await seeDocFun( 'groups/gro1/chatPhotos/chp3', { uploaderUid : 'bob' } ); // What: Second Document Seed. Why: The next check needs a photo still to upload. How: This writes another of Bob's.
+
+	await remDocFun( 'groups/gro1/members/bob' ); // What: Uploader Leave Call. Why: A sender can leave before the upload finishes. How: This deletes Bob's membership.
+
+	await assertFails( uplFilFun( bobStoObj, 100, BIN_MET_OBJ, 'chatPhotos/gro1/chp3' ) ); // What: Departed Upload. Why: Someone who has left sends nothing more. How: This expects Bob refused.
+
+
+} );
+
+
+
+test( 'a chat photo is one binary file of 17 bytes to 200 KB and its tag, with no custom metadata', async () => { // What: Chat Photo Shape Test. Why: A chat photo is encrypted, so only its size and form can be checked, and plain metadata would sit beside it unencrypted (Section 22). How: This uploads with one fault at a time, then at the size limit, checking each fault fails and the limit passes.
+
+
+	const bobStoObj = accStoFun( 'bob' ); // What: Bob Storage Object. Why: Bob uploads the photos. How: This acts as him.
+
+
+	await seeGroFun(); // What: Group Seed Call. Why: The rules read the members. How: This writes them.
+
+	await seeDocFun( 'groups/gro1/chatPhotos/chp1', { uploaderUid : 'bob' } ); // What: Chat Photo Document Seed. Why: Every upload follows Bob's document. How: This writes it.
+
+	await assertFails( uplFilFun( bobStoObj, 100, { contentType : 'image/jpeg' }, CHP_PAT_STR ) );                           // What: Image Type. Why: A browser would render a file typed as an image. How: This expects a JPEG type refused.
+	await assertFails( uplFilFun( bobStoObj, 100, { ...BIN_MET_OBJ, customMetadata : { place : 'Beach' } }, CHP_PAT_STR ) ); // What: Custom Metadata. Why: Metadata is stored unencrypted. How: This expects any refused.
+	await assertFails( uplFilFun( bobStoObj, 16, BIN_MET_OBJ, CHP_PAT_STR ) );                                               // What: Empty Photo. Why: A photo holds an image beyond its 16-byte tag. How: This expects 16 bytes refused.
+	await assertFails( uplFilFun( bobStoObj, CHP_MAX_NUM + 1, BIN_MET_OBJ, CHP_PAT_STR ) );                                  // What: Oversized Photo. Why: A chat photo is shrunk to fit 200 KB. How: This expects one byte more refused.
+	await assertSucceeds( uplFilFun( bobStoObj, CHP_MAX_NUM, BIN_MET_OBJ, CHP_PAT_STR ) );                                   // What: Largest Photo. Why: A photo may fill the whole 200 KB with its tag. How: This expects one at the limit allowed.
 
 
 } );
