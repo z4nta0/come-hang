@@ -26,7 +26,7 @@
 
 
 	display             : grid;
-	grid-template-areas : 'pinEveBut' 'pusNudDiv' 'chaLogDiv' 'chaComFor';
+	grid-template-areas : 'pinEveBut' 'chaNudDiv' 'chaLogDiv' 'chaComFor';
 	grid-template-rows  : auto auto minmax( 0, 1fr ) auto;
 	height              : 100%;
 	min-height          : 0;
@@ -39,7 +39,7 @@
 	.chaRooDiv { /* What: Paneled Chat Root Div. Why: The event panel runs the full height beside the notifications card, the log, and the composer, where the pinned card was. How: This sets the card over the log over the composer in one column and the panel in a second, at its own width. */
 
 
-		grid-template-areas   : 'pusNudDiv eveNexAsi' 'chaLogDiv eveNexAsi' 'chaComFor eveNexAsi';
+		grid-template-areas   : 'chaNudDiv eveNexAsi' 'chaLogDiv eveNexAsi' 'chaComFor eveNexAsi';
 		grid-template-columns : minmax( 0, 1fr ) clamp( calc( var( --ver-rhy-p11 ) * 1rem ), var( --hor-rhy-022 ), calc( var( --ver-rhy-p12 ) * 1rem ) ); /* Vertical Rhythm Base Plus 11 ~= 321.277px, Horizontal Rhythm 22 ~= 470.635px @ 1,920px width, Vertical Rhythm Base Plus 12 ~= 425.601px */ /* What: Panel Width Note. Why: The panel holds a readable list without crowding the chat, and the horizontal rhythm alone would leave it too narrow at 1,100px. How: It follows step 22 between the two vertical rhythm ends. */
 		grid-template-rows    : auto minmax( 0, 1fr ) auto;
 
@@ -221,13 +221,27 @@
 
 
 
-.pusNudDiv { /* What: Push Nudge Div. Why: The notifications card sits between the pinned event and the log, taking no room while it shows nothing. How: This places it in its own area. */
+/* #region chaNudDiv */
+
+.chaNudDiv { /* What: Chat Nudge Div. Why: The chat's cards sit between the pinned event and the log, taking no room while none shows. How: This stacks them in one column in its own area, each card bringing its own space above it. */
 
 
-	grid-area : pusNudDiv;
+	display   : grid;
+	grid-area : chaNudDiv;
 
 
 }
+
+.pusNudDiv,
+.stoNudDiv { /* What: Chat Nudge Wrappers. Why: A card's long words should wrap within the column rather than widen it. How: This lets each wrapper shrink below its content's width. */
+
+
+	min-width : 0;
+
+
+}
+
+/* #endregion chaNudDiv */
 
 
 
@@ -327,6 +341,20 @@
 
 
 	grid-template-areas : 'mesMetPar' 'mesTexPar' 'mesPenPar';
+
+
+}
+.chaMesIte--photo { /* What: Chat Message Item Photo. Why: A photo message's bubble holds its photo where a message's words would be. How: This sets the photo's bubble in the words' place beside the avatar. */
+
+
+	grid-template-areas : 'mesAvaSpa mesMetPar' 'mesAvaSpa mesPhoDiv';
+
+
+}
+.chaMesIte--own.chaMesIte--photo { /* What: Own Chat Message Item Photo. Why: The member's own photo sits at the end with no avatar, as their messages do. How: This sets the photo's bubble below the hidden meta line in one column, outranking each modifier alone. */
+
+
+	grid-template-areas : 'mesMetPar' 'mesPhoDiv';
 
 
 }
@@ -444,6 +472,122 @@
 
 }
 
+
+
+
+/* #region mesPhoDiv */
+
+.mesPhoDiv { /* What: Message Photo Div. Why: A photo and its caption read as one bubble, its corner nearest the avatar squared, the photo filling its top. How: This stacks them on the hover color, clipped to the bubble's corners, at a fixed photo width, in its own area. */
+
+
+	background-color : var( --bac-hov-col );                                                                /* Background Hover Color = #ECEDF7 */
+	border-radius    : var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xsm ); /* Radius Border Extra Large ~= 19.304px, Radius Border Extra Small ~= 3.572px */
+	display          : grid;
+	grid-area        : mesPhoDiv;
+	overflow         : hidden;
+	width            : min( 100%, calc( var( --ver-rhy-p11 ) * 1rem ) );                                    /* Vertical Rhythm Base Plus 11 ~= 321.277px */
+
+
+}
+.chaMesIte--own .mesPhoDiv { /* What: Own Message Photo Div. Why: The member's own photo stands out in the accent, the bubble's squared corner at its end. How: This fills it with the main accent in the accent's text color. */
+
+
+	background-color : var( --acc-mai-col );                                                                /* Accent Main Color = #4A4FC9 */
+	border-radius    : var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xsm ) var( --rad-bor-xla ); /* Radius Border Extra Large ~= 19.304px, Radius Border Extra Small ~= 3.572px */
+	color            : var( --tex-acc-col );                                                                /* Text Accent Color = #FFFFFF */
+
+
+}
+
+
+/* #region mesPhoBut */
+
+.mesPhoBut { /* What: Message Photo Button. Why: The photo opens whole when pressed, and the bubble's corners would clip a ring drawn outside it. How: This shows the photo edge to edge with no button chrome, its focus ring growing inside its edges, and eases its hover fade, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	cursor           : zoom-in;
+	display          : block;
+	outline-offset   : calc( var( --ver-rhy-m03 ) * -1rem ); /* Vertical Rhythm Base Minus 3 ~= -6.268px */
+	padding          : 0;
+	transition       : opacity var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.mesPhoBut:hover { /* What: Hovered Message Photo Button. Why: A photo should show it opens, and a lift would push it against the bubble's edge. How: This fades it slightly. */
+
+
+	opacity : 0.88; /* What: Hover Opacity. Why: A slight fade reads as live without hiding the photo. How: It's a literal, since no power of the core design number lands within 10%. */
+
+
+}
+.mesPhoBut:active { /* What: Pressed Message Photo Button. Why: A press should register before the viewer opens. How: This presses the photo in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+.mesPhoBut:focus-visible { /* What: Focused Message Photo Button. Why: The ring drawn outside the photo would be clipped by the bubble's corners. How: This holds it a large border's width inside the photo's edges. */
+
+
+	outline-offset : calc( var( --bor-wid-lar ) * -1 ); /* Border Width Large ~= -2.035px */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Message Photo Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.mesPhoBut { /* What: Motionless Message Photo Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.mesPhoIma { /* What: Message Photo Image. Why: A photo shows across the bubble at its own shape, a very tall one cut down so it doesn't fill the log. How: This sets it the bubble's width, its height following, at most Base Plus 12 tall, cropped to fill. */
+
+
+	display    : block;
+	height     : auto;
+	max-height : calc( var( --ver-rhy-p12 ) * 1rem ); /* Vertical Rhythm Base Plus 12 ~= 425.601px */
+	object-fit : cover;
+	width      : 100%;
+
+
+}
+
+/* #endregion mesPhoBut */
+
+
+.mesCapPar { /* What: Message Caption Paragraph. Why: A photo's caption reads below it inside the bubble, keeping the line breaks typed. How: This pads it as a message's words are, wrapping long words anywhere. */
+
+
+	overflow-wrap : anywhere;
+	padding       : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */
+	white-space   : pre-wrap;
+
+
+}
+
+.mesNotPar { /* What: Message Note Paragraph. Why: A photo still decrypting, or no longer on the device, says so inside its bubble, quieter than a message. How: This pads it as a message's words are, in italics. */
+
+
+	font-style : italic;
+	padding    : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */
+
+
+}
+
+/* #endregion mesPhoDiv */
+
+
+
 .mesPenPar { /* What: Message Pending Paragraph. Why: The note says the message is waiting, quieter than the message itself. How: This sets it small in the muted text color in its own area. */
 
 
@@ -560,7 +704,7 @@
 
 /* #region chaComFor */
 
-.chaComFor { /* What: Chat Composer Form. Why: The composer sits at the bottom on its own surface. How: This lays the box beside the send button in named areas a tier 4 space apart, the alert below them, on the surface color with a border above, a tier 4 space above and below and the gutter at the sides. */
+.chaComFor { /* What: Chat Composer Form. Why: The composer sits at the bottom on its own surface. How: This lays the photo button, the box, and the send button in named areas a tier 4 space apart, a picked photo above them and the alert below, on the surface color with a border above, a tier 4 space above and below and the gutter at the sides. */
 
 
 	align-items           : end;
@@ -569,9 +713,200 @@
 	column-gap            : var( --tie-hor-004 );                            /* Tier Horizontal 4, about 8.304px - 11px */
 	display               : grid;
 	grid-area             : chaComFor;
-	grid-template-areas   : 'comTexTex comSenBut' 'comErrPar comErrPar';
-	grid-template-columns : 1fr auto;
+	grid-template-areas   : 'comPreDiv comPreDiv comPreDiv' 'comPhoBut comTexTex comSenBut' 'comErrPar comErrPar comErrPar';
+	grid-template-columns : auto 1fr auto;
 	padding               : var( --tie-ver-004 ) var( --gut-sid-pad );       /* Tier Vertical 4 ~= 8.304px, Gutter Side Padding, about 19.304px - 44.876px */
+
+
+}
+
+
+/* #region comPreDiv */
+
+.comPreDiv { /* What: Composer Preview Div. Why: A picked photo sits above the box with a note while it sends and a way to remove it. How: This lays the thumbnail, the note, and the remove button in named areas a tier 4 space apart, the event's choice across a row below them when there is one, a tier 4 space above the box, in its own area. */
+
+
+	align-items           : center;
+	column-gap            : var( --tie-hor-004 );            /* Tier Horizontal 4, about 8.304px - 11px */
+	display               : grid;
+	grid-area             : comPreDiv;
+	grid-template-areas   : 'comPreIma comPreSpa comRemBut' 'comEveLab comEveLab comEveLab';
+	grid-template-columns : auto 1fr auto;
+	margin-bottom         : var( --tie-ver-004 );            /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.comPreIma { /* What: Composer Preview Image. Why: The member sees the photo they picked at a glance. How: This shows it as a rounded square Base Plus 6 wide, cropped to fill, in its own area. */
+
+
+	border-radius : var( --rad-bor-sma );                /* Radius Border Small ~= 8.304px */
+	grid-area     : comPreIma;
+	height        : calc( var( --ver-rhy-p06 ) * 1rem ); /* Vertical Rhythm Base Plus 6 ~= 78.749px */
+	object-fit    : cover;
+	width         : calc( var( --ver-rhy-p06 ) * 1rem ); /* Vertical Rhythm Base Plus 6 ~= 78.749px */
+
+
+}
+
+.comPreSpa { /* What: Composer Preview Span. Why: The note that the photo is sending is quieter than the photo. How: This sets it small in the muted text color, in its own area. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	grid-area : comPreSpa;
+
+
+}
+
+.comRemBut { /* What: Composer Remove Button. Why: Removing the photo is a small, round action, still a full touch target. How: This draws a circle in the hover color at the touch target size, its cross in the main text color, in its own area, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --bac-hov-col );                /* Background Hover Color = #ECEDF7 */
+	border           : 0;
+	border-radius    : 50%;
+	color            : var( --tex-mai-col );                /* Text Main Color = #1D1E33 */
+	display          : grid;
+	grid-area        : comRemBut;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.comRemBut:hover:enabled { /* What: Hovered Composer Remove Button. Why: A button beside the photo shows it's live by color, since a lift would jostle the row, and one that's off isn't live. How: This darkens the circle a step while it's on. */
+
+
+	background-color : var( --bor-mai-col ); /* Border Main Color = #E0E1EF */
+
+
+}
+.comRemBut:active:enabled { /* What: Pressed Composer Remove Button. Why: A press should register before the photo goes. How: This presses the circle in slightly while it's on. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+.comRemBut:disabled { /* What: Off Composer Remove Button. Why: The photo can't be removed while it sends, and the button should look it. How: This draws its cross in the muted text color. */
+
+
+	color  : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	cursor : default;
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Composer Remove Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.comRemBut { /* What: Motionless Composer Remove Button. Why: The hover, press, focus, and off looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+
+/* #region comEveLab */
+
+.comEveLab { /* What: Composer Event Label. Why: The whole row picks the event, at least a touch target tall, and shows it's live under the pointer. How: This lays the box beside its words a tier 5 space apart, rounds the row, in its own area, and eases its hover background. */
+
+
+	align-items           : center;
+	border-radius         : var( --rad-bor-med );                                       /* Radius Border Medium = 11px */
+	column-gap            : var( --tie-hor-005 );                                       /* Tier Horizontal 5, about 4.732px - 6.268px */
+	cursor                : pointer;
+	display               : grid;
+	grid-area             : comEveLab;
+	grid-template-columns : auto minmax( 0, 1fr );
+	min-height            : calc( var( --ver-rhy-p04 ) * 1rem );                        /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	transition            : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease */
+
+
+}
+.comEveLab:hover { /* What: Hovered Composer Event Label. Why: A row with a choice shows it's live by color, since a lift would jostle the composer. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Composer Event Label. Why: Someone who asked for less motion should see the tint switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.comEveLab { /* What: Motionless Composer Event Label. Why: The hover tint should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.comEveInp { /* What: Composer Event Input. Why: The box should be easy to see and drawn in the brand's accent. How: This sizes it at the base rhythm step with no margin, filled in the main accent when ticked. */
+
+
+	accent-color : var( --acc-mai-col );                /* Accent Main Color = #4A4FC9 */
+	height       : calc( var( --ver-rhy-bas ) * 1rem ); /* Vertical Rhythm Base ~= 14.572px */
+	margin       : 0;
+	width        : calc( var( --ver-rhy-bas ) * 1rem ); /* Vertical Rhythm Base ~= 14.572px */
+
+
+}
+
+/* #endregion comEveLab */
+
+/* #endregion comPreDiv */
+
+
+.comPhoBut { /* What: Composer Photo Button. Why: Adding a photo is a quieter action than sending, still round and easy to hit. How: This draws a clear circle at the touch target size, its picture in the muted text color, in its own area, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : 0;
+	border-radius    : 50%;
+	color            : var( --tex-mut-col );                /* Text Muted Color = #5A5D7E */
+	display          : grid;
+	grid-area        : comPhoBut;
+	height           : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	place-items      : center;
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+	width            : calc( var( --ver-rhy-p04 ) * 1rem ); /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+
+
+}
+.comPhoBut:hover { /* What: Hovered Composer Photo Button. Why: A button beside the box shows it's live by color, since a lift would jostle the row. How: This fills the circle with the hover color and darkens its picture to the main text color. */
+
+
+	background-color : var( --bac-hov-col ); /* Background Hover Color = #ECEDF7 */
+	color            : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+
+
+}
+.comPhoBut:active { /* What: Pressed Composer Photo Button. Why: A press should register before the picker opens. How: This presses the circle in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Composer Photo Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.comPhoBut { /* What: Motionless Composer Photo Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
 
 
 }

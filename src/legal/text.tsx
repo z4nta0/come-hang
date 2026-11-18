@@ -56,7 +56,7 @@ function PriPolCom () : React.JSX.Element {
 		<>{ /* What: Privacy Policy Fragment. Why: The policy's headings, paragraphs, and lists have to render as one child of whatever holds them. How: This groups them without adding an element. */ }
 
 
-			<p>Last updated November 12, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
+			<p>Last updated November 18, 2026</p>{ /* What: Updated Date Paragraph Element. Why: A reader should know which version they're reading. How: This gives the date of the last change. */ }
 
 			<p>Come Hang is an app for planning get-togethers with a group. It's made and run by Gary S. Walton, an individual based in Missouri, in the United States ("we" and "us" below). This policy explains what information Come Hang handles, why, who else handles it, how long it's kept, and the choices you have. If you have a question, write to <a href='mailto:support@comehang.app'>support@comehang.app</a>.</p>{ /* What: Body Paragraph Element. Why: The document is plain prose. How: This holds one paragraph. */ }
 
@@ -112,6 +112,8 @@ function PriPolCom () : React.JSX.Element {
 				<li>each event's start and end times, who planned it, and who has claimed each item on its bring-list</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>who shared each photo and when, the size of its file, and how many photos each member has added to an event</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
+				<li>who sent each chat photo and when, and how many chat photos each member and each group has sent today, which is kept for 2 days to hold the daily limits</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li>whether a member has the app open right now</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
@@ -189,7 +191,9 @@ function PriPolCom () : React.JSX.Element {
 
 				<li><strong>Events and their bring-lists</strong> are deleted 48 hours after the event ends. Your device keeps only each event's place, to suggest it when your group plans its next event, until you leave the group.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
-				<li><strong>Photos</strong> are deleted with their event, 48 hours after it ends, or sooner when the member who shared one or the group's owner deletes it. Before a photo is shared, your device shrinks it, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+				<li><strong>Event photos</strong> are deleted with their event, 48 hours after it ends, or sooner when the member who shared one or the group's owner deletes it. Before a photo is shared, your device shrinks it, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
+
+				<li><strong>Chat photos</strong> are deleted from the server with their message, once every member's device has them or the group's chat period ends. Your device keeps the chat photos it has for 3 months by default, which you can change or clear in Settings, under "Storage on this device". Before a photo is sent, your device shrinks it, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 
 				<li><strong>Your profile photo</strong>, if you add one, is kept in each group you're in until you remove it or your membership ends, when it's deleted from that group. Your device shrinks it first, which also removes the location and other details your camera stores in it.</li>{ /* What: Body List Item Element. Why: Each point stands on its own. How: This holds one. */ }
 

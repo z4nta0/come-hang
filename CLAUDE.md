@@ -108,7 +108,13 @@ switcher, and the group sheet while anything waits. Adding to or claiming
 from a bring-list posts a quiet line to the chat, which opens the event at
 its list, and a card above the chat offers notifications on a device until it's answered.
 A member's one profile photo, set in Settings' "Your profile", shows in every
-group's avatars, each group keeping its own encrypted copy. Offline, a banner
+group's avatars, each group keeping its own encrypted copy. A chat message can carry
+one photo, shrunk, encrypted, counted against daily limits that follow the
+owner's plan, fetched by each member's device before its message leaves the
+server, and deleted from the server with it, or sent to a running event's
+photos instead. Each device keeps its chat photos for 3 months by default,
+changed or cleared in Settings' "Storage on this device", and a card above
+the chat says when space runs low. Offline, a banner
 says so, chat messages wait on the device and send once back online, and
 other changes are paused with a note saying they have to wait. Online but with
 the chat unable to reach its database, the banner says that instead, messages

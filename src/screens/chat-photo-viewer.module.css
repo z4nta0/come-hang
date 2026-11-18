@@ -1,0 +1,168 @@
+
+
+
+/**
+ * chat-photo-viewer.module.css = Chat Photo Viewer Module
+ *
+ * @summary
+ * Styles for ChaPhoVieCom: the photo shown whole in a rounded frame on the
+ * accent tint, who sent it and when, an outlined save button, and the note on
+ * how long the device keeps chat photos in the muted color. The status is for
+ * screen readers alone, and a failure shows in the dark error color.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region chpVieDiv */
+
+.chpVieDiv { /* What: Chat-Photo Viewer Div. Why: The photo, its line, its save, and the note read top to bottom. How: This stacks them a tier 3 space apart, each at the start of its row. */
+
+
+	display       : grid;
+	justify-items : start;
+	row-gap       : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+
+/* #region vieImaDiv */
+
+.vieImaDiv { /* What: Viewer Image Div. Why: The photo shows whole on a quiet tint, however it's shaped, without pushing the save off a short screen. How: This centers it in a rounded frame across the row, at most 60% of the screen's height. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+	border-radius    : var( --rad-bor-sma ); /* Radius Border Small ~= 8.304px */
+	display          : grid;
+	height           : 60svh;
+	justify-self     : stretch;
+	overflow         : hidden;
+	place-items      : center;
+
+
+}
+
+.vieImaIma { /* What: Viewer Image Image. Why: The whole photo shows, whatever its shape. How: This fills the frame, fitting the photo within it. */
+
+
+	height     : 100%;
+	object-fit : contain;
+	width      : 100%;
+
+
+}
+
+/* #endregion vieImaDiv */
+
+
+
+/* #region vieMetPar */
+
+.vieMetPar { /* What: Viewer Meta Paragraph. Why: Who sent the photo leads the line. How: This sets it bold. */
+
+
+	font-weight : 700;
+
+
+}
+
+.vieTimSpa { /* What: Viewer Time Span. Why: When it was sent is a quieter fact after the name. How: This sets it in the muted text color at the normal weight. */
+
+
+	color       : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-weight : 400;
+
+
+}
+
+/* #endregion vieMetPar */
+
+
+.vieSavBut { /* What: Viewer Save Button. Why: Saving is lighter than the photo, still a full touch target. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.vieSavBut:hover { /* What: Hovered Viewer Save Button. Why: A button should respond to the pointer, and a lift would move it against the note below. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.vieSavBut:active { /* What: Pressed Viewer Save Button. Why: A press should register before the photo is handed over. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Viewer Save Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.vieSavBut { /* What: Motionless Viewer Save Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.vieKepPar { /* What: Viewer Keep Paragraph. Why: The note on how long photos stay is quieter than the photo's own line. How: This sets it small in the muted text color, at the small text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	font-size : var( --fon-siz-bas ); /* Font Size Base = 11px */
+	max-width : var( --tex-wid-sma ); /* Text Width Small ~= 22.047em */
+
+
+}
+
+.vieStaPar { /* What: Viewer Status Paragraph. Why: The viewer shows a save to sight already, so the status is for screen readers alone. How: This hides it from view with the standard clip, keeping it in the accessibility tree. */
+
+
+	clip-path   : inset( 50% );
+	height      : 1px;
+	overflow    : hidden;
+	position    : absolute;
+	white-space : nowrap;
+	width       : 1px;
+
+
+}
+
+.vieErrPar { /* What: Viewer Error Paragraph. Why: A failed save should be clear below the note. How: This sets it bold in the dark error color. */
+
+
+	color       : var( --err-dar-col ); /* Error Dark Color = #A12A2A */
+	font-weight : 700;
+
+
+}
+.vieErrPar:empty { /* What: Empty Viewer Error Paragraph. Why: The alert stays in the viewer while empty, so it's heard when it speaks, but shouldn't add a gap. How: This pulls it up by the viewer's row gap, cancelling the gap above it. */
+
+
+	margin-top : calc( var( --tie-ver-003 ) * -1 ); /* Tier Vertical 3 ~= -14.572px */
+
+
+}
+
+/* #endregion chpVieDiv */
+
+

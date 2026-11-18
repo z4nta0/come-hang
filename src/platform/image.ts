@@ -6,13 +6,14 @@
  *
  * @summary
  * Shrinks a picked photo on the device before it's shared (ARCHITECTURE.md
- * Sections 20 and 21), through the browser's own image decoder and canvas,
- * with no library. A profile photo is cropped to the square at its middle and
- * drawn at up to 256px. The photo is drawn upright, the way the browser shows
- * it, at up to 1,600px on its long side, and again as a thumbnail of up to
- * 320px, each encoded as WebP where the browser can and JPEG where it can't,
- * at the highest of a few qualities that fits its size limit, drawn smaller
- * still when none does. Drawing it anew leaves behind everything else the file
+ * Sections 20, 21, and 22), through the browser's own image decoder and
+ * canvas, with no library. A profile photo is cropped to the square at its
+ * middle and drawn at up to 256px. An event photo is drawn upright, the way
+ * the browser shows it, at up to 1,600px on its long side, and again as a
+ * thumbnail of up to 320px, and a chat photo once, at up to 1,280px. Each is
+ * encoded as WebP where the browser can and JPEG where it can't, at the
+ * highest of a few qualities that fits its size limit, drawn smaller still
+ * when none does. Drawing it anew leaves behind everything else the file
  * carried, such as the position a camera records. A shared photo's bytes are
  * typed again from their first bytes when they're shown, and a WebP one is
  * converted to JPEG when it's saved, which more of the places a saved photo
@@ -33,6 +34,8 @@
 
 const AVA_MAX_NUM = 64 * 1024 - 16;            // What: Avatar Maximum Number. Why: A profile photo has to fit the Storage rules' 64 KB once encrypted, which adds a 16-byte tag. How: This is the most its bytes may be.
 const AVA_SID_NUM = 256;                        // What: Avatar Side Number. Why: A profile photo shows at most about 64px across, so 256px stays sharp on the densest screens. How: This is the side it's drawn at, at most.
+const CHA_MAX_NUM = 200 * 1024;                 // What: Chat Maximum Number. Why: A chat photo is downloaded by every member, so it's held to 200 KB, which the Storage rules allow with encryption's 16-byte tag. How: This is the most its bytes may be.
+const CHA_SID_NUM = 1280;                       // What: Chat Side Number. Why: A chat photo shows within a message and still looks sharp on a phone at 1,280px, about half an event photo's bytes. How: This is the long side it's drawn at, at most.
 const FUL_MAX_NUM = 1024 * 1024 - 16;           // What: Full Maximum Number. Why: A full photo has to fit the Storage rules' 1 MB once encrypted, which adds a 16-byte tag. How: This is the most its bytes may be.
 const FUL_SID_NUM = 1600;                       // What: Full Side Number. Why: A photo 1,600px on its long side looks sharp on a phone at a fraction of a camera's size. How: This is the long side it's drawn at, at most.
 const JPE_QUA_NUM = 0.92;                       // What: JPEG Quality Number. Why: A saved photo converted to JPEG should look the same as the one shown. How: This is the quality it's encoded at, above any the upload uses, so the second encoding adds no visible loss.
@@ -95,8 +98,9 @@ const blbEncFun = async ( canEleObj : HTMLCanvasElement, quaValNum : number ) : 
  *
  * @summary
  * Draws an image at up to a long side and encodes it at the highest quality
- * that fits a byte limit, drawing it 80% as large and trying again while
- * none does, down to 160px on its long side, below which it rejects.
+ * that fits a byte limit, drawing it 80% as large and trying again while none
+ * does, down to 160px on its long side, below which it rejects. A photo
+ * already smaller than that is tried once, at its own size.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -123,7 +127,7 @@ const sidFitFun = async ( imaEleObj : HTMLImageElement, sidMaxNum : number, bytM
 	let sidNowNum = Math.min( sidMaxNum, sidLonNum ); // What: Side Now Number. Why: A photo is never drawn larger than it is. How: This starts at the smaller of the limit and its own long side.
 
 
-	while ( sidNowNum >= 160 ) { // What: Size Loop. Why: A photo too detailed for any quality at one size may fit smaller. How: This tries each size down to 160px.
+	while ( sidNowNum >= Math.min( 160, sidLonNum ) ) { // What: Size Loop. Why: A photo too detailed for any quality at one size may fit smaller, while one already smaller than 160px still gets its one try. How: This tries each size down to 160px, or the photo's own size when that's smaller.
 
 
 		const scaValNum = sidNowNum / sidLonNum; // What: Scale Value Number. Why: Both sides shrink alike. How: This is the long side's share of the photo's.
@@ -241,6 +245,63 @@ const avaShrFun = async ( filValObj : Blob ) : Promise< Uint8Array< ArrayBuffer 
 };
 
 // #endregion avaShrFun
+
+
+
+// #region chaShrFun
+
+/**
+ * chaShrFun = Chat Shrink Function
+ *
+ * @summary
+ * Decodes a picked photo the way the browser shows it, upright, and
+ * resolves with one copy of it for the chat, at up to 1,280px on its long
+ * side and within 200 KB (ARCHITECTURE.md Section 22). Rejects when the
+ * browser can't decode the file, such as a format it doesn't show, or it
+ * can't be made small enough.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param filValObj - File Value Object: The picked photo.
+ *
+ * @returns A promise that resolves with the photo's bytes.
+ *
+ * @example
+ * ```ts
+ * chaShrFun(filValObj) // => Uint8Array
+ * ```
+ *
+*/
+
+const chaShrFun = async ( filValObj : Blob ) : Promise< Uint8Array< ArrayBuffer > > => { // What: Chat Shrink Function. Why: A camera's photo is far too large to send to every member. How: This decodes it and encodes one copy within the chat's limit.
+
+
+	const imaEleObj = new Image();                      // What: Image Element Object. Why: An image element decodes the photo upright, as the browser shows it. How: This makes one off the page.
+	const objUrlStr = URL.createObjectURL( filValObj ); // What: Object URL String. Why: The image element reads the file by address. How: This makes a temporary one.
+
+
+
+	try { // What: Decode Attempt. Why: The temporary address has to be freed however decoding ends. How: This decodes and encodes inside it.
+
+
+		imaEleObj.src = objUrlStr; // What: Source Assignment. Why: The element loads the file. How: This points it at the address.
+
+
+		await imaEleObj.decode(); // What: Decode Call. Why: The photo has to be decoded before it's drawn. How: This waits for it, rejecting for a file the browser can't show.
+
+
+
+		return await sidFitFun( imaEleObj, CHA_SID_NUM, CHA_MAX_NUM ); // What: Shrunk Return. Why: The chat sends one copy. How: This encodes it within its limit.
+
+
+	}
+
+	finally { URL.revokeObjectURL( objUrlStr ); } // What: Address Free. Why: A temporary address holds the file in memory until it's freed. How: This frees it.
+
+
+};
+
+// #endregion chaShrFun
 
 
 
@@ -387,7 +448,7 @@ const jpeConFun = async ( bytValArr : Uint8Array< ArrayBuffer > ) : Promise< Uin
 
 // #region Exports
 
-export { avaShrFun, imaShrFun, imaTypFun, jpeConFun }; // What: Named Exports. Why: Sharing a photo or a profile photo shrinks it, showing one types its bytes, and saving one converts a WebP. How: This exports the shrinks, the type check, and the conversion.
+export { avaShrFun, chaShrFun, imaShrFun, imaTypFun, jpeConFun }; // What: Named Exports. Why: Sharing a photo, a chat photo, or a profile photo shrinks it, showing one types its bytes, and saving one converts a WebP. How: This exports the shrinks, the type check, and the conversion.
 
 // #endregion Exports
 

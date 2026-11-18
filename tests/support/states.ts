@@ -43,7 +43,7 @@ type StaRecTyp = { // What: State Record Type. Why: Every check reads the same d
 	ideStr  : string,                        // What: Identifier String. Why: Each test names the state it checks. How: This becomes part of the test title.
 	patStr  : string,                        // What: Path String. Why: Each state opens one route. How: This is the path loaded from the suite's server.
 	schStr? : 'dark' | 'light',              // What: Scheme String. Why: Every color has a dark value too, which has to pass the same checks. How: This is the phone's color scheme, light when left out.
-	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
+	steStr? : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'photo' | 'requests' | 'settings' | 'sheet' | 'solo' | 'viewer' | 'waiting' | 'welcome', // What: Steps String. Why: A screen past the first is reached by using the app, not by an address, and the waiting screen only by holding the app's check. How: This names the steps that reach it, none when left out.
 	uasStr? : string,                        // What: User Agent String. Why: An iPhone in Safari shows the install steps first, and another app's built-in browser the way out of it. How: This is the user agent the page reports, the browser's own when left out.
 	widNum  : number                         // What: Width Number. Why: Layouts change with width. How: This is the viewport width in CSS pixels.
 
@@ -121,6 +121,8 @@ const STA_REC_ARR : StaRecTyp[] = [ // What: State Record Array. Why: Every chec
 	{ heiNum : 900, ideStr : 'chat-desktop',         patStr : '/',         widNum : 1440, steStr : 'chat'                     }, // What: Chat Desktop State. Why: A chat with an event and a message is checked at a desktop width. How: This fills a new group's chat at 1,440px.
 	{ heiNum : 844, ideStr : 'chat-phone',           patStr : '/',         widNum : 390,  steStr : 'chat'                     }, // What: Chat Phone State. Why: The chat is checked at a phone width. How: This fills a new group's chat at 390px.
 	{ heiNum : 844, ideStr : 'chat-phone-dark',      patStr : '/',         widNum : 390,  schStr : 'dark',    steStr : 'chat' }, // What: Chat Phone Dark State. Why: The chat's dark colors are checked too. How: This fills a new group's chat at 390px with the phone set to dark.
+	{ heiNum : 844, ideStr : 'photo-phone',          patStr : '/',         widNum : 390,  steStr : 'photo'                    }, // What: Photo Phone State. Why: A picked photo shows above the composer with its remove button. How: This picks one in a new group's chat at 390px.
+	{ heiNum : 844, ideStr : 'viewer-phone',         patStr : '/',         widNum : 390,  steStr : 'viewer'                   }, // What: Viewer Phone State. Why: A chat photo opens whole in a sheet of its own. How: This sends one in a new group's chat and opens it at 390px.
 	{ heiNum : 844, ideStr : 'sheet-phone',          patStr : '/',         widNum : 390,  steStr : 'sheet'                    }, // What: Sheet Phone State. Why: The group sheet is a modal layer of its own. How: This opens a new group's sheet at 390px.
 	{ heiNum : 900, ideStr : 'chat-tablet',          patStr : '/',         widNum : 900,  steStr : 'chat'                     }, // What: Chat Tablet State. Why: Between 720px and 1,100px the rail shows and the event stays pinned. How: This fills a new group's chat at 900px.
 	{ heiNum : 844, ideStr : 'event-phone',          patStr : '/',         widNum : 390,  steStr : 'event'                    }, // What: Event Phone State. Why: The pinned event's sheet is a modal layer of its own. How: This opens it at 390px.
@@ -358,6 +360,79 @@ async function chaSteFun ( curPagObj : Page ) : Promise< void > {
 }
 
 // #endregion chaSteFun
+
+
+
+// #region phoSteFun
+
+/**
+ * phoSteFun = Photo Steps Function
+ *
+ * @summary
+ * Picks a drawn photo in the open chat's composer, as the device's picker
+ * would, and waits for its preview. For the viewer state it then sends the
+ * photo with a caption and opens it from the log, waiting for the viewer.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param curPagObj - Current Page Object: The page showing the chat.
+ * @param steStr    - Steps String: Which photo state to reach.
+ *
+ * @returns A promise that settles once the state shows, with no value.
+ *
+ * @example
+ * ```ts
+ * phoSteFun(page, 'viewer') // => Promise<void>
+ * ```
+ *
+*/
+
+async function phoSteFun ( curPagObj : Page, steStr : 'photo' | 'viewer' ) : Promise< void > {
+
+
+	const pngB64Str = await curPagObj.evaluate( () => { // What: PNG Base64 String. Why: The picker needs a real image the browser can shrink. How: This draws a two-color rectangle on a canvas and reads it back as a PNG.
+
+
+		const canEleObj = document.createElement( 'canvas' ); // What: Canvas Element Object. Why: The photo is drawn in the page. How: This makes a canvas off the page.
+
+
+		canEleObj.width  = 400; // What: Canvas Width Assignment. Why: The photo needs a size. How: This makes it 400px wide.
+		canEleObj.height = 300; // What: Canvas Height Assignment. Why: The photo needs a size. How: This makes it 300px tall.
+
+
+		canEleObj.getContext( '2d' )!.fillRect( 0, 0, 200, 300 ); // What: Fill Call. Why: The photo needs something in it. How: This fills its left half black. // What: Non-Null Note. Why: A new canvas always gives a 2D context the first time it's asked. How: The ! reads it as present.
+
+
+
+		return canEleObj.toDataURL( 'image/png' ).split( ',' )[ 1 ]; // What: Base64 Return. Why: The picker is handed the bytes. How: This returns the PNG's base64, after its data URL prefix.
+
+
+	} );
+
+
+
+	await curPagObj.locator( 'form input[type="file"]' ).setInputFiles( { buffer : Buffer.from( pngB64Str, 'base64' ), mimeType : 'image/png', name : 'look.png' } ); // What: Photo Pick Call. Why: The member picks a photo. How: This hands the composer's hidden picker the drawn photo.
+
+	await curPagObj.getByRole( 'img', { name : 'Photo to send' } ).waitFor(); // What: Preview Wait. Why: The picked photo has to show before it's checked or sent. How: This waits for its preview.
+
+
+
+	if ( steStr === 'photo' ) return; // What: Photo Return. Why: The photo state stops with the photo picked. How: This returns.
+
+
+
+	await curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ).fill( 'The table is set.' ); // What: Caption Fill Call. Why: The photo carries a caption. How: This types it.
+
+	await curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ).press( 'Enter' ); // What: Enter Press Call. Why: Enter sends the photo. How: This presses it.
+
+	await curPagObj.getByRole( 'button', { name : 'Open your photo' } ).click(); // What: Photo Click Call. Why: The viewer opens from the photo in the log. How: This presses it once it shows.
+
+	await curPagObj.getByRole( 'dialog', { name : 'Photo' } ).getByRole( 'img', { name : 'Photo you sent' } ).waitFor(); // What: Viewer Wait. Why: The viewer has to show its photo before it's checked. How: This waits for the image in the dialog.
+
+
+}
+
+// #endregion phoSteFun
 
 
 
@@ -701,24 +776,25 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  * @summary
  * Takes a loaded page to the screen a state names by using the app as a person
  * would: the loading state waits for the loader on a page whose database is
- * held ({@link datHolFun}), the join state opens another device's invite
- * link and the waiting state asks through it ({@link joiSteFun}), the map
- * state joins Beach Day from another device's group ({@link memSteFun}),
- * where the owner shares as arrived, and shares from its Map section, and
- * the member state joins it and opens its Settings section, as does the
- * offered state once the group is offered to it. Otherwise the create state
- * opens the form for starting a group and reloads it, so it shows with
- * nothing focused, the group state creates a group named Beach Day, for the
- * chat state fills its chat ({@link chaSteFun}), as do the edit, event,
- * events, and form states, and then opens the app afresh, so the group shows
- * as it does on a later visit, with nothing focused. The event state then
- * opens the pinned event's sheet, the edit state an item's form in it, the
- * events state the Events section, the form state the section's form, the
- * people state the People section, the requests state that section once two
- * people have asked to join ({@link reqSteFun}), the settings state the
- * Settings section, the delete state its deletion's confirmation, the notice
- * state the sheet of notices once two are left ({@link notSteFun}), and the
- * sheet state the group sheet from its switcher. A group needs the Firebase
+ * held ({@link datHolFun}), the join state opens another device's invite link
+ * and the waiting state asks through it ({@link joiSteFun}), the map state
+ * joins Beach Day from another device's group ({@link memSteFun}), where the
+ * owner shares as arrived, and shares from its Map section, and the member
+ * state joins it and opens its Settings section, as does the offered state
+ * once the group is offered to it. Otherwise the create state opens the form
+ * for starting a group and reloads it, so it shows with nothing focused, the
+ * group state creates a group named Beach Day, for the chat state fills its
+ * chat ({@link chaSteFun}), as do the edit, event, events, form, photo, and
+ * viewer states, and then opens the app afresh, so the group shows as it does
+ * on a later visit, with nothing focused. The event state then opens the
+ * pinned event's sheet, the edit state an item's form in it, the events state
+ * the Events section, the form state the section's form, the people state the
+ * People section, the requests state that section once two people have asked
+ * to join ({@link reqSteFun}), the settings state the Settings section, the
+ * delete state its deletion's confirmation, the notice state the sheet of
+ * notices once two are left ({@link notSteFun}), the sheet state the group
+ * sheet from its switcher, and the photo and viewer states a photo picked in
+ * the chat or sent and opened ({@link phoSteFun}). A group needs the Firebase
  * Emulators, which the suites that reach one run inside.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -735,7 +811,7 @@ const bipFakFun = ( curPagObj : Page ) : Promise< void > => curPagObj.evaluate( 
  *
 */
 
-async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'requests' | 'settings' | 'sheet' | 'solo' | 'waiting' | 'welcome' ) : Promise< void > {
+async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delete' | 'edit' | 'erase' | 'event' | 'events' | 'form' | 'group' | 'join' | 'legal' | 'loading' | 'map' | 'member' | 'note' | 'notice' | 'offered' | 'paste' | 'people' | 'photo' | 'requests' | 'settings' | 'sheet' | 'solo' | 'viewer' | 'waiting' | 'welcome' ) : Promise< void > {
 
 
 	if ( steStr === 'loading' ) { // What: Loading Block. Why: The loading state stops at the waiting screen, its database held since before the load. How: This waits for the loader's status and stops.
@@ -902,11 +978,15 @@ async function steRunFun ( curPagObj : Page, steStr : 'chat' | 'create' | 'delet
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Group Wait. Why: The group has to exist before the app is opened again. How: This waits for its heading.
 
-	if ( [ 'chat', 'edit', 'event', 'events', 'form' ].includes( steStr ) ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat, edit, event, events, and form states show a planned event with its list, and a message. How: This plans one and sends one.
+	if ( [ 'chat', 'edit', 'event', 'events', 'form', 'photo', 'viewer' ].includes( steStr ) ) await chaSteFun( curPagObj ); // What: Chat Steps Call. Why: The chat states, and the edit, event, events, and form states, show a planned event with its list, and a message. How: This plans one and sends one.
 
 	await curPagObj.goto( '/' ); // What: Fresh Open Call. Why: A later visit shows the group without the focus its creation gave it. How: This opens the app again.
 
 	await curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ).waitFor(); // What: Reopened Group Wait. Why: The group shows once its list has loaded. How: This waits for its heading.
+
+
+
+	if ( steStr === 'photo' || steStr === 'viewer' ) { await phoSteFun( curPagObj, steStr ); return; } // What: Photo Guard. Why: The photo state stops with a photo picked, and the viewer state with a sent one open. How: This runs the photo steps and returns.
 
 
 

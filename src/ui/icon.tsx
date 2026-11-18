@@ -50,6 +50,7 @@ const ICO_PAT_OBJ = { // What: Icon Path Object. Why: Every icon is drawn the sa
 	lock     : 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
 	map      : 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
 	people   : 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.7',
+	photo    : 'M4 6h16v13H4zM8.5 12a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM4 17l5-5 4 4 3-3 4 4',
 	plus     : 'M12 5v14M5 12h14',
 	send     : 'M4 12l16-8-6 16-2-7z',
 	settings : 'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4',

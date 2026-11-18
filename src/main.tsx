@@ -7,6 +7,7 @@ import { AppRooCom     } from './app.tsx';                // What: App Root Comp
 import { BrowserRouter } from 'react-router';             // What: Browser Router. Why: The routes read the real URL path. How: This wraps AppRooCom so every Route inside it can match against the address bar.
 import { colModAppFun  } from './platform/color-mode.ts'; // What: Color Mode Apply Function. Why: A kept light or dark choice should hold from the first render. How: This is called once before the render below.
 import { createRoot    } from 'react-dom/client';         // What: Create Root. Why: This is React's API for creating the root the app renders into. How: This is called once against index.html's appMouDiv element.
+import { kepPruFun     } from './state/photo-keep.ts';    // What: Keep Prune Function. Why: A device keeps chat photos only as long as its member chose. How: This clears the older ones as the app opens.
 import { StrictMode    } from 'react';                    // What: Strict Mode. Why: Development builds should flag unsafe patterns early. How: This wraps the whole tree below.
 
 
@@ -22,8 +23,9 @@ import './styles/styles.css'; // What: Styles Stylesheet Import. Why: This is th
  *
  * @summary
  * The app's entry point, loaded by index.html's module script and imported
- * nowhere else. It applies the light or dark choice kept on this device, then
- * creates the single React root on index.html's appMouDiv element and renders
+ * nowhere else. It applies the light or dark choice kept on this device,
+ * starts clearing chat photos older than the device keeps them, then creates
+ * the single React root on index.html's appMouDiv element and renders
  * AppRooCom into it, wrapped in StrictMode for development checks and
  * BrowserRouter for the URL-based routing between the pages. In development,
  * outside a browser driven by a test, it also mounts the member switcher on a
@@ -36,6 +38,12 @@ import './styles/styles.css'; // What: Styles Stylesheet Import. Why: This is th
 
 
 colModAppFun(); // What: Color Mode Apply Call. Why: The page should open in the chosen light or dark mode rather than switch after it renders. How: This sets the root's attribute from the kept choice before the render below.
+
+
+
+void kepPruFun().catch( ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Photo Prune Call. Why: Chat photos past the device's chosen span shouldn't take its room (ARCHITECTURE.md Section 22). How: This clears them as the app opens, without holding up the render, logging a failure.
+
+
 
 createRoot( document.getElementById( 'appMouDiv' )! ).render( // What: Root Render Call. Why: This is the app's only mount, rendering the whole app into index.html's mount element. How: This creates a React root on appMouDiv and renders AppRooCom inside StrictMode and the router. // What: Non-Null Note. Why: getElementById's return type allows null. How: index.html always ships the appMouDiv element, so the lookup can't come back empty.
 

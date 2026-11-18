@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-18 (photos in chat messages planned, one per message, capped daily by the owner's plan with a day running from 08:00 UTC, deleted from the server with their message, and kept on each device for 3 months by default with a Storage on this device part to change or clear them, in a new Section 22, with pointers in Sections 3, 4, 13, and 14); 2026-11-14 (saved photos converted to JPEG on save, built, in Section 20, its to-do gone from Section 14; the in-app browser screen checked on real devices, in Section 16); 2026-11-12 (history requests dropped, with a new device or a new joiner seeing chat only from their arrival, in Section 11.9 and every passage that pointed to it, the leftover cleanup in Section 14, and a handoff from the old device as an open idea in Section 13; another app's built-in browser stopped first with a way out to the device's browser or the installed app, in Section 16; stage 6, search and outside checks, done, in Section 14's setup checklist; App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-18 (chat photos built, one per message, capped daily by the owner's plan with a day running from 08:00 UTC, deleted from the server with their message, kept on each device for 3 months by default with a Storage on this device part and a low space card, sendable to a running event's photos instead, not sent offline, and counted once however often their message is retried, in Section 22, with pointers in Sections 3, 4, 5, 13, and 14 and its backstops in Section 14's setup checklist; a photo smaller than 160px shared at its own size, in Section 22); 2026-11-14 (saved photos converted to JPEG on save, built, in Section 20, its to-do gone from Section 14; the in-app browser screen checked on real devices, in Section 16); 2026-11-12 (history requests dropped, with a new device or a new joiner seeing chat only from their arrival, in Section 11.9 and every passage that pointed to it, the leftover cleanup in Section 14, and a handoff from the old device as an open idea in Section 13; another app's built-in browser stopped first with a way out to the device's browser or the installed app, in Section 16; stage 6, search and outside checks, done, in Section 14's setup checklist; App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -166,7 +166,7 @@ long-term data store, see Section 5 for retention rules per data type.
 | Firestore | Structured, lower-frequency data: events, notes/assignments, group & membership metadata, invite tokens, live location |
 | Realtime Database (RTDB) | High-frequency, ephemeral data: chat messages, presence |
 | Cloud Messaging (FCM) | Push notifications, the only mechanism that can reach a backgrounded or closed app on either platform |
-| Storage | Encrypted files: event photos (Section 20), profile photos (Section 21), and chat photos (Section 22, planned) |
+| Storage | Encrypted files: event photos (Section 20), profile photos (Section 21), and chat photos (Section 22) |
 
 No custom signaling server, TURN server, or WebRTC is used. Firebase's
 listeners and FCM replace the need for a peer-to-peer data channel
@@ -246,7 +246,7 @@ from Spark's 100 to 200,000.
 | Notes / task-assignments | Firestore | Under the owning event; single-owner field per claimable item |
 | Event photos | Firestore and Cloud Storage | Each photo's encrypted thumbnail in a doc under the owning event, its encrypted full photo in Storage; see Section 20 |
 | Chat messages | RTDB | Under the owning conversation, each with a waiting-on list of who hasn't received it yet; see Sections 5 and 11.7 |
-| Chat photos (planned) | Firestore and Cloud Storage | A doc per photo under the owning group, its encrypted file in Storage, deleted with its message; see Section 22 |
+| Chat photos | Firestore and Cloud Storage | A doc per photo under the owning group, its encrypted file in Storage, deleted with its message; see Section 22 |
 | Membership mirror | RTDB | `/mirrors/{conversationId}`, written only by a Cloud Function, so the RTDB rules can check membership; see Section 11.7 |
 | Live location | Firestore | One doc per user per group, TTL-expired; see Section 11.4 for why this moved off RTDB |
 | Presence | RTDB | Standard `onDisconnect()` pattern |
@@ -336,6 +336,11 @@ out to be too short for a given group, once it's gone, it's gone.
 - Deleted from the server with their event, 48 hours after it ends, and
   kept on a device only until then unless the member saves them; see
   Section 20.
+
+### Chat photos
+- Deleted from the server with their message, once every member's device
+  has it or the chat's retention ends, and kept on each device for 3
+  months by default, or as long as its member chose; see Section 22.
 
 ### Profile photos
 - Deleted from a group with the membership, and removed from every group
@@ -2124,11 +2129,6 @@ the Blaze change.
     acts on the item, so each answer has one screen.
 
 **App structure, still open**:
-- Chat photos (Section 22): planned 2026-11-18, to build next. It needs the composer's photo
-  button, the message bubble and viewer, the Firestore documents, tallies,
-  and rules, the Storage rule and a `chatPhotos/` lifecycle prefix in both
-  projects, the Cloud Function that deletes a photo with its message, and
-  Settings' Storage on this device.
 - The exact hook API/conventions (naming, loading/error state shape, how
   a hook exposes its listener's unsubscribe).
 - Scroll behavior per screen, decided as each data screen is built. The app's
@@ -2370,6 +2370,13 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          collection group in the console, not by the rules. Each takes no
          expiration offset, since `expireAt` already holds the deletion
          time. All nine set on both projects 2026-11-09.
+   - [ ] Chat photos' backstops (added 2026-11-18, Section 22): Firestore
+         TTL policies on the `expireAt` field of the `chatPhotos` and
+         `chatPhotoTally` collection groups, and a second lifecycle rule on
+         the Storage bucket deleting objects under the `chatPhotos/` prefix
+         181 days after upload, kept apart from the 15-day rule above, in
+         both projects, alongside deploying the rules and the
+         `chpEndFun` and `chpFilFun` functions.
    - [x] The web push (VAPID) key pair generated in each project's Cloud
          Messaging settings (2026-11-09), its public key set as
          `VITE_FIREBASE_VAPID_KEY` in Netlify in stage 3.
@@ -3311,32 +3318,36 @@ added.
 
 ---
 
-## 22. Chat Photos (Planned)
+## 22. Chat Photos
 
-Decided 2026-11-18, not yet built. A member can attach one photo to a chat
-message. People expect to drop a picture into a group chat, and the event
-photos (Section 20) only cover an event's own photos, from its start until
-48 hours after it ends. Chat photos are planned to cost less than event
-photos, since a message leaves the server once every member's device has it
+Decided 2026-11-18, built 2026-11-18. A member can attach one photo to a
+chat message. People expect to drop a picture into a group chat, and the
+event photos (Section 20) only cover an event's own photos, from its start
+until 48 hours after it ends. Chat photos cost less than event photos,
+since a message leaves the server once every member's device has it
 (Section 5), and the photo leaves with it.
 
 ### One photo per message
-- **A photo button beside the composer** picks one photo, shows it small
-  above the field with a way to remove it, and sends it with the message's
-  text, which is optional. One photo per message keeps the composer simple,
-  each push clear ("Sam sent a photo"), and sending many photos at once
-  awkward on purpose.
-- **In the log**, a photo shows inside its message's bubble at a size that
-  fits the bubble, and a tap opens it in a viewer like the event photos'
-  one, with "Save to device", which saves a JPEG the way Section 20's save
-  does, and a line under it saying how long this device keeps chat photos,
-  so a member knows to save one they want to keep.
+- **A photo button beside the composer** opens the device's picker for one
+  photo, which shows small above the field with a way to remove it, and
+  sends with the message's text as its caption, which is optional. One
+  photo per message keeps the composer simple and sending many photos at
+  once awkward on purpose. Pushes stay as they are, saying only that
+  there's news in the chat, since a push never carries a message's content.
+- **In the log**, a photo fills the top of its message's bubble at a fixed
+  width, its caption below it, and a tap opens it in a viewer like the
+  event photos' one, with "Save to device", which saves a JPEG the way
+  Section 20's save does, and a line under it saying how long this device
+  keeps chat photos, so a member knows to save one they want to keep. A
+  photo the device no longer keeps, cleared by age or by the member, leaves
+  its message, whose bubble says "This photo is no longer on this device."
 - **While an event runs**, from its start until its deletion 48 hours after
-  it ends, the picker also offers "Add to this event's photos", which sends
-  the photo through the event photos flow instead (Section 20): it joins the
-  event's grid, counts against the event's limits, and posts the usual
-  photos line. Which way a photo goes is the member's open choice, never a
-  count taken from the event without saying so.
+  it ends, the preview also offers "Add to Picnic's photos instead", naming
+  the latest event to have started, which sends the photo through the
+  event photos flow (Section 20): it joins the event's grid, counts against
+  the event's limits, and posts the usual photos line, while the caption
+  goes as a message of its own. Which way a photo goes is the member's open
+  choice, never a count taken from the event without saying so.
 
 ### How a photo is sent
 1. **Shrunk on the device** the way event photos are (Section 20), turned
@@ -3344,21 +3355,31 @@ photos, since a message leaves the server once every member's device has it
    to 1,280px on its long side, the highest of a few qualities that fits
    200 KB. That's about half an event photo's bytes and still sharp on a
    phone. The log shows the same file scaled down, with no separate
-   thumbnail.
+   thumbnail. A photo already smaller than the shrink's 160px floor is
+   tried once at its own size (a fix that also reaches event photos).
 2. **Encrypted with the group key** under its own IV, as every chat message
    is (Section 6).
 3. **Counted, then uploaded**: the device first adds a document for the
    photo in Firestore, raising the tallies below in the same transaction,
    and then uploads the encrypted file to Cloud Storage, which the Storage
-   rules allow only for a document the member added. The message itself,
-   sent last, carries the photo's ID and IV inside its encrypted payload.
+   rules allow only for a document the member added. The message, sent
+   last, carries the photo's ID and IV inside its encrypted text, and the
+   photo's ID in the clear too, as `photoId`, so the Cloud Function below
+   can find the photo without the group key. A message refused after its
+   photo was uploaded, as just after a group is made while its membership
+   mirror catches up (Section 11.7), is sent again with the same photo,
+   which isn't counted again.
 4. **Fetched before a member is taken off the message's waiting-on list**
    (Section 11.7): a device downloads and stores the photo before it marks
-   the message received, so the message, and with it the photo, never leaves
-   the server before every member's device has both.
-5. **Offline**, the photo waits in the outbox with its message, as messages
-   do (Section 14), already shrunk and encrypted. The outbox holds a few
-   waiting photos at most, so a long offline stretch can't fill the device.
+   the message received, so the message, and with it the photo, never
+   leaves the server before every member's device has both. A download that
+   fails, as when the connection drops, leaves the message unacknowledged,
+   to be fetched again at the next sync. A photo already gone from the
+   server, as when its sender deleted their data, is acknowledged anyway
+   and shows as no longer on the device.
+5. **Offline**, a photo isn't kept to send later: it has to be counted and
+   uploaded, so the composer says photos send only while online and keeps
+   it picked, while a typed message still waits on the device (Section 14).
 
 ### Data model
 - **`/groups/{groupId}/chatPhotos/{photoId}`** in Firestore: `uploaderUid`,
@@ -3368,20 +3389,27 @@ photos, since a message leaves the server once every member's device has it
   photo, typed as generic binary with no custom metadata, capped by the
   rules just over 200 KB.
 - **`/groups/{groupId}/chatPhotoTally/{tallyId}`**: one document for the
-  group and one per member for each day, named by the day, each holding its
-  count, raised with each photo in the same transaction, which the rules
-  require. Deleting a photo doesn't lower them. A day runs from 08:00 UTC
-  to the next 08:00 UTC (decided 2026-11-18): the rules work out its name
-  from the server's time less 8 hours, so no device's clock decides it, and
-  the limits reset between midnight and 4 AM across the continental US
-  (midnight to 1 AM Pacific, 3 to 4 AM Eastern), and in the late evening
-  in Alaska and Hawaii, rather than in the US afternoon at midnight UTC.
-- **A Cloud Function keeps the photo with its message**: when a chat message
-  carrying a photo is deleted from the Realtime Database, however that
+  group (`{day}-all`) and one per member (`{day}-{uid}`) for each day, each
+  holding its count, the last photo it counted, and an `expireAt` TTL field
+  about 2 days out, raised with each photo in the same transaction, which
+  the rules require. Deleting a photo doesn't lower them. A day runs from
+  08:00 UTC to the next 08:00 UTC (decided 2026-11-18): the rules work out
+  its name from the server's time less 8 hours, so no device's clock
+  decides it, and the limits reset between midnight and 4 AM across the
+  continental US (midnight to 1 AM Pacific, 3 to 4 AM Eastern), and in the
+  late evening in Alaska and Hawaii, rather than in the US afternoon at
+  midnight UTC.
+- **Cloud Functions keep the photo with its message**: when a chat message
+  naming a photo is deleted from the Realtime Database, however that
   happens, whether every member received it, the retention ran out, or the
-  group was deleted, it deletes the photo's document and its file. The
-  document's TTL and a lifecycle rule on the `chatPhotos/` prefix at 181
-  days are the backstops.
+  group was deleted, `chpEndFun` deletes the photo's document, but only
+  when the message's sender added that photo, so a message can't name
+  someone else's photo to have it deleted. When a photo's document is
+  deleted, by its message, its TTL, or a group or data deletion,
+  `chpFilFun` deletes its file. A group's deletion also clears its
+  `chatPhotos/` folder, and a member's data deletion their own chat photos
+  in each group. The document's TTL and a lifecycle rule on the
+  `chatPhotos/` prefix at 181 days are the backstops.
 
 ### Limits
 
@@ -3391,41 +3419,44 @@ photos, since a message leaves the server once every member's device has it
 | Chat photos the whole group sends a day | 40 | 120 |
 
 The limits follow the owner's status, as every other limit does
-(Section 18), and the landing page's free and paid cards gain them. When a
-member reaches a limit, the photo button says how many they've sent and
-when they can send more, in the device's own time.
+(Section 18), and the landing page's free and paid cards list them. When a
+photo would pass either limit, the rules refuse it, and the composer says
+the day's photo limit has been reached and when more can be sent, in the
+device's own time, keeping the photo picked.
 
 ### On the device
-- **Kept with the chat history**, in the app's own IndexedDB storage
-  (Section 14), each photo stored encrypted beside its message, so it opens
-  offline and needs no second download.
+- **Kept beside the chat history**, in its own store in the app's IndexedDB
+  storage (Section 14), each photo stored encrypted with its IV and its
+  message's time, so it opens offline and needs no second download. A
+  photo decrypted once stays in memory while the app is open.
 - **Why not the device's own photo library**: a web app can't write a file
   to the photo library or a folder and read it back later, in Safari or
   Chrome on a phone. Saving to the device (the share sheet, or a download on
   a computer) hands the file over, but the app can't link back to it. So
   the app keeps its own copy, and the member saves what they want to keep
   elsewhere.
-- **Storage on this device**, a part of Settings' device parts, shows how
-  much the chat photos take up, read from the stored files, beside the
-  browser's own estimate of what the app uses and has available
-  (`navigator.storage.estimate()`). It offers:
+- **Storage on this device**, a part of Settings below "This device",
+  says how many chat photos the device keeps and how much room they take,
+  read from the stored files, beside the browser's own estimate of what the
+  app uses of what it allows (`navigator.storage.estimate()`), where the
+  browser gives one. It offers:
   - **"Keep chat photos"**: 3 months (the default, decided 2026-11-18), 6
-    months, 1 year, or "Always". The app removes photos older than the
-    choice from this device as it opens. A default that keeps them forever
-    would leave most devices filling up without anyone choosing it, while
-    most chat photos are shared for fun and few people scroll back months,
-    so the default keeps a season's worth, and a member who wants more picks
-    it.
-  - **"Remove chat photos older than..."**: a one-time clean-up, with 30
-    days, 90 days, or all of them, confirmed first.
-  Removing a photo leaves its message, whose bubble then reads "Photo
-  removed from this device". The message's text and the chat history
-  itself are never removed this way.
-- **A note when space runs low**: when the browser's estimate shows the app
-  using most of what it has (80% or more), or the chat photos pass 500 MB,
-  a card above the chat says so once and opens Storage on this device.
-  Asking the browser to keep the storage (Section 14) still applies, so it
-  isn't cleared without warning while space remains.
+    months, 1 year, or "Always", kept on the device. The app removes photos
+    older than the choice from this device as it opens, and at once when
+    the choice gets shorter. A default that keeps them forever would leave
+    most devices filling up without anyone choosing it, while most chat
+    photos are shared for fun and few people scroll back months, so the
+    default keeps a season's worth, and a member who wants more picks it.
+  - **"Remove chat photos now"**: a one-time clean-up of photos older than
+    30 days, older than 90 days, or all of them, confirmed first.
+  Removing a photo leaves its message. The message's text and the chat
+  history itself are never removed this way.
+- **A card when space runs low**: when the browser's estimate shows the app
+  using 80% or more of what it allows, or the chat photos pass 500 MB, a
+  card above the chat says so and opens Settings, staying until one of its
+  buttons is pressed, which the device keeps. Asking the browser to keep
+  the storage (Section 14) still applies, so it isn't cleared without
+  warning while space remains.
 
 ### Cost
 At the limits, a free group sends at most 40 photos a day, about 8 MB, and
@@ -3439,15 +3470,16 @@ The budget alerts and billing cutoff (Section 15) cover a runaway.
 ### Safety
 The same as event photos (Section 20): encrypted, so nothing can be
 scanned, in invite-only groups where the owner can remove a member, and
-covered by the terms' rules for what may be shared. A sender can delete
-their own message, which takes its photo with it, and the owner can
-delete any message.
+covered by the terms' rules for what may be shared. The app has no way to
+delete a sent message, so a chat photo leaves the server with its message,
+once everyone has it or the chat's retention ends.
 
 **Pros**: people can share a photo where the group is talking; it costs
 little, since each photo is small, capped daily, and leaves the server once
 everyone has it; and a device keeps photos for 3 months unless its member
 chooses longer, so storage stays in check by default.
 **Cons**: a photo a member meant to keep but didn't save is gone from their
-device after 3 months unless they changed the setting; a member who joins later never sees earlier
-photos, the same as earlier messages (Section 11.9); and a daily limit can
-stop someone partway through a busy day.
+device after 3 months unless they changed the setting; a member who joins
+later never sees earlier photos, the same as earlier messages (Section
+11.9); a photo can't be sent offline; and a daily limit can stop someone
+partway through a busy day.

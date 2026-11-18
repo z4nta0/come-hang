@@ -6,6 +6,8 @@
 import { briTexFun       } from '../core/chat-status.ts';      // What: Bring Text Function. Why: A bring-list post is sent as a message's text. How: This builds it.
 import { chaMesFun       } from '../core/text-limits.ts';      // What: Chat Message Function. Why: A message is checked by the app alone. How: This applies the limits.
 import { child           } from 'firebase/database';           // What: Child. Why: A message's waiting-on entries sit under it. How: This names one.
+import { chpFetFun       } from './chat-photos.ts';            // What: Chat-Photo Fetch Function. Why: A member's device keeps each photo before it acknowledges the message. How: This fetches it once.
+import { chpSenFun       } from './chat-photos.ts';            // What: Chat-Photo Send Function. Why: A message can carry a photo. How: This gets the photo ready and counted.
 import { collection      } from 'firebase/firestore';          // What: Collection. Why: The waiting-on list names every other member. How: This names the members collection.
 import { decTexFun       } from '../platform/crypto.ts';       // What: Decrypt Text Function. Why: Messages are stored encrypted. How: This decrypts one.
 import { doc             } from 'firebase/firestore';          // What: Doc. Why: The group and this member's membership are read by path. How: This builds a reference.
@@ -15,6 +17,8 @@ import { get             } from 'firebase/database';           // What: Get. Why
 import { getDoc          } from 'firebase/firestore';          // What: Get Doc. Why: The join time and retention are read from Firestore. How: This reads one document.
 import { getDocs         } from 'firebase/firestore';          // What: Get Docs. Why: The members are read together. How: This reads the collection.
 import { ideEnsFun       } from './identity.ts';               // What: Identity Ensure Function. Why: Chat acts as this identity. How: This reads it.
+import { imgDetFun       } from '../core/chat-status.ts';      // What: Image Details Function. Why: A photo message names the photo to fetch. How: This reads its details.
+import { imgTexFun       } from '../core/chat-status.ts';      // What: Image Text Function. Why: A photo message is sent as a message's text. How: This builds it.
 import { keyLoaFun       } from './groups.ts';                 // What: Key Load Function. Why: Messages are encrypted with the group key. How: This loads it.
 import { linNorFun       } from '../core/text-limits.ts';      // What: Lines Normalize Function. Why: A message keeps its line breaks while it's tidied. How: This normalizes it.
 import { mesPutFun       } from '../platform/chat-store.ts';   // What: Message Put Function. Why: The device keeps its chat history. How: This stores a message.
@@ -35,6 +39,7 @@ import { staTexFun       } from '../core/chat-status.ts';      // What: Status T
 
 
 import type { BriKinTyp    } from '../core/chat-status.ts';      // What: Bring Kind Type. Why: A bring-list post names its kind. How: This types it.
+import type { ChpSenTyp    } from './chat-photos.ts';            // What: Chat-Photo Sent Type. Why: A photo message names an uploaded photo. How: This types its ID and IV.
 import type { DataSnapshot } from 'firebase/database';           // What: Data Snapshot. Why: Each message arrives as one. How: This types it.
 import type { MesRecTyp    } from '../platform/chat-store.ts';   // What: Message Record Type. Why: A handled message is stored and handed on as a record. How: This types it.
 import type { OutRecTyp    } from '../platform/outbox-store.ts'; // What: Outbox Record Type. Why: A waiting message is returned to the chat. How: This types it.
@@ -50,15 +55,16 @@ import type { Timestamp    } from 'firebase/firestore';          // What: Timest
  *
  * @summary
  * A group's chat (ARCHITECTURE.md Sections 5 and 11.7). A message is tidied
- * and checked as visible text, or built as a status post, then encrypted
- * under the group key and sent with a waiting-on list naming every other
- * member, and the sender's device keeps its own copy. A member reads only
- * from their own join time, as the rules require, by a one-time sync or by
- * watching the chat. Each message read is decrypted and kept on the device,
- * takes this member off its waiting-on list, takes off members who've left,
- * and is deleted from the server once nobody is waiting on it or it's older
- * than the group's chat retention. A message that won't decrypt isn't kept,
- * but is still acknowledged.
+ * and checked as visible text, or built as a status post, then encrypted under
+ * the group key and sent with a waiting-on list naming every other member, and
+ * the sender's device keeps its own copy. A message can carry one photo, sent
+ * and counted first and fetched by each device before it acknowledges the
+ * message. A member reads only from their own join time, as the rules require,
+ * by a one-time sync or by watching the chat. Each message read is decrypted
+ * and kept on the device, takes this member off its waiting-on list, takes off
+ * members who've left, and is deleted from the server once nobody is waiting
+ * on it or it's older than the group's chat retention. A message that won't
+ * decrypt isn't kept, but is still acknowledged.
  *
  * Sections:
  *  - Types
@@ -182,13 +188,15 @@ const chaCtxFun = async ( groIdeStr : string ) : Promise< ChaCtxTyp > => { // Wh
  *
  * @summary
  * Handles one message read from the server: decrypts it and keeps it on the
- * device, deletes this member's waiting-on entry, deletes the entries of
- * members who've left, rereading the members first so someone who joined
- * since isn't mistaken for gone, and deletes the message once nobody is
- * waiting on it or it's older than the retention. Resolves with the stored
- * record, or null for a message that won't decrypt, which is still
- * acknowledged. A cleanup another member's device already made, or one the
- * rules refuse while the mirror catches up, is skipped.
+ * device, keeps a photo message's photo too, deletes this member's waiting-on
+ * entry, deletes the entries of members who've left, rereading the members
+ * first so someone who joined since isn't mistaken for gone, and deletes the
+ * message once nobody is waiting on it or it's older than the retention.
+ * Resolves with the stored record, or null for a message that won't decrypt,
+ * which is still acknowledged. A photo message whose photo fails to download
+ * is shown but left unacknowledged, to be read again at the next sync. A
+ * cleanup another member's device already made, or one the rules refuse while
+ * the mirror catches up, is skipped.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -218,6 +226,13 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
 
 
 	if ( mesRecObj ) await mesPutFun( mesRecObj ); // What: Store Call. Why: The device keeps the history the server won't. How: This stores the message.
+
+
+
+	const imgDetObj = texValStr === null ? null : imgDetFun( texValStr ); // What: Image Details Object. Why: A photo message's photo has to be on the device before the message can leave the server (Section 22). How: This reads its details, null for any other message.
+
+
+	if ( imgDetObj !== null && !await chpFetFun( chaCtxObj.groIdeStr, imgDetObj.phoIdeStr, b64DecFun( imgDetObj.iniVecStr ), mesValObj.sentAt ).then( () => true, () => false ) ) return mesRecObj; // What: Fetch Guard. Why: A photo that didn't download, as when the connection drops, mustn't be acknowledged, or the server could delete it before this device has it. How: This fetches the photo, and on a failure returns the message unacknowledged, to be read again at the next sync.
 
 
 
@@ -261,14 +276,14 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  * mesSenFun = Message Send Function
  *
  * @summary
- * Sends a message's text to a group's chat as given, encrypted under the
- * group key, stamped with the server's time, and waiting on every other
- * member, marked quiet when asked, so it pushes nobody. While the server
- * decides on it, this device's own watch skips it, so a refused message is
- * never shown or kept. Once it's accepted, the sender's device keeps its own
- * copy, which the group's open watches are handed too, and a message nobody
- * waits on, in a group of one, is deleted from the server. Resolves with
- * the message's ID.
+ * Sends a message's text to a group's chat as given, encrypted under the group
+ * key, stamped with the server's time, and waiting on every other member,
+ * marked quiet when asked, so it pushes nobody, and naming the photo it
+ * carries, when it carries one. While the server decides on it, this device's
+ * own watch skips it, so a refused message is never shown or kept. Once it's
+ * accepted, the sender's device keeps its own copy, which the group's open
+ * watches are handed too, and a message nobody waits on, in a group of one, is
+ * deleted from the server. Resolves with the message's ID.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -276,6 +291,9 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  * @param mesTexStr - Message Text String: The message's text, as sent.
  * @param quiValBoo - Quiet Value Boolean: Whether the message pushes
  *                    nobody, false by default.
+ * @param phoIdeStr - Photo Identifier String: The photo the message
+ *                    carries, named in the clear so a Cloud Function can
+ *                    delete it with the message, or null by default.
  *
  * @returns A promise that resolves with the message's ID.
  *
@@ -286,7 +304,7 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  *
 */
 
-const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = false ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
+const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = false, phoIdeStr : string | null = null ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
 
 
 	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The message names its sender. How: This reads the identity.
@@ -314,7 +332,8 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = fa
 			sentAt     : serverTimestamp(),                                                          // What: Sent At. Why: The rules require the server's time. How: This asks the server to fill it in.
 			waitingOn  : Object.fromEntries( othUidArr.map( ( othUidStr ) => [ othUidStr, true ] ) ), // What: Waiting On. Why: The message stays until every other member has it. How: This lists them, which the database drops when there's nobody.
 
-			...( quiValBoo ? { quiet : true } : {} ) // What: Quiet Spread. Why: A bring-list line shouldn't push anyone, and the push function can't read the encrypted text. How: This marks the message quiet in the clear when asked, and adds nothing otherwise.
+			...( phoIdeStr === null ? {} : { photoId : phoIdeStr } ), // What: Photo Spread. Why: A Cloud Function deletes the photo with its message, and can't read the encrypted text. How: This names the photo in the clear when there is one, and adds nothing otherwise.
+			...( quiValBoo ? { quiet : true } : {} )                  // What: Quiet Spread. Why: A bring-list line shouldn't push anyone, and the push function can't read the encrypted text. How: This marks the message quiet in the clear when asked, and adds nothing otherwise.
 
 
 		} );
@@ -399,6 +418,51 @@ const chaSenFun = async ( groIdeStr : string, mesTexStr : string ) : Promise< st
 };
 
 // #endregion chaSenFun
+
+
+type CifResTyp = { mesIdeStr : string, texValStr : string }; // What: Chat-Image-Function Result Type. Why: The sender's copy of a photo message shows at once. How: This types its ID and text.
+
+// #region chaImgFun
+
+/**
+ * chaImgFun = Chat Image Function
+ *
+ * @summary
+ * Sends the message for a photo already counted and uploaded with chaUplFun
+ * (ARCHITECTURE.md Section 22), with an optional caption, tidied, naming the
+ * photo, and resolves with the message's ID and text. A refused or failed
+ * send can be tried again with the same photo, which isn't counted again.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param chpSenObj - Chat-Photo Sent Object: The uploaded photo's ID and IV,
+ *                    from chaUplFun.
+ * @param capTexStr - Caption Text String: What was typed with it, which may
+ *                    be empty.
+ *
+ * @returns A promise that resolves with the message's ID and text.
+ *
+ * @example
+ * ```ts
+ * chaImgFun('Xk3...', chpSenObj, 'Look!') // => { mesIdeStr, texValStr }
+ * ```
+ *
+*/
+
+const chaImgFun = async ( groIdeStr : string, chpSenObj : ChpSenTyp, capTexStr : string ) : Promise< CifResTyp > => { // What: Chat Image Function. Why: A member attaches a photo to a message (Section 22). How: This sends the message naming the uploaded photo.
+
+
+	const texValStr = imgTexFun( chpSenObj.phoIdeStr, b64EncFun( chpSenObj.iniVecArr ), linNorFun( capTexStr ) ); // What: Text Value String. Why: The photo message is sent, and shown by the sender, as a message's text. How: This builds it from the photo's ID, its IV, and the tidied caption.
+
+
+
+	return { mesIdeStr : await mesSenFun( groIdeStr, texValStr, false, chpSenObj.phoIdeStr ), texValStr }; // What: Send Return. Why: The caller shows the sender's copy at once, by its ID and text. How: This sends the photo message, naming the photo in the clear too, and resolves with both.
+
+
+};
+
+// #endregion chaImgFun
 
 
 
@@ -637,6 +701,54 @@ const chaSynFun = async ( groIdeStr : string ) : Promise< number > => { // What:
 
 
 
+// #region chaUplFun
+
+/**
+ * chaUplFun = Chat Upload Function
+ *
+ * @summary
+ * Gets a photo ready for a group's chat (ARCHITECTURE.md Section 22): checks
+ * the caption it'll go with as a message, then shrinks, encrypts, counts, and
+ * uploads the photo, timed by the server's clock, and resolves with its ID
+ * and IV for chaImgFun to name. Rejects with a RangeError for a caption
+ * outside a message's limits, before anything is counted, or with the
+ * RangeError chpSenFun gives once a day's limit is reached.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param groIdeStr - Group Identifier String: The group's ID.
+ * @param filValObj - File Value Object: The picked photo.
+ * @param capTexStr - Caption Text String: What will be sent with it, which
+ *                    may be empty.
+ *
+ * @returns A promise that resolves with the photo's ID and IV.
+ *
+ * @example
+ * ```ts
+ * chaUplFun('Xk3...', filValObj, 'Look!') // => { iniVecArr, phoIdeStr }
+ * ```
+ *
+*/
+
+const chaUplFun = async ( groIdeStr : string, filValObj : Blob, capTexStr : string ) : Promise< ChpSenTyp > => { // What: Chat Upload Function. Why: A photo is counted and uploaded before its message is sent, once, however many times the message is tried. How: This checks the caption, then sends the photo.
+
+
+	const capNorStr = linNorFun( capTexStr ); // What: Caption Normalized String. Why: The caption is checked as it'll be sent. How: This normalizes it, keeping its line breaks.
+
+
+	if ( capNorStr !== '' && !chaMesFun( capNorStr ) ) throw new RangeError( 'The message is outside its limits.' ); // What: Caption Guard. Why: A caption is checked as a message before the photo is counted. How: This rejects it here.
+
+
+
+	return chpSenFun( groIdeStr, filValObj, await srvTimFun() ); // What: Upload Return. Why: The message names the photo once it's counted and uploaded. How: This sends the photo, timed by the server's clock.
+
+
+};
+
+// #endregion chaUplFun
+
+
+
 // #region chaWatFun
 
 /**
@@ -726,7 +838,7 @@ const chaWatFun = async ( groIdeStr : string, onMesFun : ( mesRecObj : MesRecTyp
 
 // #region Exports
 
-export { chaBriFun, chaOutFun, chaPhoFun, chaQueFun, chaSenFun, chaStaFun, chaSynFun, chaWatFun, outSubFun }; // What: Named Exports. Why: The screens send, queue, and flush messages, follow the outbox, send status posts, catch up, and watch through these. How: This exports the functions.
+export { chaBriFun, chaImgFun, chaOutFun, chaPhoFun, chaQueFun, chaSenFun, chaStaFun, chaSynFun, chaUplFun, chaWatFun, outSubFun }; // What: Named Exports. Why: The screens send, queue, and flush messages, upload and send photos, follow the outbox, send status posts, catch up, and watch through these. How: This exports the functions.
 
 // #endregion Exports
 
