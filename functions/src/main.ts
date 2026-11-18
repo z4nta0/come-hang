@@ -7,6 +7,8 @@ import { avaFilFun } from './avatars.ts';          // What: Avatar File Function
 import { bilCutFun } from './billing-cutoff.ts';   // What: Billing Cutoff Function. Why: Spending past the budget unlinks billing. How: This is the budget topic's trigger.
 import { chaPusFun } from './activity-pushes.ts';  // What: Chat Push Function. Why: Members away from a group learn its chat moved on. How: This is the message trigger.
 import { cheCreFun } from './purchase.ts';         // What: Checkout Create Function. Why: Buying the upgrade starts from the app. How: This is the callable that opens a Polar checkout.
+import { chpEndFun } from './chat-photos.ts';      // What: Chat-Photo End Function. Why: A chat photo goes with its message. How: This is the message deletion trigger.
+import { chpFilFun } from './chat-photos.ts';      // What: Chat-Photo File Function. Why: A chat photo's file goes with its document. How: This is the chat photo deletion trigger.
 import { dayRunFun } from './daily-run.ts';        // What: Day Run Function. Why: Offers lapse and inactive owners' groups are offered on through it. How: This is the schedule.
 import { decOffFun } from './offer-decline.ts';    // What: Decline Offer Function. Why: The member offered a group declines through it. How: This is the callable.
 import { delDatFun } from './data-deletion.ts';    // What: Delete Data Function. Why: Someone deletes their data through it. How: This is the callable.
@@ -41,6 +43,6 @@ import { polWebFun } from './purchase.ts';         // What: Polar Webhook Functi
 
 
 
-export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, chpEndFun, chpFilFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 

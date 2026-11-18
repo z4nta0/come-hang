@@ -3,8 +3,10 @@
 
 // #region Imports
 
+import { chaMesFun } from './text-limits.ts'; // What: Chat Message Function. Why: A photo message's caption is checked like any message before it's shown. How: This applies the message's limits.
 import { eveTitFun } from './text-limits.ts'; // What: Event Title Function. Why: A photos or bring-list post's title is checked before it's shown. How: This applies the title's limits.
 import { iteLabFun } from './text-limits.ts'; // What: Item Label Function. Why: A bring-list post's labels are checked before they're shown. How: This applies a label's limits.
+import { linNorFun } from './text-limits.ts'; // What: Lines Normalize Function. Why: A photo message's caption has to arrive already tidy, its line breaks kept. How: This tidies it for the comparison.
 import { texNorFun } from './text-limits.ts'; // What: Text Normalize Function. Why: A post's title and labels have to arrive already tidy. How: This tidies them for the comparison.
 
 // #endregion Imports
@@ -29,6 +31,12 @@ import { texNorFun } from './text-limits.ts'; // What: Text Normalize Function. 
  * as an event's ID, a title, and labels within their limits reads as a
  * status this version can't show.
  *
+ * A photo message (Section 22) takes the same form, so a version that
+ * doesn't know photos shows it as a status it can't show rather than as
+ * text: its kind, then the photo's ID, the photo's IV as base64, and its
+ * caption, which may be empty. Its parts are checked the same way, and the
+ * chat shows it as a message with its photo rather than as a line.
+ *
  * Sections:
  *  - Types
  *  - Constants
@@ -46,6 +54,10 @@ import { texNorFun } from './text-limits.ts'; // What: Text Normalize Function. 
 type BriKinTyp = 'add' | 'cla'; // What: Bring Kind Type. Why: A bring-list post either adds to the list or claims from it. How: This types the two kinds, 'add' for adding and 'cla' for claiming.
 
 type BriDetTyp = { couNum : number, eveIdeStr : string, kinValStr : BriKinTyp, labArr : string[], titTexStr : string }; // What: Bring Details Type. Why: A bring-list line names who changed what, for which event, and how much. How: This types a post's kind, event, title, item count, and the labels it names.
+
+
+
+type ImgDetTyp = { capTexStr : string, iniVecStr : string, phoIdeStr : string }; // What: Image Details Type. Why: A photo message names its photo, how it decrypts, and what was said with it. How: This types the caption, the IV as base64, and the photo's ID.
 
 
 
@@ -119,6 +131,54 @@ const briDetFun = ( texValStr : string ) : BriDetTyp | null => { // What: Bring 
 
 
 
+// #region imgDetFun
+
+/**
+ * imgDetFun = Image Details Function
+ *
+ * @summary
+ * Reads a photo message's details: the photo's ID, its IV as base64, and its
+ * caption. Returns null for any other text, or for a photo message whose ID
+ * isn't a document ID, whose IV isn't 16 base64 characters, or whose caption
+ * isn't already tidy and within a message's limits, since another member
+ * wrote it.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+ * @param texValStr - Text Value String: A message's decrypted text.
+ *
+ * @returns The photo message's details, or null.
+ *
+ * @example
+ * ```ts
+ * imgDetFun(imgTexStr) // => { capTexStr : 'Look', iniVecStr : 'Ab...', ... }
+ * ```
+ *
+*/
+
+const imgDetFun = ( texValStr : string ) : ImgDetTyp | null => { // What: Image Details Function. Why: A photo message shows its photo and caption. How: This splits and checks the message's details.
+
+
+	const [ kinValStr, phoIdeStr, iniVecStr, capTexStr, ...extValArr ] = texValStr.slice( STA_PRE_STR.length ).split( STA_SEP_STR ); // What: Kind Value String. Why: The kind leads. How: This reads it. // What: Photo Identifier String. Why: The photo comes first after the kind. How: This reads its ID. // What: Initialization Vector String. Why: The photo decrypts with its IV. How: This reads it as base64. // What: Caption Text String. Why: The caption comes last. How: This reads it. // What: Extra Value Array. Why: A photo message holds nothing more. How: This collects anything beyond.
+
+	const capValBoo = capTexStr !== undefined && linNorFun( capTexStr ) === capTexStr && ( capTexStr === '' || chaMesFun( capTexStr ) ); // What: Caption Valid Boolean. Why: The caption shows as a message's text, and may be empty. How: This requires it tidy and, when present, within a message's limits.
+	const ideValBoo = phoIdeStr !== undefined && /^[A-Za-z0-9]{20}$/.test( phoIdeStr );                                                 // What: Identifier Valid Boolean. Why: The ID names a file the app downloads. How: This allows only a 20-character Firestore ID.
+	const iniVecBoo = iniVecStr !== undefined && /^[A-Za-z0-9+/]{16}$/.test( iniVecStr );                                               // What: Initialization Vector Boolean. Why: A 12-byte IV is 16 base64 characters. How: This checks its form.
+	const kinImgBoo = texValStr.startsWith( STA_PRE_STR ) && kinValStr === 'img';                                                       // What: Kind Image Boolean. Why: Only a photo message has these details. How: This checks the prefix and the kind.
+
+	const detValBoo = capValBoo && ideValBoo && iniVecBoo && kinImgBoo && extValArr.length === 0; // What: Details Valid Boolean. Why: Every part has to read right. How: This combines the checks.
+
+
+
+	return detValBoo ? { capTexStr : capTexStr!, iniVecStr : iniVecStr!, phoIdeStr : phoIdeStr! } : null; // What: Details Return. Why: Only well-formed details are shown. How: This returns them, or null. // What: Non-Null Note. Why: The checks just above require all three to be present. How: The ! reads them as present.
+
+
+};
+
+// #endregion imgDetFun
+
+
+
 // #region staDetFun
 
 /**
@@ -172,8 +232,9 @@ const staDetFun = ( texValStr : string ) : { eveIdeStr : string, titTexStr : str
  *
  * @summary
  * Reads a message's text as a status post. Returns the post's kind, 'pho'
- * only for a photos post and 'add' or 'cla' only for a bring-list post whose
- * details read well, or 'unk' for a status post
+ * only for a photos post, 'img' only for a photo message, and 'add' or
+ * 'cla' only for a bring-list post whose details read well, or 'unk' for a
+ * status post
  * of a kind this version doesn't know or can't show, which a later version
  * may send, or null for an ordinary message.
  *
@@ -190,7 +251,7 @@ const staDetFun = ( texValStr : string ) : { eveIdeStr : string, titTexStr : str
  *
 */
 
-const staKinFun = ( texValStr : string ) : BriKinTyp | StaKinTyp | 'pho' | 'unk' | null => { // What: Status Kind Function. Why: The chat shows a status post as a line rather than a message. How: This reads its kind from the text.
+const staKinFun = ( texValStr : string ) : BriKinTyp | StaKinTyp | 'img' | 'pho' | 'unk' | null => { // What: Status Kind Function. Why: The chat shows a status post as a line rather than a message. How: This reads its kind from the text.
 
 
 	if ( !texValStr.startsWith( STA_PRE_STR ) ) return null; // What: Ordinary Guard. Why: A typed message is no status post. How: This returns null without the prefix.
@@ -198,6 +259,10 @@ const staKinFun = ( texValStr : string ) : BriKinTyp | StaKinTyp | 'pho' | 'unk'
 
 
 	const kinValStr = texValStr.slice( STA_PRE_STR.length ); // What: Kind Value String. Why: The kind follows the prefix. How: This takes the rest of the text.
+
+
+
+	if ( imgDetFun( texValStr ) !== null ) return 'img'; // What: Image Guard. Why: A photo message carries details after its kind. How: This returns its kind when they read well.
 
 
 
@@ -221,6 +286,7 @@ const staKinFun = ( texValStr : string ) : BriKinTyp | StaKinTyp | 'pho' | 'unk'
 
 
 
+const imgTexFun = ( phoIdeStr : string, iniVecStr : string, capTexStr : string ) : string => [ STA_PRE_STR + 'img', phoIdeStr, iniVecStr, capTexStr ].join( STA_SEP_STR ); // What: Image Text Function. Why: A photo message is sent as an ordinary message's text, naming its photo, how it decrypts, and its caption. How: This joins the kind and the details.
 const briTexFun = ( kinValStr : BriKinTyp, eveIdeStr : string, titTexStr : string, labArr : string[], couNum : number ) : string => [ STA_PRE_STR + kinValStr, eveIdeStr, titTexStr, String( couNum ), ...labArr.slice( 0, 3 ) ].join( STA_SEP_STR ); // What: Bring Text Function. Why: A bring-list post is sent as an ordinary message's text, naming its event and items. How: This joins the prefix and kind, then the event's ID and title, the count, and the first three labels, each after a separator.
 const staPhoFun = ( eveIdeStr : string, titTexStr : string ) : string => STA_PRE_STR + 'pho' + STA_SEP_STR + eveIdeStr + STA_SEP_STR + titTexStr; // What: Status Photos Function. Why: A photos post is sent as an ordinary message's text, naming its event. How: This joins the prefix, the kind, and the event's ID and title, each after a separator.
 const staTexFun = ( staKinStr : StaKinTyp ) : string => STA_PRE_STR + staKinStr; // What: Status Text Function. Why: A status post is sent as an ordinary message's text. How: This joins the prefix and the kind.
@@ -231,7 +297,7 @@ const staTexFun = ( staKinStr : StaKinTyp ) : string => STA_PRE_STR + staKinStr;
 
 // #region Exports
 
-export { briDetFun, type BriDetTyp, type BriKinTyp, briTexFun, staDetFun, staKinFun, type StaKinTyp, staPhoFun, staTexFun }; // What: Named Exports. Why: The chat sends and shows status posts through these. How: This exports the helpers and the kinds' types.
+export { briDetFun, type BriDetTyp, type BriKinTyp, briTexFun, imgDetFun, type ImgDetTyp, imgTexFun, staDetFun, staKinFun, type StaKinTyp, staPhoFun, staTexFun }; // What: Named Exports. Why: The chat sends and shows status posts through these. How: This exports the helpers and the kinds' types.
 
 // #endregion Exports
 

@@ -87,6 +87,13 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * uploader or the owner deletes one, while Cloud Functions keep them in step
  * with their event and delete the full photos in Storage.
  *
+ * A member sends a photo in the chat by first adding its document in their
+ * own name, as the same batch raises the group's and the member's tallies
+ * for the day by one, within limits that follow the owner's status. A day
+ * runs from 08:00 UTC, worked out from the server's time. Nobody but Cloud
+ * Functions reads or deletes a chat photo's document, which goes with its
+ * message, and members read the tallies.
+ *
  * A member shares their own location for one event, from 3 hours before it
  * starts until it ends. Each update overwrites the last, stamped with the
  * server's time, and expires an hour later or at the event's end, whichever
@@ -152,6 +159,34 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion accPatFun
+
+
+
+		// #region chpPatFun
+
+		function chpPatFun ( groIdeStr, phoIdeStr ) { // What: Chat-Photo Path Function. Why: A chat photo tally's rules check the photo it counts. How: This returns the chat photo document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/chatPhotos/$(phoIdeStr); // What: Chat-Photo Path Return. Why: A lookup needs the full path. How: This builds it from the group and photo IDs.
+
+
+		}
+
+		// #endregion chpPatFun
+
+
+
+		// #region cptPatFun
+
+		function cptPatFun ( groIdeStr, talIdeStr ) { // What: Chat-Photo-Tally Path Function. Why: A chat photo's rules check the day's counts it raises. How: This returns the tally document's path.
+
+
+			return /databases/$(database)/documents/groups/$(groIdeStr)/chatPhotoTally/$(talIdeStr); // What: Chat-Photo-Tally Path Return. Why: A lookup needs the full path. How: This builds it from the group ID and the tally's name, a day and all or a UID.
+
+
+		}
+
+		// #endregion cptPatFun
 
 
 
@@ -324,6 +359,34 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 		}
 
 		// #endregion belCapFun
+
+
+
+		// #region cpgCapFun
+
+		function cpgCapFun ( uidValStr ) { // What: Chat-Photo-Group Cap Function. Why: The photos a whole group sends in its chat each day are capped by the group owner's status (Section 22). How: This returns the cap for the owner given.
+
+
+			return isaPaiFun( uidValStr ) ? 120 : 40; // What: Chat-Photo-Group Cap Return. Why: A paid owner's group may send 120 chat photos a day, and a free owner's 40. How: This picks one.
+
+
+		}
+
+		// #endregion cpgCapFun
+
+
+
+		// #region cpmCapFun
+
+		function cpmCapFun ( uidValStr ) { // What: Chat-Photo-Member Cap Function. Why: The photos one member sends in the chat each day are capped by the group owner's status (Section 22). How: This returns the cap for the owner given.
+
+
+			return isaPaiFun( uidValStr ) ? 30 : 10; // What: Chat-Photo-Member Cap Return. Why: A member may send 30 chat photos a day in a paid owner's group, and 10 in a free owner's. How: This picks one.
+
+
+		}
+
+		// #endregion cpmCapFun
 
 
 
@@ -1823,6 +1886,133 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 
 
+		// #region Chat Photo Rules
+
+		// #region cptRisFun
+
+		function cptRisFun ( groIdeStr, talIdeStr, phoIdeStr, capValNum ) { // What: Chat-Photo-Tally Rise Function. Why: A chat photo is added only as the day's counts rise, so the limits can't be skipped (Section 22). How: This is true when the tally rises by exactly one for this photo once the batch is applied, staying within the cap.
+
+
+			let talPatStr = cptPatFun( groIdeStr, talIdeStr ); // What: Tally Path String. Why: The tally is read before and after the batch. How: This names its path once.
+
+			let couBefNum = exists( talPatStr ) ? get( talPatStr ).data.count : 0; // What: Count Before Number. Why: The day's first photo starts from no tally. How: This reads the count before the batch, 0 when there's none.
+			let talAftObj = getAfter( talPatStr ).data;                            // What: Tally After Object. Why: The batch has to leave the tally raised. How: This reads it as the batch leaves it.
+
+			let capValBoo = talAftObj.count <= capValNum;       // What: Cap Valid Boolean. Why: A count past its cap means one photo too many. How: This compares the raised count with the cap.
+			let couRisBoo = talAftObj.count == couBefNum + 1;   // What: Count Rise Boolean. Why: Each photo raises its counts by one. How: This compares the counts after and before.
+			let lasPhoBoo = talAftObj.lastPhotoId == phoIdeStr; // What: Last Photo Boolean. Why: The rise is for this photo, so one rise can't cover two. How: This requires the tally to name it.
+
+			let talRisBoo = capValBoo && couRisBoo && lasPhoBoo; // What: Tally Rise Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return talRisBoo; // What: Tally Rise Return. Why: The chat photo's create check reads the answer for each tally. How: This returns it.
+
+
+		}
+
+		// #endregion cptRisFun
+
+
+
+		// #region dayKeyFun
+
+		function dayKeyFun () { // What: Day Key Function. Why: The chat photo limits count by the day, which runs from 08:00 UTC so it turns over at night across the US, and the server's time decides it, never a device's clock (Section 22). How: This returns the day's number since 1970, counted from the server's time less 8 hours, as text.
+
+
+			return string( int( ( request.time.toMillis() - 28800000 ) / 86400000 ) ); // What: Day Key Return. Why: A tally's name starts with its day. How: This takes 8 hours off the server's time in milliseconds and counts whole days, as text.
+
+
+		}
+
+		// #endregion dayKeyFun
+
+
+
+		// #region expBacFun
+
+		function expBacFun ( expValObj, dayValNum ) { // What: Expire Backstop Function. Why: A chat photo's document and its tallies expire on their own as a backstop, a set number of days after they're added, and the device sets the time by its own clock, which can run a little off the server's (Section 22). How: This is true for a timestamp within a day either side of that many days past the server's time.
+
+
+			let expLowBoo = expValObj > request.time + duration.value( dayValNum - 1, 'd' );  // What: Expire Low Boolean. Why: The backstop can't come early. How: This requires the time past the days given, less one.
+			let expTimBoo = expValObj is timestamp;                                           // What: Expire Timestamp Boolean. Why: A TTL field has to be a timestamp. How: This checks the type.
+			let expUppBoo = expValObj <= request.time + duration.value( dayValNum + 1, 'd' ); // What: Expire Upper Boolean. Why: The backstop can't be pushed far off. How: This caps the time at the days given, plus one.
+
+			let expBacBoo = expTimBoo && expLowBoo && expUppBoo; // What: Expire Backstop Boolean. Why: Every check has to pass, the type first. How: This combines them.
+
+
+
+			return expBacBoo; // What: Expire Backstop Return. Why: The chat photo's and tally's checks read the answer. How: This returns it.
+
+
+		}
+
+		// #endregion expBacFun
+
+
+
+		// #region creChpFun
+
+		function creChpFun ( groIdeStr, phoIdeStr ) { // What: Create Chat-Photo Function. Why: A member adds a chat photo in their own name within the day's limits, before its file is uploaded and its message sent (Section 22). How: This is true for a member writing exactly the photo's three fields as its uploader while both of the day's tallies rise for it.
+
+
+			let chpDatObj = request.resource.data;                       // What: Chat-Photo Data Object. Why: Every field check reads the incoming photo. How: This names it once.
+			let dayKeyStr = dayKeyFun();                                 // What: Day Key String. Why: The tallies are named by the day. How: This works it out from the server's time.
+			let ownUidStr = get( groPatFun( groIdeStr ) ).data.ownerUid; // What: Owner UID String. Why: The limits follow the group owner's status. How: This reads the owner.
+
+			let creNowBoo = chpDatObj.createdAt == request.time;                                                           // What: Created Now Boolean. Why: A photo's time comes from when it was really added. How: This requires the server's time.
+			let expBacBoo = expBacFun( chpDatObj.expireAt, 181 );                                                          // What: Expire Backstop Boolean. Why: The document's backstop sits a day past the longest chat retention (Section 5). How: This requires about 181 days out.
+			let fieAllBoo = chpDatObj.keys().toSet() == [ 'createdAt', 'expireAt', 'uploaderUid' ].toSet();                // What: Fields All Boolean. Why: A chat photo's document holds exactly its three fields, the photo itself living in Storage. How: This compares them with the full set.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                        // What: Is-A Member Boolean. Why: Only members send photos. How: This requires the requester to be a member.
+			let isaUplBoo = isaOwnFun( chpDatObj.uploaderUid );                                                            // What: Is-An Uploader Boolean. Why: Nobody sends a photo in someone else's name. How: This requires the requester to be named as the uploader.
+			let talAllBoo = cptRisFun( groIdeStr, dayKeyStr + '-all', phoIdeStr, cpgCapFun( ownUidStr ) );                 // What: Tally All Boolean. Why: The group's chat photos are capped each day. How: This requires the group's tally for the day to rise for this photo within its cap.
+			let talMemBoo = cptRisFun( groIdeStr, dayKeyStr + '-' + request.auth.uid, phoIdeStr, cpmCapFun( ownUidStr ) ); // What: Tally Member Boolean. Why: One member's chat photos are capped each day too. How: This requires the requester's tally for the day to rise for this photo within its cap.
+
+			let creAllBoo = creNowBoo && expBacBoo && fieAllBoo && isaMemBoo && isaUplBoo && talAllBoo && talMemBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return creAllBoo; // What: Create Allowed Return. Why: The chat photo's create rule reads the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion creChpFun
+
+
+
+		// #region setCptFun
+
+		function setCptFun ( groIdeStr, talIdeStr ) { // What: Set Chat-Photo-Tally Function. Why: A day's tally rises by one only as a chat photo is added in the same batch, under the group's name for the day or the uploader's own (Section 22). How: This is true for a member raising today's group tally or their own by one, naming a photo the batch creates in their name.
+
+
+			let couBefNum = resource == null ? 0 : resource.data.count; // What: Count Before Number. Why: The day's first photo starts the tally. How: This reads the count before the write, 0 when there's none.
+			let dayKeyStr = dayKeyFun();                                // What: Day Key String. Why: Only today's tallies rise. How: This works out the day from the server's time.
+			let phoIdeStr = request.resource.data.lastPhotoId;          // What: Photo Identifier String. Why: The tally names the photo that raised it. How: This reads it.
+			let phoPatStr = chpPatFun( groIdeStr, phoIdeStr );          // What: Photo Path String. Why: The photo is checked before and after the batch. How: This names its path once.
+
+			let couRisBoo = request.resource.data.count == couBefNum + 1;                                                                   // What: Count Rise Boolean. Why: Each photo raises the tally by one. How: This compares the counts.
+			let expBacBoo = expBacFun( request.resource.data.expireAt, 2 );                                                                 // What: Expire Backstop Boolean. Why: A day's tally is no use once its day is over. How: This requires it to expire about 2 days out.
+			let fieAllBoo = request.resource.data.keys().toSet() == [ 'count', 'expireAt', 'lastPhotoId' ].toSet() && phoIdeStr is string;  // What: Fields All Boolean. Why: A tally holds exactly its count, its expiry, and the photo that last raised it. How: This compares them with the full set and requires the photo's ID as text.
+			let isaMemBoo = isaMemFun( groIdeStr );                                                                                         // What: Is-A Member Boolean. Why: Only members send photos. How: This requires the requester to be a member.
+			let newPhoBoo = !exists( phoPatStr ) && existsAfter( phoPatStr ) && getAfter( phoPatStr ).data.uploaderUid == request.auth.uid; // What: New Photo Boolean. Why: A tally rises only for a photo being added now, by the requester. How: This requires the photo to be created by the batch in their name, three parts of one check that guard each other, so they stay inline.
+			let talNamBoo = talIdeStr == dayKeyStr + '-all' || talIdeStr == dayKeyStr + '-' + request.auth.uid;                             // What: Tally Name Boolean. Why: A member raises today's group tally and their own, never another day's or another member's. How: This allows those two names.
+
+			let setAllBoo = couRisBoo && expBacBoo && fieAllBoo && isaMemBoo && newPhoBoo && talNamBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
+
+
+
+			return setAllBoo; // What: Set Allowed Return. Why: The tally's create and update rules read the combined answer. How: This returns it.
+
+
+		}
+
+		// #endregion setCptFun
+
+		// #endregion Chat Photo Rules
+
+
+
 		// #region Location Rules
 
 		// #region valLocFun
@@ -2194,6 +2384,27 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 				allow create : if setLocFun( groIdeStr, uidValStr ); // What: Location Create Rule. Why: A member starts sharing. How: This allows it when setLocFun passes.
 				allow update : if setLocFun( groIdeStr, uidValStr ); // What: Location Update Rule. Why: Each update overwrites the last position. How: This allows it when setLocFun passes.
 				allow delete : if isaOwnFun( uidValStr );            // What: Location Delete Rule. Why: Stopping sharing deletes the location at once, even for someone who has since left the group. How: This lets only its owner delete it.
+
+
+			}
+
+
+
+			match /chatPhotos/{phoIdeStr} { // What: Chat Photo Match. Why: Each photo sent in the chat has its own document, which its file and the day's tallies are checked against (Section 22). How: This matches one chat photo by ID.
+
+
+				allow create : if creChpFun( groIdeStr, phoIdeStr ); // What: Chat Photo Create Rule. Why: A member adds a photo within the day's limits before uploading it. How: This allows it when creChpFun passes, while only Cloud Functions read or delete one.
+
+
+			}
+
+
+
+			match /chatPhotoTally/{talIdeStr} { // What: Chat Photo Tally Match. Why: Each day's chat photo count for the group and for each member is its own document, so the limits can be checked (Section 22). How: This matches one tally, named by its day and all or a UID.
+
+
+				allow read           : if isaMemFun( groIdeStr );            // What: Tally Read Rule. Why: A member sees how many photos are left to send today. How: This lets members fetch them.
+				allow create, update : if setCptFun( groIdeStr, talIdeStr ); // What: Tally Set Rule. Why: A tally rises only with a photo added beside it. How: This allows it when setCptFun passes, while only Cloud Functions and the TTL delete one.
 
 
 			}

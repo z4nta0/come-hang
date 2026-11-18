@@ -1,0 +1,267 @@
+
+
+
+/**
+ * storage-settings.module.css = Storage Settings Module
+ *
+ * @summary
+ * Styles for StoSetCom: a line above the part, its heading, its notes in the
+ * muted color, its two lists of choices as rows that tint under the pointer,
+ * and its outlined buttons, with a pill in the dark error color for
+ * confirming a removal.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region stoSetSec */
+
+.stoSetSec { /* What: Storage Settings Section. Why: The heading, the sizes, the choices, and the clean-up read as one part. How: This draws a line above it, a tier 2 space above its heading to match the gap above the line, and stacks them a tier 3 space apart, in order. */
+
+
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
+
+
+}
+
+.stoTitHea { /* What: Storage Title Heading. Why: The heading names the part. How: This sets it at Base Plus 2. */
+
+
+	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+
+
+}
+
+.stoNotPar { /* What: Storage Note Paragraph. Why: The notes are quieter than the heading. How: This sets them in the muted text color, capped at the base text width. */
+
+
+	color     : var( --tex-mut-col ); /* Text Muted Color = #5A5D7E */
+	max-width : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+
+/* #region stoChoFie */
+
+.stoChoFie { /* What: Storage Choice Fieldset. Why: The legend and its choices read down one column, without the browser's frame around them. How: This stacks them a tier 5 space apart by auto placement, since the choices repeat one class, with no border, padding, or margin. */
+
+
+	border    : 0;
+	display   : grid;
+	margin    : 0;
+	min-width : 0;
+	padding   : 0;
+	row-gap   : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+
+.stoChoLeg { /* What: Storage Choice Legend. Why: The legend names the choices above them, set like a field's label. How: This sets it bold with no padding, a tier 5 space above the first choice. */
+
+
+	font-weight   : 700;
+	margin-bottom : var( --tie-ver-005 ); /* Tier Vertical 5 ~= 4.732px */
+	padding       : 0;
+
+
+}
+
+
+
+/* #region stoChoLab */
+
+.stoChoLab { /* What: Storage Choice Label. Why: A whole row picks its choice, at least a touch target tall, and shows it's live under the pointer. How: This lays the circle beside its name a tier 5 space apart, rounds the row, and eases its hover background and focus ring. */
+
+
+	align-items           : center;
+	border-radius         : var( --rad-bor-med );                       /* Radius Border Medium = 11px */
+	column-gap            : var( --tie-hor-005 );                       /* Tier Horizontal 5, about 4.732px - 6.268px */
+	cursor                : pointer;
+	display               : grid;
+	grid-template-columns : auto minmax( 0, 1fr );
+	min-height            : calc( var( --ver-rhy-p04 ) * 1rem );        /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding               : 0 var( --spa-ver-m02 );                     /* Spacing Vertical Base Minus 2 ~= 8.304px */ /* What: Control Padding Note. Why: A row's own padding shapes the control rather than separating parts of the page. How: It reads a spacing step directly, outside the tiers. */
+	transition            : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease */
+
+
+}
+.stoChoLab:hover { /* What: Hovered Storage Choice Label. Why: A row in a list of choices shows it's live by color, since a lift would jostle the list. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Storage Choice Label. Why: Someone who asked for less motion should see the tint switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.stoChoLab { /* What: Motionless Storage Choice Label. Why: The hover tint should switch at once. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.stoChoInp { /* What: Storage Choice Input. Why: The circle should be easy to see and drawn in the brand's accent. How: This sizes it at the base rhythm step with no margin, filled in the main accent when chosen. */
+
+
+	accent-color : var( --acc-mai-col );                 /* Accent Main Color = #4A4FC9 */
+	height       : calc( var( --ver-rhy-bas ) * 1rem );  /* Vertical Rhythm Base ~= 14.572px */
+	margin       : 0;
+	width        : calc( var( --ver-rhy-bas ) * 1rem );  /* Vertical Rhythm Base ~= 14.572px */
+
+
+}
+
+/* #endregion stoChoLab */
+
+/* #endregion stoChoFie */
+
+
+
+/* #region stoConDiv */
+
+.stoConDiv { /* What: Storage Confirm Div. Why: The question reads above its answers. How: This stacks them a tier 4 space apart. */
+
+
+	display : grid;
+	row-gap : var( --tie-ver-004 ); /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+
+.conAskPar { /* What: Confirm Ask Paragraph. Why: The question reads before its answers. How: This sets it bold, capped at the base text width. */
+
+
+	font-weight : 700;
+	max-width   : var( --tex-wid-bas ); /* Text Width Base ~= 29.207em */
+
+
+}
+
+
+/* #region endActDiv */
+
+.endActDiv { /* What: End Actions Div. Why: A part's buttons sit together, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+
+
+	align-items : center;
+	display     : flex;
+	flex-wrap   : wrap;
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+
+
+}
+
+.actDanBut { /* What: Action Danger Button. Why: Confirming a removal can't be undone and should look it, still a full touch target. How: This draws a pill in the dark error color with bold text in the accent's text color, at least a touch target tall, and eases its hover color, press scale, and focus ring. */
+
+
+	background-color : var( --err-dar-col );                      /* Error Dark Color = #A12A2A */
+	border           : 0;
+	border-radius    : 999px;
+	color            : var( --tex-acc-col );                      /* Text Accent Color = #FFFFFF */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );       /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actDanBut:hover { /* What: Hovered Action Danger Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This darkens it a step. */
+
+
+	background-color : oklch( from var( --err-dar-col ) calc( l - 0.08 ) c h ); /* Error Dark Color = #A12A2A, darkened by 0.08 lightness */
+
+
+}
+.actDanBut:active { /* What: Pressed Action Danger Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Danger Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actDanBut { /* What: Motionless Action Danger Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+.actPlaBut { /* What: Action Plain Button. Why: Removing photos and keeping them are lighter actions, still full touch targets. How: This draws an accent outlined pill with bold accent text, at least a touch target tall, and eases its hover background, press scale, and focus ring. */
+
+
+	background-color : transparent;
+	border           : var( --bor-wid-bas ) solid var( --acc-mai-col ); /* Border Width Base ~= 1.160px, Accent Main Color = #4A4FC9 */
+	border-radius    : 999px;
+	color            : var( --acc-mai-col );                            /* Accent Main Color = #4A4FC9 */
+	font             : inherit;
+	font-weight      : 700;
+	min-height       : calc( var( --ver-rhy-p04 ) * 1rem );             /* Vertical Rhythm Base Plus 4 ~= 44.876px */
+	padding          : var( --spa-ver-m02 ) var( --spa-ver-bas );       /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */ /* What: Control Padding Note. Why: A button's own padding shapes the control rather than separating parts of the page. How: It reads spacing steps directly, outside the tiers. */
+	transition       : background-color var( --dur-tra-p02 ) var( --mot-sta-eas ), transform var( --dur-tra-p02 ) var( --mot-dec-eas ), outline-offset var( --dur-tra-p01 ) var( --mot-dec-eas ), outline-width var( --dur-tra-p01 ) var( --mot-dec-eas ); /* Duration Transition Base Plus 2 ~= 277.0ms, Motion Standard Easing = ease, Motion Decelerate Easing = cubic-bezier( .2, .7, .3, 1 ), Duration Transition Base Plus 1 ~= 209.1ms */
+
+
+}
+.actPlaBut:hover { /* What: Hovered Action Plain Button. Why: A button in a row of controls shows it's live by color, since a lift would jostle the row. How: This fills it with the accent tint. */
+
+
+	background-color : var( --acc-tin-col ); /* Accent Tint Color = #E7E8FA */
+
+
+}
+.actPlaBut:active { /* What: Pressed Action Plain Button. Why: A press should register before anything else happens. How: This presses the pill in slightly. */
+
+
+	transform : scale( 0.97 ); /* What: Press Scale. Why: A press should register before anything else happens. How: This shrinks the control by 3%, a literal since no scale step lands within 10%. */
+
+
+}
+@media ( prefers-reduced-motion : reduce ) { /* What: Reduced Motion Action Plain Button. Why: Someone who asked for less motion should see the looks switch at once. How: This applies only when the reduced-motion preference is set. */
+
+
+	.actPlaBut { /* What: Motionless Action Plain Button. Why: The hover, press, and focus looks should switch at once, the press still applying instantly. How: This turns the transition off. */
+
+
+		transition : none;
+
+
+	}
+
+
+}
+
+/* #endregion endActDiv */
+
+/* #endregion stoConDiv */
+
+
+
+/* #region endActDiv */
+
+/* What: End Actions Div Pointer. Why: The clean-up's button sits in the same row as the confirmation's answers. How: Its rules sit in the stoConDiv region. */
+
+/* #endregion endActDiv */
+
+/* #endregion stoSetSec */
+
+

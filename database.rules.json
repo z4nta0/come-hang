@@ -15,6 +15,9 @@
 						"iv": {
 							".validate": "newData.val().length === 16 && newData.val().matches(/^[A-Za-z0-9+\\/]+$/)"
 						},
+						"photoId": {
+							".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9]{20}$/)"
+						},
 						"quiet": {
 							".validate": "newData.val() === true"
 						},

@@ -7,6 +7,7 @@ import { expect                    } from '@playwright/test';             // Wha
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: Setting up a member reads the group past the rules. How: This connects to the emulator.
 import { memSetFun                 } from '../support/client.ts';         // What: Member Setup Function. Why: A message from another member needs a group with two. How: This creates the group and lets the member in.
 import { pagTesObj                 } from '../support/client.ts';         // What: Page Test Object. Why: The member writes from a device of their own. How: This declares a test with a second page.
+import { readFile                  } from 'node:fs/promises';             // What: Read File. Why: A saved chat photo is checked by its bytes. How: This reads the downloaded file.
 import { runPagFun                 } from '../support/client.ts';         // What: Run Page Function. Why: Groups and events are made the way the app makes them. How: This calls the app's functions in a page.
 import { senPolFun                 } from '../support/client.ts';         // What: Send Poll Function. Why: A send just after joining can meet the old mirror. How: This retries it until it lands.
 import { test                      } from '@playwright/test';             // What: Test. Why: Each behavior is its own test. How: This declares them.
@@ -328,6 +329,220 @@ test( "the group's next event is pinned above the chat on a phone", async ( { pa
 
 	await expect( pinButObj ).toBeVisible();                   // What: Card Assertion. Why: The card names the event. How: This waits for it.
 	await expect( pinButObj ).toContainText( 'Central Park' ); // What: Place Assertion. Why: The card says where it is. How: This reads its line.
+
+
+} );
+
+
+
+test( 'a picked photo is previewed, sent with its caption, shown in the chat, and opens whole to save', async ( { page : curPagObj } ) => { // What: Chat Photo Test. Why: A member attaches a photo to a message, sees it in the chat, and keeps the ones they want (Section 22). How: This picks a drawn photo, removes it, picks it again, sends it with a caption, opens it in the viewer, and saves it, then checks a photo can't be sent offline.
+
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The test starts in a chat. How: This creates a group and opens it.
+
+
+	const pngB64Str = await curPagObj.evaluate( () => { // What: PNG Base64 String. Why: The picker needs a real image the browser can shrink. How: This draws a two-color rectangle on a canvas and reads it back as a PNG.
+
+
+		const canEleObj = document.createElement( 'canvas' ); // What: Canvas Element Object. Why: The photo is drawn in the page. How: This makes a canvas off the page.
+
+
+		canEleObj.width  = 400; // What: Canvas Width Assignment. Why: The photo needs a size. How: This makes it 400px wide.
+		canEleObj.height = 300; // What: Canvas Height Assignment. Why: The photo needs a size. How: This makes it 300px tall.
+
+
+		canEleObj.getContext( '2d' )!.fillRect( 0, 0, 200, 300 ); // What: Fill Call. Why: The photo needs something in it. How: This fills its left half black. // What: Non-Null Note. Why: A new canvas always gives a 2D context the first time it's asked. How: The ! reads it as present.
+
+
+
+		return canEleObj.toDataURL( 'image/png' ).split( ',' )[ 1 ]; // What: Base64 Return. Why: The test hands the bytes to the picker. How: This returns the PNG's base64, after its data URL prefix.
+
+
+	} );
+
+
+
+	const filInpObj = curPagObj.locator( 'form input[type="file"]' );                                                  // What: File Input Object. Why: The photo button opens this hidden picker. How: This finds it in the composer.
+	const filValObj = { buffer : Buffer.from( pngB64Str, 'base64' ), mimeType : 'image/png', name : 'look.png' };     // What: File Value Object. Why: The picker is handed the drawn photo. How: This holds it as a file.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } );                              // What: Text Box Object. Why: The caption is typed there. How: This finds the composer.
+
+
+	await filInpObj.setInputFiles( filValObj ); // What: Photo Pick Call. Why: The member picks a photo. How: This hands the picker the drawn photo.
+
+	await expect( curPagObj.getByRole( 'img', { name : 'Photo to send' } ) ).toBeVisible();     // What: Preview Assertion. Why: A picked photo shows before it's sent. How: This waits for its preview.
+	await expect( curPagObj.getByRole( 'button', { name : 'Change the photo' } ) ).toBeVisible(); // What: Change Assertion. Why: With a photo picked, the button changes it. How: This reads its name.
+	await expect( texBoxObj ).toHaveAttribute( 'placeholder', 'Add a caption' );                 // What: Caption Hint Assertion. Why: With a photo picked, the box takes its caption. How: This reads its hint.
+
+	await curPagObj.getByRole( 'button', { name : 'Remove the photo' } ).click(); // What: Remove Click Call. Why: A member can change their mind. How: This removes the photo.
+
+	await expect( curPagObj.getByRole( 'img', { name : 'Photo to send' } ) ).toHaveCount( 0 ); // What: Removed Assertion. Why: A removed photo leaves the composer. How: This expects no preview.
+
+	await filInpObj.setInputFiles( filValObj ); // What: Photo Repick Call. Why: The same photo is picked again, which the emptied picker still registers. How: This hands it over again.
+
+	await texBoxObj.fill( 'Look!' ); // What: Caption Fill Call. Why: A photo can carry words. How: This types the caption.
+
+
+	const phoButObj = curPagObj.getByRole( 'button', { name : 'Open your photo' } ); // What: Photo Button Object. Why: The sent photo shows in the chat and opens. How: This finds it by its name.
+
+
+	await expect( async () => { // What: Send Retry Call. Why: A send just after the group is made is refused until its membership mirror catches up, keeping the photo, which a retry sends without uploading it again. How: This presses Enter until the photo shows.
+
+
+		await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: Enter sends the photo as it sends a message. How: This presses it.
+
+		await expect( phoButObj ).toBeVisible( { timeout : 3000 } ); // What: Photo Shown Wait. Why: The send landed once the photo shows. How: This waits up to 3 seconds for it.
+
+
+	} ).toPass(); // What: Retry Settings. Why: The mirror usually catches up within a moment. How: This retries until the photo shows or the test times out.
+
+
+
+	await expect( phoButObj ).toBeVisible();                                                                         // What: Photo Shown Assertion. Why: The sender sees their photo at once. How: This waits for it in the chat.
+	await expect( curPagObj.getByRole( 'log', { name : 'Messages' } ) ).toContainText( 'Look!' );                    // What: Caption Shown Assertion. Why: The caption shows with the photo. How: This reads the log.
+	await expect( curPagObj.getByRole( 'img', { name : 'Photo to send' } ) ).toHaveCount( 0 );                     // What: Cleared Assertion. Why: A sent photo leaves the composer. How: This expects no preview.
+	await expect( texBoxObj ).toHaveValue( '' );                                                                     // What: Box Cleared Assertion. Why: The caption is sent. How: This reads the box.
+
+	await phoButObj.click(); // What: Photo Click Call. Why: A tapped photo opens whole. How: This presses it.
+
+
+	const vieDiaObj = curPagObj.getByRole( 'dialog', { name : 'Photo' } ); // What: Viewer Dialog Object. Why: The checks read the viewer. How: This finds it by its title.
+
+
+	await expect( vieDiaObj.getByRole( 'img', { name : 'Photo you sent' } ) ).toBeVisible();                            // What: Viewer Photo Assertion. Why: The viewer shows the photo whole. How: This waits for it.
+	await expect( vieDiaObj ).toContainText( 'Chat photos stay on this device for 3 months, which you can change in Settings.' ); // What: Keep Note Assertion. Why: A member learns the photo won't stay forever. How: This reads the note.
+
+
+	const dowValPro = curPagObj.waitForEvent( 'download' ); // What: Download Value Promise. Why: A computer's browser downloads a saved photo. How: This waits for the download the save starts.
+
+
+	await vieDiaObj.getByRole( 'button', { name : 'Save to device' } ).click(); // What: Save Click Call. Why: The member keeps the photo. How: This presses Save to device.
+
+
+	const dowValObj = await dowValPro;                          // What: Download Value Object. Why: The saved file is checked. How: This waits for the download.
+	const savBytArr = await readFile( await dowValObj.path() ); // What: Saved Bytes Array. Why: The file is checked by its bytes. How: This reads the downloaded file.
+
+
+	expect( dowValObj.suggestedFilename() ).toBe( 'come-hang-photo-1.jpg' );   // What: JPEG Name Assertion. Why: The file is named as what it is. How: This expects a .jpg name.
+	expect( [ ...savBytArr.subarray( 0, 3 ) ] ).toEqual( [ 0xFF, 0xD8, 0xFF ] ); // What: JPEG Bytes Assertion. Why: The saved photo is a JPEG, whatever was sent. How: This expects JPEG's opening bytes.
+
+	await vieDiaObj.getByRole( 'button', { name : 'Close' } ).click(); // What: Close Click Call. Why: The composer is used next. How: This closes the viewer.
+
+	await expect( vieDiaObj ).toBeHidden(); // What: Closed Assertion. Why: The chat stays inert until the viewer's slide ends, so a key pressed sooner is lost. How: This waits for the viewer to go.
+
+	await curPagObj.context().setOffline( true ); // What: Offline Call. Why: A photo has to upload to be sent. How: This cuts the page off.
+
+	await filInpObj.setInputFiles( filValObj ); // What: Offline Pick Call. Why: The member picks a photo while offline. How: This hands it over.
+
+	await texBoxObj.press( 'Enter' ); // What: Offline Send Call. Why: The member tries to send it. How: This presses Enter.
+
+	await expect( curPagObj.getByRole( 'alert' ).filter( { hasText : 'online' } ) ).toHaveText( "Photos send only while you're online. Try again once you're connected." ); // What: Offline Refusal Assertion. Why: The member learns the photo has to wait for a connection. How: This reads the alert.
+	await expect( curPagObj.getByRole( 'img', { name : 'Photo to send' } ) ).toBeVisible();                                                                                     // What: Photo Kept Assertion. Why: A photo that couldn't go isn't lost. How: This expects its preview still there.
+
+	await curPagObj.context().setOffline( false ); // What: Online Call. Why: The page shouldn't stay cut off. How: This reconnects it.
+
+
+} );
+
+
+
+test( "a photo sent while an event runs can go to the event's photos instead, its caption as a message", async ( { page : curPagObj } ) => { // What: Event Photo Test. Why: While an event runs, a member can add a photo to its photos rather than the chat, by choice (Section 22). How: This plans an event under way, picks a photo, picks the event, and sends it with words, checking the photos line, the message, and that no chat photo was sent.
+
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+
+	const groIdeStr = await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ) as string; // What: Group Identifier String. Why: The event is planned in this group. How: This creates it. // What: Type Assertion Note. Why: groCreFun resolves with the ID. How: The as reads it as a string.
+	const staTimNum = Date.now() - 3600000;                                                                             // What: Start Time Number. Why: The event is under way. How: This starts it an hour ago.
+
+
+	await runPagFun( curPagObj, '/src/state/events.ts', 'eveCreFun', groIdeStr, { desTexStr : '', endTimNum : staTimNum + 3 * 3600000, locTexStr : '', staTimNum, titTexStr : 'Picnic' } ); // What: Event Create Call. Why: The choice shows only while an event runs. How: This plans a three-hour picnic under way.
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The chat reads the event. How: This opens the app on the group.
+
+	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Day' } ) ).toBeVisible(); // What: Group Wait. Why: The chat shows once the group has loaded. How: This waits for its heading.
+
+
+	const pngB64Str = await curPagObj.evaluate( () => { // What: PNG Base64 String. Why: The picker needs a real image the browser can shrink. How: This draws a two-color rectangle on a canvas and reads it back as a PNG.
+
+
+		const canEleObj = document.createElement( 'canvas' ); // What: Canvas Element Object. Why: The photo is drawn in the page. How: This makes a canvas off the page.
+
+
+		canEleObj.width  = 400; // What: Canvas Width Assignment. Why: The photo needs a size. How: This makes it 400px wide.
+		canEleObj.height = 300; // What: Canvas Height Assignment. Why: The photo needs a size. How: This makes it 300px tall.
+
+
+		canEleObj.getContext( '2d' )!.fillRect( 0, 0, 200, 300 ); // What: Fill Call. Why: The photo needs something in it. How: This fills its left half black. // What: Non-Null Note. Why: A new canvas always gives a 2D context the first time it's asked. How: The ! reads it as present.
+
+
+
+		return canEleObj.toDataURL( 'image/png' ).split( ',' )[ 1 ]; // What: Base64 Return. Why: The test hands the bytes to the picker. How: This returns the PNG's base64, after its data URL prefix.
+
+
+	} );
+
+
+
+	const logDivObj = curPagObj.getByRole( 'log', { name : 'Messages' } );                // What: Log Div Object. Why: The checks read the chat. How: This finds the log.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } ); // What: Text Box Object. Why: The words are typed there. How: This finds the composer.
+
+
+	await curPagObj.locator( 'form input[type="file"]' ).setInputFiles( { buffer : Buffer.from( pngB64Str, 'base64' ), mimeType : 'image/png', name : 'picnic.png' } ); // What: Photo Pick Call. Why: The member picks a photo. How: This hands the picker the drawn photo.
+
+	await curPagObj.getByRole( 'checkbox', { name : "Add to Picnic's photos instead" } ).check(); // What: Event Check Call. Why: The member sends the photo to the event. How: This ticks the choice.
+
+	await texBoxObj.fill( 'Look!' ); // What: Words Fill Call. Why: What's typed still reaches the chat. How: This types it.
+
+	await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it.
+
+	await expect( logDivObj ).toContainText( 'You just uploaded photos for Picnic' );               // What: Photos Line Assertion. Why: The photo joined the event's photos, which the chat says. How: This waits for the line.
+	await expect( logDivObj ).toContainText( 'Look!' );                                             // What: Message Assertion. Why: The words go as a message of their own. How: This reads the log.
+	await expect( curPagObj.getByRole( 'button', { name : 'Open your photo' } ) ).toHaveCount( 0 ); // What: No Chat Photo Assertion. Why: The photo went to the event, not the chat. How: This expects no photo in the log.
+	await expect( curPagObj.getByRole( 'img', { name : 'Photo to send' } ) ).toHaveCount( 0 );      // What: Cleared Assertion. Why: A shared photo leaves the composer. How: This expects no preview.
+
+
+} );
+
+
+
+test( 'a device short of room shows the storage card until it opens Settings, and never again after', async ( { page : curPagObj } ) => { // What: Storage Card Test. Why: A device whose app is near its quota should hear the chat photos can be cleared, once (Section 22). How: This has the browser report 90% used, checks the card, opens Settings from it, and checks the card stays away after a reload.
+
+
+	await curPagObj.addInitScript( () => { // What: Estimate Stand-In Call. Why: No engine lets a test fill its quota, and WebKit can hand a later page a manager without a stub set on the manager itself. How: This reports 900 MB used of 1 GB before the app loads, on the manager's prototype where there is one, or on a stand-in manager where there's none.
+
+
+		const estValFun = async () : Promise< StorageEstimate > => ( { quota : 1000000000, usage : 900000000 } ); // What: Estimate Value Function. Why: The app asks what it uses. How: This answers 900 MB of 1 GB.
+
+
+		if ( 'StorageManager' in window ) Object.defineProperty( StorageManager.prototype, 'estimate', { configurable : true, value : estValFun } ); // What: Prototype Define Call. Why: Every manager the page gets reads its estimate from here. How: This replaces it with the stand-in.
+
+		else Object.defineProperty( navigator, 'storage', { configurable : true, value : { estimate : estValFun } } ); // What: Manager Define Call. Why: The app reads the estimate through the navigator. How: This adds a stand-in manager where the browser has none.
+
+
+	} );
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The card shows above the chat. How: This creates a group and opens it.
+
+
+	const stoCarObj = curPagObj.getByRole( 'region', { name : 'Storage' } ); // What: Storage Card Object. Why: The checks read the card. How: This finds it by its name.
+
+
+	await expect( stoCarObj ).toContainText( 'Chat photos are filling up this device.' ); // What: Card Assertion. Why: A device at 90% shows the card. How: This waits for its note.
+
+	await stoCarObj.getByRole( 'button', { name : 'Open Settings' } ).click(); // What: Open Click Call. Why: Storage on this device is in Settings. How: This presses the card's button.
+
+	await expect( curPagObj.getByRole( 'region', { name : 'Storage on this device' } ) ).toBeVisible(); // What: Settings Assertion. Why: The card leads to the storage part. How: This waits for it in the Settings section.
+
+	await curPagObj.getByRole( 'navigation', { name : 'Group sections' } ).getByRole( 'button', { name : 'Chat' } ).click(); // What: Chat Click Call. Why: The card is checked in the chat again. How: This goes back to the chat.
+
+	await curPagObj.reload(); // What: Reload Call. Why: An answered card shouldn't come back on a later visit. How: This opens the chat afresh.
+
+	await expect( curPagObj.getByRole( 'log', { name : 'Messages' } ) ).toBeVisible(); // What: Chat Wait. Why: The card would show with the chat. How: This waits for the log.
+	await expect( stoCarObj ).toHaveCount( 0 );                                    // What: Gone Assertion. Why: The answer is kept on the device. How: This expects no card.
 
 
 } );

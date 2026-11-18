@@ -6,25 +6,24 @@
 import cssModObj from './event-photos.module.css'; // What: CSS Module Object. Why: The photos part is styled in its own module, whose class names Vite hashes. How: Every element reads its class from this object.
 
 
-import { ButBasCom   } from '../ui/button.tsx';     // What: Button Base Component. Why: Adding photos is the part's main action. How: This draws its button.
-import { filNamFun   } from '../utils/text.ts';     // What: File Name Function. Why: The archive of an event's photos is named after the event. How: This turns its title into a plain piece of a file name.
-import { IcoSvgCom   } from '../ui/icon.tsx';       // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
-import { imaTypFun   } from '../platform/image.ts'; // What: Image Type Function. Why: A shared photo's bytes carry no type. How: This reads it from their first bytes.
-import { jpeConFun   } from '../platform/image.ts'; // What: JPEG Convert Function. Why: A saved photo should open wherever it goes. How: This converts a WebP photo to JPEG and leaves a JPEG as it is.
-import { mesTimFun   } from '../utils/date.ts';     // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
-import { offGuaFun   } from '../ui/online.ts';      // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
-import { phoAddFun   } from '../state/photos.ts';   // What: Photo Add Function. Why: A member shares photos from the event. How: This shrinks, encrypts, and shares one.
-import { phoDelFun   } from '../state/photos.ts';   // What: Photo Delete Function. Why: The uploader or owner takes a photo down. How: This deletes it.
-import { phoFluFun   } from '../state/photos.ts';   // What: Photos Flush Function. Why: Leaving the photos means the member is done adding them. How: This ends the burst, posting its chat line.
-import { phoGetFun   } from '../state/photos.ts';   // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
-import { phoWatFun   } from '../state/photos.ts';   // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
-import { SheDiaCom   } from '../ui/sheet.tsx';      // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
-import { sheJumFun   } from '../ui/sheet.tsx';      // What: Sheet Jump Function. Why: A chat line about photos opens its event at them. How: This scrolls the part into view once the sheet has risen.
-import { useCallback } from 'react';                // What: Use Callback. Why: The arrow keys step the viewer through a listener that shouldn't change on every render. How: This keeps the step function the same between renders.
-import { useEffect   } from 'react';                // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
-import { useRef      } from 'react';                // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
-import { useState    } from 'react';                // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
-import { zipBuiFun   } from '../utils/zip.ts';      // What: ZIP Build Function. Why: Several photos download to a computer as one file. How: This packs them into one archive.
+import { ButBasCom    } from '../ui/button.tsx';          // What: Button Base Component. Why: Adding photos is the part's main action. How: This draws its button.
+import { filNamFun    } from '../utils/text.ts';          // What: File Name Function. Why: The archive of an event's photos is named after the event. How: This turns its title into a plain piece of a file name.
+import { IcoSvgCom    } from '../ui/icon.tsx';            // What: Icon SVG Component. Why: The viewer's steps show arrows. How: This draws them.
+import { mesTimFun    } from '../utils/date.ts';          // What: Message Time Function. Why: The viewer says when a photo was shared. How: This labels the time briefly.
+import { offGuaFun    } from '../ui/online.ts';           // What: Offline Guard Function. Why: Changes that need the server are paused while offline. How: This announces the pause and reports it.
+import { phoAddFun    } from '../state/photos.ts';        // What: Photo Add Function. Why: A member shares photos from the event. How: This shrinks, encrypts, and shares one.
+import { phoDelFun    } from '../state/photos.ts';        // What: Photo Delete Function. Why: The uploader or owner takes a photo down. How: This deletes it.
+import { phoFluFun    } from '../state/photos.ts';        // What: Photos Flush Function. Why: Leaving the photos means the member is done adding them. How: This ends the burst, posting its chat line.
+import { phoGetFun    } from '../state/photos.ts';        // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
+import { phoWatFun    } from '../state/photos.ts';        // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
+import { savFilFun    } from '../platform/photo-save.ts'; // What: Save Files Function. Why: Photos leave the server with their event, so members keep them on their device. How: This hands them over.
+import { SheDiaCom    } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
+import { sheJumFun    } from '../ui/sheet.tsx';           // What: Sheet Jump Function. Why: A chat line about photos opens its event at them. How: This scrolls the part into view once the sheet has risen.
+import { useBytUrlFun } from '../ui/bytes-url.ts';        // What: Use Bytes URL Function. Why: An image shows a decrypted photo by address. How: This makes and frees one.
+import { useCallback  } from 'react';                     // What: Use Callback. Why: The arrow keys step the viewer through a listener that shouldn't change on every render. How: This keeps the step function the same between renders.
+import { useEffect    } from 'react';                     // What: Use Effect. Why: The photos are watched while shown, and a full photo loads as it's opened. How: This starts and stops each.
+import { useRef       } from 'react';                     // What: Use Reference. Why: The viewer opens through its handle, and Add photos opens the file picker. How: This holds both.
+import { useState     } from 'react';                     // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
 
 
 import type { EveRecTyp } from '../state/events.ts';  // What: Event Record Type. Why: The part belongs to one event. How: This types it.
@@ -53,7 +52,6 @@ import type { SheHanTyp } from '../ui/sheet.tsx';     // What: Sheet Handle Type
  *
  * Sections:
  *  - Helpers
- *  - Hooks
  *  - Components
  *  - Exports
  *
@@ -106,186 +104,7 @@ const errMesFun = ( errCatObj : unknown ) : string => { // What: Error Message F
 
 // #endregion errMesFun
 
-
-
-// #region dowFilFun
-
-/**
- * dowFilFun = Download File Function
- *
- * @summary
- * Downloads a file under the given name through a link off the page, freeing
- * the link's temporary address a minute later, once the download has had
- * time to read it.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param blbValObj - Blob Value Object: The file's contents.
- * @param namValStr - Name Value String: The name it's saved under.
- *
- * @returns This function does not return anything.
- *
- * @example
- * ```ts
- * dowFilFun(zipBlbObj, 'come-hang-lake-day-photos.zip') // => void
- * ```
- *
-*/
-
-const dowFilFun = ( blbValObj : Blob, namValStr : string ) : void => { // What: Download File Function. Why: A computer keeps photos as downloads. How: This clicks a link to the file off the page.
-
-
-	const ancEleObj = document.createElement( 'a' );    // What: Anchor Element Object. Why: A download starts from a link. How: This makes one off the page.
-	const objUrlStr = URL.createObjectURL( blbValObj ); // What: Object URL String. Why: The link needs an address for the file. How: This makes a temporary one.
-
-
-	ancEleObj.download = namValStr; // What: Download Assignment. Why: The file keeps its name. How: This names it.
-	ancEleObj.href     = objUrlStr; // What: Address Assignment. Why: The link points at the file. How: This sets its address.
-
-
-	ancEleObj.click(); // What: Download Click Call. Why: The download starts as if the link were tapped. How: This clicks it.
-
-
-	window.setTimeout( () => URL.revokeObjectURL( objUrlStr ), 60000 ); // What: Address Free Call. Why: The download needs the address a little while. How: This frees it a minute later.
-
-
-};
-
-// #endregion dowFilFun
-
-
-
-// #region savFilFun
-
-/**
- * savFilFun = Save Files Function
- *
- * @summary
- * Hands photos to the device, each WebP photo converted to JPEG first and a
- * JPEG one kept as it is. On a touch screen that can share files, the share
- * sheet takes them, which on a phone saves them to its photo library,
- * and a share the member backs out of is no error. Anywhere else one photo
- * downloads as itself, and several download as one ZIP archive under the
- * given name, so a computer gets one file rather than one download, and in
- * some browsers one tab, per photo.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param bytValArr - Bytes Value Array: Each photo's bytes.
- * @param zipNamStr - ZIP Name String: The archive's name, for several photos.
- *
- * @returns A promise that settles once the photos are handed over, with no
- *          value.
- *
- * @example
- * ```ts
- * savFilFun([fulBytArr], 'come-hang-photos.zip') // => Promise<void>
- * ```
- *
-*/
-
-const savFilFun = async ( bytValArr : Uint8Array< ArrayBuffer >[], zipNamStr : string ) : Promise< void > => { // What: Save Files Function. Why: Photos leave the server with their event, so members keep them on their own device. How: This shares them on a touch screen, or downloads them as one file.
-
-
-	const savBytArr = await Promise.all( bytValArr.map( jpeConFun ) ); // What: Saved Bytes Array. Why: Not every place a saved photo goes can open WebP. How: This converts each WebP photo to JPEG, keeping a JPEG one as it is.
-	const filValArr = savBytArr.map( ( bytValObj, filIndNum ) => new File( [ bytValObj ], `come-hang-photo-${ filIndNum + 1 }.${ imaTypFun( bytValObj ) === 'image/jpeg' ? 'jpg' : 'webp' }`, { type : imaTypFun( bytValObj ) } ) ); // What: File Value Array. Why: Each photo is saved as a typed file with a plain name. How: This wraps each photo's bytes, numbered in order.
-
-
-
-	if ( navigator.canShare?.( { files : filValArr } ) && window.matchMedia( '(pointer: coarse)' ).matches ) { // What: Share Check. Why: A phone or tablet saves shared photos to its library, while a computer's share sheet sends them on rather than keeping them. How: This shares them where the browser can share files on a touch screen.
-
-
-		await navigator.share( { files : filValArr } ).catch( ( errCatObj : unknown ) => { if ( Reflect.get( Object( errCatObj ), 'name' ) !== 'AbortError' ) throw errCatObj; } ); // What: Share Call. Why: Backing out of the share sheet isn't a failure. How: This shares the files, ignoring a cancel.
-
-
-		return; // What: Shared Return. Why: The share sheet saved them. How: This returns.
-
-
-	}
-
-
-
-	if ( filValArr.length === 1 ) { dowFilFun( filValArr[ 0 ], filValArr[ 0 ].name ); return; } // What: One Photo Guard. Why: A single photo downloads as itself. How: This downloads it and returns.
-
-
-
-	dowFilFun( zipBuiFun( filValArr.map( ( filValObj, filIndNum ) => ( { bytArr : savBytArr[ filIndNum ], namStr : filValObj.name } ) ), new Date() ), zipNamStr ); // What: Archive Download Call. Why: Many photos should download as one file. How: This packs every photo under its name into one archive dated now and downloads it.
-
-
-};
-
-// #endregion savFilFun
-
 // #endregion Helpers
-
-
-
-// #region Hooks
-
-type UrlRecTyp = { bytArr : Uint8Array< ArrayBuffer >, urlStr : string }; // What: URL Record Type. Why: An address is made a render after its bytes, so a caller has to tell which bytes it shows. How: This pairs the address with the bytes it was made for.
-
-// #region useBytUrlFun
-
-/**
- * useBytUrlFun = Use Bytes URL Function
- *
- * @summary
- * Turns a photo's bytes into a temporary address an image can show, typed
- * from its first bytes, freeing the address when the bytes change or the
- * caller goes. The address is made a render after the bytes arrive, so it
- * comes paired with the bytes it was made for, letting a caller that
- * switches photos hold back an address left from the last one. Returns null
- * while there are no bytes.
- *
- * @author z4nta0 <https://github.com/z4nta0>
- *
- * @param bytValArr - Bytes Value Array: The photo's bytes, or null.
- *
- * @returns The address with its bytes, or null.
- *
- * @example
- * ```ts
- * useBytUrlFun(thuBytArr) // => { bytArr, urlStr : 'blob:...' }
- * ```
- *
-*/
-
-const useBytUrlFun = ( bytValArr : Uint8Array< ArrayBuffer > | null ) : UrlRecTyp | null => { // What: Use Bytes URL Function. Why: An image shows a photo by address. How: This makes and frees a temporary address for the bytes.
-
-
-	const [ urlRecObj, setUrlRecObj ] = useState< UrlRecTyp | null >( null ); // What: URL Record Object And Setter. Why: The image reads the address once it's made. How: This holds it with its bytes, null without bytes.
-
-
-
-	useEffect( () => { // What: Address Effect. Why: Each set of bytes needs its own address, freed once it's done. How: This makes one for the bytes and frees it on cleanup.
-
-
-		if ( bytValArr === null ) { setUrlRecObj( null ); return; } // What: Empty Guard. Why: No bytes means no address. How: This clears it and returns.
-
-
-
-		const objUrlStr = URL.createObjectURL( new Blob( [ bytValArr ], { type : imaTypFun( bytValArr ) } ) ); // What: Object URL String. Why: The image needs an address for the photo. How: This makes one, typed from the bytes.
-
-
-		setUrlRecObj( { bytArr : bytValArr, urlStr : objUrlStr } ); // What: Address Set Call. Why: The image shows the new address. How: This keeps it with the bytes it was made for.
-
-
-
-		return () => URL.revokeObjectURL( objUrlStr ); // What: Cleanup Return. Why: An address holds its photo in memory until it's freed. How: This frees it.
-
-
-	}, [ bytValArr ] ); // What: Effect Dependency Array. Why: New bytes need a new address. How: bytValArr changes with the photo.
-
-
-
-	return urlRecObj; // What: Address Return. Why: The caller shows the photo. How: This returns the address with its bytes.
-
-
-};
-
-// #endregion useBytUrlFun
-
-// #endregion Hooks
 
 
 

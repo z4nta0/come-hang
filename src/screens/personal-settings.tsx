@@ -26,6 +26,7 @@ import { purPaiFun            } from '../state/purchase.ts';        // What: Pur
 import { pusActFun            } from '../state/push.ts';            // What: Push Active Function. Why: The notifications button says whether they're on. How: This reads the state.
 import { pusDisFun            } from '../state/push.ts';            // What: Push Disable Function. Why: The member can turn notifications off. How: This turns them off.
 import { pusEnaFun            } from '../state/push.ts';            // What: Push Enable Function. Why: The member can turn notifications on, which asks the browser. How: This asks and stores the token.
+import { StoSetCom            } from './storage-settings.tsx';      // What: Storage Settings Component. Why: Settings holds the chat photos this device keeps (Section 22). How: This draws the "Storage on this device" part.
 import { SupForCom            } from './support-form.tsx';          // What: Support Form Component. Why: About offers a way to write to the maker. How: This draws the form.
 import { useEffect            } from 'react';                       // What: Use Effect. Why: The account is read as the parts open, and a link moves focus. How: This starts the read and moves the focus.
 import { useRef               } from 'react';                       // What: Use Reference. Why: A link replaces its button, so focus lands on the part's heading. How: This holds the heading.
@@ -47,12 +48,12 @@ import type { SarRetTyp } from './settings-actions.ts';     // What: Settings Ac
  * The parts of Settings that belong to this device and the member's account
  * rather than a group, so they show whether or not the member is in one: this
  * device's appearance, notifications, and how to install the app until it's
- * installed; the account's Google link, upgrade, and the deletion of the
- * member's data; About, with a note from the app's maker, its version, links
- * to the maker's website, the source code, and support, and a tip on Ko-fi;
- * and the privacy policy and the terms, each opening in a sheet. Each change
- * is announced, and a change that fails says why, through the status and alert
- * of the Settings section holding them.
+ * installed; the chat photos it keeps; the account's Google link, upgrade, and
+ * the deletion of the member's data; About, with a note from the app's maker,
+ * its version, links to the maker's website, the source code, and support, and
+ * a tip on Ko-fi; and the privacy policy and the terms, each opening in a
+ * sheet. Each change is announced, and a change that fails says why, through
+ * the status and alert of the Settings section holding them.
  *
  * Sections:
  *  - Constants
@@ -113,19 +114,19 @@ type PscProTyp = { retPatStr? : string, setActObj : SarRetTyp }; // What: Person
  * PerSetCom = Personal Settings Component
  *
  * @summary
- * Renders the profile part, the device's part, the account's part, About, and
- * the legal documents' part as siblings in whatever Settings column holds
- * them, running their changes through the section's own runners, so the
- * section's one status and alert announce them. Picking an appearance applies
- * and keeps it at once; the notifications button turns them on or off for this
- * device; Install shows the browser's prompt where it can; Link Google account
- * links through Google's popup, focus then landing on the account part's
- * heading, or through a full-page redirect when the popup is blocked, whose
- * outcome the account part announces once the app reopens; and Buy the
- * upgrade opens Polar's checkout once Google is linked. About's links and its
- * tip open in a new tab, except the support address, which opens an email.
- * The account is read as the parts open, and the part says it's checking
- * until it's read.
+ * Renders the profile part, the device's part, the storage part, the account's
+ * part, About, and the legal documents' part as siblings in whatever Settings
+ * column holds them, running their changes through the section's own runners,
+ * so the section's one status and alert announce them. Picking an appearance
+ * applies and keeps it at once; the notifications button turns them on or off
+ * for this device; Install shows the browser's prompt where it can; Link
+ * Google account links through Google's popup, focus then landing on the
+ * account part's heading, or through a full-page redirect when the popup is
+ * blocked, whose outcome the account part announces once the app reopens; and
+ * Buy the upgrade opens Polar's checkout once Google is linked. About's links
+ * and its tip open in a new tab, except the support address, which opens an
+ * email. The account is read as the parts open, and the part says it's
+ * checking until it's read.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -412,6 +413,10 @@ function PerSetCom ( { retPatStr, setActObj } : PscProTyp ) : React.JSX.Element 
 
 
 			</section>
+
+
+
+			<StoSetCom setActObj={ setActObj } />{ /* What: Storage Settings Component. Why: The chat photos kept on this device are the device's own to manage, so the part follows "This device" (Section 22). How: This draws the "Storage on this device" part. */ }
 
 
 

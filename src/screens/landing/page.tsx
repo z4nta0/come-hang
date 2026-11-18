@@ -642,6 +642,14 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 
 									<dd className={ cssModObj.plaLimDet }>30</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
 
+									<dt className={ cssModObj.plaLimTer }>Chat photos each person sends a day</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>10</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Chat photos a day in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>40</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
 
 								</dl>
 
@@ -681,6 +689,14 @@ function LanPagCom ( { invNamStr, onRecFun } : LpcProTyp ) : React.JSX.Element {
 									<dt className={ cssModObj.plaLimTer }>Photos each person adds to one</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
 
 									<dd className={ cssModObj.plaLimDet }>60</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Chat photos each person sends a day</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>30</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
+
+									<dt className={ cssModObj.plaLimTer }>Chat photos a day in a group you start</dt>{ /* What: Plan Limit Term Element. Why: Each limit names what it counts. How: This sets it. */ }
+
+									<dd className={ cssModObj.plaLimDet }>120</dd>{ /* What: Plan Limit Details Element. Why: Each limit gives its number. How: This sets it. */ }
 
 
 								</dl>

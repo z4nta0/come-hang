@@ -523,6 +523,69 @@ test( "a link whose popup the browser blocks goes through Google's page instead,
 
 } );
 
+
+
+test( 'the device keeps chat photos for the span picked, and the clean-up removes older ones once confirmed, focus moving with the confirmation', async ( { page : curPagObj } ) => { // What: Storage Test. Why: A device keeps chat photos only as long as its member chose, and a clean-up can't be undone, so it asks first (Section 22). How: This keeps photos of four ages on a device set to keep them always, picks 1 year, then opens, closes, and confirms the clean-up of photos older than 30 days, checking the line, each status, and the focus.
+
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await runPagFun( curPagObj, '/src/state/groups.ts', 'groCreFun', 'Beach Day', 'Alice' ); // What: Group Create Call. Why: Settings belong to a group's screen. How: This creates one.
+
+	await curPagObj.evaluate( async ( modPatStr ) => { // What: Seed Call. Why: The device keeps photos of four ages, and kept bytes can't be passed into the page. How: This sets the device to keep photos always, so opening the app clears none, then keeps one at 400 days, one at 200, one at 60, and one at 10, each with 1,024 bytes.
+
+
+		localStorage.setItem( 'come-hang-chat-photo-keep', 'all' ); // What: Always Keep Call. Why: The app clears photos past the span as it opens. How: This keeps them all until the test changes it.
+
+
+		const modValObj = await import( /* @vite-ignore */ modPatStr ); // What: Module Value Object. Why: The photos are kept as the app keeps them. How: This imports the store.
+
+
+
+		for ( const [ keyValStr, ageDayNum ] of [ [ 'gro/a', 400 ], [ 'gro/b', 200 ], [ 'gro/c', 60 ], [ 'gro/d', 10 ] ] as const ) await modValObj.cpsSetFun( keyValStr, { cipBytArr : new Uint8Array( 1024 ), iniVecArr : new Uint8Array( 12 ), sntTimNum : Date.now() - ageDayNum * 86400000 } ); // What: Seed Loop. Why: Each age is kept in turn. How: This writes each record. // What: Type Assertion Note. Why: A plain array would type every entry alike. How: The as const keeps each pair's own types.
+
+
+	}, '/src/platform/chat-photo-store.ts' );
+
+
+
+	await curPagObj.goto( '/' ); // What: App Open Call. Why: The app shows the new group. How: This opens it.
+
+	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The storage part is in the Settings section. How: This opens it.
+
+
+	const remButObj = curPagObj.getByRole( 'button', { name : 'Remove chat photos' } );          // What: Remove Button Object. Why: The clean-up opens from it, and focus returns to it. How: This finds it.
+	const stoSecObj = curPagObj.getByRole( 'region', { name : 'Storage on this device' } ); // What: Storage Section Object. Why: The checks read the part. How: This finds it by its heading.
+
+
+	await expect( stoSecObj ).toContainText( '4 chat photos take up 4 KB on this device.' ); // What: Size Line Assertion. Why: The part says what the photos take. How: This reads its line.
+	await expect( stoSecObj.getByRole( 'radio', { name : 'Always' } ) ).toBeChecked();      // What: Kept Choice Assertion. Why: The choice shows the span kept on this device. How: This expects Always picked.
+
+	await stoSecObj.getByRole( 'radio', { name : '1 year' } ).check(); // What: Year Check Call. Why: The member keeps photos a year. How: This picks 1 year.
+
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'stay on this device' } ) ).toHaveText( 'Chat photos now stay on this device for 1 year. 1 older photo was removed.' ); // What: Year Status Assertion. Why: The shorter span clears the 400-day photo, and the member hears it. How: This reads the status.
+	await expect( stoSecObj ).toContainText( '3 chat photos take up 3 KB on this device.' );                                                                                         // What: Smaller Line Assertion. Why: The line follows the clearing. How: This reads it again.
+
+	await remButObj.click(); // What: Remove Click Call. Why: The clean-up asks first. How: This opens the confirmation.
+
+	await expect( stoSecObj ).toContainText( 'Remove chat photos older than 30 days from this device? Their messages stay in the chat.' ); // What: Question Assertion. Why: The member learns what goes before confirming. How: This reads the question.
+	await expect( stoSecObj.getByRole( 'button', { name : 'Keep them' } ) ).toBeFocused();                                                  // What: Keep Focus Assertion. Why: The safe answer is the first stop. How: This expects it focused.
+
+	await stoSecObj.getByRole( 'button', { name : 'Keep them' } ).click(); // What: Keep Click Call. Why: The member can change their mind. How: This closes the confirmation.
+
+	await expect( remButObj ).toBeFocused(); // What: Return Focus Assertion. Why: Focus doesn't fall to the page as the confirmation closes. How: This expects Remove chat photos focused.
+
+	await remButObj.click(); // What: Remove Again Call. Why: The member goes ahead this time. How: This opens the confirmation again.
+
+	await stoSecObj.getByRole( 'button', { name : 'Remove them' } ).click(); // What: Confirm Click Call. Why: The clean-up runs once confirmed. How: This presses Remove them.
+
+	await expect( curPagObj.getByRole( 'status' ).filter( { hasText : 'removed from this device' } ) ).toHaveText( '2 photos were removed from this device. Their messages stay in the chat.' ); // What: Removed Status Assertion. Why: The 200-day and 60-day photos go, and the member hears it. How: This reads the status.
+	await expect( remButObj ).toBeFocused();                                                                                                                                         // What: Done Focus Assertion. Why: Focus returns to the button the confirmation replaced. How: This expects Remove chat photos focused.
+	await expect( stoSecObj ).toContainText( '1 chat photo takes up 1 KB on this device.' );                                                                                         // What: Last Line Assertion. Why: Only the 10-day photo stays. How: This reads the line.
+
+
+} );
+
 // #endregion Module Init
 
 

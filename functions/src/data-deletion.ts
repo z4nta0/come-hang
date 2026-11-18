@@ -4,6 +4,7 @@
 // #region Imports
 
 import { CAL_OPT_OBJ  } from './setup.ts';                  // What: Callable Options Object. Why: Every function shares the deploy options, and one the app calls refuses a call without App Check outside the emulator. How: The callable takes them.
+import { chpDelFun    } from './chat-photos.ts';            // What: Chat-Photos Delete Function. Why: Photos the identity sent in the chat are its data too. How: This deletes them in a group.
 import { FieldPath    } from 'firebase-admin/firestore';    // What: Field Path. Why: A group's ID becomes a map key in each account. How: This names that key without reading it as a dotted path.
 import { FieldValue   } from 'firebase-admin/firestore';    // What: Field Value. Why: Counts fall and map entries go. How: This supplies the increment and the field delete.
 import { FIR_DAT_OBJ  } from './setup.ts';                  // What: Firestore Database Object. Why: Most of an identity's data lives in Firestore. How: This reads and deletes it.
@@ -62,9 +63,9 @@ import type { DocumentSnapshot } from 'firebase-admin/firestore'; // What: Docum
  *
  * @summary
  * Deletes what an identity keeps in one group besides its membership: its
- * shared location, its presence, the photos it added, and any request for
- * chat history and its transfer left from before the app stopped asking for
- * history, each of which may not exist.
+ * shared location, its presence, the event and chat photos it added, and
+ * any request for chat history and its transfer left from before the app
+ * stopped asking for history, each of which may not exist.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -90,6 +91,7 @@ const perDelFun = async ( groIdeStr : string, uidValStr : string ) : Promise< vo
 	await groRefObj.collection( 'liveLocations' ).doc( uidValStr ).delete();                                                      // What: Location Delete Call. Why: A shared position is keyed by its member. How: This deletes the identity's.
 	await REA_DAT_OBJ.ref( `presence/${ groIdeStr }/${ uidValStr }` ).remove();                                                   // What: Presence Remove Call. Why: Whether the identity is online is kept per group. How: This removes its entry.
 	await STO_ADM_OBJ.bucket().file( `groupHistoryTransfers/${ groIdeStr }/${ uidValStr }` ).delete( { ignoreNotFound : true } ); // What: Transfer Delete Call. Why: A history bundle sent before the app stopped asking for history waits on its expiry, filed under its asker. How: This deletes the identity's, if there is one.
+	await chpDelFun( groIdeStr, uidValStr );                                                                                      // What: Chat-Photos Delete Call. Why: The photos the identity sent in the chat are theirs to take with them. How: This deletes them, their files following.
 	await uplDelFun( groIdeStr, uidValStr );                                                                                      // What: Uploads Delete Call. Why: The photos the identity added are theirs to take with them. How: This deletes them, their full photos following.
 
 
