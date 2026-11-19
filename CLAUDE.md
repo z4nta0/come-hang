@@ -121,7 +121,9 @@ the chat unable to reach its database, the banner says that instead, messages
 wait the same way, and the Map's status lines are paused.
 The app's one service worker opens it offline and shows pushes, a tap on one opening its
 group at the section its news is in, and a new version of it takes over without
-waiting for the app to close. In development, a member switcher on the
+waiting for the app to close. An open app then reloads into it while hidden
+once nothing would be lost, such as a draft, a picked photo, an open sheet, or
+a message on its way, and otherwise offers a Reload note above the screen. In development, a member switcher on the
 screen's edge acts as the members of a demo group it seeds, one tab per
 member. Next steps are in ARCHITECTURE.md's Section 14.
 

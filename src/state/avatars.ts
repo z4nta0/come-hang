@@ -19,6 +19,7 @@ import { keyLoaFun       } from './groups.ts';                 // What: Key Load
 import { ref             } from 'firebase/storage';            // What: Ref. Why: A photo's file is named by path. How: This builds a reference.
 import { serverTimestamp } from 'firebase/firestore';          // What: Server Timestamp. Why: The newest photo wins when groups disagree. How: This stamps the server's time.
 import { updateDoc       } from 'firebase/firestore';          // What: Update Doc. Why: The membership names the photo once its file is up. How: This writes its fields.
+import { updHolFun       } from '../platform/update.ts';       // What: Update Hold Function. Why: A quiet update reload mid-send would lose what's being sent. How: This holds the reload while each send or upload runs.
 import { uploadBytes     } from 'firebase/storage';            // What: Upload Bytes. Why: Each group's copy goes to Storage. How: This writes its file.
 
 
@@ -298,7 +299,7 @@ const ownLisFun = async () : Promise< { ownRecArr : OwnRecTyp[], uidValStr : str
  *
 */
 
-const avaPutFun = async ( groIdeStr : string, uidValStr : string, avaIdeStr : string, bytValArr : Uint8Array< ArrayBuffer > ) : Promise< void > => { // What: Avatar Put Function. Why: Each group keeps its own encrypted copy. How: This encrypts, uploads, and names it.
+const avaPutFun = updHolFun( async ( groIdeStr : string, uidValStr : string, avaIdeStr : string, bytValArr : Uint8Array< ArrayBuffer > ) : Promise< void > => { // What: Avatar Put Function. Why: Each group keeps its own encrypted copy. How: This encrypts, uploads, and names it. // What: Update Hold Note. Why: A quiet update reload mid-send would lose what this sends. How: updHolFun holds the reload while each call runs.
 
 
 	const encValObj = await encBytFun( await keyLoaFun( groIdeStr ), bytValArr ); // What: Encrypted Value Object. Why: Firebase only ever sees ciphertext. How: This encrypts the photo under the group key with a fresh IV.
@@ -311,7 +312,7 @@ const avaPutFun = async ( groIdeStr : string, uidValStr : string, avaIdeStr : st
 	await avsSetFun( `${ groIdeStr }/${ uidValStr }`, { avaIdeStr, bytArr : bytValArr } ); // What: Keep Call. Why: This device shows the photo without downloading it. How: This keeps it.
 
 
-};
+} );
 
 // #endregion avaPutFun
 

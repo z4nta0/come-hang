@@ -398,6 +398,8 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 
 								className={ cssModObj.fieValInp }
 
+								data-field-saved-value={ curGroObj.namStr } // What: Field Saved Value. Why: The box starts with the group's name, which a quiet update reload shouldn't take for a draft. How: This names the saved name, which the update's busy check compares the box against.
+
 								autoComplete='off'
 								maxLength={ 50 }
 								type='text'

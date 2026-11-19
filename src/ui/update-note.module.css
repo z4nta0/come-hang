@@ -1,0 +1,54 @@
+
+
+
+/**
+ * update-note.module.css = Update Note Module
+ *
+ * @summary
+ * Styles for UpdNotCom: a full-width band in the accent tint above every
+ * screen once a new version is ready, its bold message beside its Reload
+ * button, centered and wrapping onto two lines where they don't fit, taking
+ * no room while it's empty.
+ *
+ * @author z4nta0 <https://github.com/z4nta0>
+ *
+*/
+
+
+
+/* #region updNotDiv */
+
+.updNotDiv { /* What: Update Note Div. Why: A waiting update should be plain at a glance without hiding the screen, and its words and button each keep their own width. How: This draws a band in the accent tint, its message and button centered in a flex row a tier 4 space apart, since only flexbox wraps items that keep their own width. */
+
+
+	align-items      : center;
+	background-color : var( --acc-tin-col );                       /* Accent Tint Color = #E7E8FA */
+	display          : flex;
+	flex-wrap        : wrap;
+	gap              : var( --tie-ver-004 ) var( --tie-hor-004 );   /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	justify-content  : center;
+	padding          : var( --tie-ver-004 ) var( --gut-sid-pad );   /* Tier Vertical 4 ~= 8.304px, Gutter Side Padding, about 19.304px - 44.876px */
+
+
+}
+.updNotDiv:empty { /* What: Empty Update Note Div. Why: The region stays in the page until an update is ready, so it's heard when it speaks, but shouldn't show. How: This drops its padding. */
+
+
+	padding : 0;
+
+
+}
+
+.updMesPar { /* What: Update Message Paragraph. Why: The message says what the button does. How: This sets it bold in the main text color, centered when it wraps. */
+
+
+	color       : var( --tex-mai-col ); /* Text Main Color = #1D1E33 */
+	font-weight : 700;
+	text-align  : center;
+
+
+}
+
+/* #endregion updNotDiv */
+
+
