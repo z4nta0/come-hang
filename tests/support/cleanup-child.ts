@@ -39,6 +39,9 @@ const CLE_LIB_STR = '../../functions/lib/identity-cleanup.js'; // What: Cleanup 
 
 // #region Module Init
 
+process.env.METADATA_SERVER_DETECTION = 'none'; // What: Metadata Server Detection Assignment. Why: Outside Google Cloud the Admin SDK's auth library looked for a metadata server and waited about 10 seconds for it to time out (measured 2026-11-19), which took each cleanup test past 11 seconds. How: This tells the library, which reads the setting by this name, that there's no metadata server, so it stops looking.
+
+
 const CLE_MOD_OBJ = await import( CLE_LIB_STR ) as typeof IdeModTyp; // What: Cleanup Module Object. Why: The schedule runs here. How: This loads its build. // What: Type Assertion Note. Why: The build has no types of its own. How: The as reads it as the source module's shape.
 
 

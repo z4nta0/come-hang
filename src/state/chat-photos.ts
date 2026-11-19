@@ -19,6 +19,7 @@ import { ref             } from 'firebase/storage';                // What: Ref.
 import { runTransaction  } from 'firebase/firestore';              // What: Run Transaction. Why: A photo and the day's two counts are written as one, from the counts as they stand. How: This reads and writes them together.
 import { serverTimestamp } from 'firebase/firestore';              // What: Server Timestamp. Why: The rules require the server's time on a photo. How: This asks the server to fill it in.
 import { Timestamp       } from 'firebase/firestore';              // What: Timestamp. Why: A photo's and the tallies' backstop times are Firestore timestamps. How: This builds them.
+import { updHolFun       } from '../platform/update.ts';           // What: Update Hold Function. Why: A quiet update reload mid-send would lose what's being sent. How: This holds the reload while each send or upload runs.
 import { uploadBytes     } from 'firebase/storage';                // What: Upload Bytes. Why: The photo's file goes to Storage. How: This uploads it.
 
 // #endregion Imports
@@ -292,7 +293,7 @@ const chpPruFun = async ( cutTimNum : number ) : Promise< number > => { // What:
  *
 */
 
-const chpSenFun = async ( groIdeStr : string, filValObj : Blob, srvTimNum : number ) : Promise< ChpSenTyp > => { // What: Chat-Photo Send Function. Why: A member attaches a photo to a message (Section 22). How: This shrinks, encrypts, counts, uploads, and keeps it.
+const chpSenFun = updHolFun( async ( groIdeStr : string, filValObj : Blob, srvTimNum : number ) : Promise< ChpSenTyp > => { // What: Chat-Photo Send Function. Why: A member attaches a photo to a message (Section 22). How: This shrinks, encrypts, counts, uploads, and keeps it. // What: Update Hold Note. Why: A quiet update reload mid-send would lose what this sends. How: updHolFun holds the reload while each call runs.
 
 
 	const phoBytArr     = await chaShrFun( filValObj ); // What: Photo Bytes Array. Why: Every member downloads the photo, so it's sent small. How: This shrinks it.
@@ -381,7 +382,7 @@ const chpSenFun = async ( groIdeStr : string, filValObj : Blob, srvTimNum : numb
 	return { iniVecArr : phoEncObj.iniVecArr, phoIdeStr : phoRefObj.id }; // What: Sent Return. Why: The message names the photo and how it decrypts. How: This returns its IV and ID.
 
 
-};
+} );
 
 // #endregion chpSenFun
 

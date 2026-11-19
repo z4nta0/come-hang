@@ -12,6 +12,7 @@ import { Route        } from 'react-router';              // What: Route. Why: E
 import { Routes       } from 'react-router';              // What: Routes. Why: Only one route should render for any path. How: This renders the single route that best matches the path.
 import { ScrHosCom    } from './screens/screen-host.tsx'; // What: Screen Host Component. Why: The app's root address shows whichever screen the visit is on. How: The root route renders it.
 import { SkiLinCom    } from './ui/skip-link.tsx';        // What: Skip Link Component. Why: Every screen opens with a way for a keyboard user to jump straight to the content. How: The app root renders it first, before the screen.
+import { UpdNotCom    } from './ui/update-note.tsx';      // What: Update Note Component. Why: A new version waiting on something being edited is offered above every screen. How: This draws the note.
 import { useParams    } from 'react-router';              // What: Use Params. Why: An invite link carries its token in its path. How: The join route reads it.
 import { usePusOpeFun } from './ui/push-open.ts';         // What: Use Push Open Function. Why: A push tapped while the app is open opens its group and section. How: This follows the service worker's messages.
 import { useScrTopFun } from './ui/scroll-top.ts';        // What: Use Scroll Top Function. Why: A new page should open at its top rather than where the last one was scrolled, and back, forward, and a reload should return to where the visitor was. How: The app root calls it once, and it scrolls on every navigation.
@@ -205,6 +206,10 @@ function AppRooCom () : React.JSX.Element {
 
 
 			<OffBanCom />{ /* What: Offline Banner Component. Why: Someone offline should know what still works before anything else on the screen. How: This shows the banner above every screen while the device is offline. */ }
+
+
+
+			<UpdNotCom />{ /* What: Update Note Component. Why: A new version that couldn't reload quietly, since something was being edited, should be offered without covering the screen. How: This shows the note below the offline banner, above every screen, once an update is ready. */ }
 
 
 

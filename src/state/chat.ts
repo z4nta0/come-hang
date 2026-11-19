@@ -36,6 +36,7 @@ import { set             } from 'firebase/database';           // What: Set. Why
 import { staPhoFun       } from '../core/chat-status.ts';      // What: Status Photos Function. Why: A photos post is sent as a message's text. How: This builds it.
 import { startAt         } from 'firebase/database';           // What: Start At. Why: The rules let a member read from their own join time exactly. How: This starts the query there.
 import { staTexFun       } from '../core/chat-status.ts';      // What: Status Text Function. Why: A status post is sent as a message's text. How: This builds it.
+import { updHolFun       } from '../platform/update.ts';       // What: Update Hold Function. Why: A quiet update reload mid-send would lose what's being sent. How: This holds the reload while each send or upload runs.
 
 
 import type { BriKinTyp    } from '../core/chat-status.ts';      // What: Bring Kind Type. Why: A bring-list post names its kind. How: This types it.
@@ -304,7 +305,7 @@ const mesHanFun = async ( chaCtxObj : ChaCtxTyp, mesSnaObj : DataSnapshot ) : Pr
  *
 */
 
-const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = false, phoIdeStr : string | null = null ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy.
+const mesSenFun = updHolFun( async ( groIdeStr : string, mesTexStr : string, quiValBoo = false, phoIdeStr : string | null = null ) : Promise< string > => { // What: Message Send Function. Why: Typed messages and status posts reach the chat the same way (Section 11.7). How: This encrypts and sends the text, then keeps a copy. // What: Update Hold Note. Why: A quiet update reload mid-send would lose what this sends. How: updHolFun holds the reload while each call runs.
 
 
 	const { uidValStr } = await ideEnsFun(); // What: UID Value String. Why: The message names its sender. How: This reads the identity.
@@ -371,7 +372,7 @@ const mesSenFun = async ( groIdeStr : string, mesTexStr : string, quiValBoo = fa
 	return mesKeyStr; // What: Message Return. Why: The app can find the message. How: This returns its ID.
 
 
-};
+} );
 
 // #endregion mesSenFun
 

@@ -21,6 +21,7 @@ import { query           } from 'firebase/firestore';      // What: Query. Why: 
 import { ref             } from 'firebase/storage';        // What: Ref. Why: A full photo's file is named by path. How: This builds its reference.
 import { runTransaction  } from 'firebase/firestore';      // What: Run Transaction. Why: A photo and its two counts are written as one, from the counts as they stand. How: This reads and writes them together.
 import { serverTimestamp } from 'firebase/firestore';      // What: Server Timestamp. Why: The rules require the server's time on a photo. How: This asks the server to fill it in.
+import { updHolFun       } from '../platform/update.ts';   // What: Update Hold Function. Why: A quiet update reload mid-send would lose what's being sent. How: This holds the reload while each send or upload runs.
 import { uploadBytes     } from 'firebase/storage';        // What: Upload Bytes. Why: The full photo goes to Storage. How: This uploads it.
 
 
@@ -384,7 +385,7 @@ const phoWatFun = ( groIdeStr : string, eveIdeStr : string, onPhoFun : ( phoRecA
  *
 */
 
-const phoAddFun = async ( groIdeStr : string, eveIdeStr : string, titTexStr : string, filValObj : Blob ) : Promise< void > => { // What: Photo Add Function. Why: A member shares a photo from the event. How: This shrinks, encrypts, writes, and uploads it as part of the event's burst.
+const phoAddFun = updHolFun( async ( groIdeStr : string, eveIdeStr : string, titTexStr : string, filValObj : Blob ) : Promise< void > => { // What: Photo Add Function. Why: A member shares a photo from the event. How: This shrinks, encrypts, writes, and uploads it as part of the event's burst. // What: Update Hold Note. Why: A quiet update reload mid-send would lose what this sends. How: updHolFun holds the reload while each call runs.
 
 
 	const keyValStr = `${ groIdeStr }/${ eveIdeStr }`;                                                                                             // What: Key Value String. Why: The burst is the event's. How: This names it by group and event.
@@ -476,7 +477,7 @@ const phoAddFun = async ( groIdeStr : string, eveIdeStr : string, titTexStr : st
 	finally { burEndFun( keyValStr, sucValBoo ); } // What: Burst End Call. Why: The burst waits on every upload, however it ends. How: This counts this one finished.
 
 
-};
+} );
 
 // #endregion phoAddFun
 

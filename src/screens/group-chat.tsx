@@ -1042,7 +1042,11 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 				{ phoSelObj !== null && ( // What: Preview Check. Why: A picked photo shows before it's sent, so the member can see it's the right one or remove it. How: This shows its preview while one is picked.
 
 
-					<div className={ cssModObj.comPreDiv }>{ /* What: Composer Preview Div Element. Why: The picked photo, a note while it sends, and its remove button sit together above the box. How: This lays them in a row. */ }
+					<div
+						className={ cssModObj.comPreDiv }
+
+						data-element-name-hook='comPreDiv'
+					>{ /* What: Composer Preview Div Element. Why: The picked photo, a note while it sends, and its remove button sit together above the box. How: This lays them in a row, and the update's busy check finds it by its hook, so a quiet reload waits while a photo is picked. */ }
 
 
 						<img
