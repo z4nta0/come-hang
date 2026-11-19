@@ -4,13 +4,13 @@
 // #region Imports
 
 import { BUC_URL_STR               } from '../support/storage.ts';        // What: Bucket URL String. Why: The triggers delete from Storage's default bucket. How: This names it for the tests' seeds.
+import { ref as datRefFun          } from 'firebase/database';            // What: Database Ref Function. Why: Every message names a path in the Realtime Database, apart from Storage's own ref. How: This builds a reference.
 import { DBS_URL_STR               } from '../support/database.ts';       // What: Database URL String. Why: Messages are seeded in the instance the functions watch. How: This names it.
 import { deleteDoc                 } from 'firebase/firestore';           // What: Delete Doc. Why: Deleting a chat photo's document sets off its trigger. How: This deletes a document.
 import { doc                       } from 'firebase/firestore';           // What: Doc. Why: Every Firestore read and write names a document. How: This builds a reference.
 import { expect                    } from '@playwright/test';             // What: Expect. Why: Each check passes only when the triggers leave what they should. How: This asserts on what each poll reads.
 import { getDoc                    } from 'firebase/firestore';           // What: Get Doc. Why: The photos' documents are read back. How: This reads one document.
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'; // What: Initialize Test Environment. Why: The tests write and read the emulators past their rules, as the server would. How: This connects to them.
-import { ref as datRefFun          } from 'firebase/database';            // What: Database Ref Function. Why: Every message names a path in the Realtime Database, apart from Storage's own ref. How: This builds a reference.
 import { ref                       } from 'firebase/storage';             // What: Ref. Why: Every seeded file names a path. How: This builds a reference.
 import { remove                    } from 'firebase/database';            // What: Remove. Why: Deleting a message sets off its trigger. How: This deletes one.
 import { set                       } from 'firebase/database';            // What: Set. Why: The tests seed messages. How: This writes one.
