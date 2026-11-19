@@ -65,6 +65,9 @@ const REQ_LIS_ARR : { bodObj : unknown, urlStr : string }[] = [];         // Wha
 
 // #region Module Init
 
+process.env.METADATA_SERVER_DETECTION = 'none'; // What: Metadata Server Detection Assignment. Why: Outside Google Cloud the Admin SDK's auth library looked for a metadata server on each write and waited about 10 seconds for it to time out (measured 2026-11-19), which ran the paid-flag and checkout tests past their limit. How: This tells the library, which reads the setting by this name, that there's no metadata server, so it stops looking.
+
+
 for ( const [ envNamStr, envValStr ] of Object.entries( JOB_VAL_OBJ.envObj ) ) { // What: Environment Loop. Why: The functions read Polar's settings from the environment, as deployed. How: This sets each, or unsets one given as null.
 
 
