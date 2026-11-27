@@ -21,11 +21,14 @@
 
 /* #region evePhoSec */
 
-.evePhoSec { /* What: Event Photos Section. Why: The heading, the grid, and the messages read top to bottom. How: This stacks them a tier 3 space apart. */
+.evePhoSec { /* What: Event Photos Section. Why: The heading, the grid, and the messages read top to bottom, set apart from the bring-list above. How: This stacks them a tier 3 space apart below a divider, a tier 2 space above the line and below it. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col );     /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	margin-top  : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+	padding-top : var( --tie-ver-002 );                                /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                                /* Tier Vertical 3 ~= 14.572px */
 
 
 }

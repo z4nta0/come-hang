@@ -201,11 +201,13 @@
 
 /* #region reqLisSec */
 
-.reqLisSec { /* What: Request List Section. Why: The heading, the advice, the requests, and the decline-all control read as one part. How: This stacks them a tier 3 space apart, in order since the decline-all control shows only for two or more. */
+.reqLisSec { /* What: Request List Section. Why: The heading, the advice, the requests, and the decline-all control read as one part, set apart from the part above. How: This stacks them a tier 3 space apart, in order since the decline-all control shows only for two or more, below a divider with a tier 2 space under the line. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -238,10 +240,9 @@
 
 /* #region reqLisUno */
 
-.reqLisUno { /* What: Request List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below. */
+.reqLisUno { /* What: Request List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets, each row but the last drawing a border below itself. */
 
 
-	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
 	display    : grid;
 	list-style : none;
 
@@ -252,7 +253,7 @@
 
 /* #region reqRowIte */
 
-.reqRowIte { /* What: Request Row Item. Why: A request's name, time, warning, note, and answers read down one row. How: This stacks them a tier 5 space apart by auto placement, since the warning and the note show only sometimes and named rows would leave their gaps, each at its own width, with a tier 4 space above and below and a border below. */
+.reqRowIte { /* What: Request Row Item. Why: A request's name, time, warning, note, and answers read down one row. How: This stacks them a tier 5 space apart by auto placement, since the warning and the note show only sometimes and named rows would leave their gaps, each at its own width, with a tier 4 space above and below and a border below every row but the last. */
 
 
 	border-bottom : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
@@ -260,6 +261,13 @@
 	justify-items : start;
 	padding       : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
 	row-gap       : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+.reqRowIte:last-child { /* What: Request Row Item Last. Why: A line under the last request would double the divider of the part below. How: This drops the last row's border. */
+
+
+	border-bottom : none;
 
 
 }
@@ -425,12 +433,14 @@
 
 /* #region keyLisSec */
 
-.keyLisSec { /* What: Key List Section. Why: The heading, the note, and the list read as one part. How: This stacks them in named areas a tier 3 space apart. */
+.keyLisSec { /* What: Key List Section. Why: The heading, the note, and the list read as one part, set apart from the part above. How: This stacks them in named areas a tier 3 space apart, below a divider with a tier 2 space under the line. */
 
 
+	border-top          : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
 	display             : grid;
 	grid-template-areas : 'keyTitHea' 'keyIntPar' 'keyLisUno';
-	row-gap             : var( --tie-ver-003 );                    /* Tier Vertical 3 ~= 14.572px */
+	padding-top         : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap             : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -465,10 +475,9 @@
 
 /* #region keyLisUno */
 
-.keyLisUno { /* What: Key List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below, in its own area. */
+.keyLisUno { /* What: Key List Unordered List. Why: The requests read as one list of rows. How: This stacks them with no bullets, each row but the last drawing a border below itself, in its own area. */
 
 
-	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
 	display    : grid;
 	grid-area  : keyLisUno;
 	list-style : none;
@@ -480,7 +489,7 @@
 
 /* #region keyRowIte */
 
-.keyRowIte { /* What: Key Row Item. Why: A request's name, time, and share read down one row. How: This stacks them a tier 5 space apart in order, since the share's button shares its class with other parts, each at its own width, with a tier 4 space above and below and a border below. */
+.keyRowIte { /* What: Key Row Item. Why: A request's name, time, and share read down one row. How: This stacks them a tier 5 space apart in order, since the share's button shares its class with other parts, each at its own width, with a tier 4 space above and below and a border below every row but the last. */
 
 
 	border-bottom : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
@@ -488,6 +497,13 @@
 	justify-items : start;
 	padding       : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
 	row-gap       : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+.keyRowIte:last-child { /* What: Key Row Item Last. Why: A line under the last request would double the divider of the part below. How: This drops the last row's border. */
+
+
+	border-bottom : none;
 
 
 }
@@ -529,11 +545,13 @@
 
 /* #region memLisSec */
 
-.memLisSec { /* What: Member List Section. Why: The heading and the list read as one part. How: This stacks them a tier 3 space apart, in order since the list gives way to a note while it loads. */
+.memLisSec { /* What: Member List Section. Why: The heading and the list read as one part, set apart from the part above. How: This stacks them a tier 3 space apart, in order since the list gives way to a note while it loads, below a divider with a tier 2 space under the line. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -565,10 +583,9 @@
 
 /* #region memLisUno */
 
-.memLisUno { /* What: Member List Unordered List. Why: The members read as one list of rows. How: This stacks them with no bullets and a border above the first, each row adding its own below. */
+.memLisUno { /* What: Member List Unordered List. Why: The members read as one list of rows. How: This stacks them with no bullets, each row but the last drawing a border below itself. */
 
 
-	border-top : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
 	display    : grid;
 	list-style : none;
 
@@ -579,7 +596,7 @@
 
 /* #region memRowIte */
 
-.memRowIte { /* What: Member Row Item. Why: A member's avatar, name, and actions read across one row. How: This lays them out in named areas a tier 4 space apart, centered on each other, with a tier 4 space above and below and a border below. */
+.memRowIte { /* What: Member Row Item. Why: A member's avatar, name, and actions read across one row. How: This lays them out in named areas a tier 4 space apart, centered on each other, with a tier 4 space above and below and a border below every row but the last. */
 
 
 	align-items           : center;
@@ -589,6 +606,13 @@
 	grid-template-areas   : 'memAvaSpa memNamSpa memActSpa';
 	grid-template-columns : auto minmax( 0, 1fr ) auto;
 	padding               : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
+
+
+}
+.memRowIte:last-child { /* What: Member Row Item Last. Why: A line under the last member would divide it from nothing. How: This drops the last row's border. */
+
+
+	border-bottom : none;
 
 
 }
