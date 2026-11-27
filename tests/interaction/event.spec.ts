@@ -344,7 +344,7 @@ pagTesObj( "an item's label opens a form that relabels and reassigns it, and Esc
 
 
 
-test( 'a saved photo downloads as a JPEG, which opens wherever it goes, and a touch screen shares the prepared photos on a second press', async ( { page : curPagObj } ) => { // What: Saved Photo Test. Why: Not every place a saved photo goes can open WebP, so a WebP upload is saved as JPEG and a JPEG one as itself (Section 20). How: This shares a photo to an event under way from the pinned event's sheet, saves it, and checks the download is a JPEG named as one.
+test( 'a saved photo downloads as a JPEG, which opens wherever it goes, and a touch screen shares the prepared photos in batches of 10, a press each', async ( { page : curPagObj } ) => { // What: Saved Photo Test. Why: Not every place a saved photo goes can open WebP, so a WebP upload is saved as JPEG and a JPEG one as itself (Section 20). How: This shares a photo to an event under way from the pinned event's sheet, saves it, and checks the download is a JPEG named as one.
 
 
 	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: The card opens a sheet below 1,100px wide. How: This sizes the page as a phone.
@@ -426,6 +426,36 @@ test( 'a saved photo downloads as a JPEG, which opens wherever it goes, and a to
 	await expect.poll( () => curPagObj.evaluate( () => Reflect.get( window, '__shaRecObj' ) ) ).toEqual( { actBoo : true, couNum : 1 } ); // What: Shared Assertion. Why: The share sheet opens only while the press still counts. How: This waits for one file shared with the press still active.
 
 	await expect( curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'button', { name : 'Save all' } ) ).toBeVisible(); // What: Reset Assertion. Why: Handed over, the button offers the save afresh. How: This waits for its first name.
+
+
+
+	const savButObj = curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).locator( '[class*="phoSavBut"]' ); // What: Save Button Object. Why: The button's name changes with each batch. How: This finds it by its class, which a test may do.
+
+
+	await curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByLabel( 'Add photos' ).setInputFiles( Array.from( Array( 10 ).keys(), ( filIndNum ) => ( { buffer : Buffer.from( pngB64Str, 'base64' ), mimeType : 'image/png', name : `picnic-${ filIndNum }.png` } ) ) ); // What: More Photos Pick Call. Why: A share sheet takes at most 10 photos, so 11 need two. How: This shares 10 more.
+
+	await expect( curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'button', { name : /^Photo \d+, shared by/ } ) ).toHaveCount( 11, { timeout : 30000 } ); // What: Photos Shown Assertion. Why: The save covers every photo once all are up. How: This waits up to 30 seconds for 11 thumbnails.
+
+	await curPagObj.evaluate( () => Reflect.set( navigator, 'share', ( shaDatObj : ShareData ) => { const couLisArr = ( Reflect.get( window, '__shaCouArr' ) ?? [] ) as number[]; const bacOutBoo = couLisArr.length === 1 && !Reflect.get( window, '__bacOutBoo' ); if ( bacOutBoo ) { Reflect.set( window, '__bacOutBoo', true ); return Promise.reject( new DOMException( 'Backed out', 'AbortError' ) ); } Reflect.set( window, '__shaCouArr', [ ...couLisArr, shaDatObj.files?.length ] ); return Promise.resolve(); } ) ); // What: Batch Stand-In Call. Why: The test reads each batch's size, and a member may back out of a share sheet. How: This records each share's file count, backing out once before the second batch. // What: Type Assertion Note. Why: Only this stand-in writes the list. How: The as reads it as numbers.
+
+	await savButObj.click(); // What: Prepare Click Call. Why: The first press gets the photos ready. How: This presses Save all.
+
+	await expect( savButObj ).toHaveText( 'Save photos 1 to 10 of 11' ); // What: First Batch Assertion. Why: Eleven photos need two shares, the first of 10. How: This reads the button.
+
+	await savButObj.click(); // What: First Share Click Call. Why: The press shares the first batch. How: This presses the button.
+
+	await expect( savButObj ).toHaveText( 'Save photo 11 of 11' ); // What: Second Batch Assertion. Why: The last photo waits for its own press. How: This reads the button.
+
+	await savButObj.click(); // What: Backed Out Click Call. Why: The member backs out of the second share sheet. How: This presses the button, which the stand-in cancels once.
+
+	await expect( savButObj ).toHaveText( 'Save photo 11 of 11' ); // What: Kept Batch Assertion. Why: A batch that wasn't shared stays next. How: This reads the button again.
+
+	await savButObj.click(); // What: Second Share Click Call. Why: The press shares the last batch. How: This presses the button.
+
+	await expect( savButObj ).toHaveText( 'Save all' );                                                                                                                              // What: Done Assertion. Why: Every batch shared, the button offers the save afresh. How: This reads the button.
+	await expect( curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'status' ).filter( { hasText : 'last' } ) ).toHaveText( 'That was the last of the photos.' ); // What: Done Status Assertion. Why: The member is told the save is over. How: This reads the status.
+
+	expect( await curPagObj.evaluate( () => Reflect.get( window, '__shaCouArr' ) ) ).toEqual( [ 10, 1 ] ); // What: Batches Assertion. Why: No share may pass 10 files. How: This expects a share of 10 and a share of 1.
 
 
 } );

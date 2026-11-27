@@ -214,6 +214,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const [ fulErrBoo, setFulErrBoo ] = useState( false );                                        // What: Full Error Boolean And Setter. Why: A full photo still on its way says so. How: This is true when it couldn't load.
 	const [ lisErrBoo, setLisErrBoo ] = useState( false );                                        // What: List Error Boolean And Setter. Why: Photos that can't load say so. How: This is true once the watch fails.
 	const [ phoRecArr, setPhoRecArr ] = useState< PhoRecTyp[] | null >( null );                   // What: Photo Record Array And Setter. Why: The grid shows each photo. How: This holds them, null until the first report.
+	const [ savBatNum, setSavBatNum ] = useState( 0 );                                            // What: Save Batch Number And Setter. Why: A share sheet takes at most 10 photos, so a big event is shared a batch per press. How: This is the next batch's place, from 0.
 	const [ savBusBoo, setSavBusBoo ] = useState( false );                                        // What: Save Busy Boolean And Setter. Why: Getting every photo ready takes a while, and the button says so. How: This is true while they're being prepared.
 	const [ savPreObj, setSavPreObj ] = useState< SavPreTyp | null >( null );                     // What: Save Prepared Object And Setter. Why: On a touch screen the prepared photos wait for a second press, since the share sheet opens only shortly after one. How: This holds them, null until they're ready.
 	const [ staMesStr, setStaMesStr ] = useState( '' );                                           // What: Status Message String And Setter. Why: Shared photos are announced. How: This holds the status's text.
@@ -226,6 +227,28 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const savReaBoo = savPreObj !== null && savPreObj.filArr.length === ( phoRecArr?.length ?? 0 );      // What: Save Ready Boolean. Why: Prepared photos are handed over only while they're still the event's photos. How: This is true while some are prepared and their count matches the grid's.
 	const staOpeBoo = eveRecObj.staTimNum <= Date.now();                                                   // What: Started Open Boolean. Why: Photos open once the event starts (Section 20). How: This compares its start with now.
 	const vieIndNum = phoRecArr?.findIndex( ( phoRecObj ) => phoRecObj.phoIdeStr === vieIdeStr ) ?? -1;   // What: Viewer Index Number. Why: The viewer's place in the photos picks its title and neighbors. How: This finds the open photo, -1 when none is.
+
+
+
+	const savLabFun = ( reaPreObj : SavPreTyp, batIndNum : number ) : string => { // What: Save Label Function. Why: The button and the status name the batch the next press shares. How: This counts the photos in the batches before it and names its range, or the whole count when there's one batch.
+
+
+		const batStaNum = reaPreObj.batArr.slice( 0, batIndNum ).reduce( ( couValNum, batFilArr ) => couValNum + batFilArr.length, 0 ); // What: Batch Start Number. Why: A batch's range starts after the photos already shared. How: This adds up the earlier batches.
+		const filCouNum = reaPreObj.filArr.length;                                                                                    // What: File Count Number. Why: The label says how many photos there are in all. How: This counts them.
+
+
+		if ( reaPreObj.batArr.length === 1 ) return `Save ${ filCouNum === 1 ? '1 photo' : `${ filCouNum } photos` }`; // What: One Batch Guard. Why: Photos that fit one share need no range. How: This names their count.
+
+
+
+		if ( reaPreObj.batArr[ batIndNum ].length === 1 ) return `Save photo ${ batStaNum + 1 } of ${ filCouNum }`; // What: Lone Photo Guard. Why: A batch of one photo has no range. How: This names the photo's place and the total.
+
+
+
+		return `Save photos ${ batStaNum + 1 } to ${ batStaNum + reaPreObj.batArr[ batIndNum ].length } of ${ filCouNum }`; // What: Range Return. Why: The member sees which photos the press shares and how many there are. How: This names the batch's first and last photo and the total.
+
+
+	};
 	const vieRecObj = vieIndNum >= 0 ? phoRecArr![ vieIndNum ] : null;                                     // What: Viewer Record Object. Why: The viewer shows the open photo. How: This reads it, null when none is open. // What: Non-Null Note. Why: An index of 0 or more was found in the photos. How: The ! reads them as present.
 
 	const fulBytArr = fulRecObj !== null && fulRecObj.ideStr === vieIdeStr ? fulRecObj.bytArr : null; // What: Full Bytes Array. Why: The viewer shows the open photo's full bytes alone. How: This reads them when they belong to the open photo, null otherwise.
@@ -544,7 +567,9 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	 * all. A computer then downloads them at once. A touch screen keeps them
 	 * ready instead and says so, and the next press hands them to the share
 	 * sheet straight away, since a browser opens the sheet only shortly
-	 * after a press and many photos take longer than that to prepare.
+	 * after a press and many photos take longer than that to prepare. More
+	 * than one share sheet's worth go a batch per press, a batch the member
+	 * backs out of staying next.
 	 *
 	 * @author z4nta0 <https://github.com/z4nta0>
 	 *
@@ -577,18 +602,27 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 		try { // What: Save Attempt. Why: A failed save should say so. How: This saves inside a try.
 
 
-			if ( savReaBoo && savPreObj !== null ) { // What: Ready Check. Why: Prepared photos go to the share sheet while this press still counts. How: This hands them over before anything is awaited.
+			if ( savReaBoo && savPreObj !== null ) { // What: Ready Check. Why: Prepared photos go to the share sheet while this press still counts. How: This hands the next batch over before anything is awaited.
 
 
-				setSavPreObj( null ); // What: Prepared Clear Call. Why: Handed over, the photos are prepared afresh next time. How: This clears them.
-
-				setStaMesStr( '' ); // What: Status Clear Call. Why: The photos are no longer waiting on a press. How: This clears the status.
-
-
-				await savHanFun( savPreObj, zipNamStr ); // What: Hand Call. Why: The share sheet takes the photos. How: This shares them, the sheet asked for in the same task as the press.
+				const batDonBoo = await savHanFun( savPreObj, zipNamStr, savBatNum ); // What: Batch Done Boolean. Why: A batch the member backed out of is offered again. How: This shares the batch, the sheet asked for in the same task as the press, and reads whether it went.
+				const batLasBoo = savBatNum + 1 >= savPreObj.batArr.length;           // What: Batch Last Boolean. Why: After the last batch the save is over. How: This is true when no batch follows this one.
 
 
-				return; // What: Handed Return. Why: The save is done. How: This returns.
+				if ( !batDonBoo ) return; // What: Backed Out Guard. Why: A batch that wasn't shared stays the next one. How: This returns with nothing moved on.
+
+
+
+				setSavBatNum( batLasBoo ? 0 : savBatNum + 1 ); // What: Batch Move Call. Why: The next press shares the next batch, or a new save starts from the first. How: This moves on, or back to the start after the last.
+
+				setStaMesStr( batLasBoo ? 'That was the last of the photos.' : `Press "${ savLabFun( savPreObj, savBatNum + 1 ) }" for the next ones.` ); // What: Status Set Call. Why: The member should know whether more photos wait. How: This says the save is over, or names the button for the next batch.
+
+
+				if ( batLasBoo ) setSavPreObj( null ); // What: Prepared Clear Call. Why: Handed over, the photos are prepared afresh next time. How: This clears them after the last batch.
+
+
+
+				return; // What: Handed Return. Why: This press's work is done. How: This returns.
 
 
 			}
@@ -605,9 +639,11 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 
+			setSavBatNum( 0 ); // What: Batch Reset Call. Why: Newly prepared photos are shared from the first batch. How: This starts the count over.
+
 			setSavPreObj( newPreObj ); // What: Prepared Set Call. Why: The photos wait for the press that opens the share sheet. How: This keeps them.
 
-			setStaMesStr( `The photos are ready. Press "Save ${ newPreObj.filArr.length === 1 ? '1 photo' : `${ newPreObj.filArr.length } photos` }" to finish.` ); // What: Status Set Call. Why: The member should know one more press saves them. How: This announces it, naming the button.
+			setStaMesStr( `The photos are ready. Press "${ savLabFun( newPreObj, 0 ) }" to ${ newPreObj.batArr.length === 1 ? 'finish' : 'save the first ones' }.` ); // What: Status Set Call. Why: The member should know another press saves them, and that a big event takes several. How: This announces it, naming the button.
 
 
 		}
@@ -681,7 +717,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 						type='button'
 
 						onClick={ () => void savAllFun() }
-					>{ savBusBoo ? 'Getting photos ready…' : savReaBoo ? `Save ${ phoRecArr.length === 1 ? '1 photo' : `${ phoRecArr.length } photos` }` : 'Save all' }</button> // What: Photos Save Button Element. Why: Photos leave the server with the event, so members keep them, and on a touch screen the save takes a second press once they're ready. How: This saves every photo to the device, reading "Getting photos ready…" while they're prepared and "Save" with their count while they wait for that press.
+					>{ savBusBoo ? 'Getting photos ready…' : savReaBoo && savPreObj !== null ? savLabFun( savPreObj, savBatNum ) : 'Save all' }</button> // What: Photos Save Button Element. Why: Photos leave the server with the event, so members keep them, and on a touch screen the save takes a second press once they're ready. How: This saves every photo to the device, reading "Getting photos ready…" while they're prepared and "Save" with their count, or with the next batch's range when they need several shares, while they wait for that press.
 
 
 				) }
