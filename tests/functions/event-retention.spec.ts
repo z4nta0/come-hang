@@ -116,7 +116,7 @@ test.afterAll( async () => { // What: Teardown Hook. Why: The connection should 
 
 
 
-test( "a change of event retention moves each event still to go, with its items and photos, and leaves one already due", async () => { // What: Event Retention Trigger Test. Why: Events planned before the owner's choice carry the old deletion time (Section 23). How: This seeds a live and a due event, shortens and then lengthens the retention, and checks each deletion time.
+test( 'a change of event retention moves each event still to go, with its items and photos, and leaves one already due', async () => { // What: Event Retention Trigger Test. Why: Events planned before the owner's choice carry the old deletion time (Section 23). How: This seeds a live and a due event, shortens and then lengthens the retention, and checks each deletion time.
 
 
 	const oldExpNum = OLD_END_NUM + 7 * DAY_MIL_NUM;                         // What: Old Expire Number. Why: The due event's deletion time passed 3 days ago. How: This is its end plus a week.

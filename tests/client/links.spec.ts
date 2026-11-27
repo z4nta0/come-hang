@@ -40,7 +40,7 @@ const LIN_MOD_STR = '/src/utils/links.ts'; // What: Links Module String. Why: Th
 
 // #region Module Init
 
-test( 'a web address in text becomes a link, shown as typed, without the punctuation after it', async ( { page } ) => { // What: Link Parts Test. Why: A shared address should open when pressed, and a sentence's punctuation isn't part of it. How: This splits text with addresses in it and reads the pieces.
+test( 'a web address in text becomes a link, shown as typed, without the punctuation after it', async ( { page } ) => { // What: Link Parts Test. Why: A shared address should open when pressed, and a sentence's punctuation isn't part of it. How: This splits text with addresses in it and checks each piece's words and address.
 
 
 	await page.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
@@ -55,7 +55,7 @@ test( 'a web address in text becomes a link, shown as typed, without the punctua
 
 
 
-test( 'text that is not an http or https address with a dotted host stays plain', async ( { page } ) => { // What: Plain Text Test. Why: A message opens web pages only, and never runs what was typed. How: This splits text shaped like other addresses and expects it back whole.
+test( 'text that is not an http or https address with a dotted host stays plain', async ( { page } ) => { // What: Plain Text Test. Why: A message opens web pages only, and never runs what was typed. How: This splits text shaped like other addresses and checks it comes back as one plain piece.
 
 
 	await page.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.

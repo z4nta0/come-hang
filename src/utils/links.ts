@@ -82,7 +82,7 @@ const linHreFun = ( linTexStr : string ) : string => { // What: Link Hypertext-R
 
 	try { urlValObj = new URL( urlTexStr ); } // What: Parse Attempt. Why: Text shaped like an address may not be one. How: This parses it.
 
-	catch { return ''; }
+	catch { return ''; } // What: Parse Catch. Why: Text the browser can't read as an address isn't a link. How: This returns nothing.
 
 
 
