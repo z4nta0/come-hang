@@ -344,7 +344,7 @@ pagTesObj( "an item's label opens a form that relabels and reassigns it, and Esc
 
 
 
-test( 'a saved photo downloads as a JPEG, which opens wherever it goes', async ( { page : curPagObj } ) => { // What: Saved Photo Test. Why: Not every place a saved photo goes can open WebP, so a WebP upload is saved as JPEG and a JPEG one as itself (Section 20). How: This shares a photo to an event under way from the pinned event's sheet, saves it, and checks the download is a JPEG named as one.
+test( 'a saved photo downloads as a JPEG, which opens wherever it goes, and a touch screen shares the prepared photos on a second press', async ( { page : curPagObj } ) => { // What: Saved Photo Test. Why: Not every place a saved photo goes can open WebP, so a WebP upload is saved as JPEG and a JPEG one as itself (Section 20). How: This shares a photo to an event under way from the pinned event's sheet, saves it, and checks the download is a JPEG named as one.
 
 
 	await curPagObj.setViewportSize( { height : 844, width : 390 } ); // What: Phone Size Call. Why: The card opens a sheet below 1,100px wide. How: This sizes the page as a phone.
@@ -400,6 +400,32 @@ test( 'a saved photo downloads as a JPEG, which opens wherever it goes', async (
 
 	expect( dowValObj.suggestedFilename() ).toBe( 'come-hang-photo-1.jpg' );   // What: JPEG Name Assertion. Why: The file is named as what it is. How: This expects a .jpg name.
 	expect( [ ...savBytArr.subarray( 0, 3 ) ] ).toEqual( [ 0xFF, 0xD8, 0xFF ] ); // What: JPEG Bytes Assertion. Why: The saved photo is a JPEG, whatever was uploaded. How: This expects JPEG's opening bytes.
+
+
+
+	await curPagObj.evaluate( () => { // What: Touch Stand-In Call. Why: A touch screen saves through the share sheet, which opens only shortly after a press, and no engine here has one. How: This makes the page read as a touch screen that shares files, recording each share and whether a press still counted as it was asked for.
+
+
+		Reflect.set( window, 'matchMedia', () => ( { matches : true } ) ); // What: Pointer Stand-In. Why: The share sheet is for touch screens. How: This answers every media query as matching.
+
+		Reflect.set( navigator, 'canShare', () => true ); // What: Can Share Stand-In. Why: The device has to say it shares files. How: This says it does.
+
+		Reflect.set( navigator, 'share', ( shaDatObj : ShareData ) => { Reflect.set( window, '__shaRecObj', { actBoo : navigator.userActivation.isActive, couNum : shaDatObj.files?.length } ); return Promise.resolve(); } ); // What: Share Stand-In. Why: The test reads what was shared and when. How: This records the files' count and whether the press was still active, then resolves.
+
+
+	} );
+
+	await curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'button', { name : 'Save all' } ).click(); // What: Prepare Click Call. Why: The first press gets the photos ready. How: This presses Save all.
+
+	await expect( curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'status' ).filter( { hasText : 'ready' } ) ).toHaveText( 'The photos are ready. Press "Save 1 photo" to finish.' ); // What: Ready Status Assertion. Why: The member is told one more press saves them. How: This reads the status.
+
+	expect( await curPagObj.evaluate( () => Reflect.get( window, '__shaRecObj' ) ) ).toBeUndefined(); // What: Unshared Assertion. Why: The share sheet waits for a press of its own. How: This expects no share yet.
+
+	await curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'button', { name : 'Save 1 photo' } ).click(); // What: Share Click Call. Why: The second press hands the photos over. How: This presses the button under its new name.
+
+	await expect.poll( () => curPagObj.evaluate( () => Reflect.get( window, '__shaRecObj' ) ) ).toEqual( { actBoo : true, couNum : 1 } ); // What: Shared Assertion. Why: The share sheet opens only while the press still counts. How: This waits for one file shared with the press still active.
+
+	await expect( curPagObj.getByRole( 'dialog', { name : 'Picnic' } ).getByRole( 'button', { name : 'Save all' } ) ).toBeVisible(); // What: Reset Assertion. Why: Handed over, the button offers the save afresh. How: This waits for its first name.
 
 
 } );

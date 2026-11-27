@@ -17,6 +17,8 @@ import { phoFluFun    } from '../state/photos.ts';        // What: Photos Flush 
 import { phoGetFun    } from '../state/photos.ts';        // What: Photo Get Function. Why: The viewer shows the full photo. How: This downloads and decrypts it.
 import { phoWatFun    } from '../state/photos.ts';        // What: Photos Watch Function. Why: The grid fills in as members share. How: This watches the event's photos.
 import { savFilFun    } from '../platform/photo-save.ts'; // What: Save Files Function. Why: Photos leave the server with their event, so members keep them on their device. How: This hands them over.
+import { savHanFun    } from '../platform/photo-save.ts'; // What: Save Hand Function. Why: A whole event's photos are handed over on a press of their own. How: This shares or downloads the prepared photos.
+import { savPreFun    } from '../platform/photo-save.ts'; // What: Save Prepare Function. Why: A whole event's photos take a while to get ready. How: This converts and wraps them ahead of the hand-over.
 import { SheDiaCom    } from '../ui/sheet.tsx';           // What: Sheet Dialog Component. Why: A tapped photo opens over the page. How: This draws the viewer's sheet.
 import { sheJumFun    } from '../ui/sheet.tsx';           // What: Sheet Jump Function. Why: A chat line about photos opens its event at them. How: This scrolls the part into view once the sheet has risen.
 import { useBytUrlFun } from '../ui/bytes-url.ts';        // What: Use Bytes URL Function. Why: An image shows a decrypted photo by address. How: This makes and frees one.
@@ -26,10 +28,11 @@ import { useRef       } from 'react';                     // What: Use Reference
 import { useState     } from 'react';                     // What: Use State. Why: The photos, uploads, the open photo, and the messages change as the member acts. How: This holds each.
 
 
-import type { EveRecTyp } from '../state/events.ts';  // What: Event Record Type. Why: The part belongs to one event. How: This types it.
-import type { MemRecTyp } from '../state/members.ts'; // What: Member Record Type. Why: The viewer names who shared each photo. How: This types the members.
-import type { PhoRecTyp } from '../state/photos.ts';  // What: Photo Record Type. Why: The grid and the viewer show photo records. How: This types them.
-import type { SheHanTyp } from '../ui/sheet.tsx';     // What: Sheet Handle Type. Why: A thumbnail opens the viewer. How: This types its handle.
+import type { EveRecTyp } from '../state/events.ts';        // What: Event Record Type. Why: The part belongs to one event. How: This types it.
+import type { MemRecTyp } from '../state/members.ts';       // What: Member Record Type. Why: The viewer names who shared each photo. How: This types the members.
+import type { PhoRecTyp } from '../state/photos.ts';        // What: Photo Record Type. Why: The grid and the viewer show photo records. How: This types them.
+import type { SavPreTyp } from '../platform/photo-save.ts'; // What: Save Prepared Type. Why: Prepared photos wait for the press that hands them over. How: This types them.
+import type { SheHanTyp } from '../ui/sheet.tsx';           // What: Sheet Handle Type. Why: A thumbnail opens the viewer. How: This types its handle.
 
 // #endregion Imports
 
@@ -211,6 +214,8 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const [ fulErrBoo, setFulErrBoo ] = useState( false );                                        // What: Full Error Boolean And Setter. Why: A full photo still on its way says so. How: This is true when it couldn't load.
 	const [ lisErrBoo, setLisErrBoo ] = useState( false );                                        // What: List Error Boolean And Setter. Why: Photos that can't load say so. How: This is true once the watch fails.
 	const [ phoRecArr, setPhoRecArr ] = useState< PhoRecTyp[] | null >( null );                   // What: Photo Record Array And Setter. Why: The grid shows each photo. How: This holds them, null until the first report.
+	const [ savBusBoo, setSavBusBoo ] = useState( false );                                        // What: Save Busy Boolean And Setter. Why: Getting every photo ready takes a while, and the button says so. How: This is true while they're being prepared.
+	const [ savPreObj, setSavPreObj ] = useState< SavPreTyp | null >( null );                     // What: Save Prepared Object And Setter. Why: On a touch screen the prepared photos wait for a second press, since the share sheet opens only shortly after one. How: This holds them, null until they're ready.
 	const [ staMesStr, setStaMesStr ] = useState( '' );                                           // What: Status Message String And Setter. Why: Shared photos are announced. How: This holds the status's text.
 	const [ vieErrStr, setVieErrStr ] = useState( '' );                                           // What: Viewer Error String And Setter. Why: A failed delete or save is announced inside the viewer. How: This holds its alert's text.
 	const [ vieIdeStr, setVieIdeStr ] = useState( '' );                                           // What: Viewer Identifier String And Setter. Why: The viewer follows one photo, even as others come and go. How: This holds its ID, empty when none is open.
@@ -218,6 +223,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	const [ vieStaStr, setVieStaStr ] = useState( '' );                                           // What: Viewer Status String And Setter. Why: A save is announced inside the viewer. How: This holds its status's text.
 
 
+	const savReaBoo = savPreObj !== null && savPreObj.filArr.length === ( phoRecArr?.length ?? 0 );      // What: Save Ready Boolean. Why: Prepared photos are handed over only while they're still the event's photos. How: This is true while some are prepared and their count matches the grid's.
 	const staOpeBoo = eveRecObj.staTimNum <= Date.now();                                                   // What: Started Open Boolean. Why: Photos open once the event starts (Section 20). How: This compares its start with now.
 	const vieIndNum = phoRecArr?.findIndex( ( phoRecObj ) => phoRecObj.phoIdeStr === vieIdeStr ) ?? -1;   // What: Viewer Index Number. Why: The viewer's place in the photos picks its title and neighbors. How: This finds the open photo, -1 when none is.
 	const vieRecObj = vieIndNum >= 0 ? phoRecArr![ vieIndNum ] : null;                                     // What: Viewer Record Object. Why: The viewer shows the open photo. How: This reads it, null when none is open. // What: Non-Null Note. Why: An index of 0 or more was found in the photos. How: The ! reads them as present.
@@ -533,8 +539,12 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	 * savAllFun = Save All Function
 	 *
 	 * @summary
-	 * Loads every photo's full image and hands them all to the device at
-	 * once, announcing a failure in the part's alert.
+	 * Saves every photo of the event, announcing a failure in the part's
+	 * alert. The first press loads each photo's full image and prepares them
+	 * all. A computer then downloads them at once. A touch screen keeps them
+	 * ready instead and says so, and the next press hands them to the share
+	 * sheet straight away, since a browser opens the sheet only shortly
+	 * after a press and many photos take longer than that to prepare.
 	 *
 	 * @author z4nta0 <https://github.com/z4nta0>
 	 *
@@ -550,7 +560,14 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 	 *
 	*/
 
-	const savAllFun = async () : Promise< void > => { // What: Save All Function. Why: A member keeps every photo of the event before it's deleted. How: This loads each and saves them together.
+	const savAllFun = async () : Promise< void > => { // What: Save All Function. Why: A member keeps every photo of the event before it's deleted. How: This prepares them on the first press and hands them over at once on a computer, or on the next press on a touch screen.
+
+
+		const zipNamStr = `come-hang-${ filNamFun( eveRecObj.titTexStr ) || 'event' }-photos.zip`; // What: ZIP Name String. Why: An archive of the photos is named after the event. How: This builds the name from the event's title, or "event" when the title leaves nothing.
+
+
+		if ( savBusBoo ) return; // What: Busy Guard. Why: A second press while the photos are being prepared would prepare them twice. How: This returns.
+
 
 
 		setErrMesStr( '' ); // What: Error Clear Call. Why: A new save starts without an old failure. How: This clears the alert.
@@ -560,7 +577,37 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 		try { // What: Save Attempt. Why: A failed save should say so. How: This saves inside a try.
 
 
-			await savFilFun( await Promise.all( ( phoRecArr ?? [] ).map( ( phoRecObj ) => phoGetFun( groIdeStr, eveRecObj.eveIdeStr, phoRecObj ) ) ), `come-hang-${ filNamFun( eveRecObj.titTexStr ) || 'event' }-photos.zip` ); // What: Save Call. Why: Every photo is saved together, an archive of them named after the event. How: This loads each full photo, then saves them, naming the archive from the event's title, or "event" when nothing of the title is left.
+			if ( savReaBoo && savPreObj !== null ) { // What: Ready Check. Why: Prepared photos go to the share sheet while this press still counts. How: This hands them over before anything is awaited.
+
+
+				setSavPreObj( null ); // What: Prepared Clear Call. Why: Handed over, the photos are prepared afresh next time. How: This clears them.
+
+				setStaMesStr( '' ); // What: Status Clear Call. Why: The photos are no longer waiting on a press. How: This clears the status.
+
+
+				await savHanFun( savPreObj, zipNamStr ); // What: Hand Call. Why: The share sheet takes the photos. How: This shares them, the sheet asked for in the same task as the press.
+
+
+				return; // What: Handed Return. Why: The save is done. How: This returns.
+
+
+			}
+
+
+
+			setSavBusBoo( true ); // What: Busy Set Call. Why: The button says the photos are being prepared. How: This sets the flag.
+
+
+			const newPreObj = await savPreFun( await Promise.all( ( phoRecArr ?? [] ).map( ( phoRecObj ) => phoGetFun( groIdeStr, eveRecObj.eveIdeStr, phoRecObj ) ) ) ); // What: New Prepared Object. Why: Every photo is saved together. How: This loads each full photo, then prepares them all.
+
+
+			if ( !newPreObj.shaBoo ) { await savHanFun( newPreObj, zipNamStr ); return; } // What: Download Guard. Why: A download needs no second press. How: This downloads the photos and returns.
+
+
+
+			setSavPreObj( newPreObj ); // What: Prepared Set Call. Why: The photos wait for the press that opens the share sheet. How: This keeps them.
+
+			setStaMesStr( `The photos are ready. Press "Save ${ newPreObj.filArr.length === 1 ? '1 photo' : `${ newPreObj.filArr.length } photos` }" to finish.` ); // What: Status Set Call. Why: The member should know one more press saves them. How: This announces it, naming the button.
 
 
 		}
@@ -574,6 +621,8 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 
 
 		}
+
+		finally { setSavBusBoo( false ); } // What: Busy Clear Block. Why: The button reads as usual once the work is over, whether it worked or failed. How: This clears the flag.
 
 
 	};
@@ -632,7 +681,7 @@ function EvePhoCom ( { eveRecObj, groIdeStr, jumBoo, memRecMap, ownBoo, uidValSt
 						type='button'
 
 						onClick={ () => void savAllFun() }
-					>Save all</button> // What: Photos Save Button Element. Why: Photos leave the server with the event, so members keep them. How: This saves every photo to the device.
+					>{ savBusBoo ? 'Getting photos ready…' : savReaBoo ? `Save ${ phoRecArr.length === 1 ? '1 photo' : `${ phoRecArr.length } photos` }` : 'Save all' }</button> // What: Photos Save Button Element. Why: Photos leave the server with the event, so members keep them, and on a touch screen the save takes a second press once they're ready. How: This saves every photo to the device, reading "Getting photos ready…" while they're prepared and "Save" with their count while they wait for that press.
 
 
 				) }
