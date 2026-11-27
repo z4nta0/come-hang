@@ -28,6 +28,7 @@ import { iniTexFun       } from '../utils/text.ts';            // What: Initials
 import { KEY_WAI_STR     } from '../state/groups.ts';          // What: Key Waiting String. Why: A group whose key hasn't been shared yet can't show its chat. How: The chat shows this message then.
 import { linNorFun       } from '../core/text-limits.ts';      // What: Lines Normalize Function. Why: A message keeps its line breaks while each line is tidied. How: This tidies it as it'll be sent.
 import { linNowFun       } from '../state/chat-link.ts';       // What: Link Now Function. Why: A message sent while the chat can't connect would hang. How: This reads the chat's connection.
+import { LinTexCom       } from '../ui/linked-text.tsx';       // What: Linked Text Component. Why: A web address in a message should open when pressed. How: This draws a message's words with its addresses as links.
 import { lisPhrFun       } from '../utils/text.ts';            // What: List Phrase Function. Why: A bring-list line names its items as a phrase. How: This joins them the way English does.
 import { memLisFun       } from '../state/members.ts';         // What: Member List Function. Why: Each message shows its sender's name and color. How: This lists the members.
 import { mesLisFun       } from '../platform/chat-store.ts';   // What: Message List Function. Why: The chat opens with the history kept on the device. How: This reads it.
@@ -954,7 +955,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 									{ imgDetObj === null ? ( // What: Photo Check. Why: A photo message shows its photo where a message shows its words. How: This shows the words of a typed message, or the photo and its caption.
 
 
-										<p className={ cssModObj.mesTexPar }>{ mesRecObj.texValStr }</p> // What: Message Text Paragraph Element. Why: The message's words are what was said. How: This shows them, keeping their line breaks, as text rather than markup.
+										<p className={ cssModObj.mesTexPar }><LinTexCom texValStr={ mesRecObj.texValStr } /></p> // What: Message Text Paragraph Element. Why: The message's words are what was said. How: This shows them, keeping their line breaks, as text rather than markup, with their web addresses as links.
 
 
 									) : ( // What: Photo Branch. Why: A photo message's bubble holds the photo above its caption. How: This renders them.
@@ -974,7 +975,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 
 
-											{ imgDetObj.capTexStr !== '' && <p className={ cssModObj.mesCapPar }>{ imgDetObj.capTexStr }</p> }{ /* What: Caption Check. Why: A photo may be sent with words. How: This shows the caption below it, keeping its line breaks, as text. */ }
+											{ imgDetObj.capTexStr !== '' && <p className={ cssModObj.mesCapPar }><LinTexCom texValStr={ imgDetObj.capTexStr } /></p> }{ /* What: Caption Check. Why: A photo may be sent with words. How: This shows the caption below it, keeping its line breaks, as text, with its web addresses as links. */ }
 
 
 										</div>
@@ -1011,7 +1012,7 @@ function GroChaCom ( { groIdeStr, groNamStr, ownBoo } : GccProTyp ) : React.JSX.
 
 								</p>
 
-								<p className={ cssModObj.mesTexPar }>{ penRecObj.texValStr }</p>{ /* What: Message Text Paragraph Element. Why: The waiting message's words show as written. How: This shows them as text. */ }
+								<p className={ cssModObj.mesTexPar }><LinTexCom texValStr={ penRecObj.texValStr } /></p>{ /* What: Message Text Paragraph Element. Why: The waiting message's words show as written. How: This shows them as text, with their web addresses as links. */ }
 
 								<p className={ cssModObj.mesPenPar }>Waiting to send</p>{ /* What: Message Pending Paragraph Element. Why: The member should know the message hasn't gone yet. How: This says it's waiting. */ }
 

@@ -455,8 +455,12 @@
 
 
 }
-.chaMesIte--own .mesTexPar { /* What: Own Message Text Paragraph. Why: The member's own words stand out in the accent, the bubble's squared corner at its end. How: This fills it with the main accent in the accent's text color. */
+.chaMesIte--own .mesTexPar { /* What: Own Message Text Paragraph. Why: The member's own words stand out in the accent, the bubble's squared corner at its end, and a link or a focus ring in the accent would vanish on it. How: This fills it with the main accent in the accent's text color, and hands its links that color, a faded one on hover, and a focus ring to match. */
 
+
+	--foc-rin-col : var( --tex-acc-col );                                                /* Text Accent Color = #FFFFFF */
+	--lin-hov-col : oklch( from var( --tex-acc-col ) l c h / var( --cdn-pow-001-rec ) ); /* Text Accent Color = #FFFFFF @ 0.755 opacity */
+	--lin-tex-col : var( --tex-acc-col );                                                /* Text Accent Color = #FFFFFF */
 
 	background-color : var( --acc-mai-col );                                                                /* Accent Main Color = #4A4FC9 */
 	border-radius    : var( --rad-bor-xla ) var( --rad-bor-xla ) var( --rad-bor-xsm ) var( --rad-bor-xla ); /* Radius Border Extra Large ~= 19.304px, Radius Border Extra Small ~= 3.572px */
@@ -571,6 +575,15 @@
 	overflow-wrap : anywhere;
 	padding       : var( --spa-ver-m02 ) var( --spa-ver-bas ); /* Spacing Vertical Base Minus 2 ~= 8.304px, Spacing Vertical Base ~= 14.572px */
 	white-space   : pre-wrap;
+
+
+}
+.chaMesIte--own .mesCapPar { /* What: Own Message Caption Paragraph. Why: The member's own caption sits on the accent, where a link or a focus ring in the accent would vanish. How: This hands its links the accent's text color, a faded one on hover, and a focus ring to match. */
+
+
+	--foc-rin-col : var( --tex-acc-col );                                                /* Text Accent Color = #FFFFFF */
+	--lin-hov-col : oklch( from var( --tex-acc-col ) l c h / var( --cdn-pow-001-rec ) ); /* Text Accent Color = #FFFFFF @ 0.755 opacity */
+	--lin-tex-col : var( --tex-acc-col );                                                /* Text Accent Color = #FFFFFF */
 
 
 }
