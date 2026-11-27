@@ -36,13 +36,14 @@ import type { SheHanTyp } from '../ui/sheet.tsx';     // What: Sheet Handle Type
  * group-events.tsx = Group Events
  *
  * @summary
- * The open group's Events section: a button to plan an event and a card for
- * each event that hasn't ended, soonest first, then under "Recently ended" the
- * events that have ended but not yet been deleted, so their photos and bring-
- * lists can still be reached, the most recent first. A card opens a sheet with
- * the event's details and bring-list, where its creator or the group's owner
- * can change it, in a form sheet over it, or cancel it after confirming. Each
- * plan, change, and cancel is announced, and the list reads the events again.
+ * The open group's Events section: a button to plan an event, then under
+ * "Upcoming Events" a card for each event that hasn't ended, soonest first,
+ * and under "Previous Events" the events that have ended but not yet been
+ * deleted, so their photos and bring-lists can still be reached, the most
+ * recent first. A card opens a sheet with the event's details and bring-list,
+ * where its creator or the group's owner can change it, in a form sheet over
+ * it, or cancel it after confirming. Each plan, change, and cancel is
+ * announced, and the list reads the events again.
  *
  * Sections:
  *  - Components
@@ -424,6 +425,10 @@ function GroEveCom ( { groIdeStr, opeIdeStr, opeParStr, ownBoo } : GecProTyp ) :
 
 
 
+			<h3 className={ cssModObj.eveLisHea }>Upcoming Events</h3>{ /* What: Events List Heading Element. Why: Events to come are set apart from those that have ended. How: This names their list, above it or above its note. */ }
+
+
+
 			{ upcRecArr === null || upcRecArr.length === 0 ? ( // What: List Empty Check. Why: An empty space would read as broken. How: This says the list is loading, couldn't load, or has nothing to come, or else shows the cards.
 
 
@@ -458,13 +463,13 @@ function GroEveCom ( { groIdeStr, opeIdeStr, opeParStr, ownBoo } : GecProTyp ) :
 
 
 
-			{ endRecArr.length > 0 && ( // What: Ended Check. Why: An event that has ended stays until it's deleted, 48 hours later, so its photos and list can still be reached (Section 20). How: This lists the ended events under their own heading.
+			{ endRecArr.length > 0 && ( // What: Ended Check. Why: An event that has ended stays until it's deleted, as many days later as the group's owner chose, so its photos and list can still be reached (Sections 20 and 23). How: This lists the ended events under their own heading.
 
 
 				<>{ /* What: Ended Fragment. Why: The heading and its list show together. How: This groups them without adding an element. */ }
 
 
-					<h3 className={ cssModObj.endLisHea }>Recently ended</h3>{ /* What: Ended List Heading Element. Why: Ended events are set apart from those to come. How: This names their list. */ }
+					<h3 className={ cssModObj.eveLisHea }>Previous Events</h3>{ /* What: Events List Heading Element. Why: Ended events are set apart from those to come. How: This names their list. */ }
 
 
 

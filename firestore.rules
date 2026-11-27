@@ -68,17 +68,17 @@ rules_version = '2'; // What: Rules Version. Why: Version 2 allows recursive wil
  * owner reads and dismisses them. No client deletes a group, which a Cloud
  * Function does whole.
  *
- * The owner renames the group and sets how long its chat is kept. A rename
- * updates the current invite's copy of the name in the same batch, so the
- * invite screen always shows the group's real name.
+ * The owner renames the group and sets how long its chat and its ended
+ * events are kept. A rename updates the current invite's copy of the name in
+ * the same batch, so the invite screen always shows the group's real name.
  *
  * Any member plans an event, and only its creator or the owner edits or
  * cancels it. An event's details are encrypted as one bundle the rules cap by
  * size, and its times are bounded: it lasts up to 7 days, starts within a
- * year, and expires 48 hours after it ends. Any member adds, claims,
- * releases, reassigns, or removes an event's items, each assigned to nobody
- * or a member, and each expires with its event, since Firestore's TTL leaves
- * an event's subcollections behind.
+ * year, and expires the group's chosen 1, 3, or 7 days after it ends. Any
+ * member adds, claims, releases, reassigns, or removes an event's items,
+ * each assigned to nobody or a member, and each expires with its event, since
+ * Firestore's TTL leaves an event's subcollections behind.
  *
  * From an event's start until it's deleted, a member adds photos in their
  * own name, each holding its encrypted thumbnail and expiring with its event,
@@ -1516,18 +1516,19 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region setGroFun
 
-		function setGroFun () { // What: Set Group Function. Why: The owner renames the group and sets how long its chat is kept, and a new name reaches the invite screen in the same batch (Section 11.6). How: This is true for the owner changing only the name and retention, to a valid name and a retention of 7 to 180 days, with the current invite carrying the same name once the batch is applied.
+		function setGroFun () { // What: Set Group Function. Why: The owner renames the group and sets how long its chat and ended events are kept, and a new name reaches the invite screen in the same batch (Sections 11.6 and 23). How: This is true for the owner changing only the name and the two retentions, to a valid name, a chat retention of 7 to 180 days, and an event retention of 1, 3, or 7 days, with the current invite carrying the same name once the batch is applied.
 
 
 			let groNewObj = request.resource.data; // What: Group New Object. Why: The checks read the group as it will be. How: This names it.
 
-			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'chatTtlDays', 'name' ] );        // What: Fields Only Boolean. Why: Only the settings change here, never the count, owner, or link. How: This allows changes to the name and retention alone.
-			let invNamBoo = getAfter( invPatFun( groNewObj.currentInviteToken ) ).data.groupName == groNewObj.name;     // What: Invite Name Boolean. Why: The invite screen has to show the group's real name. How: This requires the current invite to carry the name once the batch is applied, which holds without an invite write when the name stays the same.
-			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                        // What: Is-An Owner Boolean. Why: The group's settings are the owner's to change. How: This requires the requester to own the group.
-			let namValBoo = namGroFun( groNewObj.name );                                                                // What: Name Valid Boolean. Why: The name keeps to its limits (Section 11.10). How: This checks it.
-			let ttlValBoo = groNewObj.chatTtlDays is int && groNewObj.chatTtlDays >= 7 && groNewObj.chatTtlDays <= 180; // What: TTL Valid Boolean. Why: Chat retention runs 7 to 180 days (Section 11.2). How: This checks the type, then the range, which the type check guards, so the chain stays inline.
+			let eveDayBoo = groNewObj.get( 'eventTtlDays', 7 ) in [ 1, 3, 7 ];                                                   // What: Event Days Boolean. Why: Ended events are kept 1 day, 3 days, or a week (Section 23). How: This requires one of those, reading a group with none saved as a week.
+			let fieOnlBoo = groNewObj.diff( resource.data ).affectedKeys().hasOnly( [ 'chatTtlDays', 'eventTtlDays', 'name' ] ); // What: Fields Only Boolean. Why: Only the settings change here, never the count, owner, or link. How: This allows changes to the name and retention alone.
+			let invNamBoo = getAfter( invPatFun( groNewObj.currentInviteToken ) ).data.groupName == groNewObj.name;              // What: Invite Name Boolean. Why: The invite screen has to show the group's real name. How: This requires the current invite to carry the name once the batch is applied, which holds without an invite write when the name stays the same.
+			let isaOwnBoo = isaOwnFun( resource.data.ownerUid );                                                                 // What: Is-An Owner Boolean. Why: The group's settings are the owner's to change. How: This requires the requester to own the group.
+			let namValBoo = namGroFun( groNewObj.name );                                                                         // What: Name Valid Boolean. Why: The name keeps to its limits (Section 11.10). How: This checks it.
+			let ttlValBoo = groNewObj.chatTtlDays is int && groNewObj.chatTtlDays >= 7 && groNewObj.chatTtlDays <= 180;          // What: TTL Valid Boolean. Why: Chat retention runs 7 to 180 days (Section 11.2). How: This checks the type, then the range, which the type check guards, so the chain stays inline.
 
-			let setAllBoo = fieOnlBoo && invNamBoo && isaOwnBoo && namValBoo && ttlValBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
+			let setAllBoo = eveDayBoo && fieOnlBoo && invNamBoo && isaOwnBoo && namValBoo && ttlValBoo; // What: Set Allowed Boolean. Why: Every check has to pass. How: This combines them.
 
 
 
@@ -1571,7 +1572,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 		// #region valEveFun
 
-		function valEveFun () { // What: Valid Event Function. Why: An event holds its encrypted details, its times, and who made it, and is deleted 48 hours after it ends (Section 5). How: This checks the incoming event's fields, sizes, and times.
+		function valEveFun ( groIdeStr ) { // What: Valid Event Function. Why: An event holds its encrypted details, its times, and who made it, and is deleted as many days after it ends as its group's owner chose (Sections 5 and 23). How: This checks the incoming event's fields, sizes, and times.
 
 
 			let eveDatObj = request.resource.data; // What: Event Data Object. Why: Every check reads the incoming event. How: This names it once.
@@ -1579,7 +1580,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 			let detValBoo = eveDatObj.detailsEnc is bytes && eveDatObj.detailsEnc.size() > 16 && eveDatObj.detailsEnc.size() <= 2148;   // What: Details Valid Boolean. Why: The title, description, and location text are encrypted together and fit in 2,148 bytes (Section 11.10), and the cap stops the field holding anything else. How: This checks the type, then the size, which the type check guards.
 			let durValBoo = eveDatObj.endAt > eveDatObj.startAt && eveDatObj.endAt <= eveDatObj.startAt + duration.value( 7, 'd' );     // What: Duration Valid Boolean. Why: An event ends after it starts and lasts at most 7 days. How: This compares the two times, two halves of one check, so they stay inline.
 			let endFutBoo = eveDatObj.endAt > request.time;                                                                             // What: End Future Boolean. Why: An event that's already over is only kept for review, not created or changed. How: This requires the end to be after the server's time.
-			let expValBoo = eveDatObj.expireAt == eveDatObj.endAt + duration.value( 48, 'h' );                                          // What: Expire Valid Boolean. Why: An event is deleted 48 hours after it ends (Section 5). How: This requires the TTL field to be exactly that.
+			let expValBoo = eveDatObj.expireAt == eveDatObj.endAt + duration.value( get( groPatFun( groIdeStr ) ).data.get( 'eventTtlDays', 7 ), 'd' ); // What: Expire Valid Boolean. Why: An event is deleted as many days after it ends as its group chose, a week where it has no choice saved (Sections 5 and 23). // The group is read inline rather than in a let, since this function is one short of the language's 10 bindings. How: This requires the TTL field to be exactly that.
 			let fieAllBoo = eveDatObj.keys().toSet() == [ 'createdByUid', 'detailsEnc', 'endAt', 'expireAt', 'iv', 'startAt' ].toSet(); // What: Fields All Boolean. Why: An event holds exactly its six fields. How: This compares them with the full set.
 			let ivaValBoo = eveDatObj.iv is bytes && eveDatObj.iv.size() == 12;                                                         // What: IV Valid Boolean. Why: An AES-GCM IV is 12 bytes (Section 6). How: This checks the type, then the size, which the type check guards.
 			let staNeaBoo = eveDatObj.startAt <= request.time + duration.value( 365, 'd' );                                             // What: Start Near Boolean. Why: An event starts at most a year ahead, so nothing is stored for years. How: This compares its start with the server's time.
@@ -1626,7 +1627,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			let isaCreBoo = isaOwnFun( request.resource.data.createdByUid ); // What: Is-A Creator Boolean. Why: Nobody creates an event in someone else's name. How: This requires the requester to be named as the creator.
 			let isaMemBoo = isaMemFun( groIdeStr );                          // What: Is-A Member Boolean. Why: Only members plan the group's events. How: This requires the requester to be a member.
-			let valEveBoo = valEveFun();                                     // What: Valid Event Boolean. Why: The event keeps its shape. How: This checks it.
+			let valEveBoo = valEveFun( groIdeStr );                          // What: Valid Event Boolean. Why: The event keeps its shape. How: This checks it.
 
 			let creAllBoo = isaCreBoo && isaMemBoo && valEveBoo; // What: Create Allowed Boolean. Why: Every check has to pass. How: This combines them.
 
@@ -1648,7 +1649,7 @@ service cloud.firestore { // What: Firestore Service. Why: These rules cover the
 
 			let creKeeBoo = request.resource.data.createdByUid == resource.data.createdByUid; // What: Creator Kept Boolean. Why: An event's creator is a fact, not a setting. How: This requires it unchanged.
 			let manEveBoo = manEveFun( groIdeStr );                                           // What: Manage Event Boolean. Why: Only the creator or owner edits an event. How: This checks it.
-			let valEveBoo = valEveFun();                                                      // What: Valid Event Boolean. Why: The event keeps its shape. How: This checks it.
+			let valEveBoo = valEveFun( groIdeStr );                                           // What: Valid Event Boolean. Why: The event keeps its shape. How: This checks it.
 
 			let updAllBoo = creKeeBoo && manEveBoo && valEveBoo; // What: Update Allowed Boolean. Why: Every check has to pass. How: This combines them.
 

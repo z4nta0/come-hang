@@ -290,7 +290,7 @@ const useChaDatFun = ( groIdeStr : string ) : ChaDatTyp => { // What: Use Chat D
 
 			setEveNexObj( eveRecArr.find( ( eveRecObj ) => eveRecObj.endTimNum > Date.now() ) ?? null ); // What: Next Set Call. Why: The next event is pinned. How: This keeps the first still to come or under way.
 
-			setEveRunObj( eveRecArr.filter( ( eveRecObj ) => eveRecObj.staTimNum <= Date.now() ).at( -1 ) ?? null ); // What: Running Set Call. Why: A chat photo can join the photos of an event that has started, until it's deleted 48 hours after it ends. How: This keeps the latest to have started of the events still listed.
+			setEveRunObj( eveRecArr.filter( ( eveRecObj ) => eveRecObj.staTimNum <= Date.now() ).at( -1 ) ?? null ); // What: Running Set Call. Why: A chat photo can join the photos of an event that has started, until it's deleted after it ends. How: This keeps the latest to have started of the events still listed.
 
 
 		}, ( errCatObj : unknown ) => console.warn( errCatObj ) ); // What: Read Failure Handler. Why: The failure stays visible to someone debugging. How: This logs it.

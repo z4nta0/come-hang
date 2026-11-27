@@ -50,10 +50,10 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: An
  * was cleared, is recovered from the member's own wrap and kept again, and a
  * wrap made for another phone's key, after a recovery onto a new phone, asks
  * the group to share the key instead. The owner rotates the invite link, and
- * renames the group or changes its chat retention, each in one transaction
- * that keeps the invite in step, and deletes the group through a Cloud
- * Function. The group list watches the account and each group in it, but
- * only on a device that already holds an identity.
+ * renames the group or changes how long its chat and ended events are kept,
+ * each in one transaction that keeps the invite in step, and deletes the
+ * group through a Cloud Function. The group list watches the account and
+ * each group in it, but only on a device that already holds an identity.
  *
  * Sections:
  *  - Constants
@@ -68,6 +68,8 @@ import type { Timestamp } from 'firebase/firestore'; // What: Timestamp. Why: An
 
 // #region Constants
 
+const EVE_DAY_ARR = [ 1, 3, 7 ];                                             // What: Event Day Array. Why: An ended event stays 1 day, 3 days, or 1 week, as the group's owner chooses (Section 23). How: This lists the choices, in days.
+const EVE_DEF_NUM = 7;                                                       // What: Event Default Number. Why: A group that never chose, every group made before the setting, keeps ended events a week (Section 23). How: This is the days it reads as.
 const KEY_WAI_STR = "This group's key is waiting for a member to share it."; // What: Key Waiting String. Why: A screen tells someone on a new phone why a group won't open yet. How: This is the message keyLoaFun rejects with while a key request stands.
 
 // #endregion Constants
@@ -226,29 +228,31 @@ const groDelFun = async ( groIdeStr : string ) : Promise< void > => { // What: G
  * groSetFun = Group Settings Function
  *
  * @summary
- * Saves a group's name and chat retention as its owner, in one transaction
- * with the current invite's copy of the name, as the rules require. The
- * name is tidied first, and a name outside its limits, or a retention that
- * isn't a whole number of days from 7 to 180, rejects with a RangeError
- * before anything is written.
+ * Saves a group's name, chat retention, and how long it keeps ended events
+ * as its owner, in one transaction with the current invite's copy of the
+ * name, as the rules require. The name is tidied first, and a name outside
+ * its limits, a chat retention that isn't a whole number of days from 7 to
+ * 180, or an event retention other than 1, 3, or 7 days rejects with a
+ * RangeError before anything is written.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
  * @param groIdeStr - Group Identifier String: The group's ID.
  * @param groNamStr - Group Name String: The group's name, as typed.
  * @param ttlDayNum - TTL Day Number: How many days chat is kept.
+ * @param eveDayNum - Event Day Number: How many days an ended event stays.
  *
  * @returns A promise that settles once the settings are saved, with no
  *          value.
  *
  * @example
  * ```ts
- * groSetFun('Xk3...', 'Beach Week', 60) // => Promise<void>
+ * groSetFun('Xk3...', 'Beach Week', 60, 7) // => Promise<void>
  * ```
  *
 */
 
-const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : number ) : Promise< void > => { // What: Group Settings Function. Why: The owner renames the group and sets how long its chat is kept (Section 11.2). How: This checks both, then saves them with the invite's copy of the name.
+const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : number, eveDayNum : number ) : Promise< void > => { // What: Group Settings Function. Why: The owner renames the group and sets how long its chat and its ended events are kept (Sections 11.2 and 23). How: This checks each, then saves them with the invite's copy of the name.
 
 
 	const groNorStr = texNorFun( groNamStr ); // What: Group Normalized String. Why: The name is saved tidied. How: This normalizes it.
@@ -269,6 +273,10 @@ const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : nu
 
 
 
+	if ( !EVE_DAY_ARR.includes( eveDayNum ) ) throw new RangeError( 'The event retention is not one of its choices.' ); // What: Event Retention Guard. Why: The rules allow only 1, 3, or 7 days. How: This rejects anything else first.
+
+
+
 	const { fstDatObj } = firGetFun(); // What: Firestore Data Object. Why: The settings are saved to Firestore. How: This reads the service.
 
 	const groRefObj = doc( fstDatObj, `groups/${ groIdeStr }` ); // What: Group Reference Object. Why: The settings live on the group. How: This names it.
@@ -280,7 +288,7 @@ const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : nu
 		const tokCurStr = ( await traValObj.get( groRefObj ) ).get( 'currentInviteToken' ) as string; // What: Token Current String. Why: The working invite carries a copy of the name. How: This reads its token. // What: Type Assertion Note. Why: The rules store the token as a string. How: The as reads it as one.
 
 
-		traValObj.update( groRefObj, { chatTtlDays : ttlDayNum, name : groNorStr } ); // What: Group Update Call. Why: The group's settings change. How: This writes the name and retention.
+		traValObj.update( groRefObj, { chatTtlDays : ttlDayNum, eventTtlDays : eveDayNum, name : groNorStr } ); // What: Group Update Call. Why: The group's settings change. How: This writes the name and both retentions.
 
 		traValObj.update( doc( fstDatObj, `invites/${ tokCurStr }` ), { groupName : groNorStr } ); // What: Invite Update Call. Why: The invite screen has to show the group's real name (Section 11.6). How: This copies the name to the working invite.
 
@@ -294,7 +302,7 @@ const groSetFun = async ( groIdeStr : string, groNamStr : string, ttlDayNum : nu
 
 
 
-type GroRecTyp = { ideStr : string, namStr : string, offTimNum : number, offUidStr : string, ownBoo : boolean, ownUidStr : string, tokStr : string, ttlDayNum : number }; // What: Group Record Type. Why: The group list shows each group by name, marks the ones this identity owns, names each group's owner, and carries its invite link, chat retention, and standing offer of ownership. How: This types each entry groWatFun reports, the offer's time 0 and its member empty when none stands.
+type GroRecTyp = { eveDayNum : number, ideStr : string, namStr : string, offTimNum : number, offUidStr : string, ownBoo : boolean, ownUidStr : string, tokStr : string, ttlDayNum : number }; // What: Group Record Type. Why: The group list shows each group by name, marks the ones this identity owns, names each group's owner, and carries its invite link, chat and event retention, and standing offer of ownership. How: This types each entry groWatFun reports, the offer's time 0 and its member empty when none stands.
 
 // #region groWatFun
 
@@ -303,13 +311,13 @@ type GroRecTyp = { ideStr : string, namStr : string, offTimNum : number, offUidS
  *
  * @summary
  * Watches the groups this identity belongs to, owned or not, and reports them
- * sorted by name, each with its owner, current invite token, chat retention,
- * and any standing offer of ownership, each time one is added, changed, handed
- * over, or lost, once every group in the account has been read. A device with
- * no identity yet reports none and connects to nothing, so a first visit makes
- * no connection (Section 16). A group whose read is refused, such as one just
- * left or deleted, drops out of the list. Resolves with the function that
- * stops watching.
+ * sorted by name, each with its owner, current invite token, chat and event
+ * retention, and any standing offer of ownership, each time one is added,
+ * changed, handed over, or lost, once every group in the account has been
+ * read. A device with no identity yet reports none and connects to nothing,
+ * so a first visit makes no connection (Section 16). A group whose read is
+ * refused, such as one just left or deleted, drops out of the list. Resolves
+ * with the function that stops watching.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -398,7 +406,7 @@ const groWatFun = async ( onGroFun : ( groRecArr : GroRecTyp[] ) => void ) : Pro
 		groStoMap.set( groIdeStr, onSnapshot( doc( fstDatObj, `groups/${ groIdeStr }` ), ( groSnaObj ) => { // What: Group Watch Call. Why: A rename or a change of owner shows at once. How: This listens to the group's document and keeps its entry.
 
 
-			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, offTimNum : ( groSnaObj.get( 'pendingOfferedAt', { serverTimestamps : 'estimate' } ) as Timestamp | null )?.toMillis() ?? 0, offUidStr : ( groSnaObj.get( 'pendingOwnerUid' ) as string | null ) ?? '', ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr, ownUidStr : groSnaObj.get( 'ownerUid' ) as string, tokStr : groSnaObj.get( 'currentInviteToken' ) as string, ttlDayNum : groSnaObj.get( 'chatTtlDays' ) as number } ); // What: Entry Set Call. Why: The list shows the group by name, marks it when owned, and carries its owner, invite link, chat retention, and any offer of ownership. How: This keeps the entry from the document, an offer just made timed by the device's estimate until the server's time arrives. // What: Type Assertion Note. Why: The rules store the name, the owner's UID, and the invite token as strings, the retention as an integer, and the offer as a UID and a time, each null with no offer. How: The as read them as such.
+			if ( groSnaObj.exists() ) groRecMap.set( groIdeStr, { eveDayNum : ( groSnaObj.get( 'eventTtlDays' ) as number | undefined ) ?? EVE_DEF_NUM, ideStr : groIdeStr, namStr : groSnaObj.get( 'name' ) as string, offTimNum : ( groSnaObj.get( 'pendingOfferedAt', { serverTimestamps : 'estimate' } ) as Timestamp | null )?.toMillis() ?? 0, offUidStr : ( groSnaObj.get( 'pendingOwnerUid' ) as string | null ) ?? '', ownBoo : groSnaObj.get( 'ownerUid' ) === uidValStr, ownUidStr : groSnaObj.get( 'ownerUid' ) as string, tokStr : groSnaObj.get( 'currentInviteToken' ) as string, ttlDayNum : groSnaObj.get( 'chatTtlDays' ) as number } ); // What: Entry Set Call. Why: The list shows the group by name, marks it when owned, and carries its owner, invite link, chat retention, and any offer of ownership. How: This keeps the entry from the document, an offer just made timed by the device's estimate until the server's time arrives. // What: Type Assertion Note. Why: The rules store the name, the owner's UID, and the invite token as strings, both retentions as integers, the event one absent until its owner chooses, and the offer as a UID and a time, each null with no offer. How: The as read them as such.
 
 			else groRecMap.delete( groIdeStr ); // What: Entry Delete Call. Why: A deleted group shouldn't stay listed. How: This drops its entry.
 
@@ -611,7 +619,7 @@ const keyLoaFun = async ( groIdeStr : string ) : Promise< CryptoKey > => { // Wh
 
 // #region Exports
 
-export { groCreFun, groDelFun, type GroRecTyp, groSetFun, groWatFun, invRotFun, KEY_WAI_STR, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, list them, change their settings and link, and read their keys, and tell a key that's waiting to be shared. How: This exports the functions, the list entry's type, and the waiting message.
+export { EVE_DAY_ARR, EVE_DEF_NUM, groCreFun, groDelFun, type GroRecTyp, groSetFun, groWatFun, invRotFun, KEY_WAI_STR, keyLoaFun }; // What: Named Exports. Why: The group screens create groups, list them, change their settings and link, and read their keys, and tell a key that's waiting to be shared, and the settings and events read the event retention's choices. How: This exports the functions, the list entry's type, the waiting message, and the retention's choices and default.
 
 // #endregion Exports
 

@@ -16,7 +16,7 @@ import { PLA_STO_STR } from './local-db.ts'; // What: Place Store String. Why: P
  * @summary
  * Keeps each group's event places on this device, so the event form can
  * suggest where the group has met before, since the server deletes an event
- * 48 hours after it ends (ARCHITECTURE.md Section 5). Each group's places are
+ * soon after it ends (ARCHITECTURE.md Section 5). Each group's places are
  * one record under its ID, most recent first, at most 20, with no two that
  * differ only in case. Only the places are kept, nothing else about an
  * event, and a group the device no longer belongs to has its record removed.

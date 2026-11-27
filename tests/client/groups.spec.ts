@@ -391,7 +391,7 @@ test( 'the group list follows the account as groups are created, renamed, and de
 	expect( await page.evaluate( () => Reflect.get( globalThis, 'groFirArr' ) ) ).toEqual( await repGetFun() ); // What: Whole First Report Assertion. Why: The first report waits for every group's name. How: This expects it to match the full list.
 
 
-	await runPagFun( page, '/src/state/groups.ts', 'groSetFun', groIdeArr[ 1 ], 'Aardvarks', 30 ); // What: Rename Call. Why: A rename shows at once. How: This renames the Zebra group so it sorts first.
+	await runPagFun( page, '/src/state/groups.ts', 'groSetFun', groIdeArr[ 1 ], 'Aardvarks', 30, 7 ); // What: Rename Call. Why: A rename shows at once. How: This renames the Zebra group so it sorts first.
 
 
 	await expect.poll( repGetFun ).toMatchObject( [ { ideStr : groIdeArr[ 1 ], namStr : 'Aardvarks', ownBoo : true }, { ideStr : groIdeArr[ 0 ], namStr : 'Apple Pickers', ownBoo : true } ] ); // What: Renamed List Assertion. Why: The new name shows in its sorted place. How: This waits for the report with the renamed group first.
