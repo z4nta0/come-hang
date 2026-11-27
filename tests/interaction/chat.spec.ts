@@ -193,6 +193,42 @@ test( 'the composer sends on Enter, keeps a Shift+Enter line break, and clears i
 
 
 
+test( 'a web address in a message is a link that opens in a new tab, and the rest stays text', async ( { page : curPagObj } ) => { // What: Message Link Test. Why: A shared address should open when pressed, safely, and say where it opens (Section 14). How: This sends a message holding an address and markup, and checks the link opens the address in a new tab and the markup shows as text.
+
+
+	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
+
+	await groOpeFun( curPagObj ); // What: Group Open Call. Why: The test starts in a chat. How: This creates a group and opens it.
+
+
+	const linAncObj = curPagObj.getByRole( 'log' ).getByRole( 'link', { name : 'https://example.com/menu (opens in a new tab)' } ); // What: Link Anchor Object. Why: The checks read the link the message holds. How: This finds it by its announced name.
+	const texBoxObj = curPagObj.getByRole( 'textbox', { exact : true, name : 'Message' } );                                         // What: Text Box Object. Why: The message is typed there. How: This finds the composer.
+
+
+	await texBoxObj.fill( '<b>Menu</b>: https://example.com/menu.' ); // What: Message Fill Call. Why: The message holds an address after markup-like text and before a full stop. How: This types it.
+
+	await expect( async () => { // What: Send Retry Call. Why: A send before the membership mirror catches up is refused and leaves its text. How: This presses Enter until the message shows.
+
+
+		await texBoxObj.press( 'Enter' ); // What: Enter Press Call. Why: Enter sends. How: This presses it.
+
+		await expect( curPagObj.getByRole( 'log' ).getByRole( 'listitem' ) ).toHaveCount( 1, { timeout : 2000 } ); // What: Message Shown Assertion. Why: The send landed once the log holds it. How: This waits up to 2 seconds for it.
+
+
+	} ).toPass(); // What: Retry Settings. Why: The mirror usually catches up within a moment. How: This retries until the message shows.
+
+	await expect( linAncObj ).toHaveAttribute( 'href', 'https://example.com/menu' ); // What: Address Assertion. Why: The link opens the address without the sentence's full stop. How: This reads its address.
+	await expect( linAncObj ).toHaveAttribute( 'rel', 'noopener noreferrer' );       // What: Relationship Assertion. Why: The page it opens can't reach back or learn where the visitor came from. How: This reads its rel.
+	await expect( linAncObj ).toHaveAttribute( 'target', '_blank' );                 // What: Target Assertion. Why: The chat stays open behind the page. How: This reads its target.
+
+	expect( await curPagObj.getByRole( 'log' ).getByRole( 'listitem' ).locator( 'p' ).last().textContent() ).toBe( '<b>Menu</b>: https://example.com/menu (opens in a new tab).' ); // What: Text Assertion. Why: Markup typed into a message shows as text, never run. How: This reads the paragraph's words, the link's hidden note among them.
+	expect( await curPagObj.getByRole( 'log' ).locator( 'b' ).count() ).toBe( 0 );                                                                                                 // What: No Markup Assertion. Why: The typed tag mustn't become an element. How: This expects no bold element in the log.
+
+
+} );
+
+
+
 test( 'a chat longer than its log opens at the newest message and scrolls back to the first', async ( { page : curPagObj } ) => { // What: Long Chat Test. Why: A member has to be able to read back through the chat, which a list spilling past the log's top couldn't. How: This sends more messages than a phone's log holds, checks the newest is in view and the first isn't, then moves the log to its start with the keyboard and checks the first comes into view.
 
 

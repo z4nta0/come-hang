@@ -3,25 +3,27 @@
 
 // #region Imports
 
-import { Bytes      } from 'firebase/firestore';         // What: Bytes. Why: An event's encrypted details and IV are stored as Firestore bytes. How: This wraps and reads raw bytes.
-import { collection } from 'firebase/firestore';         // What: Collection. Why: A group's events and an event's items are listed together. How: This names a collection.
-import { decTexFun  } from '../platform/crypto.ts';      // What: Decrypt Text Function. Why: An event's details are stored encrypted. How: This decrypts them.
-import { doc        } from 'firebase/firestore';         // What: Doc. Why: Each event is named by path. How: This builds a reference.
-import { encTexFun  } from '../platform/crypto.ts';      // What: Encrypt Text Function. Why: An event's details are stored encrypted. How: This encrypts them under the group key.
-import { eveDesFun  } from '../core/text-limits.ts';     // What: Event Description Function. Why: A description is checked by the app alone. How: This applies the limits.
-import { eveLocFun  } from '../core/text-limits.ts';     // What: Event Location Function. Why: A location is checked by the app alone. How: This applies the limits.
-import { eveTitFun  } from '../core/text-limits.ts';     // What: Event Title Function. Why: A title is checked by the app alone. How: This applies the limits.
-import { firGetFun  } from '../platform/firebase.ts';    // What: Firebase Get Function. Why: Events live in Firestore. How: This returns the services.
-import { getDocs    } from 'firebase/firestore';         // What: Get Docs. Why: Events and their items are read together. How: This reads a collection.
-import { ideEnsFun  } from './identity.ts';              // What: Identity Ensure Function. Why: An event names its creator. How: This reads the identity.
-import { jsoObjFun  } from '../utils/json.ts';           // What: JSON Object Function. Why: Another member wrote the bundle, so it may not be JSON. How: This parses it safely.
-import { keyLoaFun  } from './groups.ts';                // What: Key Load Function. Why: Details are encrypted with the group key. How: This loads it.
-import { linNorFun  } from '../core/text-limits.ts';     // What: Lines Normalize Function. Why: A description keeps its line breaks while it's tidied. How: This normalizes it.
-import { plaAddFun  } from '../platform/place-store.ts'; // What: Place Add Function. Why: The device remembers where a group's events are, for the form's suggestions. How: This keeps the places.
-import { setDoc     } from 'firebase/firestore';         // What: Set Doc. Why: A new event is written whole. How: This writes it.
-import { texNorFun  } from '../core/text-limits.ts';     // What: Text Normalize Function. Why: A title and location are tidied before they're checked. How: This normalizes them.
-import { Timestamp  } from 'firebase/firestore';         // What: Timestamp. Why: An event's times are stored as timestamps. How: This builds and reads them.
-import { writeBatch } from 'firebase/firestore';         // What: Write Batch. Why: A changed or cancelled event moves or deletes its items with it. How: This groups the writes.
+import { Bytes       } from 'firebase/firestore';         // What: Bytes. Why: An event's encrypted details and IV are stored as Firestore bytes. How: This wraps and reads raw bytes.
+import { collection  } from 'firebase/firestore';         // What: Collection. Why: A group's events and an event's items are listed together. How: This names a collection.
+import { decTexFun   } from '../platform/crypto.ts';      // What: Decrypt Text Function. Why: An event's details are stored encrypted. How: This decrypts them.
+import { doc         } from 'firebase/firestore';         // What: Doc. Why: Each event is named by path. How: This builds a reference.
+import { encTexFun   } from '../platform/crypto.ts';      // What: Encrypt Text Function. Why: An event's details are stored encrypted. How: This encrypts them under the group key.
+import { EVE_DEF_NUM } from './groups.ts';                // What: Event Default Number. Why: A group that never chose how long ended events stay keeps them a week. How: This is the fallback.
+import { eveDesFun   } from '../core/text-limits.ts';     // What: Event Description Function. Why: A description is checked by the app alone. How: This applies the limits.
+import { eveLocFun   } from '../core/text-limits.ts';     // What: Event Location Function. Why: A location is checked by the app alone. How: This applies the limits.
+import { eveTitFun   } from '../core/text-limits.ts';     // What: Event Title Function. Why: A title is checked by the app alone. How: This applies the limits.
+import { firGetFun   } from '../platform/firebase.ts';    // What: Firebase Get Function. Why: Events live in Firestore. How: This returns the services.
+import { getDoc      } from 'firebase/firestore';         // What: Get Doc. Why: An event's deletion time follows its group's choice. How: This reads the group.
+import { getDocs     } from 'firebase/firestore';         // What: Get Docs. Why: Events and their items are read together. How: This reads a collection.
+import { ideEnsFun   } from './identity.ts';              // What: Identity Ensure Function. Why: An event names its creator. How: This reads the identity.
+import { jsoObjFun   } from '../utils/json.ts';           // What: JSON Object Function. Why: Another member wrote the bundle, so it may not be JSON. How: This parses it safely.
+import { keyLoaFun   } from './groups.ts';                // What: Key Load Function. Why: Details are encrypted with the group key. How: This loads it.
+import { linNorFun   } from '../core/text-limits.ts';     // What: Lines Normalize Function. Why: A description keeps its line breaks while it's tidied. How: This normalizes it.
+import { plaAddFun   } from '../platform/place-store.ts'; // What: Place Add Function. Why: The device remembers where a group's events are, for the form's suggestions. How: This keeps the places.
+import { setDoc      } from 'firebase/firestore';         // What: Set Doc. Why: A new event is written whole. How: This writes it.
+import { texNorFun   } from '../core/text-limits.ts';     // What: Text Normalize Function. Why: A title and location are tidied before they're checked. How: This normalizes them.
+import { Timestamp   } from 'firebase/firestore';         // What: Timestamp. Why: An event's times are stored as timestamps. How: This builds and reads them.
+import { writeBatch  } from 'firebase/firestore';         // What: Write Batch. Why: A changed or cancelled event moves or deletes its items with it. How: This groups the writes.
 
 // #endregion Imports
 
@@ -31,17 +33,17 @@ import { writeBatch } from 'firebase/firestore';         // What: Write Batch. W
  * events.ts = Events
  *
  * @summary
- * A group's planned events (ARCHITECTURE.md Sections 5 and 11.5). Any
- * member plans an event, and its creator or the group's owner changes or
- * cancels it. An event's title, description, and location text are tidied,
- * checked, and encrypted together as one bundle under the group key, so
- * Firebase can't tell which are filled in or how long each is, while its
- * start and end stay plaintext for the deletion that follows 48 hours after
- * it ends. Its times are checked as the rules check them: it ends after it
- * starts, lasts at most 7 days, hasn't ended, and starts at most a year
- * ahead. Moving an event's end moves every item's deletion time in the same
- * batch, and cancelling an event deletes its items with it. Any member lists
- * the events with their details decrypted, where details that won't read
+ * A group's planned events (ARCHITECTURE.md Sections 5 and 11.5). Any member
+ * plans an event, and its creator or the group's owner changes or cancels it.
+ * An event's title, description, and location text are tidied, checked, and
+ * encrypted together as one bundle under the group key, so Firebase can't tell
+ * which are filled in or how long each is, while its start and end stay
+ * plaintext for the deletion that follows as many days after it ends as the
+ * group's owner chose. Its times are checked as the rules check them: it ends
+ * after it starts, lasts at most 7 days, hasn't ended, and starts at most a
+ * year ahead. Moving an event's end moves every item's deletion time in the
+ * same batch, and cancelling an event deletes its items with it. Any member
+ * lists the events with their details decrypted, where details that won't read
  * come back empty. Every place planned, changed, or listed is kept on the
  * device too, so the event form can suggest it after the event is gone.
  *
@@ -85,7 +87,8 @@ const DAY_MIL_NUM = 86400000; // What: Day Milliseconds Number. Why: An event's 
  * Builds the fields an event is written with, after tidying and checking
  * its text and times the way the rules and Section 11.10 do: the details
  * bundle encrypted under the group key with a fresh IV, the start and end,
- * and the deletion time 48 hours after the end. Text outside its limits, or
+ * and the deletion time the group's chosen number of days after the end, a
+ * week where the group has no choice saved. Text outside its limits, or
  * times the rules would refuse, reject with a RangeError before anything is
  * written.
  *
@@ -135,6 +138,11 @@ const eveFieFun = async ( groIdeStr : string, eveInpObj : EveInpTyp ) : Promise<
 
 
 
+	const groSnaObj = await getDoc( doc( firGetFun().fstDatObj, `groups/${ groIdeStr }` ) );    // What: Group Snapshot Object. Why: An event is deleted as many days after it ends as its group's owner chose (Section 23). How: This reads the group.
+	const eveDayNum = ( groSnaObj.get( 'eventTtlDays' ) as number | undefined ) ?? EVE_DEF_NUM; // What: Event Days Number. Why: The deletion time is counted in the group's days. How: This reads its choice, or a week where it has none. // What: Type Assertion Note. Why: The rules allow only 1, 3, or 7 there. How: This reads it as a number or nothing.
+
+
+
 	const detEncObj = await encTexFun( await keyLoaFun( groIdeStr ), JSON.stringify( { d : desNorStr, l : locNorStr, t : titNorStr } ) ); // What: Details Encrypted Object. Why: The three are encrypted together, so Firebase can't tell which are filled in (Section 11.5). How: This encrypts them as one JSON bundle under the group key.
 
 
@@ -144,7 +152,7 @@ const eveFieFun = async ( groIdeStr : string, eveInpObj : EveInpTyp ) : Promise<
 
 		detailsEnc : Bytes.fromUint8Array( detEncObj.cipTexArr ),                   // What: Details Encrypted. Why: The bundle is stored as bytes. How: This wraps it.
 		endAt      : Timestamp.fromMillis( eveInpObj.endTimNum ),                   // What: End At. Why: The deletion time follows the end. How: This stores the end.
-		expireAt   : Timestamp.fromMillis( eveInpObj.endTimNum + 2 * DAY_MIL_NUM ), // What: Expire At. Why: An event is deleted 48 hours after it ends (Section 5). How: This sets the TTL field to exactly that.
+		expireAt   : Timestamp.fromMillis( eveInpObj.endTimNum + eveDayNum * DAY_MIL_NUM ), // What: Expire At. Why: An event is deleted as many days after it ends as its group chose (Sections 5 and 23). How: This sets the TTL field to exactly that.
 		iv         : Bytes.fromUint8Array( detEncObj.iniVecArr ),                   // What: IV. Why: The bundle decrypts with its IV. How: This wraps it.
 		startAt    : Timestamp.fromMillis( eveInpObj.staTimNum )                    // What: Start At. Why: Events are listed by when they start. How: This stores the start.
 

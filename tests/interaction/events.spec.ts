@@ -156,7 +156,8 @@ test( 'the form refuses empty and out-of-order fields, then plans an event that 
 
 	await secOpeFun( curPagObj ); // What: Section Open Call. Why: The test plans from the Events section. How: This opens it.
 
-	await expect( curPagObj.getByText( 'Nothing planned yet.' ) ).toBeVisible(); // What: Empty Note Assertion. Why: A new group has nothing planned, and says so. How: This waits for the note.
+	await expect( curPagObj.getByRole( 'heading', { level : 3, name : 'Upcoming Events' } ) ).toBeVisible(); // What: Upcoming Heading Assertion. Why: The events to come are named as a list, even before there are any. How: This waits for the heading.
+	await expect( curPagObj.getByText( 'Nothing planned yet.' ) ).toBeVisible();                             // What: Empty Note Assertion. Why: A new group has nothing planned, and says so. How: This waits for the note.
 
 	await curPagObj.getByRole( 'button', { name : 'Plan an event' } ).click(); // What: Plan Click Call. Why: The form opens from the button. How: This presses it.
 

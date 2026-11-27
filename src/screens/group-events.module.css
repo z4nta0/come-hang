@@ -6,11 +6,11 @@
  *
  * @summary
  * Styles for GroEveCom: the section's heading beside its plan button, then
- * its events as a list of cards, each a date block on a tint beside its title
- * and line, lifting on hover. Inside an event's sheet, the creator's controls
- * sit in a row above the details, with the cancel's confirmation and its
- * failure in their place. The status that announces a change is for screen
- * readers alone.
+ * each list of events under its own heading, as cards, each a date block on a
+ * tint beside its title and line, lifting on hover. Inside an event's sheet,
+ * the creator's controls sit in a row above the details, with the cancel's
+ * confirmation and its failure in their place. The status that announces a
+ * change is for screen readers alone.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -75,6 +75,15 @@
 
 /* #endregion eveBarDiv */
 
+
+.eveLisHea { /* What: Events List Heading. Why: Each list of events is named apart from the other, and a heading sits closer to its list than the section's parts sit to each other. How: This sets it at Base Plus 2 and pulls the list up to a tier 3 space below it. */
+
+
+	font-size     : var( --fon-siz-p02 );                                /* Font Size Base Plus 2 ~= 19.304px */
+	margin-bottom : calc( var( --tie-ver-003 ) - var( --tie-ver-002 ) ); /* Tier Vertical 3 ~= 14.572px, Tier Vertical 2 ~= 25.572px */
+
+
+}
 
 .eveNotPar { /* What: Events Note Paragraph. Why: A loading, failed, or empty list is a quiet note. How: This sets it in the muted text color. */
 
@@ -247,14 +256,7 @@
 
 
 
-.endLisHea { /* What: Ended List Heading. Why: Ended events are set apart from those to come, and a heading sits closer to its list than the section's parts sit to each other. How: This sets it at Base Plus 2 and pulls the list up to a tier 3 space below it. */
-
-
-	font-size     : var( --fon-siz-p02 );                                /* Font Size Base Plus 2 ~= 19.304px */
-	margin-bottom : calc( var( --tie-ver-003 ) - var( --tie-ver-002 ) ); /* Tier Vertical 3 ~= 14.572px, Tier Vertical 2 ~= 25.572px */
-
-
-}
+/* What: Events List Heading Pointer. Why: The ended events' heading shares the upcoming events' look. How: Its rule sits above the note. */
 
 /* What: Events List Unordered List Pointer. Why: The ended events' list shares the first list's look. How: Its rule sits in the eveLisUno region above. */
 

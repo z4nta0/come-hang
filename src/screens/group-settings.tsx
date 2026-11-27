@@ -8,10 +8,11 @@ import cssModObj from './group-settings.module.css'; // What: CSS Module Object.
 
 import { ButBasCom    } from '../ui/button.tsx';        // What: Button Base Component. Why: Saving the group's settings and accepting an offer are the section's leading actions. How: This draws their buttons.
 import { dayDatFun    } from '../utils/date.ts';        // What: Day Date Function. Why: An offer says the day it lapses. How: This writes the day in full.
+import { EVE_DAY_ARR  } from '../state/groups.ts';      // What: Event Day Array. Why: Ended events are kept 1 day, 3 days, or a week. How: This lists the choices.
 import { groDelFun    } from '../state/groups.ts';      // What: Group Delete Function. Why: The owner can delete the group. How: This deletes it for everyone.
 import { groLeaFun    } from '../state/members.ts';     // What: Group Leave Function. Why: A member other than the owner can leave. How: This ends their membership.
 import { groNamFun    } from '../core/text-limits.ts';  // What: Group Name Function. Why: A name outside its limits is caught before it's sent. How: This checks it.
-import { groSetFun    } from '../state/groups.ts';      // What: Group Settings Function. Why: The owner renames the group and sets its chat retention. How: This saves both.
+import { groSetFun    } from '../state/groups.ts';      // What: Group Settings Function. Why: The owner renames the group and sets how long its chat and ended events are kept. How: This saves all three.
 import { ideEnsFun    } from '../state/identity.ts';    // What: Identity Ensure Function. Why: The member an offer names answers it. How: This reads their UID.
 import { memLisFun    } from '../state/members.ts';     // What: Member List Function. Why: The owner offers the group to a member by name. How: This reads the members.
 import { OFF_LIF_NUM  } from '../state/ownership.ts';   // What: Offer Life Number. Why: An offer lapses 7 days after it's made. How: This gives that life.
@@ -68,6 +69,8 @@ const GRO_ERR_STR = 'Use letters, numbers, emoji, and simple punctuation.';     
 const OFF_DEN_STR = "That member can't take on another group right now. Offer it to someone else.";          // What: Offer Denied String. Why: The rules refuse an offer to a member with no free owned slot, without saying more about their account (Section 18). How: The alert shows this.
 
 const TTL_DAY_ARR = [ 7, 14, 30, 60, 90, 180 ]; // What: TTL Day Array. Why: The retention runs 7 to 180 days (Section 5), and a few steps cover every group's need. How: This lists the choices, in days.
+
+const EVE_LAB_OBJ : Record< number, string > = { 1 : '1 day', 3 : '3 days', 7 : '1 week' }; // What: Event Label Object. Why: An event retention reads as a span of time, a week rather than 7 days. How: This names each choice, keyed by its days.
 
 // #endregion Constants
 
@@ -145,6 +148,7 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 	const [ conLeaBoo, setConLeaBoo ] = useState( false );                      // What: Confirm Leave Boolean And Setter. Why: Leaving asks to confirm first. How: This is true while the confirmation shows.
 	const [ delErrStr, setDelErrStr ] = useState( '' );                         // What: Delete Error String And Setter. Why: A name that doesn't match is told beside its box. How: This holds the problem, empty when there's none.
 	const [ delNamStr, setDelNamStr ] = useState( '' );                         // What: Delete Name String And Setter. Why: The confirmation's box shows what's typed. How: This holds it.
+	const [ eveDayNum, setEveDayNum ] = useState( curGroObj.eveDayNum );        // What: Event Day Number And Setter. Why: The event retention choice shows what's picked, starting from the group's. How: This holds it, in days.
 	const [ memRecArr, setMemRecArr ] = useState< MemRecTyp[] | null >( null ); // What: Member Record Array And Setter. Why: The owner offers the group to a member by name, and the offer names whom it's to. How: This holds the members, null until read.
 	const [ namErrStr, setNamErrStr ] = useState( '' );                         // What: Name Error String And Setter. Why: The name box says what's wrong with it. How: This holds the problem, empty when there's none.
 	const [ namTexStr, setNamTexStr ] = useState( curGroObj.namStr );           // What: Name Text String And Setter. Why: The name box shows what's typed, starting from the group's name. How: This holds it.
@@ -267,7 +271,7 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 	 *
 	*/
 
-	const savSetFun = async () : Promise< void > => { // What: Save Settings Function. Why: The owner renames the group and sets its retention. How: This checks the name, then saves both.
+	const savSetFun = async () : Promise< void > => { // What: Save Settings Function. Why: The owner renames the group and sets its two retentions. How: This checks the name, then saves all three.
 
 
 		const namNorStr = texNorFun( namTexStr ); // What: Name Normalized String. Why: The name is checked as it'll be saved. How: This tidies it.
@@ -282,7 +286,7 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 
 
 
-		const lanValBoo = await actRunFun( 'save', () => groSetFun( curGroObj.ideStr, namNorStr, ttlDayNum ) ); // What: Landed Value Boolean. Why: Only a save that landed is announced. How: This saves the settings as one change.
+		const lanValBoo = await actRunFun( 'save', () => groSetFun( curGroObj.ideStr, namNorStr, ttlDayNum, eveDayNum ) ); // What: Landed Value Boolean. Why: Only a save that landed is announced. How: This saves the settings as one change.
 
 
 		if ( !lanValBoo ) return; // What: Failed Guard. Why: A failed save keeps the form as typed, and the alert says so. How: This returns.
@@ -475,6 +479,53 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 
 
 
+						<div className={ cssModObj.detFieDiv }>{ /* What: Details Field Div Element. Why: The event retention's label, choice, and hint read as one. How: This stacks them. */ }
+
+
+							<label
+								className={ cssModObj.fieNamLab }
+								htmlFor='detEveSel'
+							>Keep ended events for</label>{ /* What: Field Name Label Element. Why: The choice needs a visible name. How: This labels the event retention choice. */ }
+
+							<select
+								id='detEveSel'
+
+								className={ cssModObj.fieValSel }
+
+								value={ eveDayNum }
+
+								aria-describedby='detEveHin'
+
+								onChange={ ( chaEveObj ) => setEveDayNum( Number( chaEveObj.target.value ) ) } // What: Event Retention Change Handler. Why: A choice's value arrives as text, and the retention is a number of days. How: This keeps it as a number.
+							>{ /* What: Field Value Select Element. Why: The event retention is one of three spans. How: This lists them. */ }
+
+
+								{ EVE_DAY_ARR.map( ( dayValNum ) => ( // What: Event Retention Option Map. Why: Each span is a choice. How: This renders an option per span.
+
+
+									<option
+										key={ dayValNum }
+
+										value={ dayValNum }
+									>{ EVE_LAB_OBJ[ dayValNum ] }</option> // What: Event Retention Option Element. Why: A span reads as a day, days, or a week. How: This names it from the labels.
+
+
+								) ) }
+
+
+							</select>
+
+							<p
+								id='detEveHin'
+
+								className={ cssModObj.fieHinPar }
+							>How long an event, its bring-list, and its photos stay under Previous Events after it ends. A shorter choice removes those already past it.</p>{ /* What: Field Hint Paragraph Element. Why: The owner should know what the event retention controls (Section 23). How: This says what goes and when, and that shortening it removes ended events already past it. */ }
+
+
+						</div>
+
+
+
 						<ButBasCom
 							className={ cssModObj.detSavBut }
 
@@ -505,6 +556,10 @@ function GroSetCom ( { curGroObj, onGonFun, waiStr } : GscProTyp ) : React.JSX.E
 							<dt className={ cssModObj.detKeyTer }>Unreceived messages held for</dt>{ /* What: Details Key Term Element. Why: The value needs its name. How: This names the retention. */ }
 
 							<dd className={ cssModObj.detValDet }>{ `${ curGroObj.ttlDayNum } days` }</dd>{ /* What: Details Value Details Element. Why: The member sees how long a message waits for them. How: This shows it in days. */ }
+
+							<dt className={ cssModObj.detKeyTer }>Ended events kept for</dt>{ /* What: Details Key Term Element. Why: The value needs its name. How: This names the event retention. */ }
+
+							<dd className={ cssModObj.detValDet }>{ EVE_LAB_OBJ[ curGroObj.eveDayNum ] }</dd>{ /* What: Details Value Details Element. Why: The member sees how long an ended event stays. How: This shows it as a day, days, or a week. */ }
 
 
 						</dl>

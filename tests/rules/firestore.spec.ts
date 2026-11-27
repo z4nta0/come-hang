@@ -856,7 +856,8 @@ const setBatFun = ( stoConObj : StoConTyp, namValStr : string, optValObj : SbfOp
  *
  * @summary
  * Builds an event's three times from its start and end: the two timestamps,
- * plus the TTL field 48 hours after the end, as the rules require.
+ * plus the TTL field a week after the end, as the rules require of a group
+ * with no event retention saved.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -876,7 +877,7 @@ const eveTimFun = ( staMilNum : number, endMilNum : number ) => ({ // What: Even
 
 
 	endAt    : Timestamp.fromMillis( endMilNum ),
-	expireAt : Timestamp.fromMillis( endMilNum + 2 * DAY_MIL_NUM ),
+	expireAt : Timestamp.fromMillis( endMilNum + 7 * DAY_MIL_NUM ),
 	startAt  : Timestamp.fromMillis( staMilNum )
 
 
@@ -893,7 +894,7 @@ const eveTimFun = ( staMilNum : number, endMilNum : number ) => ({ // What: Even
  *
  * @summary
  * Builds a valid event for the rules to accept: encrypted details, a 12-byte
- * IV, a day-long span ending at EVE_END_NUM, and the TTL field 48 hours
+ * IV, a day-long span ending at EVE_END_NUM, and the TTL field a week
  * after the end. Fields can be changed or added by an option.
  *
  * @author z4nta0 <https://github.com/z4nta0>
@@ -957,7 +958,7 @@ const iteDatFun = ( iteChaObj : Record< string, unknown > = {} ) => ({ // What: 
 
 
 	assignedUid : null,
-	expireAt    : Timestamp.fromMillis( EVE_END_NUM + 2 * DAY_MIL_NUM ),
+	expireAt    : Timestamp.fromMillis( EVE_END_NUM + 7 * DAY_MIL_NUM ),
 	iv          : bytFilFun( 12 ),
 	labelEnc    : bytFilFun( 60 ),
 
@@ -1001,7 +1002,7 @@ const phoDatFun = ( uplUidStr : string, phoChaObj : Record< string, unknown > = 
 
 
 	createdAt   : serverTimestamp(),
-	expireAt    : Timestamp.fromMillis( EVE_END_NUM + 2 * DAY_MIL_NUM ),
+	expireAt    : Timestamp.fromMillis( EVE_END_NUM + 7 * DAY_MIL_NUM ),
 	fullIv      : bytFilFun( 12 ),
 	thumbEnc    : bytFilFun( 4000 ),
 	thumbIv     : bytFilFun( 12 ),
@@ -2454,12 +2455,36 @@ test( 'an event keeps its fields, sizes, real times, and creator', async () => {
 	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { startAt : Timestamp.fromMillis( EVE_END_NUM - 7 * DAY_MIL_NUM - 1 ) } ) ) );     // What: Long Event. Why: An event lasts at most 7 days. How: This expects 7 days and a millisecond refused.
 	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', eveTimFun( Date.now() - 2000, Date.now() - 1000 ) ) ) );                           // What: Ended Event. Why: An event that's over is kept only for review. How: This expects one that ended a second ago refused.
 	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', eveTimFun( Date.now() + 366 * DAY_MIL_NUM, Date.now() + 367 * DAY_MIL_NUM ) ) ) ); // What: Distant Event. Why: An event starts at most a year ahead. How: This expects one 366 days out refused.
-	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { expireAt : Timestamp.fromMillis( EVE_END_NUM + 2 * DAY_MIL_NUM + 1 ) } ) ) );    // What: Late Expiry. Why: An event is deleted exactly 48 hours after it ends. How: This expects a millisecond later refused.
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { expireAt : Timestamp.fromMillis( EVE_END_NUM + 7 * DAY_MIL_NUM + 1 ) } ) ) );    // What: Late Expiry. Why: An event is deleted exactly as many days after it ends as its group keeps, a week by default. How: This expects a millisecond later refused.
 	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { detailsEnc : bytFilFun( 2148 ) } ) ) );                                       // What: Longest Details. Why: The details may fill 2,148 bytes. How: This expects an event at that size allowed.
 	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve2' ), eveDatFun( 'bob', eveTimFun( EVE_END_NUM - 7 * DAY_MIL_NUM, EVE_END_NUM ) ) ) );                  // What: Longest Event. Why: An event may last 7 days. How: This expects a week-long event allowed.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { createdByUid : 'alice' } ) );                                                                   // What: Creator Changed. Why: An event's creator never changes. How: This expects handing it to Alice refused.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { detailsEnc : bytFilFun( 2149 ) } ) );                                                           // What: Long Details Edit. Why: An edit keeps the details within 2,148 bytes. How: This expects 2,149 refused.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), { endAt : Timestamp.fromMillis( EVE_END_NUM - DAY_MIL_NUM / 2 ) } ) );                            // What: Unmatched Expiry Edit. Why: A moved end moves the expiry with it. How: This expects an end moved alone refused.
+
+
+} );
+
+
+
+test( "the owner keeps ended events 1, 3, or 7 days, and each event's deletion time follows the group's choice", async () => { // What: Event Retention Test. Why: How long ended events stay is one choice per group, and an event can't outlast it (Section 23). How: This sets the retention as the owner and as a member, then plans events against it.
+
+
+	const aliStoObj = accStoFun( 'alice' ); // What: Alice Store Object. Why: Alice owns the group. How: This acts as her.
+	const bobStoObj = accStoFun( 'bob' );   // What: Bob Store Object. Why: Bob is a member who plans the events. How: This acts as him.
+
+
+	await seeTwoFun(); // What: Two Member Seed Call. Why: The retention belongs to a group with members. How: This approves Bob into the group.
+
+	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1' ), { eventTtlDays : 3 } ) );    // What: Member Event Retention. Why: Only the owner sets the retention. How: This expects Bob refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { eventTtlDays : 2 } ) );    // What: Unlisted Event Retention. Why: Ended events are kept 1, 3, or 7 days. How: This expects 2 refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { eventTtlDays : 14 } ) );   // What: Long Event Retention. Why: Ended events are kept at most a week. How: This expects 14 refused.
+	await assertFails( updateDoc( doc( aliStoObj, 'groups/gro1' ), { eventTtlDays : '3' } ) );  // What: Text Event Retention. Why: The retention is a number of days. How: This expects text refused.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1' ), { eventTtlDays : 3 } ) ); // What: Three Day Retention. Why: The owner may keep ended events 3 days. How: This expects 3 allowed.
+	await assertSucceeds( updateDoc( doc( aliStoObj, 'groups/gro1' ), { eventTtlDays : 1 } ) ); // What: One Day Retention. Why: The owner may keep ended events a day. How: This expects 1 allowed.
+
+	await assertFails( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob' ) ) );                                                                       // What: Week Expiry. Why: A group keeping ended events a day can't hold one for a week. How: This expects the default week refused.
+	await assertSucceeds( setDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveDatFun( 'bob', { expireAt : Timestamp.fromMillis( EVE_END_NUM + DAY_MIL_NUM ) } ) ) ); // What: Day Expiry. Why: The event goes the group's one day after it ends. How: This expects that deletion time allowed.
 
 
 } );
@@ -2550,7 +2575,7 @@ test( "a removed member's claim stays until someone changes it, and an event tha
 	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 70 ) } ) );                                       // What: Removed Claim Kept. Why: An edit that leaves the claim alone keeps a removed member's claim. How: This expects Bob relabelling it allowed.
 	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1' ), eveTimFun( EVE_END_NUM, EVE_END_NUM + DAY_MIL_NUM ) ) );                                   // What: Event Moved. Why: The creator reschedules the event a day later. How: This expects the move allowed, its expiry following its end.
 	await assertFails( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { labelEnc : bytFilFun( 80 ) } ) );                                          // What: Stale Item Expiry. Why: An item still carrying the old expiry is out of step with its event. How: This expects an edit keeping it refused.
-	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { expireAt : Timestamp.fromMillis( EVE_END_NUM + 3 * DAY_MIL_NUM ) } ) ); // What: Item Expiry Synced. Why: Any member brings an item back in step with its event. How: This expects the item moved to the event's new expiry allowed.
+	await assertSucceeds( updateDoc( doc( bobStoObj, 'groups/gro1/events/eve1/assignments/ite1' ), { expireAt : Timestamp.fromMillis( EVE_END_NUM + 8 * DAY_MIL_NUM ) } ) ); // What: Item Expiry Synced. Why: Any member brings an item back in step with its event. How: This expects the item moved to the event's new expiry allowed.
 
 
 } );
@@ -2599,7 +2624,7 @@ test( "a photo keeps its six fields, sizes, real time, and its event's expiry, a
 
 
 	const bobStoObj = accStoFun( 'bob' );           // What: Bob Store Object. Why: Bob adds the photos. How: This acts as him.
-	const lapEndNum = Date.now() - 3 * DAY_MIL_NUM; // What: Lapsed End Number. Why: The late check needs an event whose deletion time, 2 days after its end, has passed, and its photo has to carry that same time. How: This is an end 3 days ago, read once.
+	const lapEndNum = Date.now() - 8 * DAY_MIL_NUM; // What: Lapsed End Number. Why: The late check needs an event whose deletion time, 7 days after its end, has passed, and its photo has to carry that same time. How: This is an end 3 days ago, read once.
 
 
 	await seeTwoFun(); // What: Two Member Seed Call. Why: Bob adds photos as a member. How: This approves Bob into the group.
@@ -2621,7 +2646,7 @@ test( "a photo keeps its six fields, sizes, real time, and its event's expiry, a
 
 	await seeDocFun( tesEnvObj, 'groups/gro1/events/eve1', eveDatFun( 'alice', eveTimFun( lapEndNum - 2 * DAY_MIL_NUM, lapEndNum ) ) ); // What: Lapsed Event Seed. Why: An event's TTL can delete it a day late. How: This replaces the event with one whose deletion time passed a day ago.
 
-	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho2', { allNum : 2, memNum : 2, phoObj : { expireAt : Timestamp.fromMillis( lapEndNum + 2 * DAY_MIL_NUM ) } } ) ); // What: Late Photo. Why: Photos close when the event is due to go. How: This expects a photo carrying the event's own deletion time, now past, refused.
+	await assertFails( phoBatFun( bobStoObj, 'bob', 'pho2', { allNum : 2, memNum : 2, phoObj : { expireAt : Timestamp.fromMillis( lapEndNum + 7 * DAY_MIL_NUM ) } } ) ); // What: Late Photo. Why: Photos close when the event is due to go. How: This expects a photo carrying the event's own deletion time, now past, refused.
 
 
 } );

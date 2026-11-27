@@ -253,7 +253,7 @@ pagTesObj( 'a member plans an event every member reads, which its creator or the
 
 
 	expect( await runPagFun( page, EVE_MOD_STR, 'eveLisFun', groIdeStr ) ).toEqual( [ { creUidStr : uidMemStr, desTexStr : 'Bring chairs\n\nand shade', endTimNum, eveIdeStr, locTexStr : 'Lake Park', staTimNum, titTexStr : 'Beach Day 🏖️' } ] ); // What: Event Listed. Why: Every member reads the tidied details with the group key. How: This expects the one event as the owner reads it.
-	expect( ( ( await docReaFun( eveEnvObj, `groups/${ groIdeStr }/events/${ eveIdeStr }` ) )?.expireAt as Timestamp ).toMillis() ).toBe( endTimNum + 2 * DAY_MIL_NUM );                                                                            // What: Deletion Time. Why: An event is deleted 48 hours after it ends (Section 5). How: This expects exactly that.
+	expect( ( ( await docReaFun( eveEnvObj, `groups/${ groIdeStr }/events/${ eveIdeStr }` ) )?.expireAt as Timestamp ).toMillis() ).toBe( endTimNum + 7 * DAY_MIL_NUM );                                                                            // What: Deletion Time. Why: An event is deleted a week after it ends where its group has no retention saved (Sections 5 and 23). How: This expects exactly that.
 	expect( await runPagFun( page, EVE_MOD_STR, 'eveUpdFun', groIdeStr, eveIdeStr, { desTexStr : '', endTimNum, locTexStr : '', staTimNum, titTexStr : 'Beach Week' } ) ).toBeUndefined();                                                          // What: Owner Change. Why: The owner manages every event. How: This expects the owner's change to succeed.
 	expect( await runPagFun( secPagObj, EVE_MOD_STR, 'eveUpdFun', groIdeStr, eveIdeStr, { desTexStr : '', endTimNum, locTexStr : '', staTimNum, titTexStr : 'Beach Trip' } ) ).toBeUndefined();                                                     // What: Creator Change. Why: The creator manages their event. How: This expects the member's change to succeed.
 	expect( await runPagFun( secPagObj, EVE_MOD_STR, 'eveLisFun', groIdeStr ) ).toMatchObject( [ { creUidStr : uidMemStr, desTexStr : '', titTexStr : 'Beach Trip' } ] );                                                                           // What: Changes Kept. Why: The last change wins, and the creator stays. How: This expects the member's title and the original creator.
@@ -263,6 +263,35 @@ pagTesObj( 'a member plans an event every member reads, which its creator or the
 
 
 	expect( await runPagFun( secPagObj, EVE_MOD_STR, 'eveUpdFun', groIdeStr, ownEveStr, { desTexStr : '', endTimNum, locTexStr : '', staTimNum, titTexStr : 'Mine' } ) ).toBe( 'error:permission-denied' ); // What: Member Change Refused. Why: Only the creator or owner changes an event. How: This expects the rules to refuse it.
+
+
+} );
+
+
+
+pagTesObj( "an event's deletion time follows its group's event retention, and a change moves the events already planned", async ( { page, secPagObj } ) => { // What: Retention Test. Why: Ended events stay as long as the group's owner chose (Section 23). How: This plans an event, shortens the retention, and checks the event moved and a new one follows.
+
+
+	const { groIdeStr } = await memSetFun( eveEnvObj, page, secPagObj ); // What: Setup Values. Why: The test needs a group. How: This sets one up.
+
+	const staTimNum = Date.now() + DAY_MIL_NUM; // What: Start Time Number. Why: The event starts tomorrow. How: This is a day from now.
+	const endTimNum = staTimNum + 3600000;      // What: End Time Number. Why: The event lasts an hour. How: This is an hour after the start.
+
+	const eveInpObj = { desTexStr : '', endTimNum, locTexStr : '', staTimNum, titTexStr : 'Picnic' }; // What: Event Input Object. Why: Both events are planned alike. How: This holds their details.
+
+	const eveIdeStr = await runPagFun( page, EVE_MOD_STR, 'eveCreFun', groIdeStr, eveInpObj ) as string; // What: Event Identifier String. Why: The event planned before the change has to move. How: This plans it.
+	const groDatObj = await docReaFun( eveEnvObj, `groups/${ groIdeStr }` );                           // What: Group Data Object. Why: Saving the settings sends the name and chat retention too. How: This reads them.
+
+
+	const expGetFun = async ( eveKeyStr : string ) => ( ( await docReaFun( eveEnvObj, `groups/${ groIdeStr }/events/${ eveKeyStr }` ) )?.expireAt as Timestamp ).toMillis(); // What: Expire Get Function. Why: Each check reads an event's deletion time. How: This reads it in milliseconds. // What: Type Assertion Note. Why: The rules store it as a timestamp. How: The as reads it as one.
+
+
+	expect( await expGetFun( eveIdeStr ) ).toBe( endTimNum + 7 * DAY_MIL_NUM );                                                                                     // What: Week Expiry. Why: A group with no retention saved keeps ended events a week. How: This expects the end plus 7 days.
+	expect( await runPagFun( page, '/src/state/groups.ts', 'groSetFun', groIdeStr, groDatObj?.name, groDatObj?.chatTtlDays, 1 ) ).toBeUndefined(); // What: Retention Call. Why: The owner keeps ended events a day. How: This expects the save to succeed.
+
+	await expect.poll( () => expGetFun( eveIdeStr ), { timeout : 15000 } ).toBe( endTimNum + DAY_MIL_NUM ); // What: Moved Expiry. Why: The event planned before the change follows it. How: This waits for the trigger to move it to the end plus a day.
+
+	expect( await expGetFun( await runPagFun( page, EVE_MOD_STR, 'eveCreFun', groIdeStr, eveInpObj ) as string ) ).toBe( endTimNum + DAY_MIL_NUM ); // What: New Expiry. Why: An event planned after the change takes the group's choice. How: This plans one and expects the end plus a day.
 
 
 } );
@@ -336,13 +365,13 @@ pagTesObj( 'a bring-list item is claimed once, reassigned, relabeled, and follow
 
 
 	expect( desDatObj?.assignedUid ).toBeNull();                                                                                          // What: Released. Why: A released item is open. How: This expects no assignee.
-	expect( ( desDatObj?.expireAt as Timestamp ).toMillis() ).toBe( staTimNum + 7200000 + 2 * DAY_MIL_NUM );                              // What: Deletion Time Moved. Why: An item goes when its event does. How: This expects the new end plus 48 hours.
+	expect( ( desDatObj?.expireAt as Timestamp ).toMillis() ).toBe( staTimNum + 7200000 + 7 * DAY_MIL_NUM );                              // What: Deletion Time Moved. Why: An item goes when its event does. How: This expects the new end plus a week.
 	expect( await runPagFun( page, ITE_MOD_STR, 'iteClaFun', groIdeStr, eveIdeStr, chiIteStr ) ).toBe( 'error:invalid-argument' );        // What: Gone Claim Refused. Why: A removed item can't be claimed. How: This expects Firestore's refusal of the update.
 	expect( await runPagFun( page, ITE_MOD_STR, 'iteAddFun', groIdeStr, eveIdeStr, 'a'.repeat( 51 ), null ) ).toBe( 'error:RangeError' ); // What: Long Label Refused. Why: A label has at most 50 characters. How: This expects a RangeError.
 
 
 
-	await iteSeeFun( `groups/${ groIdeStr }/events/${ eveIdeStr }/assignments`, await keyRawFun( page, groIdeStr ), staTimNum + 7200000 + 2 * DAY_MIL_NUM ); // What: Item Seed Call. Why: Items list by label whatever the emulator's ID order, and a label that won't decrypt comes back empty. How: This seeds Zucchini under the first ID and a garbled label under the second.
+	await iteSeeFun( `groups/${ groIdeStr }/events/${ eveIdeStr }/assignments`, await keyRawFun( page, groIdeStr ), staTimNum + 7200000 + 7 * DAY_MIL_NUM ); // What: Item Seed Call. Why: Items list by label whatever the emulator's ID order, and a label that won't decrypt comes back empty. How: This seeds Zucchini under the first ID and a garbled label under the second.
 
 
 	expect( await runPagFun( page, ITE_MOD_STR, 'iteLisFun', groIdeStr, eveIdeStr ) ).toMatchObject( [ { iteIdeStr : 'aab', labTexStr : '' }, { labTexStr : 'Apple pie' }, { iteIdeStr : 'aaa', labTexStr : 'Zucchini' } ] ); // What: Items Relisted. Why: The chips are gone, the garbled label reads empty, and the list keeps label order. How: This expects the three items by label.
@@ -434,7 +463,7 @@ pagTesObj( 'cancelling an event deletes its items, and unreadable, expired, and 
 
 	const keyRawStr = await keyRawFun( page, groIdeStr );    // What: Key Raw String. Why: The seeds are encrypted with the group key. How: This exports the owner's key.
 	const patBasStr = `groups/${ groIdeStr }/events`;        // What: Path Base String. Why: Every seed is one of the group's events. How: This names the collection's path.
-	const expTimNum = staTimNum + 3600000 + 2 * DAY_MIL_NUM; // What: Expire Time Number. Why: A live event's deletion time. How: This is its end plus 48 hours.
+	const expTimNum = staTimNum + 3600000 + 7 * DAY_MIL_NUM; // What: Expire Time Number. Why: A live event's deletion time. How: This is its end plus a week.
 
 
 	await eveSeeFun( `${ patBasStr }/aaa`, keyRawStr, '{"d":"x","l":"y","t":5}', staTimNum + 3600000, expTimNum ); // What: Mixed Seed Call. Why: A part that isn't text comes back empty while the others read. How: This seeds a numeric title, starting later than bbb despite its ID.

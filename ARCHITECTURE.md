@@ -11,7 +11,7 @@ purely descriptive or tracking sections (concept, storage map overview,
 known limitations, open questions, next steps) don't get one, since
 there's no distinct decision to weigh there.
 
-Last updated: 2026-11-19 (an open app taking a new version, reloading while hidden once nothing would be lost and otherwise offering a Reload note, in Section 14); 2026-11-18 (chat photos' TTL policies, lifecycle rule, and deploy done on both projects, in Section 14's setup checklist; chat photos built, one per message, capped daily by the owner's plan with a day running from 08:00 UTC, deleted from the server with their message, kept on each device for 3 months by default with a Storage on this device part and a low space card, sendable to a running event's photos instead, not sent offline, and counted once however often their message is retried, in Section 22, with pointers in Sections 3, 4, 5, 13, and 14 and its backstops in Section 14's setup checklist; a photo smaller than 160px shared at its own size, in Section 22); 2026-11-14 (saved photos converted to JPEG on save, built, in Section 20, its to-do gone from Section 14; the in-app browser screen checked on real devices, in Section 16); 2026-11-12 (history requests dropped, with a new device or a new joiner seeing chat only from their arrival, in Section 11.9 and every passage that pointed to it, the leftover cleanup in Section 14, and a handoff from the old device as an open idea in Section 13; another app's built-in browser stopped first with a way out to the device's browser or the installed app, in Section 16; stage 6, search and outside checks, done, in Section 14's setup checklist; App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
+Last updated: 2026-11-26 (how long ended events stay, a group setting the owner picks from 1 day, 3 days, and 1 week, default 1 week, rewriting the group's events still to go when it changes, built, with the Events section's lists named "Upcoming Events" and "Previous Events", in Section 23, with every 48-hour passage rewritten in Sections 5, 11.2, 11.5, 13, 14, 20, and 22 and its deploy in Section 14's setup checklist; web addresses in chat shown as links, with link previews decided against, and dividers between the parts of an event's details, the Map, and People, in Section 14; "Save all" on a touch screen preparing the photos on one press and sharing them on the next, in Section 20); 2026-11-19 (an open app taking a new version, reloading while hidden once nothing would be lost and otherwise offering a Reload note, in Section 14); 2026-11-18 (chat photos' TTL policies, lifecycle rule, and deploy done on both projects, in Section 14's setup checklist; chat photos built, one per message, capped daily by the owner's plan with a day running from 08:00 UTC, deleted from the server with their message, kept on each device for 3 months by default with a Storage on this device part and a low space card, sendable to a running event's photos instead, not sent offline, and counted once however often their message is retried, in Section 22, with pointers in Sections 3, 4, 5, 13, and 14 and its backstops in Section 14's setup checklist; a photo smaller than 160px shared at its own size, in Section 22); 2026-11-14 (saved photos converted to JPEG on save, built, in Section 20, its to-do gone from Section 14; the in-app browser screen checked on real devices, in Section 16); 2026-11-12 (history requests dropped, with a new device or a new joiner seeing chat only from their arrival, in Section 11.9 and every passage that pointed to it, the leftover cleanup in Section 14, and a handoff from the old device as an open idea in Section 13; another app's built-in browser stopped first with a way out to the device's browser or the installed app, in Section 16; stage 6, search and outside checks, done, in Section 14's setup checklist; App Check enforced for Firestore, the Realtime Database, Storage, and Authentication in the console and for the functions the app calls in their code, in Section 14 and its setup checklist; the real-device checks done, the Storage service agent role and bucket CORS setting added as done, and the Polar, own-domain sign-in, and App Check setup items ticked, in Section 14's setup checklist); 2026-11-11 (Android's white navigation bar accepted after viewport-fit=cover didn't change it, in Section 14; a tapped push launching the installed app on an iPad accepted as opening at the group list, in Section 11.1; a message sent from the outbox before the chat's watch starts shown in the log, in Section 14; the chat's own connection watched, with the banner, waiting messages, and paused status lines while it can't connect, in Section 14; a new version of the service worker taking over without waiting for the app to close, in Section 14; a hidden diagnostic log for the chat database's connection, in Section 14; the screen kept on while sharing on the Map, in Section 10; a tapped push's address kept for the app it launches, and the window told the address before it's focused, in Section 11.1; chat pushes held to one per member and group every 2 minutes, in Sections 11.1 and 11.7; the join screen reading the request again as it comes into view and every 15 seconds, waiting messages kept in order when the clock steps back, Settings kept open when a just-deleted group drops out, the map's distances in the device's region's units, and the frame's content area holding what's positioned against it, in Section 14); 2026-11-10 (one active device at a time, an older device stepping back with the keys to share and a way back, and the push token refreshed as the app opens, in Sections 6, 8, 11.1, and 13; the Realtime Database kept on WebSockets, in Section 14; the bars around an installed app kept in the color of the mode showing, and Android's launcher icon on a pale tile, in Section 14; a member's own old device sharing a group's key with their new one, in Sections 6, 12, and 14; Google sign-in falling back to a full-page redirect when its popup is blocked, in Section 8; the manifest's theme color dropped so Android draws its own navigation bar, in Section 14; the sandbox purchase and refund checked on staging, in Section 14's setup checklist; staging's own Polar sandbox set up, in Section 14's setup checklist; a sixth stage for search engines and outside checks of the headers and social preview, in Section 14's setup checklist; live Polar tested with a real purchase and refund, in Section 14's setup checklist; live Polar set up from the product first made for staging, with staging's sandbox still to make, in Section 14's setup checklist); 2026-11-09 (comehang.app attached and checked through Cloudflare, and the manifest sent with its own type, in Section 14; the paywall switched on, in Sections 14 and 18; DNSSEC done, in Section 14's setup checklist; live's sign-in, API key, and App Check prepared and DNSSEC turned on, in Section 14's setup checklist; staging's domain, sign-in, API key, and App Check done, and comehang.app held until the first deploy, in Section 14's setup checklist; Google sign-in's helper script allowed by the built policy, in Section 14's setup checklist; two Netlify sites, live and staging, with staging kept out of search, in Section 14's setup checklist; stage 2, the Firebase projects, done for staging and live, with live Polar moved to the first deploy, in Section 14's setup checklist; the live project created and deployed, and the first functions deploy's permission delay, in Section 14's setup checklist; staging's Polar sandbox and full functions deploy, the product's settings, and live Polar moved after the first deploy, in Section 14's setup checklist; Storage soft delete, object versioning, and Firestore backups kept off, in Section 14's setup checklist; join requests added to the TTL policies the setup checklist lists, in Section 14; the billing cutoff tested on staging with the Project Billing Manager role, and the functions image cleanup policy, in Sections 14 and 15; the billing cutoff built and spend caps on Cloud Run Functions and Cloud Run added, in Section 15, with the staging project's progress in Section 14's setup checklist; a Google account on the support address added to the setup checklist, for the sign-in consent screen, in Section 14; the Storage lifecycle rule limited to the history transfer and photo folders, sparing profile photos, in Section 14's setup checklist; the setup checklist's first stage, the domain and email, done, and the checklist ordered into stages, in Section 14; the full photo uploaded once and never replaced, in Section 20; a waiting message's send tried again after a refusal, in Section 14); 2026-11-08 (the offline banner, waiting chat messages, and other changes paused offline, in Section 14; profile photos, one for every group, in a new Section 21, with pointers in Sections 4, 5, and 11.3; bring-list lines in the chat, posted quiet, in Sections 11.5 and 11.7, and the notifications card, shown until it's answered, in Section 11.1; a shared key loading the recovered member's open section without a reload, in Section 6; the notices sheet closing once its entries all go, in Section 14; what's waiting on the member, with its dots, the notices sheet's "Waiting on you" part, and Review's jump to the item, in Section 14); 2026-11-07 ("Save all" downloading one ZIP archive on a computer, and the share sheet kept to touch screens, in Section 20; the photo viewer's round steps over the photo's sides, with the arrow keys and a swipe stepping too and the stepped-to photo sliding in, in Section 20; saved photos keeping their format, in Section 20; the chat's photos line opening the event's photos, in Section 20; event photos built, with ended events kept in the Events section, in Sections 14 and 20; event photos decided for launch, with their caps, tallies, start, chat line, and the Cloud Function keeping them with their event, in a new Section 20, with pointers in Sections 4, 5, 11.5, and 12 and its open choices in Section 13; the event form's place suggestions, kept on each device, in Section 5's Events & Notes and Section 14; Settings' support form posting to Netlify Forms, in Section 14's infrastructure and its setup checklist); 2026-11-05 (the app's frame with no groups built for a phone with an identity in no group, its group tabs turned off and Settings' phone and account parts working, the welcome its content, in Section 14, with the deletion's place in Settings; the invite form branded, with "What is Come Hang?" opening the landing page in its invite mode and the form's draft kept, in Section 14; the landing page built, shown when the phone holds no identity, with the welcome kept for an identity in no group and the deletion's note moved to it, in Sections 14 and 16; the landing page for a visitor with no identity, its three-color headline, its route with pins dropping in and the group gathering along it, its trust and upgrade sections, the invite form's branding, and its pre-render planned and then dropped for the loader-first screen choice, in Section 14, with the root for an identity in no group recorded as open, and the paywall switched on for launch, in Section 18); 2026-11-04 (the daily cleanup of unused identities, in no group, unpaid, and unlinked for 180 days, in Sections 8 and 14, its open item closed; the notices sheet, shown at launch and live and dismissed together, in Sections 11.1 and 14, its open item closed); 2026-11-03 (deleting one's data from Settings or the welcome, handing an owner's groups to the earliest member, and the `ownershipPassed` notice, in Sections 11.1, 14, and 18, with notices not yet shown and unused identities recorded as open; the privacy policy and terms, their static pages and Settings sheet, the refund promise, and identity deletion recorded as open, in Sections 14 and 18; the hosting files filled in per project, sign-in on the app's own domain, and App Check, in Section 14; the history request screens, the chat's banner and People's list, in Sections 11.1, 11.9, and 14; history requests' missing screen recorded as open, in Section 14; a tapped push opening its group and section, in Sections 11.1 and 14; the install screen on iPhone and iPad, the install note and Settings' Install button elsewhere, and the invite in Safari left unnamed, in Sections 13, 14, and 16; joining with a pasted invite link, from the welcome and the group list, in Sections 14 and 16); 2026-11-02 (the development member switcher, its per member storage, and the seed of a demo group, in Section 14; joining through an invite link, its join screen, and watching a request until it's answered, in Section 14; the Map section drawn without a street map, status posts in the chat, and sharing kept across sections and reloads, in Sections 10, 11.7, and 14); 2026-11-01 (reviewing join requests in the People section, the Settings section's group settings, leaving, deleting, handing the group over, this phone's appearance and notifications, and the account's Google link and upgrade, getting groups back on a new phone and sharing the group's key from People, and focus in confirmations, in Section 14); 2026-10-31 (the Events section and its form, editing bring-list items, and the People section, in Section 14); 2026-10-30 (the group's section tabs, the event sheet and panel, the bring-list's watch, and the panel's width, in Section 14; the group chat, each member's color slot built, the first screens, the group list, the look, light and dark modes, and each member's color slot, in Sections 11.3 and 14); 2026-10-29 (the screen layout, in Section 14; leaving and
 arriving posted to the chat, in Sections 10 and 11.7; asking the browser to keep the storage once the
 identity exists, in Section 14; the purchase's checkout and webhook functions,
 their delivery records, and the app's side of buying, in Sections 4, 14,
@@ -307,13 +307,13 @@ does).
 
 ### Events & Notes
 - Deleted once the event is over.
-- **Resolved**: 48-hour grace period before deletion, so people can
-  still review "who brought what" for a bit afterward, chosen as a
-  middle ground between practical concerns (out-of-town attendees who
-  won't reopen the app until they're home, no way to get events/notes back
-  once they're deleted) and
-  staying consistent with this design's overall minimal-retention
-  philosophy.
+- **Resolved**: a grace period before deletion, so people can still
+  review "who brought what" for a bit afterward, which the group's owner
+  sets (Section 23, decided 2026-11-26): 1 day, 3 days, or 1 week, a week
+  by default. A week covers out-of-town attendees who won't reopen the app
+  until they're home, since there's no way to get events or notes back once
+  they're deleted, while the shorter choices let a group keep less, in line
+  with this design's overall minimal-retention philosophy.
 - **Places stay on each device** (decided 2026-11-07): so the event form
   can suggest where a group has met before, each member's device keeps the
   places of the group's events it has seen, and only the places, the most
@@ -324,17 +324,16 @@ does).
 **Pros**: bounded, predictable storage growth; matches the natural
 lifecycle of the data (nobody needs an event's logistics once it's
 happened and reviewed); still gives a short post-event window rather
-than deleting instantly; 48 hours specifically covers the "just got
-home from travel" case reasonably well without drifting toward a
-retention window that feels inconsistent with the rest of the app.
+than deleting instantly; a week covers the "just got home from travel"
+case, and a group that wants less kept can choose a day or three.
 **Cons**: no long-term archive, users can't look back at a past event
 ("remember what we did for that trip last year") once the grace period
-elapses; unlike chat, there's no recovery mechanism if 48 hours turns
-out to be too short for a given group, once it's gone, it's gone.
+elapses; unlike chat, there's no recovery mechanism if a week turns out
+to be too short for a given group, once it's gone, it's gone.
 
 ### Photos
-- Deleted from the server with their event, 48 hours after it ends, and
-  kept on a device only until then unless the member saves them; see
+- Deleted from the server with their event, as many days after it ends as
+  its group keeps ended events, and kept on a device only until then unless the member saves them; see
   Section 20.
 
 ### Chat photos
@@ -1031,6 +1030,7 @@ different names.
 | `memberCount` | plaintext number | How many member docs the group has, since rules can't count documents. Moves by exactly one in the same batch as each join, leave, and removal, and the rules check it against the member cap (Section 18). |
 | `countedUid` | plaintext | The UID whose join, leave, or removal the last `memberCount` change counted, starting as the creator (decided 2026-10-25). Rules can't see which member doc a batch creates or deletes, so the count may change only when the member doc for this UID is created or deleted in the same batch. Without it, any member could raise the count to the cap and block every join. |
 | `chatTtlDays` | plaintext, owner-adjustable | Section 5's chat safety-valve TTL, default 30, clamped between 7 and 180. Read by every client's opportunistic cleanup check (11.7), through the membership mirror there for this group's chat instead of a hardcoded constant. |
+| `eventTtlDays` | plaintext, owner-adjustable | How many days an ended event stays before it's deleted, 1, 3, or 7 (Section 23). Absent reads as 7. A change rewrites the group's events' `expireAt`. |
 
 **Exception to "encrypt all content"**: the group's own name is the one
 piece of content proposed to stay plaintext, not encrypted like
@@ -1114,7 +1114,7 @@ everything else, now including location, is Firestore).
 | `detailsEnc` / `iv` | ciphertext bytes | The title, description, and location text encrypted together as one bundle (decided 2026-10-27), so Firebase can't see which parts are filled in or how long each one is. The bundle is the three as JSON, `{"t":"…","d":"…","l":"…"}`, and the rules cap its ciphertext at 2,148 bytes: the 700 characters Section 11.10 allows at 3 bytes each, 32 for the JSON around them, and the 16-byte tag. The IV is 12 bytes. |
 | `startAt`, `endAt` | plaintext | Must stay plaintext: the deletion-grace-period query (Section 5) needs to filter/sort on real timestamps, which isn't possible against an opaque ciphertext blob. Same routing-metadata tradeoff already accepted for chat's `sentAt`. An event ends after it starts, lasts at most 7 days, starts at most a year ahead, and can only be created or edited while it hasn't ended yet (decided 2026-10-27), so nothing sits stored for years and a finished event stays as it was for its review window. |
 | `createdByUid` | plaintext | Permission checks: any member creates an event, and only its creator or the group's owner edits or deletes it (decided 2026-10-27), so the owner can clean up after a creator who left. |
-| `expireAt` | plaintext, TTL field | Exactly `endAt` + 48 hours (Section 5), which the rules check. Same native-TTL mechanism as location, no Cloud Function needed here either. |
+| `expireAt` | plaintext, TTL field | Exactly `endAt` plus the group's `eventTtlDays` in days, a week where the group has none (Sections 5 and 23), which the rules check against the group. Same native-TTL mechanism as location, no Cloud Function needed here either. |
 
 Firestore's TTL deletes only the expired document, never its subcollections
 (by Firestore's own TTL documentation), so an event's items carry the same
@@ -1479,7 +1479,8 @@ name stays plaintext for invite-preview purposes (11.2); display names
 are per-group and encrypted, not global (11.1/11.3); new joiners and new
 devices don't see earlier chat (11.9); Redux Toolkit is dropped in favor
 of hooks-per-collection plus Zustand for cross-cutting state (Section 2); the events/notes
-grace period is set at 48 hours post-event (Section 5); chat's
+grace period is set per group, 1 day, 3 days, or 1 week after the event
+(Sections 5 and 23); chat's
 safety-valve TTL defaults to 30 days and is a per-group, creator-
 adjustable setting clamped between 7 and 180 days, not a fixed global
 number (Section 5, `chatTtlDays` in 11.2); recovery-credential linking
@@ -1789,11 +1790,14 @@ the Blaze change.
   button that turns into a confirmation (removing a member, blocking,
   replacing the link, cancelling an event) puts focus on the
   confirmation's safe answer, and leaving it returns focus to the button. The Events
-  section lists the events that haven't ended, soonest first, then under
-  "Recently ended" those that have ended but aren't yet deleted, most recent
-  first (built 2026-11-07, Section 20), as cards that open each event's
-  details, bring-list, and photos in a sheet, where an ended event can no
-  longer be changed; there its creator or
+  section lists under "Upcoming Events" the events that haven't ended,
+  soonest first, then under "Previous Events" those that have ended but
+  aren't yet deleted, most recent first (built 2026-11-07, Section 20,
+  named 2026-11-26, Section 23), as cards that open each event's
+  details, bring-list, and photos in a sheet, each part set apart by a
+  divider with space around it, as the parts of the Map and People sections
+  are, their lists drawing lines only between rows (2026-11-26), where an
+  ended event can no longer be changed; there its creator or
   the group's owner changes it in a form sheet over it, or cancels it after
   confirming, focus then landing on the section's heading. Plan an event
   opens the same form empty: a title, when it starts and ends, a place, and
@@ -1810,7 +1814,12 @@ the Blaze change.
   from another member shows their avatar in their own color, their name, and
   its time, and the member's own messages sit at the other side in the accent;
   Enter sends, Shift+Enter starts a new line, and a refused or failed send is
-  announced and keeps its text. Below 1,100px wide the pinned event is a
+  announced and keeps its text. A web address in a message or a photo's
+  caption, starting with http://, https://, or www., shows as a link that
+  opens in a new tab, built on the device as the message is drawn, so
+  nothing about it is stored or sent (built 2026-11-26). Link previews were
+  decided against the same day: fetching a page's title and picture needs a
+  server, which would then see every link a group shares. Below 1,100px wide the pinned event is a
   card that opens a sheet with its details and bring-list; from 1,100px a
   panel beside the chat shows them instead (built 2026-10-30). Both share one
   sheet and one details component: the date, place, and notes, then each item
@@ -2395,6 +2404,14 @@ Firebase's secret manager, Netlify's environment settings, a git-ignored
          `chpEndFun` and `chpFilFun` functions, and `delGroFun` and
          `delDatFun`, which now delete chat photos too. Set and deployed on
          both projects 2026-11-18.
+   - [ ] The event retention (added 2026-11-26, Section 23): the
+         Firestore rules and the new `eveRetFun` function deployed to both
+         projects together with the app, since the new rules refuse the old
+         app's 48-hour deletion time and the old rules refuse the new
+         setting. An app still open on the old version can't plan or change
+         an event until it reloads into the new one, which it does once
+         nothing would be lost. No new TTL policy or lifecycle rule is
+         needed.
    - [x] The web push (VAPID) key pair generated in each project's Cloud
          Messaging settings (2026-11-09), its public key set as
          `VITE_FIREBASE_VAPID_KEY` in Netlify in stage 3.
@@ -3083,7 +3100,7 @@ and the photo rules in `firestore.rules` and `storage.rules`.
   side in a frame that keeps one size, who added it and when, "Save to device",
   and "Delete" for the member who added it or the group's owner.
 - **The Events section keeps an ended event in view** until it's deleted,
-  under a "Recently ended" heading below the upcoming events, since most
+  under a "Previous Events" heading below the upcoming events, since most
   photos are shared after the event and the list now shows only events
   that haven't ended (Section 14).
 
@@ -3148,14 +3165,14 @@ and the photo rules in `firestore.rules` and `storage.rules`.
   bounds how many an event holds.
 
 ### Retention
-- **On the server, a photo goes with its event**: 48 hours after the event
-  ends (Section 5), or when it's cancelled, when its group is deleted, or
+- **On the server, a photo goes with its event**: as many days after the
+  event ends as its group keeps ended events (Sections 5 and 23), or when it's cancelled, when its group is deleted, or
   when its uploader or the owner deletes it.
 - **Each photo document's deletion deletes its full photo**: a Cloud
   Function triggered on it removes the Storage file, whatever deleted the
   document, its own TTL included. The bucket's existing 15-day
   lifecycle rule (Section 14's checklist) is the backstop, since no photo
-  lives longer than a 7-day event plus 48 hours.
+  lives longer than a 7-day event plus a week, 14 days.
 - **On the device**, thumbnails stay in Firestore's own offline cache with
   their documents, which goes with them, and opened full photos are held in
   memory only while the app is open, so a photo is decrypted once and
@@ -3167,7 +3184,14 @@ and the photo rules in `firestore.rules` and `storage.rules`.
   computer "Save all" downloads one ZIP archive named after the event
   (decided 2026-11-07), packed in the app with no library and the photos
   stored uncompressed, since they're already compressed, so many photos
-  don't mean many downloads, or, in Firefox, a tab for each. A
+  don't mean many downloads, or, in Firefox, a tab for each. On a touch
+  screen "Save all" takes two presses (fixed 2026-11-26): a browser opens
+  its share sheet only shortly after a press, and loading and converting a
+  whole event's photos took longer than that, so the share was refused and
+  the save failed. The first press now gets the photos ready, the button
+  reading "Getting photos ready…" and then "Save 12 photos" with a status
+  saying they're ready, and the second press hands them straight to the
+  share sheet. A
   saved photo is a JPEG (decided and built 2026-11-14): WebP is shown by
   today's phone and computer photo apps, but not by every place a saved
   photo is passed on to, while JPEG opens everywhere. So the save, whether
@@ -3197,8 +3221,8 @@ check the counts through the tallies above, and the Storage rules each
 file's size.
 
 ### Taking photos
-- **From the event's start** until it's deleted, 48 hours after it ends
-  (decided 2026-11-07), though most photos will be shared during and after
+- **From the event's start** until it's deleted after it ends (decided
+  2026-11-07, Section 23), though most photos will be shared during and after
   it.
 - **One line in the chat per burst**: once a member has finished adding
   photos, the chat gets one status line, "{name} just uploaded photos for
@@ -3244,7 +3268,8 @@ cutoff (Section 15) cover a runaway.
 photos fit the app's privacy model and cost cents; the upgrade gains a
 clear benefit; and nothing new is needed from outside the stack already in
 use.
-**Cons**: photos vanish from the server 48 hours after their event, so a
+**Cons**: photos vanish from the server soon after their event, a week at
+most, so a
 member who never saves them loses them; a new device or late joiner can't
 get earlier photos once they're gone; device storage fills faster than with
 chat, and Safari may clear it under pressure; and encrypted photos can't be
@@ -3341,7 +3366,7 @@ added.
 Decided 2026-11-18, built 2026-11-18. A member can attach one photo to a
 chat message. People expect to drop a picture into a group chat, and the
 event photos (Section 20) only cover an event's own photos, from its start
-until 48 hours after it ends. Chat photos cost less than event photos,
+until its deletion after it ends. Chat photos cost less than event photos,
 since a message leaves the server once every member's device has it
 (Section 5), and the photo leaves with it.
 
@@ -3359,8 +3384,8 @@ since a message leaves the server once every member's device has it
   keeps chat photos, so a member knows to save one they want to keep. A
   photo the device no longer keeps, cleared by age or by the member, leaves
   its message, whose bubble says "This photo is no longer on this device."
-- **While an event runs**, from its start until its deletion 48 hours after
-  it ends, the preview also offers "Add to Picnic's photos instead", naming
+- **While an event runs**, from its start until its deletion after it ends,
+  the preview also offers "Add to Picnic's photos instead", naming
   the latest event to have started, which sends the photo through the
   event photos flow (Section 20): it joins the event's grid, counts against
   the event's limits, and posts the usual photos line, while the caption
@@ -3501,3 +3526,68 @@ device after 3 months unless they changed the setting; a member who joins
 later never sees earlier photos, the same as earlier messages (Section
 11.9); a photo can't be sent offline; and a daily limit can stop someone
 partway through a busy day.
+
+---
+
+## 23. Event Retention Setting
+
+Decided and built 2026-11-26. Members asked for ended events to stay up
+longer than the fixed 48 hours they had, so a group's owner chooses how
+long an ended event stays before it's deleted: 1 day, 3 days, or 1 week,
+with 1 week the default. The setting is free on every group, since it
+governs what a group already planned rather than anything that grows with
+paying.
+
+### The setting
+- **One value per group, on the server**: an event lives in Firestore and
+  every member sees the same one, so a device can't keep it longer than the
+  rest. The group holds `eventTtlDays` (Section 11.2), 1, 3, or 7, set only
+  by the owner, beside `chatTtlDays`, which the rules check. A group
+  without the field, every group made before the setting and every new
+  one until its owner chooses, reads as 7.
+- **In the group's Settings section**, the owner picks it below the chat's
+  retention ("Keep ended events for": 1 day, 3 days, 1 week), saved with
+  the name and chat retention, and the hint says that a shorter choice
+  removes ended events already past it. Other members see the current
+  choice ("Ended events kept for").
+- **On the Events section**, the events to come are listed under "Upcoming
+  Events", and ended events keep showing below them under "Previous
+  Events" until they're deleted, so with a week they stay in view for a
+  week.
+
+### How deletion follows it
+- **Each event's `expireAt` is `endAt` plus the group's days** (Section
+  11.5). The app reads the group as it plans or changes an event, and the
+  rules check the event's `expireAt` against the group's current value, so
+  no member can pick their own. Items and photos keep carrying their
+  event's `expireAt`.
+- **A change rewrites the group's events still to go**: `eveRetFun`, a
+  Cloud Function triggered on the group's update, returns at once unless
+  `eventTtlDays` changed, then reads the group as it stands, so a late or
+  repeated run lands on the latest choice, and moves each event's
+  `expireAt` to its `endAt` plus the group's days, with its items' in the
+  same batch. `phoMovFun` (Section 20) moves each event's photos, as it
+  does for any change to an event's `expireAt`. An event already past its
+  `expireAt` is left alone, so a longer choice never brings back one that
+  was due to go. A shorter choice can put an ended event's `expireAt` in
+  the past, and Firestore's TTL then deletes it, its photos going with it
+  through `phoEndFun`; the Events section stops listing it at once.
+- **Events planned before the setting shipped** kept their 48 hours until
+  they were changed or their group's setting changed, so nothing was
+  rewritten at launch.
+- **Photos stay inside the Storage backstop**: a photo lives at most from
+  its event's start until its deletion, a 7-day event plus 7 days, 14 days
+  in all, still inside the bucket's 15-day lifecycle rule (Section 14's
+  checklist).
+- **The privacy policy** says events, their bring-lists, and their photos
+  are deleted 1 day, 3 days, or a week after the event ends, as the group's
+  owner chooses.
+
+**Pros**: ended events, their bring-lists, and their photos stay up long
+enough to look back on, which members asked for; the owner can keep them
+as short as before or shorter; and it costs little, since the event photo
+caps bound what's kept.
+**Cons**: a week keeps photos on the server up to 5 days longer than the
+old 48 hours, a little more storage; one more Cloud Function and a rules
+read on every event write; and a member can't keep an event longer than
+the owner chose.

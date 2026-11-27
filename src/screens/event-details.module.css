@@ -55,10 +55,13 @@
 
 }
 
-.briLisHea { /* What: Bring List Heading. Why: The list starts a new part of the details. How: This sets its heading at Base Plus 2. */
+.briLisHea { /* What: Bring List Heading. Why: The list starts a new part of the details, set apart from the event's facts. How: This sets its heading at Base Plus 2 below a divider, a tier 2 space above the line and below it. */
 
 
-	font-size : var( --fon-siz-p02 ); /* Font Size Base Plus 2 ~= 19.304px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col );     /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	font-size   : var( --fon-siz-p02 );                                /* Font Size Base Plus 2 ~= 19.304px */
+	margin-top  : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ); /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
+	padding-top : var( --tie-ver-002 );                                /* Tier Vertical 2 ~= 25.572px */
 
 
 }

@@ -94,13 +94,14 @@
 
 /* #region eveActDiv */
 
-.eveActDiv { /* What: Event Actions Div. Why: The event's buttons sit together, wrapping when the screen is narrow. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks. */
+.eveActDiv { /* What: Event Actions Div. Why: The event's buttons sit together, wrapping when the screen is narrow, with room around them so they stand clear of the note above and the divider below. How: This lays them out in a flex row a tier 4 space apart, since its items keep their own widths and wrap, which grid can't do without fixed tracks, and widens the space above and below it to tier 2. */
 
 
 	align-items : center;
 	display     : flex;
 	flex-wrap   : wrap;
-	gap         : var( --tie-ver-004 ) var( --tie-hor-004 ); /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	gap         : var( --tie-ver-004 ) var( --tie-hor-004 );             /* Tier Vertical 4 ~= 8.304px, Tier Horizontal 4, about 8.304px - 11px */
+	margin      : calc( var( --tie-ver-002 ) - var( --tie-ver-003 ) ) 0; /* Tier Vertical 2 ~= 25.572px, Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -173,11 +174,13 @@
 
 /* #region mapPeoSec */
 
-.mapPeoSec { /* What: Map People Section. Why: The heading, the plot, and the list read as one part. How: This stacks them a tier 3 space apart, in order since the plot and its note take turns. */
+.mapPeoSec { /* What: Map People Section. Why: The heading, the plot, and the list read as one part, set apart from the event's part above. How: This stacks them a tier 3 space apart, in order since the plot and its note take turns, below a divider with a tier 2 space under the line. */
 
 
-	display : grid;
-	row-gap : var( --tie-ver-003 ); /* Tier Vertical 3 ~= 14.572px */
+	border-top  : var( --bor-wid-bas ) solid var( --bor-mai-col ); /* Border Width Base ~= 1.160px, Border Main Color = #E0E1EF */
+	display     : grid;
+	padding-top : var( --tie-ver-002 );                            /* Tier Vertical 2 ~= 25.572px */
+	row-gap     : var( --tie-ver-003 );                            /* Tier Vertical 3 ~= 14.572px */
 
 
 }
@@ -307,7 +310,7 @@
 
 /* #region peoRowIte */
 
-.peoRowIte { /* What: People Row Item. Why: A member's avatar sits beside their name, details, and link. How: This lays them out in named areas a tier 4 space across and a tier 5 space down, with a tier 4 space above and below and a border below. */
+.peoRowIte { /* What: People Row Item. Why: A member's avatar sits beside their name, details, and link. How: This lays them out in named areas a tier 4 space across and a tier 5 space down, with a tier 4 space above and below and a border below every row but the last. */
 
 
 	align-items           : center;
@@ -319,6 +322,13 @@
 	justify-items         : start;
 	padding               : var( --tie-ver-004 ) 0;                          /* Tier Vertical 4 ~= 8.304px */
 	row-gap               : var( --tie-ver-005 );                            /* Tier Vertical 5 ~= 4.732px */
+
+
+}
+.peoRowIte:last-child { /* What: People Row Item Last. Why: A line under the last member sharing would divide it from nothing. How: This drops the last row's border. */
+
+
+	border-bottom : none;
 
 
 }

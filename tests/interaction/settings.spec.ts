@@ -104,7 +104,7 @@ test.afterAll( async () => { // What: Teardown Hook. Why: The connection should 
 
 
 
-test( "the owner saves the group's name and chat retention, a bad name refused beside its box", async ( { page : curPagObj } ) => { // What: Save Test. Why: Only the owner renames the group and sets its retention (Section 11.2). How: This sends an empty name, then a new name and retention, checking the problem, the focus, the status, the bar, and the saved group.
+test( "the owner saves the group's name and its chat and event retentions, a bad name refused beside its box", async ( { page : curPagObj } ) => { // What: Save Test. Why: Only the owner renames the group and sets its retention (Section 11.2). How: This sends an empty name, then a new name and retention, checking the problem, the focus, the status, the bar, and the saved group.
 
 
 	await curPagObj.goto( '/' ); // What: Page Load Call. Why: The page needs the app's modules. How: This opens the app.
@@ -135,6 +135,7 @@ test( "the owner saves the group's name and chat retention, a bad name refused b
 	await namInpObj.fill( '  Beach   Week ' ); // What: Name Fill Call. Why: The name is saved tidied. How: This types it with extra spaces.
 
 	await curPagObj.getByLabel( 'Hold unreceived messages for' ).selectOption( '60' ); // What: Retention Choice Call. Why: The owner sets how long the server holds a message. How: This picks 60 days.
+	await curPagObj.getByLabel( 'Keep ended events for' ).selectOption( '3 days' );    // What: Event Retention Choice Call. Why: The owner sets how long ended events stay. How: This picks 3 days.
 
 	await curPagObj.getByRole( 'button', { name : 'Save' } ).click(); // What: Save Click Call. Why: The settings are sent. How: This presses Save.
 
@@ -143,7 +144,7 @@ test( "the owner saves the group's name and chat retention, a bad name refused b
 	await expect( namInpObj ).toHaveAttribute( 'aria-invalid', 'false' );                                                                            // What: Valid Assertion. Why: The fixed name has no problem. How: This reads its state.
 	await expect( curPagObj.getByRole( 'heading', { level : 1, name : 'Beach Week' } ) ).toBeVisible();                                              // What: Bar Name Assertion. Why: The group's new name shows at once. How: This reads the bar's heading.
 
-	expect( await docReaFun( setEnvObj, `groups/${ groIdeStr }` ) ).toMatchObject( { chatTtlDays : 60, name : 'Beach Week' } ); // What: Saved Group Assertion. Why: The group holds its new settings. How: This expects both.
+	expect( await docReaFun( setEnvObj, `groups/${ groIdeStr }` ) ).toMatchObject( { chatTtlDays : 60, eventTtlDays : 3, name : 'Beach Week' } ); // What: Saved Group Assertion. Why: The group holds its new settings. How: This expects all three.
 
 
 } );
@@ -236,10 +237,10 @@ pagTesObj( 'a member sees the settings without the form and leaves after confirm
 	const staButObj = secPagObj.getByRole( 'button', { name : 'Stay' } );        // What: Stay Button Object. Why: The confirmation's safe answer takes focus. How: This finds it.
 
 
-	await expect( secPagObj.getByRole( 'button', { name : 'Save' } ) ).toHaveCount( 0 );                                                         // What: No Form Assertion. Why: Only the owner changes the settings. How: This expects no Save.
-	await expect( secPagObj.getByText( "Only the group's owner changes these." ) ).toBeVisible();                                                // What: Owner Note Assertion. Why: The member is told who changes them. How: This waits for the note.
-	await expect( secPagObj.getByRole( 'region', { name : 'This group' } ).getByRole( 'definition' ) ).toHaveText( [ 'Beach Day', '30 days' ] ); // What: Values Assertion. Why: The member still sees the settings. How: This reads both values.
-	await expect( secPagObj.getByRole( 'button', { name : 'Delete group' } ) ).toHaveCount( 0 );                                                 // What: No Delete Assertion. Why: Only the owner deletes the group. How: This expects no button.
+	await expect( secPagObj.getByRole( 'button', { name : 'Save' } ) ).toHaveCount( 0 );                                                                   // What: No Form Assertion. Why: Only the owner changes the settings. How: This expects no Save.
+	await expect( secPagObj.getByText( "Only the group's owner changes these." ) ).toBeVisible();                                                          // What: Owner Note Assertion. Why: The member is told who changes them. How: This waits for the note.
+	await expect( secPagObj.getByRole( 'region', { name : 'This group' } ).getByRole( 'definition' ) ).toHaveText( [ 'Beach Day', '30 days', '1 week' ] ); // What: Values Assertion. Why: The member still sees the settings. How: This reads the name and both retentions.
+	await expect( secPagObj.getByRole( 'button', { name : 'Delete group' } ) ).toHaveCount( 0 );                                                           // What: No Delete Assertion. Why: Only the owner deletes the group. How: This expects no button.
 
 	await leaButObj.click(); // What: Leave Click Call. Why: The member starts to leave. How: This opens the confirmation.
 

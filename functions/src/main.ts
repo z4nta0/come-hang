@@ -13,6 +13,7 @@ import { dayRunFun } from './daily-run.ts';        // What: Day Run Function. Wh
 import { decOffFun } from './offer-decline.ts';    // What: Decline Offer Function. Why: The member offered a group declines through it. How: This is the callable.
 import { delDatFun } from './data-deletion.ts';    // What: Delete Data Function. Why: Someone deletes their data through it. How: This is the callable.
 import { delGroFun } from './group-deletion.ts';   // What: Delete Group Function. Why: The owner deletes a group through it. How: This is the callable.
+import { eveRetFun } from './event-retention.ts';  // What: Event Retention Function. Why: An owner's new event retention reaches the group's events. How: This is the group change trigger.
 import { groChaFun } from './group-changes.ts';    // What: Group Change Function. Why: Removals and ended offers are reported to the people they affect. How: This is its trigger.
 import { ideCleFun } from './identity-cleanup.ts'; // What: Identity Cleanup Function. Why: Identities nobody uses are deleted. How: This is the schedule.
 import { joiPusFun } from './activity-pushes.ts';  // What: Join Push Function. Why: Members learn someone is waiting to join. How: This is the join request trigger.
@@ -43,6 +44,6 @@ import { polWebFun } from './purchase.ts';         // What: Polar Webhook Functi
 
 
 
-export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, chpEndFun, chpFilFun, dayRunFun, decOffFun, delDatFun, delGroFun, groChaFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
+export { avaFilFun, bilCutFun, chaPusFun, cheCreFun, chpEndFun, chpFilFun, dayRunFun, decOffFun, delDatFun, delGroFun, eveRetFun, groChaFun, ideCleFun, joiPusFun, keyPusFun, mirGroFun, mirMemFun, phoEndFun, phoFilFun, phoMovFun, polWebFun }; // What: Named Exports. Why: Firebase deploys exactly what the entry exports. How: This exports every callable and trigger.
 
 
