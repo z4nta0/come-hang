@@ -22,7 +22,7 @@ import { ref as stoRefFun          } from 'firebase/storage';             // Wha
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the deletion is its own test. How: This declares them.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
 import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.
-import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed a history transfer. How: This uploads a file.
+import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed the group's files. How: This uploads a file.
 
 
 import type { CalRecTyp            } from '../support/callers.ts';        // What: Caller Record Type. Why: The suite keeps its three callers. How: This types them.
@@ -110,9 +110,9 @@ const reaDocFun = async ( patValStr : string ) : Promise< Record< string, unknow
  * Seeds a group, gro1, owned by Alice with Bob as a member, holding one of
  * everything the deletion removes: its documents and their collections, its
  * invite, both accounts, its chat, presence, and mirror, and its files: a
- * history transfer, a profile photo, and an event's full photo. Bob's account
- * and the Realtime Database also hold another group, gro2, which the deletion
- * must leave alone.
+ * profile photo and an event's full photo. Bob's account and the Realtime
+ * Database also hold another group, gro2, which the deletion must leave
+ * alone.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *
@@ -150,7 +150,6 @@ const seeGroFun = () => funEnvObj.withSecurityRulesDisabled( async ( cotAdmObj )
 	await set( ref( reDatObj, 'presence/gro1/bob' ), { online : true } );     // What: Presence Seed. Why: The group's presence goes. How: This marks Bob online.
 
 	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'avatars/gro1/bob' ), new Uint8Array( 10 ) );               // What: Avatar Seed. Why: The members' profile photos go. How: This uploads Bob's.
-	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'groupHistoryTransfers/gro1/bob' ), new Uint8Array( 10 ) ); // What: Transfer Seed. Why: The group's history transfers go. How: This uploads one.
 	await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), 'photos/gro1/eve1/pho1' ), new Uint8Array( 10 ) );          // What: Full Photo Seed. Why: An event's full photos go. How: This uploads the photo's.
 
 
@@ -173,7 +172,7 @@ test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one conn
 		database  : { host : '127.0.0.1', port : 8210 }, // What: Database Options. Why: The chat, presence, and mirror live there. How: This names the address firebase.json gives its emulator.
 		firestore : { host : '127.0.0.1', port : 8200 }, // What: Firestore Options. Why: Most of a group lives there. How: This names the address firebase.json gives its emulator.
 		projectId : 'demo-come-hang',                    // What: Project Identifier. Why: The Functions emulator runs for this demo project alone. How: This names it, matching the project test:functions starts.
-		storage   : { host : '127.0.0.1', port : 8220 }  // What: Storage Options. Why: History transfers live there. How: This names the address firebase.json gives its emulator.
+		storage   : { host : '127.0.0.1', port : 8220 }  // What: Storage Options. Why: The group's files live there. How: This names the address firebase.json gives its emulator.
 
 
 	});
@@ -240,7 +239,6 @@ test( 'the owner deletes a group whole, freeing their slot and leaving each othe
 	await expect.poll( () => reaDbsFun( 'mirrors/gro1' ) ).toBeNull(); // What: Mirror Gone. Why: The rules' copy of the membership goes too, and the mirror's own triggers run after the deletion. How: This waits for it to be empty.
 
 	expect( await stoLisFun( funEnvObj, 'avatars/gro1' ) ).toEqual( [] );               // What: Avatars Gone. Why: A profile photo mustn't outlive its group. How: This expects the group's folder empty.
-	expect( await stoLisFun( funEnvObj, 'groupHistoryTransfers/gro1' ) ).toEqual( [] ); // What: Transfers Gone. Why: A history bundle mustn't outlive its group. How: This expects the group's folder empty.
 	expect( await stoLisFun( funEnvObj, 'photos/gro1/eve1' ) ).toEqual( [] );           // What: Photos Gone. Why: A full photo mustn't outlive its group. How: This expects the event's folder empty.
 
 

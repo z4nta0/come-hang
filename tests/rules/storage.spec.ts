@@ -95,7 +95,7 @@ const accStoFun = ( uidValStr : string ) => stoEnvObj.authenticatedContext( uidV
  *
  * @summary
  * Writes a Firestore document with the rules turned off, so a test can set
- * up the members and history request the Storage rules read.
+ * up the documents the Storage rules read, such as members.
  *
  * @author z4nta0 <https://github.com/z4nta0>
  *

@@ -24,7 +24,7 @@ import { ref as stoRefFun          } from 'firebase/storage';             // Wha
 import { test                      } from '@playwright/test';             // What: Test. Why: Each part of the deletion is its own test. How: This declares them.
 import { Timestamp                 } from 'firebase/firestore';           // What: Timestamp. Why: A member's join time is a Firestore timestamp. How: This builds one at a chosen time.
 import { tokSetFun                 } from '../support/pushes.ts';         // What: Token Set Function. Why: A push only goes to a stored token. How: This seeds one.
-import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed a history transfer. How: This uploads a file.
+import { uploadBytes               } from 'firebase/storage';             // What: Upload Bytes. Why: The tests seed the identity's files. How: This uploads a file.
 
 
 import type { CalRecTyp            } from '../support/callers.ts';        // What: Caller Record Type. Why: The suite keeps its callers. How: This types them.
@@ -106,7 +106,7 @@ const reaDocFun = async ( patValStr : string ) : Promise< Record< string, unknow
  * Seeds Alice's world: gro1, which she owns, with Bob, who joined before
  * Carol, and a standing offer to Carol; gro2, Bob's, which she belongs to;
  * gro3, which she owns alone; gro4, which she and Erin have asked to join;
- * her location, history request, presence, and history transfer in gro1;
+ * her location and presence in gro1;
  * a photo each from Alice and Bob in gro1's event, with their full photos;
  * profile photos for Alice in gro1 and gro2 and for Bob in gro1; every
  * account, her notice and public key, and phones for Alice and Bob.
@@ -154,7 +154,6 @@ const seeAllFun = async () : Promise< void > => { // What: Seed All Function. Wh
 		await setDoc( doc( fsDatObj, 'groups/gro1/events/eve1' ), { titleEnc : 'x' } );                                                                          // What: Event Seed. Why: The photos sit under an event. How: This writes it.
 		await setDoc( doc( fsDatObj, 'groups/gro1/events/eve1/photos/pho1' ), { uploaderUid : aliUidStr } );                                                     // What: Alice Photo Seed. Why: A photo she shared is her data. How: This writes her photo in gro1's event.
 		await setDoc( doc( fsDatObj, 'groups/gro1/events/eve1/photos/pho2' ), { uploaderUid : bobUidStr } );                                                     // What: Bob Photo Seed. Why: Others' photos must stay. How: This writes Bob's beside hers.
-		await setDoc( doc( fsDatObj, `groups/gro1/historyRequests/${ aliUidStr }` ), { kind : 'recovery' } );                                                    // What: History Request Seed. Why: Her request for chat goes. How: This writes it.
 		await setDoc( doc( fsDatObj, `accounts/${ aliUidStr }` ), { memberGroups : { gro2 : true }, ownedGroups : { gro1 : true, gro3 : true }, paid : true } ); // What: Alice Account Seed. Why: The account lists what she's in. How: This writes it.
 		await setDoc( doc( fsDatObj, `accounts/${ aliUidStr }/notices/removed-gro9` ), { kind : 'removed' } );                                                   // What: Alice Notice Seed. Why: What's under her account goes with it. How: This writes a notice.
 		await setDoc( doc( fsDatObj, `accounts/${ bobUidStr }` ), { memberGroups : { gro1 : true }, ownedGroups : { gro2 : true } } );                           // What: Bob Account Seed. Why: Bob's maps change as he inherits. How: This writes his account.
@@ -163,7 +162,7 @@ const seeAllFun = async () : Promise< void > => { // What: Seed All Function. Wh
 
 		await set( ref( cotAdmObj.database( DBS_URL_STR ), `presence/gro1/${ aliUidStr }` ), { online : true } ); // What: Presence Seed. Why: Her presence goes. How: This marks her online.
 
-		for ( const filPatStr of [ `avatars/gro1/${ aliUidStr }`, `avatars/gro1/${ bobUidStr }`, `avatars/gro2/${ aliUidStr }`, `groupHistoryTransfers/gro1/${ aliUidStr }`, 'photos/gro1/eve1/pho1', 'photos/gro1/eve1/pho2' ] ) await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), filPatStr ), new Uint8Array( 10 ) ); // What: File Seed Loop. Why: Her profile photos, the bundle she asked for, and her full photo go, while Bob's files stay. How: This uploads each.
+		for ( const filPatStr of [ `avatars/gro1/${ aliUidStr }`, `avatars/gro1/${ bobUidStr }`, `avatars/gro2/${ aliUidStr }`, 'photos/gro1/eve1/pho1', 'photos/gro1/eve1/pho2' ] ) await uploadBytes( stoRefFun( cotAdmObj.storage( BUC_URL_STR ), filPatStr ), new Uint8Array( 10 ) ); // What: File Seed Loop. Why: Her profile photos, the bundle she asked for, and her full photo go, while Bob's files stay. How: This uploads each.
 
 
 	} );
@@ -191,7 +190,7 @@ test.beforeAll( async () => { // What: Setup Hook. Why: The tests share one conn
 		database  : { host : '127.0.0.1', port : 8210 }, // What: Database Options. Why: Presence lives there. How: This names the address firebase.json gives its emulator.
 		firestore : { host : '127.0.0.1', port : 8200 }, // What: Firestore Options. Why: Most of an identity's data lives there. How: This names the address firebase.json gives its emulator.
 		projectId : 'demo-come-hang',                    // What: Project Identifier. Why: The Functions emulator runs for this demo project alone. How: This names it, matching the project test:functions starts.
-		storage   : { host : '127.0.0.1', port : 8220 }  // What: Storage Options. Why: History transfers live there. How: This names the address firebase.json gives its emulator.
+		storage   : { host : '127.0.0.1', port : 8220 }  // What: Storage Options. Why: The identity's files live there. How: This names the address firebase.json gives its emulator.
 
 
 	});
@@ -254,7 +253,6 @@ test( 'deleting data hands on, leaves, and deletes every group as it should, and
 	expect( await reaDocFun( `groups/gro4/joinRequests/${ aliUidStr }` ) ).toBeUndefined();                                                    // What: Request Gone. Why: Her typed name goes. How: This expects her request gone.
 	expect( await reaDocFun( 'groups/gro4/joinRequests/erin' ) ).toBeDefined();                                                                // What: Other Request Kept. Why: Only her data goes. How: This expects Erin's request still there.
 	expect( await reaDocFun( `groups/gro1/liveLocations/${ aliUidStr }` ) ).toBeUndefined();                                                   // What: Location Gone. Why: Her position goes. How: This expects it gone.
-	expect( await reaDocFun( `groups/gro1/historyRequests/${ aliUidStr }` ) ).toBeUndefined();                                                 // What: History Request Gone. Why: Her request goes. How: This expects it gone.
 	expect( await reaDocFun( `accounts/${ aliUidStr }` ) ).toBeUndefined();                                                                    // What: Account Gone. Why: Her account goes. How: This expects it gone.
 	expect( await reaDocFun( `accounts/${ aliUidStr }/pushToken/current` ) ).toBeUndefined();                                                  // What: Token Gone. Why: Her phone's token goes with the account. How: This expects it gone.
 	expect( await reaDocFun( `users/${ aliUidStr }` ) ).toBeUndefined();                                                                       // What: Public Key Gone. Why: Her public key goes. How: This expects it gone.
@@ -276,7 +274,6 @@ test( 'deleting data hands on, leaves, and deletes every group as it should, and
 
 	expect( await reaDocFun( 'groups/gro1/events/eve1/photos/pho1' ) ).toBeUndefined(); // What: Photo Gone. Why: A photo she shared goes. How: This expects her photo's document gone.
 	expect( await reaDocFun( 'groups/gro1/events/eve1/photos/pho2' ) ).toBeDefined();   // What: Other Photo Kept. Why: Only her photos go. How: This expects Bob's still there.
-	expect( await stoLisFun( funEnvObj, 'groupHistoryTransfers/gro1' ) ).toEqual( [] ); // What: Transfer Gone. Why: Her bundle goes. How: This expects the folder empty.
 
 	await expect.poll( () => stoLisFun( funEnvObj, 'photos/gro1/eve1' ) ).toEqual( [ 'pho2' ] );          // What: Full Photo Gone. Why: Her full photo goes with its document, through the photo's trigger. How: This waits for Bob's alone to be left.
 	await expect.poll( () => stoLisFun( funEnvObj, 'avatars/gro1' ) ).toEqual( [ bobCalObj.uidValStr ] ); // What: Shared Avatar Gone. Why: Her profile photo goes with each membership, through the membership's trigger. How: This waits for Bob's alone to be left in gro1.

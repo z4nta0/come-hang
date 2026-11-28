@@ -13,7 +13,7 @@ import { forceWebSockets              } from 'firebase/database';  // What: Forc
 import { getAuth                      } from 'firebase/auth';      // What: Get Auth. Why: Every identity signs in through Auth. How: This returns the app's Auth instance.
 import { getDatabase                  } from 'firebase/database';  // What: Get Database. Why: Chat and presence live in the Realtime Database. How: This returns the app's database.
 import { getFunctions                 } from 'firebase/functions'; // What: Get Functions. Why: Some actions go through callables. How: This returns the app's Functions instance in the functions' region.
-import { getStorage                   } from 'firebase/storage';   // What: Get Storage. Why: History transfers live in Storage. How: This returns the app's Storage.
+import { getStorage                   } from 'firebase/storage';   // What: Get Storage. Why: Photos' files live in Storage. How: This returns the app's Storage.
 import { initializeApp                } from 'firebase/app';       // What: Initialize App. Why: Every service hangs off one Firebase app. How: This creates it from the web config.
 import { initializeAppCheck           } from 'firebase/app-check'; // What: Initialize App Check. Why: The project's services refuse requests without an App Check token. How: This starts App Check for the app.
 import { initializeFirestore          } from 'firebase/firestore'; // What: Initialize Firestore. Why: Firestore keeps an offline copy on the device. How: This creates Firestore with its local cache.
@@ -187,7 +187,7 @@ const firGetFun = () : FirSerTyp => { // What: Firebase Get Function. Why: Every
 	const funValObj = getFunctions( appValObj, 'us-central1' );                                                                                   // What: Functions Value Object. Why: The functions run in us-central1. How: This creates the instance there.
 	const fstDatObj = initializeFirestore( appValObj, { localCache : persistentLocalCache( { tabManager : persistentMultipleTabManager() } ) } ); // What: Firestore Data Object. Why: The app keeps working through a dropped connection, in any number of tabs. How: This creates Firestore with its IndexedDB cache shared between tabs.
 	const reaDatObj = getDatabase( appValObj );                                                                                                   // What: Realtime Data Object. Why: Chat and presence live there. How: This creates it.
-	const stoValObj = getStorage( appValObj );                                                                                                    // What: Storage Value Object. Why: History transfers live there. How: This creates it.
+	const stoValObj = getStorage( appValObj );                                                                                                    // What: Storage Value Object. Why: Photos' files live there. How: This creates it.
 
 
 
