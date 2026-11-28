@@ -154,7 +154,7 @@ terms.html           the terms' page, the document built into it
 deploy-files.ts      fills in the hosting files for a build's Firebase project
 firestore.rules      who may read and write each Firestore document
 database.rules.json  who may read and write chat and presence
-storage.rules        who may read and write history transfers
+storage.rules        who may read and write photos
 ```
 
 ## Conventions
